@@ -1,14 +1,28 @@
 <template>
   <aside class="w-64 bg-orange-gradient min-h-screen text-white flex flex-col shadow-xl">
+    <!-- NEXUS Brand Logo -->
+    <div class="px-6 py-8 border-b border-white border-opacity-20">
+      <div class="text-center">
+        <h1 class="text-4xl font-black tracking-wider mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-orange-100">
+          NEXUS
+        </h1>
+        <p class="text-xs text-white text-opacity-70 tracking-widest font-light">COLLABORATE BEYOND LANGUAGE</p>
+      </div>
+    </div>
+
     <!-- User Profile Section -->
-    <div class="p-6 border-b border-white border-opacity-20">
-      <div class="flex items-center space-x-3">
-        <div class="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-xl font-bold">
-          {{ userInitial }}
-        </div>
-        <div>
-          <p class="font-semibold text-lg">{{ user?.fullName }}</p>
-          <p class="text-sm text-white text-opacity-80">@{{ user?.username }}</p>
+    <div class="px-6 py-5 border-b border-white border-opacity-20">
+      <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-4 hover:bg-opacity-15 transition-all duration-300">
+        <div class="flex items-center space-x-4">
+          <div class="relative flex-shrink-0">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-white via-orange-50 to-orange-100 flex items-center justify-center text-2xl font-bold text-orange-primary shadow-lg ring-4 ring-white ring-opacity-20">
+              {{ userInitial }}
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-lg truncate text-white">{{ user?.fullName }}</p>
+            <p class="text-sm text-white text-opacity-80 font-medium">TRANSLATOR</p>
+          </div>
         </div>
       </div>
     </div>
@@ -46,11 +60,11 @@
           class="bg-black bg-opacity-10 transition-all duration-300"
         >
           <router-link
-            to="/management/document-upload"
+            to="/management/schedule"
             class="block px-6 py-2 pl-14 text-sm hover:bg-white hover:bg-opacity-10 transition-all duration-200"
-            :class="{ 'bg-white bg-opacity-20': isActive('/management/document-upload') }"
+            :class="{ 'bg-white bg-opacity-20': isActive('/management/schedule') }"
           >
-            문서 업로드
+            일정관리
           </router-link>
           <router-link
             to="/management/project"
@@ -60,18 +74,18 @@
             프로젝트 관리
           </router-link>
           <router-link
+            to="/management/document-upload"
+            class="block px-6 py-2 pl-14 text-sm hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+            :class="{ 'bg-white bg-opacity-20': isActive('/management/document-upload') }"
+          >
+            문서관리
+          </router-link>
+          <router-link
             to="/management/glossary"
             class="block px-6 py-2 pl-14 text-sm hover:bg-white hover:bg-opacity-10 transition-all duration-200"
             :class="{ 'bg-white bg-opacity-20': isActive('/management/glossary') }"
           >
             전문용어사전
-          </router-link>
-          <router-link
-            to="/management/schedule"
-            class="block px-6 py-2 pl-14 text-sm hover:bg-white hover:bg-opacity-10 transition-all duration-200"
-            :class="{ 'bg-white bg-opacity-20': isActive('/management/schedule') }"
-          >
-            일정관리
           </router-link>
         </div>
       </div>
