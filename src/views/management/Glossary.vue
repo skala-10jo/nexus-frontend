@@ -380,6 +380,126 @@
           <button @click="showAddTermModal = false" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg">닫기</button>
         </div>
       </div>
+
+      <!-- Edit Term Modal -->
+      <div
+        v-if="showEditDialog"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="closeEditDialog"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">용어 수정</h3>
+            <button
+              @click="closeEditDialog"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form @submit.prevent="saveEdit" class="space-y-4">
+            <!-- Korean Term (Required) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                한국어 용어 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="editForm.koreanTerm"
+                type="text"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: 인공지능"
+              />
+            </div>
+
+            <!-- English Term (Required) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                영어 용어 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="editForm.englishTerm"
+                type="text"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: Artificial Intelligence"
+              />
+            </div>
+
+            <!-- Abbreviation (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                약어
+              </label>
+              <input
+                v-model="editForm.abbreviation"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: AI"
+              />
+            </div>
+
+            <!-- Domain (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                도메인
+              </label>
+              <input
+                v-model="editForm.domain"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: IT, 의료, 법률"
+              />
+            </div>
+
+            <!-- Definition (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                정의
+              </label>
+              <textarea
+                v-model="editForm.definition"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어의 정의를 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Context (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                문맥
+              </label>
+              <textarea
+                v-model="editForm.context"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어가 사용되는 문맥을 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                @click="closeEditDialog"
+                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
+              >
+                저장
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -403,6 +523,18 @@ const filterVerified = ref('');
 const showDocumentSelectModal = ref(false);
 const showAddTermModal = ref(false);
 const selectedTermIds = ref([]);
+
+// Edit dialog state
+const showEditDialog = ref(false);
+const editingTermId = ref(null);
+const editForm = ref({
+  koreanTerm: '',
+  englishTerm: '',
+  abbreviation: '',
+  definition: '',
+  context: '',
+  domain: ''
+});
 
 // Computed
 const projects = computed(() => projectStore.projects);
@@ -503,7 +635,49 @@ const openTermDetail = (term) => {
 };
 
 const editTerm = (term) => {
-  console.log('Edit term:', term);
+  editingTermId.value = term.id;
+  editForm.value = {
+    koreanTerm: term.koreanTerm || '',
+    englishTerm: term.englishTerm || '',
+    abbreviation: term.abbreviation || '',
+    definition: term.definition || '',
+    context: term.context || '',
+    domain: term.domain || ''
+  };
+  showEditDialog.value = true;
+};
+
+const closeEditDialog = () => {
+  showEditDialog.value = false;
+  editingTermId.value = null;
+  editForm.value = {
+    koreanTerm: '',
+    englishTerm: '',
+    abbreviation: '',
+    definition: '',
+    context: '',
+    domain: ''
+  };
+};
+
+const saveEdit = async () => {
+  // Validate required fields
+  if (!editForm.value.koreanTerm.trim()) {
+    alert('한국어 용어는 필수입니다.');
+    return;
+  }
+  if (!editForm.value.englishTerm.trim()) {
+    alert('영어 용어는 필수입니다.');
+    return;
+  }
+
+  try {
+    await glossaryStore.updateTerm(editingTermId.value, editForm.value);
+    closeEditDialog();
+  } catch (error) {
+    console.error('Failed to update term:', error);
+    alert('용어 수정에 실패했습니다.');
+  }
 };
 
 const verifyTerm = async (term) => {
