@@ -74,9 +74,9 @@
             프로젝트 관리
           </router-link>
           <router-link
-            to="/management/document-upload"
+            to="/management/documents"
             class="block px-6 py-2 pl-14 text-sm hover:bg-white hover:bg-opacity-10 transition-all duration-200"
-            :class="{ 'bg-white bg-opacity-20': isActive('/management/document-upload') }"
+            :class="{ 'bg-white bg-opacity-20': isActive('/management/documents') }"
           >
             문서관리
           </router-link>

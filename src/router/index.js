@@ -16,9 +16,9 @@ const routes = [
   },
   // Management routes
   {
-    path: '/management/document-upload',
-    name: 'DocumentUpload',
-    component: () => import('@/views/management/DocumentUpload.vue'),
+    path: '/management/documents',
+    name: 'DocumentManagement',
+    component: () => import('@/views/management/DocumentManagement.vue'),
     meta: { requiresAuth: true }
   },
   {

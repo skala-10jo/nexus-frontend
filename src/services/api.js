@@ -51,4 +51,16 @@ export const userAPI = {
   updateUser: (id, data) => api.put(`/users/${id}`, data)
 };
 
+// Schedule API
+export const scheduleAPI = {
+  getAllSchedules: () => api.get('/schedules'),
+  getSchedulesByDateRange: (start, end) =>
+    api.get('/schedules/range', { params: { start, end } }),
+  getUpcomingSchedules: () => api.get('/schedules/upcoming'),
+  getScheduleById: (id) => api.get(`/schedules/${id}`),
+  createSchedule: (data) => api.post('/schedules', data),
+  updateSchedule: (id, data) => api.put(`/schedules/${id}`, data),
+  deleteSchedule: (id) => api.delete(`/schedules/${id}`)
+};
+
 export default api;

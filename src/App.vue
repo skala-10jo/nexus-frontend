@@ -9,6 +9,7 @@
     <div v-else>
       <router-view />
     </div>
+    <ToastContainer />
   </div>
 </template>
 
@@ -16,6 +17,7 @@
 import { computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import Sidebar from '@/components/Sidebar.vue';
+import ToastContainer from '@/components/ToastContainer.vue';
 
 const authStore = useAuthStore();
 const isAuthenticated = computed(() => authStore.isAuthenticated);
