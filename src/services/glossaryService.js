@@ -78,6 +78,13 @@ export const glossaryService = {
   },
 
   /**
+   * Delete multiple glossary terms
+   */
+  async deleteTerms(termIds) {
+    return api.delete('/glossary/batch', { data: termIds });
+  },
+
+  /**
    * Verify glossary term
    */
   async verifyTerm(termId) {

@@ -307,6 +307,16 @@ export const useGlossaryStore = defineStore('glossary', {
       }
     },
 
+    async deleteTerms(termIds) {
+      try {
+        await glossaryService.deleteTerms(termIds);
+        this.terms = this.terms.filter(t => !termIds.includes(t.id));
+        this.pagination.totalElements -= termIds.length;
+      } catch (error) {
+        throw error;
+      }
+    },
+
     async verifyTerm(termId) {
       try {
         const response = await glossaryService.verifyTerm(termId);

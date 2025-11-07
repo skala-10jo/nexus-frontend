@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -10,7 +10,21 @@
               프로젝트별 전문용어를 관리하고 AI로 자동 추출하세요
             </p>
           </div>
-          <div class="flex gap-3">
+          <div class="flex gap-3 items-center">
+            <div v-if="selectedTermIds.length > 0" class="flex items-center gap-3">
+              <span class="text-sm text-gray-600">
+                {{ selectedTermIds.length }}개 선택됨
+              </span>
+              <button
+                @click="handleBulkDelete"
+                class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                선택 삭제
+              </button>
+            </div>
             <button
               @click="showDocumentSelectModal = true"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
@@ -200,6 +214,14 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
+                  <th class="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      :checked="isAllSelected"
+                      @change="toggleSelectAll"
+                      class="w-4 h-4 text-orange-primary bg-gray-100 border-gray-300 rounded focus:ring-orange-primary focus:ring-2"
+                    />
+                  </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     한국어
                   </th>
@@ -227,10 +249,18 @@
                 <tr
                   v-for="term in terms"
                   :key="term.id"
-                  class="hover:bg-gray-50 transition cursor-pointer"
-                  @click="openTermDetail(term)"
+                  class="hover:bg-gray-50 transition"
+                  :class="{ 'bg-orange-50': selectedTermIds.includes(term.id) }"
                 >
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap" @click.stop>
+                    <input
+                      type="checkbox"
+                      :checked="selectedTermIds.includes(term.id)"
+                      @change="toggleSelectTerm(term.id)"
+                      class="w-4 h-4 text-orange-primary bg-gray-100 border-gray-300 rounded focus:ring-orange-primary focus:ring-2"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap cursor-pointer" @click="openTermDetail(term)">
                     <div class="text-sm font-medium text-gray-900">{{ term.koreanTerm }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -362,6 +392,7 @@ const filterStatus = ref('');
 const filterVerified = ref('');
 const showDocumentSelectModal = ref(false);
 const showAddTermModal = ref(false);
+const selectedTermIds = ref([]);
 
 // Computed
 const projects = computed(() => projectStore.projects);
@@ -380,6 +411,9 @@ const unverifiedTermsCount = computed(() =>
 const autoExtractedCount = computed(() =>
   terms.value.filter(t => t.status === 'AUTO_EXTRACTED').length
 );
+const isAllSelected = computed(() =>
+  terms.value.length > 0 && selectedTermIds.value.length === terms.value.length
+);
 
 // Methods
 const handleProjectChange = async () => {
@@ -388,6 +422,7 @@ const handleProjectChange = async () => {
 
 const loadTerms = async () => {
   try {
+    selectedTermIds.value = []; // Clear selection when loading
     if (selectedProjectId.value) {
       // Load terms filtered by project
       await glossaryStore.fetchTerms(selectedProjectId.value);
@@ -397,6 +432,14 @@ const loadTerms = async () => {
     }
   } catch (error) {
     console.error('Failed to load terms:', error);
+    console.error('Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+      headers: error.config?.headers
+    });
   }
 };
 
@@ -472,6 +515,42 @@ const deleteTerm = async (term) => {
     await glossaryStore.deleteTerm(term.id);
   } catch (error) {
     console.error('Failed to delete term:', error);
+  }
+};
+
+// Selection handlers
+const toggleSelectTerm = (termId) => {
+  const index = selectedTermIds.value.indexOf(termId);
+  if (index > -1) {
+    selectedTermIds.value.splice(index, 1);
+  } else {
+    selectedTermIds.value.push(termId);
+  }
+};
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedTermIds.value = [];
+  } else {
+    selectedTermIds.value = terms.value.map(t => t.id);
+  }
+};
+
+// Bulk delete handler
+const handleBulkDelete = async () => {
+  if (selectedTermIds.value.length === 0) return;
+
+  if (!confirm(`선택된 ${selectedTermIds.value.length}개의 용어를 삭제하시겠습니까?`)) {
+    return;
+  }
+
+  try {
+    await glossaryStore.deleteTerms(selectedTermIds.value);
+    selectedTermIds.value = [];
+    await loadTerms();
+  } catch (error) {
+    console.error('Failed to delete terms:', error);
+    alert('용어 삭제에 실패했습니다.');
   }
 };
 
