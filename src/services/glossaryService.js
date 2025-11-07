@@ -89,5 +89,12 @@ export const glossaryService = {
    */
   async verifyTerm(termId) {
     return api.put(`/glossary/${termId}/verify`);
+  },
+
+  /**
+   * Unverify glossary term
+   */
+  async unverifyTerm(termId) {
+    return api.put(`/glossary/${termId}/unverify`);
   }
 };

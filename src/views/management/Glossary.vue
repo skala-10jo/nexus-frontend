@@ -310,6 +310,16 @@
                         </svg>
                       </button>
                       <button
+                        v-else
+                        @click="unverifyTerm(term)"
+                        class="text-orange-600 hover:text-orange-900"
+                        title="검증 해제"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </button>
+                      <button
                         @click="editTerm(term)"
                         class="text-blue-600 hover:text-blue-900"
                         title="편집"
@@ -501,6 +511,19 @@ const verifyTerm = async (term) => {
     await glossaryStore.verifyTerm(term.id);
   } catch (error) {
     console.error('Failed to verify term:', error);
+  }
+};
+
+const unverifyTerm = async (term) => {
+  if (!confirm(`'${term.koreanTerm}' 용어의 검증을 해제하시겠습니까?`)) {
+    return;
+  }
+
+  try {
+    await glossaryStore.unverifyTerm(term.id);
+  } catch (error) {
+    console.error('Failed to unverify term:', error);
+    alert('검증 해제에 실패했습니다.');
   }
 };
 

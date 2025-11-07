@@ -337,6 +337,26 @@ export const useGlossaryStore = defineStore('glossary', {
       }
     },
 
+    async unverifyTerm(termId) {
+      try {
+        const response = await glossaryService.unverifyTerm(termId);
+        const unverifiedTerm = response.data.data || response.data;
+
+        const index = this.terms.findIndex(t => t.id === termId);
+        if (index !== -1) {
+          this.terms[index] = unverifiedTerm;
+        }
+
+        if (this.currentTerm?.id === termId) {
+          this.currentTerm = unverifiedTerm;
+        }
+
+        return unverifiedTerm;
+      } catch (error) {
+        throw error;
+      }
+    },
+
     setCurrentTerm(term) {
       this.currentTerm = term;
     },
