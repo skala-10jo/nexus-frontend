@@ -146,24 +146,31 @@
 
               <select
                 v-model="filterStatus"
-                @change="handleFilter"
                 class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
               >
                 <option value="">모든 상태</option>
                 <option value="AUTO_EXTRACTED">AI 추출</option>
                 <option value="USER_ADDED">사용자 추가</option>
                 <option value="USER_EDITED">사용자 편집</option>
-                <option value="USER_VERIFIED">검증됨</option>
               </select>
 
               <select
                 v-model="filterVerified"
-                @change="handleFilter"
                 class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
               >
                 <option value="">검증 상태</option>
                 <option value="true">검증됨</option>
                 <option value="false">미검증</option>
+              </select>
+
+              <select
+                v-model="filterDocumentId"
+                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+              >
+                <option value="">모든 문서</option>
+                <option v-for="doc in availableDocuments" :key="doc.id" :value="doc.id">
+                  {{ doc.originalFilename }}
+                </option>
               </select>
             </div>
 
@@ -188,7 +195,7 @@
           </div>
 
           <!-- Empty State -->
-          <div v-else-if="terms.length === 0" class="text-center py-12">
+          <div v-else-if="terms.length === 0" class="text-center py-12" style="min-height: calc(100vh - 600px);">
             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
@@ -210,11 +217,11 @@
           </div>
 
           <!-- Terms List -->
-          <div v-else class="overflow-x-auto">
+          <div v-else class="overflow-x-auto" style="max-height: calc(100vh - 550px); overflow-y: auto;">
             <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+              <thead class="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th class="px-6 py-3 text-left">
+                  <th class="px-6 py-3 text-left bg-gray-50">
                     <input
                       type="checkbox"
                       :checked="isAllSelected"
@@ -222,25 +229,25 @@
                       class="w-4 h-4 text-orange-primary bg-gray-100 border-gray-300 rounded focus:ring-orange-primary focus:ring-2"
                     />
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     한국어
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     영어
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     약어
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     정의
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     상태
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     검증
                   </th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     작업
                   </th>
                 </tr>
@@ -520,6 +527,7 @@ const selectedProjectId = ref('');
 const searchQuery = ref('');
 const filterStatus = ref('');
 const filterVerified = ref('');
+const filterDocumentId = ref('');
 const showDocumentSelectModal = ref(false);
 const showAddTermModal = ref(false);
 const selectedTermIds = ref([]);
@@ -538,11 +546,51 @@ const editForm = ref({
 
 // Computed
 const projects = computed(() => projectStore.projects);
-const terms = computed(() => glossaryStore.terms);
+const allTerms = computed(() => glossaryStore.terms);
 const loading = computed(() => glossaryStore.loading);
 const hasMore = computed(() => glossaryStore.hasMore);
 const pagination = computed(() => glossaryStore.pagination);
 const extractionJob = computed(() => glossaryStore.extractionJob);
+
+// Get unique documents from all terms
+const availableDocuments = computed(() => {
+  const docMap = new Map();
+  allTerms.value.forEach(term => {
+    if (term.documents && term.documents.length > 0) {
+      term.documents.forEach(doc => {
+        if (!docMap.has(doc.id)) {
+          docMap.set(doc.id, doc);
+        }
+      });
+    }
+  });
+  return Array.from(docMap.values());
+});
+
+// Apply client-side filters
+const terms = computed(() => {
+  let filtered = [...allTerms.value];
+
+  // Status filter
+  if (filterStatus.value) {
+    filtered = filtered.filter(t => t.status === filterStatus.value);
+  }
+
+  // Verified filter
+  if (filterVerified.value) {
+    const isVerified = filterVerified.value === 'true';
+    filtered = filtered.filter(t => t.isVerified === isVerified);
+  }
+
+  // Document filter
+  if (filterDocumentId.value) {
+    filtered = filtered.filter(t =>
+      t.documents && t.documents.some(doc => doc.id === filterDocumentId.value)
+    );
+  }
+
+  return filtered;
+});
 
 const verifiedTermsCount = computed(() =>
   terms.value.filter(t => t.isVerified).length
@@ -595,10 +643,6 @@ const handleSearch = () => {
   } else {
     loadTerms();
   }
-};
-
-const handleFilter = () => {
-  loadTerms();
 };
 
 const refreshTerms = () => {
