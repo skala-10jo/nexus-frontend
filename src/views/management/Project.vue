@@ -491,16 +491,33 @@ function openCreateModal() {
   showModal.value = true
 }
 
-function editProject(project) {
+async function editProject(project) {
   closeDropdown()
   isEditing.value = true
-  formData.value = {
-    name: project.name,
-    description: project.description || '',
-    documentIds: []
-  }
   currentProjectId.value = project.id
   documentSearchQuery.value = ''
+
+  // 프로젝트 상세 정보를 조회하여 연결된 문서 ID 가져오기
+  try {
+    const response = await projectService.getProject(project.id)
+    const projectDetail = response.data.data || response.data
+
+    formData.value = {
+      name: projectDetail.name,
+      description: projectDetail.description || '',
+      documentIds: projectDetail.documentIds || []
+    }
+  } catch (error) {
+    console.error('Failed to load project details:', error)
+    // 실패 시 기본값 사용
+    formData.value = {
+      name: project.name,
+      description: project.description || '',
+      documentIds: []
+    }
+    toast.warning('프로젝트 문서 정보를 불러오지 못했습니다.')
+  }
+
   showModal.value = true
 }
 
