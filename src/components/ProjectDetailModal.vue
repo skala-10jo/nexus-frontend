@@ -105,15 +105,29 @@
               <svg class="w-5 h-5 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              연결된 문서
+              연결된 문서 ({{ project.documentCount }})
             </h3>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <p class="text-sm text-gray-600 text-center">
-                {{ project.documentCount }}개의 문서가 이 프로젝트에 연결되어 있습니다.
-              </p>
-              <p class="text-xs text-gray-500 text-center mt-2">
-                문서 목록은 편집 모드에서 확인할 수 있습니다.
-              </p>
+            <div v-if="linkedDocuments.length > 0" class="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-64 overflow-y-auto">
+              <div
+                v-for="doc in linkedDocuments"
+                :key="doc.id"
+                class="p-3 hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate">{{ doc.originalFilename }}</p>
+                    <p class="text-xs text-gray-500">
+                      {{ doc.fileType }} · {{ formatFileSize(doc.fileSize) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="bg-gray-50 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-500">문서 정보를 불러오는 중...</p>
             </div>
           </section>
 
@@ -149,7 +163,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   show: {
     type: Boolean,
     default: false
@@ -157,10 +173,24 @@ defineProps({
   project: {
     type: Object,
     required: true
+  },
+  allDocuments: {
+    type: Array,
+    default: () => []
   }
 });
 
 defineEmits(['close', 'edit']);
+
+// Compute linked documents from project's documentIds
+const linkedDocuments = computed(() => {
+  if (!props.project.documentIds || props.project.documentIds.length === 0) {
+    return [];
+  }
+  return props.allDocuments.filter(doc =>
+    props.project.documentIds.includes(doc.id)
+  );
+});
 
 const getStatusClass = (status) => {
   switch (status) {
@@ -196,6 +226,14 @@ const formatDate = (dateString) => {
     month: 'long',
     day: 'numeric'
   });
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 </script>
 

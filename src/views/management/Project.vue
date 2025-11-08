@@ -215,6 +215,7 @@
     <ProjectDetailModal
       :show="showDetailModal"
       :project="selectedProject || {}"
+      :allDocuments="allDocuments"
       @close="closeDetailModal"
       @edit="editFromDetail"
     />
