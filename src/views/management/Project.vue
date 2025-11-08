@@ -217,7 +217,7 @@ async function loadProjects() {
 async function loadDocuments() {
   try {
     const response = await documentService.getAll({ page: 0, size: 1000 })
-    allDocuments.value = response.data?.content || response.content || []
+    allDocuments.value = response.data.data?.content || response.data?.content || response.content || []
   } catch (error) {
     console.error('Failed to load documents:', error)
   }
