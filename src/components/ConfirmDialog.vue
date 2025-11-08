@@ -11,8 +11,11 @@
       >
         <!-- Icon -->
         <div class="pt-8 pb-4 flex justify-center">
-          <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
-            <ExclamationTriangleIcon class="w-8 h-8 text-red-600" />
+          <div :class="[
+            'w-14 h-14 rounded-full flex items-center justify-center',
+            iconBgClass
+          ]">
+            <component :is="iconComponent" :class="['w-8 h-8', iconColorClass]" />
           </div>
         </div>
 
@@ -28,13 +31,16 @@
             @click="$emit('cancel')"
             class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
           >
-            취소
+            {{ cancelText }}
           </button>
           <button
             @click="$emit('confirm')"
-            class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            :class="[
+              'flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors',
+              confirmButtonClass
+            ]"
           >
-            삭제
+            {{ confirmText }}
           </button>
         </div>
       </div>
@@ -43,9 +49,14 @@
 </template>
 
 <script setup>
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
+import {
+  ExclamationTriangleIcon,
+  ArchiveBoxIcon,
+  InformationCircleIcon
+} from '@heroicons/vue/24/outline';
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     required: true
@@ -53,10 +64,59 @@ defineProps({
   message: {
     type: String,
     required: true
+  },
+  type: {
+    type: String,
+    default: 'danger', // danger, warning, info
+    validator: (value) => ['danger', 'warning', 'info'].includes(value)
+  },
+  confirmText: {
+    type: String,
+    default: '확인'
+  },
+  cancelText: {
+    type: String,
+    default: '취소'
   }
 });
 
 defineEmits(['confirm', 'cancel']);
+
+const iconComponent = computed(() => {
+  const icons = {
+    danger: ExclamationTriangleIcon,
+    warning: ArchiveBoxIcon,
+    info: InformationCircleIcon
+  };
+  return icons[props.type];
+});
+
+const iconBgClass = computed(() => {
+  const classes = {
+    danger: 'bg-red-100',
+    warning: 'bg-yellow-100',
+    info: 'bg-blue-100'
+  };
+  return classes[props.type];
+});
+
+const iconColorClass = computed(() => {
+  const classes = {
+    danger: 'text-red-600',
+    warning: 'text-yellow-600',
+    info: 'text-blue-600'
+  };
+  return classes[props.type];
+});
+
+const confirmButtonClass = computed(() => {
+  const classes = {
+    danger: 'bg-red-600 hover:bg-red-700',
+    warning: 'bg-yellow-600 hover:bg-yellow-700',
+    info: 'bg-blue-600 hover:bg-blue-700'
+  };
+  return classes[props.type];
+});
 </script>
 
 <style scoped>
