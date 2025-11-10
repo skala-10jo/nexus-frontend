@@ -1,35 +1,266 @@
 <template>
   <div class="p-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">메신저</h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">메신저</h1>
+      <button
+        v-if="integrations.length === 0"
+        @click="connectSlack"
+        :disabled="loading"
+        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
+        <span v-if="loading">연동 중...</span>
+        <span v-else>Slack 연동</span>
+      </button>
+      <button
+        v-else
+        @click="connectSlack"
+        :disabled="loading"
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
+        <span v-if="loading">연동 중...</span>
+        <span v-else>추가 워크스페이스 연동</span>
+      </button>
+    </div>
 
-    <div class="grid grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
-      <!-- Contacts List -->
+    <!-- Error Message -->
+    <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      {{ error }}
+    </div>
+
+    <!-- No Integrations -->
+    <div v-if="!loading && integrations.length === 0" class="bg-white rounded-lg shadow-md p-12 text-center">
+      <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      <h3 class="text-xl font-semibold text-gray-700 mb-2">Slack 워크스페이스를 연동하세요</h3>
+      <p class="text-gray-500 mb-6">Slack에 메시지를 보내려면 먼저 워크스페이스를 연동해야 합니다.</p>
+      <button
+        @click="connectSlack"
+        class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 inline-flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
+        Slack 연동하기
+      </button>
+    </div>
+
+    <!-- Main UI with Integrations -->
+    <div v-else class="grid grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
+      <!-- Workspace & Channels List -->
       <div class="col-span-4 bg-white rounded-lg shadow-md p-4 overflow-y-auto">
+        <!-- Workspace Selector -->
         <div class="mb-4">
-          <input
-            type="text"
-            placeholder="Search contacts..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-2">워크스페이스</label>
+          <select
+            v-model="selectedIntegration"
+            @change="onIntegrationChange"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+          >
+            <option v-for="integration in integrations" :key="integration.id" :value="integration">
+              {{ integration.workspaceName }}
+            </option>
+          </select>
         </div>
 
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Contacts</h2>
-        <div class="text-center py-8">
-          <p class="text-gray-500 text-sm">No contacts yet</p>
+        <!-- Integration Actions -->
+        <div v-if="selectedIntegration" class="mb-4 flex gap-2">
+          <button
+            @click="refreshChannels"
+            :disabled="loading"
+            class="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+          >
+            새로고침
+          </button>
+          <button
+            @click="removeIntegration"
+            :disabled="loading"
+            class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
+          >
+            연동 해제
+          </button>
+        </div>
+
+        <!-- Channels List -->
+        <div v-if="selectedIntegration">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">채널</h2>
+
+          <div v-if="loading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+          </div>
+
+          <div v-else-if="channels.length === 0" class="text-center py-8">
+            <p class="text-gray-500 text-sm">채널이 없습니다</p>
+          </div>
+
+          <div v-else class="space-y-1">
+            <button
+              v-for="channel in channels"
+              :key="channel.id"
+              @click="selectChannel(channel)"
+              :class="[
+                'w-full text-left px-3 py-2 rounded-lg transition-colors',
+                selectedChannel?.id === channel.id
+                  ? 'bg-purple-100 text-purple-900'
+                  : 'hover:bg-gray-100 text-gray-700'
+              ]"
+            >
+              <div class="flex items-center gap-2">
+                <!-- Icon for DM vs Channel -->
+                <span v-if="isDM(channel)" class="text-gray-400">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                  </svg>
+                </span>
+                <span v-else-if="channel.isPrivate" class="text-gray-400">🔒</span>
+                <span v-else class="text-gray-400">#</span>
+                <span class="font-medium">{{ channel.name }}</span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Chat Area -->
+      <!-- Message Area -->
       <div class="col-span-8 bg-white rounded-lg shadow-md flex flex-col">
-        <div class="flex-1 flex items-center justify-center p-6">
+        <!-- Channel Header -->
+        <div v-if="selectedChannel" class="border-b border-gray-200 p-4">
+          <h3 class="text-lg font-semibold text-gray-800">
+            # {{ selectedChannel.name }}
+          </h3>
+          <p class="text-sm text-gray-500">
+            {{ selectedIntegration.workspaceName }}
+          </p>
+        </div>
+
+        <!-- Message Input -->
+        <div v-if="selectedChannel" class="flex-1 flex flex-col">
+          <div class="flex-1 p-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">메시지 작성</label>
+            <textarea
+              v-model="messageText"
+              @keydown.ctrl.enter="sendSlackMessage"
+              placeholder="메시지를 입력하세요... (Ctrl+Enter로 전송)"
+              class="w-full h-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
+            ></textarea>
+          </div>
+
+          <div class="border-t border-gray-200 p-4">
+            <button
+              @click="sendSlackMessage"
+              :disabled="!messageText.trim() || loading"
+              class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span v-if="loading">전송 중...</span>
+              <span v-else>메시지 전송</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- No Channel Selected -->
+        <div v-else class="flex-1 flex items-center justify-center p-6">
           <div class="text-center">
             <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p class="text-gray-500">Select a contact to start chatting</p>
+            <p class="text-gray-500">채널을 선택해주세요</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useSlackStore } from '@/stores/slack';
+import { storeToRefs } from 'pinia';
+
+const slackStore = useSlackStore();
+const { integrations, selectedIntegration, channels, selectedChannel, loading, error } = storeToRefs(slackStore);
+
+const messageText = ref('');
+
+onMounted(async () => {
+  try {
+    await slackStore.fetchIntegrations();
+  } catch (err) {
+    console.error('Failed to fetch integrations:', err);
+  }
+});
+
+const connectSlack = async () => {
+  try {
+    const authUrl = await slackStore.getAuthUrl();
+    // Open Slack OAuth in new window
+    window.location.href = authUrl;
+  } catch (err) {
+    console.error('Failed to connect Slack:', err);
+  }
+};
+
+const onIntegrationChange = async () => {
+  if (selectedIntegration.value) {
+    await slackStore.selectIntegration(selectedIntegration.value);
+  }
+};
+
+const refreshChannels = async () => {
+  if (selectedIntegration.value) {
+    await slackStore.fetchChannels(selectedIntegration.value.id);
+  }
+};
+
+const removeIntegration = async () => {
+  if (!selectedIntegration.value) return;
+
+  if (confirm(`정말로 "${selectedIntegration.value.workspaceName}" 연동을 해제하시겠습니까?`)) {
+    try {
+      await slackStore.deleteIntegration(selectedIntegration.value.id);
+    } catch (err) {
+      console.error('Failed to delete integration:', err);
+    }
+  }
+};
+
+const selectChannel = (channel) => {
+  slackStore.selectChannel(channel);
+};
+
+const sendSlackMessage = async () => {
+  if (!messageText.value.trim() || !selectedChannel.value || !selectedIntegration.value) {
+    return;
+  }
+
+  try {
+    await slackStore.sendMessage(
+      selectedIntegration.value.id,
+      selectedChannel.value.id,
+      messageText.value
+    );
+
+    // Clear message
+    messageText.value = '';
+
+    // Show success
+    alert('메시지가 전송되었습니다!');
+  } catch (err) {
+    console.error('Failed to send message:', err);
+    alert('메시지 전송에 실패했습니다.');
+  }
+};
+
+const isDM = (channel) => {
+  // DMs have names from getUserDisplayName or contain "Direct Message" or "Group DM"
+  return channel.name.includes('Direct Message') ||
+         channel.name.includes('Group DM') ||
+         // DMs are private and don't start with # (regular private channels start with #)
+         (!channel.name.startsWith('#') && channel.isPrivate && !channel.name.startsWith('🔒'));
+};
+</script>
