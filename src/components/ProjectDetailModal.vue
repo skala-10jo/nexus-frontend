@@ -129,6 +129,68 @@
               <p class="text-sm text-gray-500">아직 연결된 문서가 없습니다</p>
             </div>
           </section>
+
+          <!-- Related Schedules -->
+          <section class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <svg class="w-5 h-5 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              관련 일정 ({{ relatedSchedules.length }})
+            </h3>
+
+            <!-- Loading State -->
+            <div v-if="loadingSchedules" class="bg-gray-50 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-500">일정 정보를 불러오는 중...</p>
+            </div>
+
+            <!-- Schedules List -->
+            <div v-else-if="relatedSchedules.length > 0" class="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-64 overflow-y-auto">
+              <div
+                v-for="schedule in relatedSchedules"
+                :key="schedule.id"
+                class="p-3 hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex items-start gap-3">
+                  <div
+                    class="w-1 h-full rounded-full flex-shrink-0 mt-1"
+                    :style="{ backgroundColor: schedule.color || '#fb923c' }"
+                  ></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate">{{ schedule.title }}</p>
+                    <p v-if="schedule.description" class="text-xs text-gray-500 mt-1 line-clamp-2">
+                      {{ schedule.description }}
+                    </p>
+                    <div class="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{{ formatDateTime(schedule.startTime) }}</span>
+                      <span v-if="!schedule.allDay">~ {{ formatDateTime(schedule.endTime) }}</span>
+                      <span v-if="schedule.allDay" class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        종일
+                      </span>
+                    </div>
+                    <div v-if="schedule.location" class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>{{ schedule.location }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="bg-gray-50 rounded-lg p-8 text-center">
+              <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-sm text-gray-500">아직 관련된 일정이 없습니다</p>
+            </div>
+          </section>
         </div>
 
         <!-- Footer -->
@@ -152,7 +214,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { projectService } from '@/services/projectService';
 
 const props = defineProps({
   show: {
@@ -170,6 +233,35 @@ const props = defineProps({
 });
 
 defineEmits(['close', 'edit']);
+
+// Related schedules
+const relatedSchedules = ref([]);
+const loadingSchedules = ref(false);
+
+const loadRelatedSchedules = async () => {
+  if (!props.project?.id) {
+    return;
+  }
+
+  try {
+    loadingSchedules.value = true;
+    const response = await projectService.getProjectSchedules(props.project.id);
+    // API returns { success: true, data: [...] } so we need response.data.data
+    relatedSchedules.value = response.data.data || response.data || [];
+  } catch (error) {
+    console.error('Failed to load project schedules:', error);
+    relatedSchedules.value = [];
+  } finally {
+    loadingSchedules.value = false;
+  }
+};
+
+// Load schedules when modal opens
+watch(() => props.show, async (newValue) => {
+  if (newValue && props.project?.id) {
+    await loadRelatedSchedules();
+  }
+}, { immediate: true });
 
 // Compute linked documents from project's documentIds
 const linkedDocuments = computed(() => {
@@ -223,6 +315,18 @@ const formatFileSize = (bytes) => {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 </script>
 

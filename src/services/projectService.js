@@ -62,5 +62,12 @@ export const projectService = {
    */
   async deleteProject(projectId) {
     return api.delete(`/projects/${projectId}`);
+  },
+
+  /**
+   * Get all schedules for a project
+   */
+  async getProjectSchedules(projectId) {
+    return api.get(`/projects/${projectId}/schedules`);
   }
 };
