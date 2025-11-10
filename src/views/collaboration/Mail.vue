@@ -148,12 +148,15 @@
         <div v-else-if="currentProjectId === null && !searchQuery" class="space-y-6">
           <div v-for="group in groupedEmails" :key="group.projectId || 'unassigned'">
             <!-- 프로젝트 헤더 -->
-            <div class="mb-3">
-              <h3 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                <span class="w-1 h-6 bg-orange-primary rounded"></span>
-                {{ group.projectName }}
-                <span class="text-sm text-gray-500 font-normal">({{ group.emails.length }})</span>
-              </h3>
+            <div class="mb-3 flex items-center gap-3 bg-gray-50 p-3 rounded-lg border-l-4" :class="group.projectId ? 'border-orange-primary' : 'border-gray-400'">
+              <span v-if="group.projectId" class="text-2xl">📁</span>
+              <span v-else class="text-2xl">📭</span>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold" :class="group.projectId ? 'text-orange-700' : 'text-gray-600'">
+                  {{ group.projectName }}
+                </h3>
+                <span class="text-xs text-gray-500">{{ group.emails.length }}개의 메일</span>
+              </div>
             </div>
 
             <!-- 메일 목록 -->
@@ -249,9 +252,10 @@
                 </span>
                 <span
                   v-if="email.projectName"
-                  class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"
+                  class="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium border border-orange-200"
+                  title="프로젝트 할당됨"
                 >
-                  {{ email.projectName }}
+                  📁 {{ email.projectName }}
                 </span>
               </div>
             </div>
@@ -321,16 +325,22 @@
             >
               {{ selectedEmail.isRead ? '읽지 않음으로 표시' : '읽음으로 표시' }}
             </button>
-            <select
-              v-model="selectedProjectId"
-              @change="assignProject"
-              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary text-sm"
-            >
-              <option :value="null">프로젝트 할당</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }}
-              </option>
-            </select>
+            <div class="relative">
+              <select
+                v-model="selectedProjectId"
+                @change="assignProject"
+                class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary text-sm min-w-[200px]"
+                :class="selectedEmail.projectId ? 'border-orange-300 bg-orange-50' : ''"
+              >
+                <option :value="null">{{ selectedEmail.projectId ? '프로젝트 할당 해제' : '프로젝트 선택' }}</option>
+                <option v-for="project in projects" :key="project.id" :value="project.id">
+                  {{ project.name }}
+                </option>
+              </select>
+              <div v-if="selectedEmail.projectName" class="absolute -top-2 -right-2 bg-orange-primary text-white text-xs px-2 py-0.5 rounded-full">
+                할당됨
+              </div>
+            </div>
             <button
               @click="deleteEmail"
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm ml-auto"
@@ -844,10 +854,20 @@ const assignProject = async () => {
     await api.put(`/emails/${selectedEmail.value.id}/project`, {
       projectId: selectedProjectId.value
     })
-    await loadEmails()
+
+    // 선택된 이메일 정보 업데이트
     const project = projects.value.find(p => p.id === selectedProjectId.value)
+    selectedEmail.value.projectId = selectedProjectId.value
     selectedEmail.value.projectName = project ? project.name : null
-    alert('프로젝트가 할당되었습니다.')
+
+    // 메일 목록 새로고침
+    await loadEmails()
+
+    if (selectedProjectId.value) {
+      console.log(`프로젝트 '${project.name}'에 할당되었습니다.`)
+    } else {
+      console.log('프로젝트 할당이 해제되었습니다.')
+    }
   } catch (error) {
     console.error('프로젝트 할당 실패:', error)
     alert('프로젝트 할당에 실패했습니다.')
