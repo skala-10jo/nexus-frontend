@@ -103,6 +103,20 @@
             />
           </div>
 
+          <!-- Project Selector (Single Selection) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
+            <select
+              v-model="eventForm.projectId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+            >
+              <option :value="null">프로젝트 없음</option>
+              <option v-for="project in projects" :key="project.id" :value="project.id">
+                {{ project.name }}
+              </option>
+            </select>
+          </div>
+
           <!-- Category Selector (Multiple Selection) -->
           <CategorySelector
             v-model="eventForm.categoryIds"
@@ -153,6 +167,7 @@ import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import CategorySelector from '@/components/schedule/CategorySelector.vue';
 import CategoryManager from '@/components/schedule/CategoryManager.vue';
 import { useScheduleCategoryStore } from '@/stores/scheduleCategory';
+import { useProjectStore } from '@/stores/projects';
 
 const fullCalendar = ref(null);
 const showModal = ref(false);
@@ -160,6 +175,8 @@ const showCategoryManager = ref(false);
 const isEditMode = ref(false);
 const currentEventId = ref(null);
 const categoryStore = useScheduleCategoryStore();
+const projectStore = useProjectStore();
+const projects = ref([]);
 
 const eventForm = ref({
   title: '',
@@ -169,6 +186,7 @@ const eventForm = ref({
   allDay: false,
   color: '#fb923c',
   location: '',
+  projectId: null, // Single project ID
   categoryIds: [] // Multiple category IDs
 });
 
@@ -241,7 +259,8 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
           extendedProps: {
             description: schedule.description,
             location: schedule.location,
-            categories: schedule.categories || []
+            categories: schedule.categories || [],
+            project: schedule.project || null
           }
         };
       });
@@ -319,6 +338,7 @@ function handleEventClick(clickInfo) {
     allDay: event.allDay,
     color: event.backgroundColor,
     location: event.extendedProps.location || '',
+    projectId: event.extendedProps.project?.id || null,
     categoryIds: event.extendedProps.categories?.map(c => c.id) || []
   };
 
@@ -380,6 +400,7 @@ function openCreateModal() {
     allDay: false,
     color: '#fb923c',
     location: '',
+    projectId: null,
     categoryIds: []
   };
   showModal.value = true;
@@ -430,6 +451,7 @@ async function saveEvent() {
       allDay: eventForm.value.allDay,
       color: eventForm.value.color,
       location: eventForm.value.location,
+      projectId: eventForm.value.projectId,
       categoryIds: eventForm.value.categoryIds || []
     };
 
@@ -503,8 +525,20 @@ function parseLocalDateTime(dateTimeString) {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
+// Load projects
+async function loadProjects() {
+  try {
+    await projectStore.fetchProjects();
+    projects.value = projectStore.projects;
+  } catch (error) {
+    console.error('Failed to load projects:', error);
+  }
+}
+
 onMounted(() => {
   // 초기 로드는 FullCalendar가 자동으로 처리
+  loadProjects();
+  categoryStore.fetchCategories();
 });
 </script>
 
