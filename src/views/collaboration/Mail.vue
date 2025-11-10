@@ -1,212 +1,282 @@
 <template>
   <div class="p-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">메일</h1>
+    <!-- 상단 헤더 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-800">메일</h1>
 
-      <!-- Outlook 연동 상태 -->
-      <div v-if="!authStatus.isConnected" class="flex items-center gap-3">
-        <span class="text-sm text-gray-500">Outlook 계정을 연동하세요</span>
-        <button
-          @click="connectOutlook"
-          class="px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition"
-        >
-          Outlook 연동
-        </button>
-      </div>
-      <div v-else class="flex items-center gap-3">
-        <span class="text-sm text-gray-600">{{ authStatus.outlookEmail }}</span>
-        <button
-          @click="openComposeModal"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-        >
-          ✉️ 메일 작성
-        </button>
-        <button
-          @click="syncMails"
-          :disabled="syncing"
-          class="px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
-        >
-          {{ syncing ? '동기화 중...' : '메일 동기화' }}
-        </button>
-        <button
-          @click="disconnectOutlook"
-          class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-        >
-          연동 해제
-        </button>
+        <!-- Outlook 연동 상태 -->
+        <div v-if="!authStatus.isConnected" class="flex items-center gap-3">
+          <span class="text-sm text-gray-500">Outlook 계정을 연동하세요</span>
+          <button
+            @click="connectOutlook"
+            class="px-6 py-2.5 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition font-medium"
+          >
+            Outlook 연동
+          </button>
+        </div>
+        <div v-else class="flex items-center gap-4">
+          <!-- 프로필 드롭다운 -->
+          <div class="relative">
+            <button
+              @click="showProfileMenu = !showProfileMenu"
+              class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
+            >
+              <svg class="w-8 h-8 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <div class="text-left">
+                <div class="font-medium text-sm">내 계정</div>
+                <div class="text-xs text-gray-500">{{ authStatus.outlookEmail }}</div>
+              </div>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- 드롭다운 메뉴 -->
+            <div
+              v-if="showProfileMenu"
+              @click.stop
+              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-10"
+            >
+              <div class="px-4 py-3 border-b border-gray-200">
+                <div class="text-sm font-medium text-gray-900">{{ authStatus.outlookEmail }}</div>
+                <div class="text-xs text-gray-500 mt-1">Outlook 연동됨</div>
+              </div>
+              <button
+                @click="disconnectOutlook"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+              >
+                연동 해제
+              </button>
+            </div>
+          </div>
+
+          <!-- 액션 버튼들 -->
+          <div class="flex items-center gap-2">
+            <button
+              @click="syncMails"
+              :disabled="syncing"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-medium"
+            >
+              {{ syncing ? '동기화 중...' : '동기화' }}
+            </button>
+            <button
+              @click="openComposeModal"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+            >
+              메일 작성
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-6">
-      <!-- 왼쪽: 폴더 및 프로젝트 필터 -->
-      <div class="col-span-3 space-y-4">
-        <!-- 폴더 -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">폴더</h3>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              @click.prevent="selectFolder('Inbox')"
-              :class="currentFolder === 'Inbox' ? 'bg-orange-50 text-orange-primary font-medium' : 'text-gray-700 hover:bg-gray-100'"
-              class="flex items-center justify-between px-3 py-2 rounded transition"
-            >
-              <span>받은편지함</span>
-              <span v-if="unreadCount > 0" class="text-xs bg-orange-primary text-white px-2 py-0.5 rounded-full">
-                {{ unreadCount }}
-              </span>
-            </a>
-            <a
-              href="#"
-              @click.prevent="selectFolder('SentItems')"
-              :class="currentFolder === 'SentItems' ? 'bg-orange-50 text-orange-primary font-medium' : 'text-gray-700 hover:bg-gray-100'"
-              class="block px-3 py-2 rounded transition"
-            >
-              보낸편지함
-            </a>
-            <a
-              href="#"
-              @click.prevent="selectFolder(null)"
-              :class="currentFolder === null ? 'bg-orange-50 text-orange-primary font-medium' : 'text-gray-700 hover:bg-gray-100'"
-              class="block px-3 py-2 rounded transition"
-            >
-              전체
-            </a>
-          </nav>
+    <!-- 필터 바 -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div class="flex justify-between items-center">
+        <!-- 왼쪽: 받은/보낸 편지함 탭 -->
+        <div class="flex gap-2">
+          <button
+            @click="selectFolder('Inbox')"
+            :class="currentFolder === 'Inbox' ? 'bg-orange-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+            class="px-6 py-2 rounded-lg transition font-medium"
+          >
+            받은편지함
+            <span v-if="unreadCount > 0 && currentFolder === 'Inbox'" class="ml-2 bg-white text-orange-primary px-2 py-0.5 rounded-full text-xs font-bold">
+              {{ unreadCount }}
+            </span>
+          </button>
+          <button
+            @click="selectFolder('SentItems')"
+            :class="currentFolder === 'SentItems' ? 'bg-orange-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+            class="px-6 py-2 rounded-lg transition font-medium"
+          >
+            보낸편지함
+          </button>
         </div>
 
-        <!-- 프로젝트 필터 -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">프로젝트</h3>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              @click.prevent="selectProject(null)"
-              :class="currentProjectId === null ? 'bg-orange-50 text-orange-primary font-medium' : 'text-gray-700 hover:bg-gray-100'"
-              class="block px-3 py-2 rounded transition text-sm"
-            >
-              전체
-            </a>
-            <a
-              v-for="project in projects"
-              :key="project.id"
-              href="#"
-              @click.prevent="selectProject(project.id)"
-              :class="currentProjectId === project.id ? 'bg-orange-50 text-orange-primary font-medium' : 'text-gray-700 hover:bg-gray-100'"
-              class="block px-3 py-2 rounded transition text-sm"
-            >
+        <!-- 오른쪽: 프로젝트 드롭다운 + 검색창 -->
+        <div class="flex gap-3">
+          <select
+            v-model="currentProjectId"
+            @change="onProjectChange"
+            class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary bg-white"
+          >
+            <option :value="null">전체 프로젝트</option>
+            <option v-for="project in projects" :key="project.id" :value="project.id">
               {{ project.name }}
-            </a>
-          </nav>
-        </div>
-      </div>
+            </option>
+          </select>
 
-      <!-- 오른쪽: 메일 목록 -->
-      <div class="col-span-9 bg-white rounded-lg shadow-md">
-        <!-- 검색 바 -->
-        <div class="p-4 border-b border-gray-200">
           <div class="flex gap-2">
             <input
               v-model="searchQuery"
               @keyup.enter="searchMails"
               type="text"
               placeholder="메일 검색 (제목, 발신자)..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
+              class="w-80 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
             >
             <button
               @click="searchMails"
-              class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition"
+              class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition font-medium"
             >
               검색
             </button>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- 메일 목록 -->
-        <div class="p-4">
-          <div v-if="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary mx-auto"></div>
-            <p class="text-gray-500 mt-4">메일을 불러오는 중...</p>
-          </div>
+    <!-- 메일 목록 -->
+    <div class="bg-white rounded-lg shadow-md">
+      <div class="p-6">
+        <div v-if="loading" class="text-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary mx-auto"></div>
+          <p class="text-gray-500 mt-4">메일을 불러오는 중...</p>
+        </div>
 
-          <div v-else-if="emails.length === 0" class="text-center py-12">
-            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <p class="text-gray-500">{{ authStatus.isConnected ? '메일이 없습니다' : 'Outlook을 연동하여 메일을 확인하세요' }}</p>
-          </div>
+        <div v-else-if="emails.length === 0" class="text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <p class="text-gray-500">{{ authStatus.isConnected ? '메일이 없습니다' : 'Outlook을 연동하여 메일을 확인하세요' }}</p>
+        </div>
 
-          <div v-else class="space-y-2">
-            <div
-              v-for="email in emails"
-              :key="email.id"
-              @click="openEmail(email.id)"
-              class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
-              :class="{ 'bg-blue-50': !email.isRead, 'bg-white': email.isRead }"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
-                    <h3
-                      class="font-semibold text-gray-800 truncate"
-                      :class="{ 'font-bold': !email.isRead }"
-                    >
-                      {{ email.subject || '(제목 없음)' }}
-                    </h3>
-                    <span
-                      v-if="email.hasAttachments"
-                      class="text-gray-400"
-                      title="첨부파일 있음"
-                    >
-                      📎
-                    </span>
-                    <span
-                      v-if="!email.isRead"
-                      class="w-2 h-2 bg-orange-primary rounded-full"
-                      title="읽지 않음"
-                    ></span>
+        <!-- 프로젝트별 그룹핑 (전체 프로젝트 보기일 때만) -->
+        <div v-else-if="currentProjectId === null && !searchQuery" class="space-y-6">
+          <div v-for="group in groupedEmails" :key="group.projectId || 'unassigned'">
+            <!-- 프로젝트 헤더 -->
+            <div class="mb-3">
+              <h3 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                <span class="w-1 h-6 bg-orange-primary rounded"></span>
+                {{ group.projectName }}
+                <span class="text-sm text-gray-500 font-normal">({{ group.emails.length }})</span>
+              </h3>
+            </div>
+
+            <!-- 메일 목록 -->
+            <div class="space-y-2 ml-4">
+              <div
+                v-for="email in group.emails"
+                :key="email.id"
+                @click="openEmail(email.id)"
+                class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+                :class="{ 'bg-blue-50 border-blue-200': !email.isRead, 'bg-white': email.isRead }"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                      <h3
+                        class="font-semibold text-gray-800 truncate"
+                        :class="{ 'font-bold': !email.isRead }"
+                      >
+                        {{ email.subject || '(제목 없음)' }}
+                      </h3>
+                      <span
+                        v-if="email.hasAttachments"
+                        class="text-gray-400"
+                        title="첨부파일 있음"
+                      >
+                        📎
+                      </span>
+                      <span
+                        v-if="!email.isRead"
+                        class="w-2 h-2 bg-orange-primary rounded-full"
+                        title="읽지 않음"
+                      ></span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-1">
+                      {{ email.fromName || email.fromAddress }}
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      {{ email.bodyPreview }}
+                    </p>
                   </div>
-                  <p class="text-sm text-gray-600 mb-1">
-                    {{ email.fromName || email.fromAddress }}
-                  </p>
-                  <p class="text-sm text-gray-500 truncate">
-                    {{ email.bodyPreview }}
-                  </p>
-                </div>
-                <div class="ml-4 flex flex-col items-end gap-2">
-                  <span class="text-xs text-gray-500 whitespace-nowrap">
-                    {{ formatDate(email.receivedDateTime) }}
-                  </span>
-                  <span
-                    v-if="email.projectName"
-                    class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"
-                  >
-                    {{ email.projectName }}
-                  </span>
+                  <div class="ml-4 flex flex-col items-end gap-2">
+                    <span class="text-xs text-gray-500 whitespace-nowrap">
+                      {{ formatDate(email.receivedDateTime) }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 페이지네이션 -->
-          <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-6">
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 0"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              이전
-            </button>
-            <span class="px-4 py-2 text-gray-700">
-              {{ currentPage + 1 }} / {{ totalPages }}
-            </span>
-            <button
-              @click="nextPage"
-              :disabled="currentPage >= totalPages - 1"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              다음
-            </button>
+        <!-- 일반 메일 목록 (특정 프로젝트 선택 또는 검색 시) -->
+        <div v-else class="space-y-2">
+          <div
+            v-for="email in emails"
+            :key="email.id"
+            @click="openEmail(email.id)"
+            class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
+            :class="{ 'bg-blue-50 border-blue-200': !email.isRead, 'bg-white': email.isRead }"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3
+                    class="font-semibold text-gray-800 truncate"
+                    :class="{ 'font-bold': !email.isRead }"
+                  >
+                    {{ email.subject || '(제목 없음)' }}
+                  </h3>
+                  <span
+                    v-if="email.hasAttachments"
+                    class="text-gray-400"
+                    title="첨부파일 있음"
+                  >
+                    📎
+                  </span>
+                  <span
+                    v-if="!email.isRead"
+                    class="w-2 h-2 bg-orange-primary rounded-full"
+                    title="읽지 않음"
+                  ></span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1">
+                  {{ email.fromName || email.fromAddress }}
+                </p>
+                <p class="text-sm text-gray-500 truncate">
+                  {{ email.bodyPreview }}
+                </p>
+              </div>
+              <div class="ml-4 flex flex-col items-end gap-2">
+                <span class="text-xs text-gray-500 whitespace-nowrap">
+                  {{ formatDate(email.receivedDateTime) }}
+                </span>
+                <span
+                  v-if="email.projectName"
+                  class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"
+                >
+                  {{ email.projectName }}
+                </span>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-8 pt-6 border-t border-gray-200">
+          <button
+            @click="prevPage"
+            :disabled="currentPage === 0"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            이전
+          </button>
+          <span class="px-4 py-2 text-gray-700 font-medium">
+            {{ currentPage + 1 }} / {{ totalPages }}
+          </span>
+          <button
+            @click="nextPage"
+            :disabled="currentPage >= totalPages - 1"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            다음
+          </button>
         </div>
       </div>
     </div>
@@ -362,7 +432,7 @@
     </div>
 
     <!-- Outlook 연동 모달 -->
-    <div v-if="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showAuthModal = false">
+    <div v-if="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeAuthModal">
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Outlook 연동</h2>
 
@@ -389,7 +459,7 @@
         </div>
 
         <button
-          @click="showAuthModal = false"
+          @click="closeAuthModal"
           class="w-full mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
         >
           취소
@@ -400,7 +470,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 
 // 상태
@@ -419,6 +489,7 @@ const totalPages = ref(0)
 const totalElements = ref(0)
 const pageSize = ref(20)
 const unreadCount = ref(0)
+const showProfileMenu = ref(false)
 
 // Outlook 연동 모달
 const showAuthModal = ref(false)
@@ -488,9 +559,44 @@ const formatDateFull = (dateString) => {
 const checkAuthStatus = async () => {
   try {
     const response = await api.get('/outlook/auth/status')
-    authStatus.value = response.data.data
+    console.log('인증 상태 API 응답:', response.data)
+
+    // API 응답 구조 확인 및 처리
+    if (response.data && response.data.data) {
+      authStatus.value = response.data.data
+      console.log('authStatus 업데이트됨:', authStatus.value)
+    } else if (response.data) {
+      authStatus.value = response.data
+      console.log('authStatus 업데이트됨 (직접):', authStatus.value)
+    }
   } catch (error) {
     console.error('인증 상태 확인 실패:', error)
+    authStatus.value = { isConnected: false, outlookEmail: null }
+  }
+}
+
+// 프로필 메뉴 외부 클릭 시 닫기
+const handleClickOutside = (event) => {
+  if (showProfileMenu.value && !event.target.closest('.relative')) {
+    showProfileMenu.value = false
+  }
+}
+
+// 페이지 클릭 이벤트 리스너
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', handleClickOutside)
+}
+
+// 인증 모달 닫기 및 interval 정리
+const closeAuthModal = () => {
+  showAuthModal.value = false
+  if (authCheckInterval) {
+    clearInterval(authCheckInterval)
+    authCheckInterval = null
+  }
+  if (authTimeoutInterval) {
+    clearInterval(authTimeoutInterval)
+    authTimeoutInterval = null
   }
 }
 
@@ -508,9 +614,7 @@ const connectOutlook = async () => {
     authCheckInterval = setInterval(async () => {
       const status = await checkAuthComplete()
       if (status) {
-        clearInterval(authCheckInterval)
-        clearInterval(authTimeoutInterval)
-        showAuthModal.value = false
+        closeAuthModal()
         await checkAuthStatus()
         await loadEmails()
       }
@@ -520,15 +624,13 @@ const connectOutlook = async () => {
     authTimeoutInterval = setInterval(() => {
       authTimeout.value--
       if (authTimeout.value <= 0) {
-        clearInterval(authCheckInterval)
-        clearInterval(authTimeoutInterval)
-        showAuthModal.value = false
+        closeAuthModal()
         alert('인증 시간이 만료되었습니다. 다시 시도해주세요.')
       }
     }, 1000)
   } catch (error) {
     console.error('Outlook 연동 시작 실패:', error)
-    showAuthModal.value = false
+    closeAuthModal()
   }
 }
 
@@ -544,12 +646,14 @@ const checkAuthComplete = async () => {
 
 // 연동 해제
 const disconnectOutlook = async () => {
+  showProfileMenu.value = false
   if (!confirm('Outlook 연동을 해제하시겠습니까?')) return
 
   try {
     await api.post('/outlook/auth/disconnect')
     authStatus.value = { isConnected: false, outlookEmail: null }
     emails.value = []
+    alert('연동이 해제되었습니다.')
   } catch (error) {
     console.error('연동 해제 실패:', error)
     alert('연동 해제에 실패했습니다.')
@@ -652,11 +756,36 @@ const selectFolder = (folder) => {
 }
 
 // 프로젝트 선택
-const selectProject = (projectId) => {
-  currentProjectId.value = projectId
+const onProjectChange = () => {
   currentPage.value = 0
   loadEmails()
 }
+
+// 프로젝트별 메일 그룹핑
+const groupedEmails = computed(() => {
+  const groups = {}
+
+  // 프로젝트별로 메일 분류
+  emails.value.forEach(email => {
+    const projectId = email.projectId || 'unassigned'
+    if (!groups[projectId]) {
+      groups[projectId] = {
+        projectId: email.projectId,
+        projectName: email.projectName || '프로젝트 미할당',
+        emails: []
+      }
+    }
+    groups[projectId].emails.push(email)
+  })
+
+  // 배열로 변환하고 정렬 (프로젝트 미할당은 맨 아래로)
+  const groupArray = Object.values(groups)
+  return groupArray.sort((a, b) => {
+    if (a.projectId === null) return 1
+    if (b.projectId === null) return -1
+    return a.projectName.localeCompare(b.projectName)
+  })
+})
 
 // 페이지 이동
 const prevPage = () => {
@@ -822,6 +951,21 @@ onMounted(async () => {
   await loadProjects()
   if (authStatus.value.isConnected) {
     await loadEmails()
+  }
+})
+
+// 클린업
+onBeforeUnmount(() => {
+  // Interval 정리
+  if (authCheckInterval) {
+    clearInterval(authCheckInterval)
+  }
+  if (authTimeoutInterval) {
+    clearInterval(authTimeoutInterval)
+  }
+
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('click', handleClickOutside)
   }
 })
 </script>
