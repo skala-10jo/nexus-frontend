@@ -20,6 +20,11 @@ export const documentService = {
   },
 
   // 문서 목록 조회
+  async getAll(params = {}) {
+    return api.get('/documents', { params });
+  },
+
+  // 문서 목록 조회 (alias)
   async getDocuments(params = {}) {
     return api.get('/documents', { params });
   },
