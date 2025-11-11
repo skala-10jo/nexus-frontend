@@ -8,6 +8,7 @@ export const useSlackStore = defineStore('slack', () => {
   const selectedIntegration = ref(null);
   const channels = ref([]);
   const selectedChannel = ref(null);
+  const messages = ref([]);
   const loading = ref(false);
   const error = ref(null);
 
@@ -155,8 +156,31 @@ export const useSlackStore = defineStore('slack', () => {
     }
   };
 
-  const selectChannel = (channel) => {
+  const selectChannel = async (channel) => {
     selectedChannel.value = channel;
+    messages.value = [];
+
+    // Fetch message history when channel is selected
+    if (channel && selectedIntegration.value) {
+      await fetchMessageHistory(selectedIntegration.value.id, channel.id);
+    }
+  };
+
+  const fetchMessageHistory = async (integrationId, channelId) => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const response = await slackAPI.getMessageHistory(integrationId, channelId);
+      messages.value = response.data.reverse(); // Reverse to show oldest first
+
+      return messages.value;
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Failed to fetch message history';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
   };
 
   return {
@@ -165,6 +189,7 @@ export const useSlackStore = defineStore('slack', () => {
     selectedIntegration,
     channels,
     selectedChannel,
+    messages,
     loading,
     error,
 
@@ -176,6 +201,7 @@ export const useSlackStore = defineStore('slack', () => {
     fetchChannels,
     sendMessage,
     selectIntegration,
-    selectChannel
+    selectChannel,
+    fetchMessageHistory
   };
 });

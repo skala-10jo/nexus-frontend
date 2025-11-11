@@ -45,7 +45,10 @@ export const slackAPI = {
   getChannels: (integrationId) => api.get(`/slack/integrations/${integrationId}/channels`),
 
   // Send message
-  sendMessage: (integrationId, data) => api.post(`/slack/integrations/${integrationId}/send`, data)
+  sendMessage: (integrationId, data) => api.post(`/slack/integrations/${integrationId}/send`, data),
+
+  // Get message history
+  getMessageHistory: (integrationId, channelId) => api.get(`/slack/integrations/${integrationId}/channels/${channelId}/history`)
 };
 
 export default slackAPI;

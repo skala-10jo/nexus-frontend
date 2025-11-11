@@ -139,27 +139,57 @@
           </p>
         </div>
 
-        <!-- Message Input -->
+        <!-- Message Area -->
         <div v-if="selectedChannel" class="flex-1 flex flex-col">
-          <div class="flex-1 p-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">메시지 작성</label>
-            <textarea
-              v-model="messageText"
-              @keydown.ctrl.enter="sendSlackMessage"
-              placeholder="메시지를 입력하세요... (Ctrl+Enter로 전송)"
-              class="w-full h-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
-            ></textarea>
+          <!-- Message History -->
+          <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div v-if="loading && messages.length === 0" class="text-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+            </div>
+
+            <div v-else-if="messages.length === 0" class="text-center py-8 text-gray-500">
+              메시지가 없습니다
+            </div>
+
+            <div v-else class="space-y-4">
+              <div v-for="(message, index) in messages" :key="index" class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <span class="text-purple-600 font-semibold text-sm">
+                      {{ message.username ? message.username.charAt(0).toUpperCase() : 'U' }}
+                    </span>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-baseline gap-2 mb-1">
+                      <span class="font-semibold text-gray-900">{{ message.username || 'Unknown' }}</span>
+                      <span class="text-xs text-gray-500">{{ formatTimestamp(message.timestamp) }}</span>
+                    </div>
+                    <p class="text-gray-700 whitespace-pre-wrap">{{ message.text }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="border-t border-gray-200 p-4">
-            <button
-              @click="sendSlackMessage"
-              :disabled="!messageText.trim() || loading"
-              class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="loading">전송 중...</span>
-              <span v-else>메시지 전송</span>
-            </button>
+          <!-- Message Input -->
+          <div class="border-t border-gray-200 bg-white p-4">
+            <div class="flex gap-2">
+              <textarea
+                v-model="messageText"
+                @keydown.ctrl.enter="sendSlackMessage"
+                placeholder="메시지를 입력하세요... (Ctrl+Enter로 전송)"
+                rows="3"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
+              ></textarea>
+              <button
+                @click="sendSlackMessage"
+                :disabled="!messageText.trim() || loading"
+                class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed self-end"
+              >
+                <span v-if="loading">전송 중...</span>
+                <span v-else>전송</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -183,7 +213,7 @@ import { useSlackStore } from '@/stores/slack';
 import { storeToRefs } from 'pinia';
 
 const slackStore = useSlackStore();
-const { integrations, selectedIntegration, channels, selectedChannel, loading, error } = storeToRefs(slackStore);
+const { integrations, selectedIntegration, channels, selectedChannel, messages, loading, error } = storeToRefs(slackStore);
 
 const messageText = ref('');
 
@@ -257,10 +287,21 @@ const sendSlackMessage = async () => {
 };
 
 const isDM = (channel) => {
-  // DMs have names from getUserDisplayName or contain "Direct Message" or "Group DM"
-  return channel.name.includes('Direct Message') ||
-         channel.name.includes('Group DM') ||
-         // DMs are private and don't start with # (regular private channels start with #)
-         (!channel.name.startsWith('#') && channel.isPrivate && !channel.name.startsWith('🔒'));
+  // Use the isDM flag provided by backend
+  return channel.isDM === true;
+};
+
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(parseFloat(timestamp) * 1000);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) + ' ' +
+           date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  }
 };
 </script>
