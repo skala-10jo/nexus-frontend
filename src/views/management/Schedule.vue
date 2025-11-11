@@ -103,20 +103,25 @@
             />
           </div>
 
+          <!-- Project Selector (Single Selection) -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">색상</label>
-            <div class="flex space-x-2">
-              <button
-                v-for="color in colorOptions"
-                :key="color"
-                type="button"
-                @click="eventForm.color = color"
-                class="w-10 h-10 rounded-full border-2 transition"
-                :class="eventForm.color === color ? 'border-gray-800 scale-110' : 'border-gray-300'"
-                :style="{ backgroundColor: color }"
-              ></button>
-            </div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
+            <select
+              v-model="eventForm.projectId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+            >
+              <option :value="null">프로젝트 없음</option>
+              <option v-for="project in projects" :key="project.id" :value="project.id">
+                {{ project.name }}
+              </option>
+            </select>
           </div>
+
+          <!-- Category Selector (Multiple Selection) -->
+          <CategorySelector
+            v-model="eventForm.categoryIds"
+            @open-manager="showCategoryManager = true"
+          />
 
           <div class="flex justify-end space-x-3 pt-4">
             <button
@@ -144,11 +149,14 @@
         </form>
       </div>
     </div>
+
+    <!-- Category Manager Modal -->
+    <CategoryManager v-if="showCategoryManager" @close="showCategoryManager = false" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -156,21 +164,19 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import { scheduleAPI } from '@/services/api';
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import CategorySelector from '@/components/schedule/CategorySelector.vue';
+import CategoryManager from '@/components/schedule/CategoryManager.vue';
+import { useScheduleCategoryStore } from '@/stores/scheduleCategory';
+import { useProjectStore } from '@/stores/projects';
 
 const fullCalendar = ref(null);
 const showModal = ref(false);
+const showCategoryManager = ref(false);
 const isEditMode = ref(false);
 const currentEventId = ref(null);
-
-const colorOptions = [
-  '#fb923c', // orange
-  '#3b82f6', // blue
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-];
+const categoryStore = useScheduleCategoryStore();
+const projectStore = useProjectStore();
+const projects = ref([]);
 
 const eventForm = ref({
   title: '',
@@ -179,8 +185,23 @@ const eventForm = ref({
   endTime: '',
   allDay: false,
   color: '#fb923c',
-  location: ''
+  location: '',
+  projectId: null, // Single project ID
+  categoryIds: [] // Multiple category IDs
 });
+
+// Watch categoryIds and automatically set color to first category's color
+watch(() => eventForm.value.categoryIds, (newCategoryIds) => {
+  if (newCategoryIds && newCategoryIds.length > 0) {
+    const firstCategory = categoryStore.getCategoryById(newCategoryIds[0]);
+    if (firstCategory) {
+      eventForm.value.color = firstCategory.color;
+    }
+  } else {
+    // No category selected, use default color
+    eventForm.value.color = '#fb923c';
+  }
+}, { deep: true });
 
 const calendarOptions = {
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
@@ -222,17 +243,24 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
         const startDate = schedule.startTime ? new Date(schedule.startTime) : null;
         const endDate = schedule.endTime ? new Date(schedule.endTime) : null;
 
+        // Use first category color if available, otherwise use schedule color
+        const categoryColor = schedule.categories && schedule.categories.length > 0
+          ? schedule.categories[0].color
+          : schedule.color || '#fb923c';
+
         return {
           id: schedule.id,
           title: schedule.title,
           start: startDate,
           end: endDate,
           allDay: schedule.allDay,
-          backgroundColor: schedule.color || '#fb923c',
-          borderColor: schedule.color || '#fb923c',
+          backgroundColor: categoryColor,
+          borderColor: categoryColor,
           extendedProps: {
             description: schedule.description,
-            location: schedule.location
+            location: schedule.location,
+            categories: schedule.categories || [],
+            project: schedule.project || null
           }
         };
       });
@@ -286,7 +314,8 @@ function handleDateSelect(selectInfo) {
     endTime: endTimeFormatted,
     allDay: selectInfo.allDay,
     color: '#fb923c',
-    location: ''
+    location: '',
+    categoryIds: []
   };
 
   showModal.value = true;
@@ -308,7 +337,9 @@ function handleEventClick(clickInfo) {
       : '',
     allDay: event.allDay,
     color: event.backgroundColor,
-    location: event.extendedProps.location || ''
+    location: event.extendedProps.location || '',
+    projectId: event.extendedProps.project?.id || null,
+    categoryIds: event.extendedProps.categories?.map(c => c.id) || []
   };
 
   showModal.value = true;
@@ -368,7 +399,9 @@ function openCreateModal() {
     endTime: formatDateTimeLocal(tomorrow),
     allDay: false,
     color: '#fb923c',
-    location: ''
+    location: '',
+    projectId: null,
+    categoryIds: []
   };
   showModal.value = true;
 }
@@ -417,7 +450,9 @@ async function saveEvent() {
       endTime: endTime,
       allDay: eventForm.value.allDay,
       color: eventForm.value.color,
-      location: eventForm.value.location
+      location: eventForm.value.location,
+      projectId: eventForm.value.projectId,
+      categoryIds: eventForm.value.categoryIds || []
     };
 
     if (isEditMode.value) {
@@ -490,8 +525,20 @@ function parseLocalDateTime(dateTimeString) {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
+// Load projects
+async function loadProjects() {
+  try {
+    await projectStore.fetchProjects();
+    projects.value = projectStore.projects;
+  } catch (error) {
+    console.error('Failed to load projects:', error);
+  }
+}
+
 onMounted(() => {
   // 초기 로드는 FullCalendar가 자동으로 처리
+  loadProjects();
+  categoryStore.fetchCategories();
 });
 </script>
 

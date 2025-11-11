@@ -39,8 +39,8 @@
           class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent transition-all bg-white"
         >
           <option value="ALL">전체 상태</option>
-          <option value="ACTIVE">활성</option>
-          <option value="ARCHIVED">보관됨</option>
+          <option value="ACTIVE">진행중</option>
+          <option value="ARCHIVED">마감</option>
         </select>
       </div>
 
@@ -51,11 +51,11 @@
           <span class="font-bold text-gray-900">{{ statistics.total }}</span>
         </div>
         <div class="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
-          <span class="font-medium text-green-700">활성</span>
+          <span class="font-medium text-green-700">진행중</span>
           <span class="font-bold text-green-900">{{ statistics.active }}</span>
         </div>
         <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
-          <span class="font-medium text-gray-600">보관</span>
+          <span class="font-medium text-gray-600">마감</span>
           <span class="font-bold text-gray-700">{{ statistics.archived }}</span>
         </div>
       </div>
@@ -121,7 +121,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
-                    보관하기
+                    마감 처리
                   </button>
                   <button
                     v-else-if="project.status === 'ARCHIVED'"
@@ -131,7 +131,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    복원하기
+                    진행중으로 변경
                   </button>
                   <hr class="my-1">
                   <button
@@ -583,18 +583,18 @@ async function deleteProject(project) {
 function archiveProject(project) {
   closeDropdown()
   confirmDialog.value = {
-    title: '프로젝트 보관',
-    message: `"${project.name}" 프로젝트를 보관하시겠습니까?\n\n📦 보관된 프로젝트는 목록에서 숨겨집니다.`,
+    title: '프로젝트 마감',
+    message: `"${project.name}" 프로젝트를 마감 처리하시겠습니까?`,
     type: 'warning',
-    confirmText: '보관',
-    onConfirm: () => updateProjectStatus(project, 'ARCHIVED', '프로젝트가 보관되었습니다.')
+    confirmText: '마감',
+    onConfirm: () => updateProjectStatus(project, 'ARCHIVED', '프로젝트가 마감 처리되었습니다.')
   }
   showConfirmDialog.value = true
 }
 
 function unarchiveProject(project) {
   closeDropdown()
-  updateProjectStatus(project, 'ACTIVE', '프로젝트가 복원되었습니다.')
+  updateProjectStatus(project, 'ACTIVE', '프로젝트가 진행중으로 변경되었습니다.')
 }
 
 async function updateProjectStatus(project, status, successMessage) {
@@ -602,8 +602,8 @@ async function updateProjectStatus(project, status, successMessage) {
     await projectService.update(project.id, {
       name: project.name,
       description: project.description,
-      status: status,
-      documentIds: []
+      status: status
+      // Don't send documentIds to avoid clearing linked documents
     })
     toast.success(successMessage)
     loadProjects()
@@ -668,9 +668,9 @@ function getStatusClass(status) {
 function getStatusText(status) {
   switch (status) {
     case 'ACTIVE':
-      return '활성'
+      return '진행중'
     case 'ARCHIVED':
-      return '보관됨'
+      return '마감'
     case 'DELETED':
       return '삭제됨'
     default:

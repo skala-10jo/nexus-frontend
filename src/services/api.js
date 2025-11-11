@@ -63,4 +63,13 @@ export const scheduleAPI = {
   deleteSchedule: (id) => api.delete(`/schedules/${id}`)
 };
 
+// Schedule Category API
+export const scheduleCategoryAPI = {
+  getCategories: () => api.get('/schedule-categories'),
+  createCategory: (data) => api.post('/schedule-categories', data),
+  updateCategory: (id, data) => api.put(`/schedule-categories/${id}`, data),
+  deleteCategory: (id) => api.delete(`/schedule-categories/${id}`),
+  reorderCategories: (orders) => api.patch('/schedule-categories/reorder', orders)
+};
+
 export default api;
