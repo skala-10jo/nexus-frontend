@@ -451,13 +451,12 @@
           <div class="bg-gray-100 p-4 rounded-lg text-center">
             <p class="text-3xl font-mono font-bold text-orange-primary">{{ deviceCode.userCode }}</p>
           </div>
-          <a
-            :href="deviceCode.verificationUri"
-            target="_blank"
+          <button
+            @click="openAuthPage"
             class="block w-full px-4 py-3 bg-orange-primary text-white text-center rounded-lg hover:bg-orange-medium transition"
           >
             인증 페이지 열기
-          </a>
+          </button>
           <p class="text-sm text-gray-500 text-center">
             인증 후 자동으로 완료됩니다 ({{ authTimeout }}초)
           </p>
@@ -607,6 +606,31 @@ const closeAuthModal = () => {
   if (authTimeoutInterval) {
     clearInterval(authTimeoutInterval)
     authTimeoutInterval = null
+  }
+}
+
+// 인증 페이지 열기
+const openAuthPage = () => {
+  if (!deviceCode.value?.verificationUri) {
+    alert('인증 정보를 불러오지 못했습니다. 다시 시도해주세요.')
+    return
+  }
+
+  // 팝업 차단 방지를 위해 window.open 사용
+  const width = 600
+  const height = 700
+  const left = (window.screen.width - width) / 2
+  const top = (window.screen.height - height) / 2
+
+  const authWindow = window.open(
+    deviceCode.value.verificationUri,
+    'OutlookAuth',
+    `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+  )
+
+  // 팝업이 차단되었는지 확인
+  if (!authWindow || authWindow.closed || typeof authWindow.closed === 'undefined') {
+    alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.')
   }
 }
 
