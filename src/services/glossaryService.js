@@ -96,5 +96,13 @@ export const glossaryService = {
    */
   async unverifyTerm(termId) {
     return api.put(`/glossary/${termId}/unverify`);
+  },
+
+  /**
+   * Get glossary statistics (with optional project filter)
+   */
+  async getStatistics(projectId = null) {
+    const params = projectId ? { projectId } : {};
+    return api.get('/glossary/statistics', { params });
   }
 };
