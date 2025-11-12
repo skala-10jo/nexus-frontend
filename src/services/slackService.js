@@ -32,23 +32,20 @@ export const slackAPI = {
   // Handle OAuth callback
   handleCallback: (code, state) => api.post('/slack/auth/callback', { code, state }),
 
-  // Get all integrations
-  getIntegrations: () => api.get('/slack/integrations'),
+  // Get integration status (1:1 relationship, no integrationId needed)
+  getIntegrationStatus: () => api.get('/slack/status'),
 
-  // Get specific integration
-  getIntegration: (integrationId) => api.get(`/slack/integrations/${integrationId}`),
+  // Disconnect integration
+  disconnectIntegration: () => api.delete('/slack/disconnect'),
 
-  // Delete integration
-  deleteIntegration: (integrationId) => api.delete(`/slack/integrations/${integrationId}`),
+  // Get channels (no integrationId needed)
+  getChannels: () => api.get('/slack/channels'),
 
-  // Get channels for integration
-  getChannels: (integrationId) => api.get(`/slack/integrations/${integrationId}/channels`),
+  // Send message (no integrationId needed)
+  sendMessage: (data) => api.post('/slack/send', data),
 
-  // Send message
-  sendMessage: (integrationId, data) => api.post(`/slack/integrations/${integrationId}/send`, data),
-
-  // Get message history
-  getMessageHistory: (integrationId, channelId) => api.get(`/slack/integrations/${integrationId}/channels/${channelId}/history`)
+  // Get message history (no integrationId needed)
+  getMessageHistory: (channelId) => api.get(`/slack/channels/${channelId}/history`)
 };
 
 export default slackAPI;

@@ -3,9 +3,9 @@ import { ref } from 'vue';
 import { slackAPI } from '@/services/slackService';
 
 export const useSlackStore = defineStore('slack', () => {
-  // State
-  const integrations = ref([]);
-  const selectedIntegration = ref(null);
+  // State (1:1 relationship - single integration per user)
+  const integration = ref(null);
+  const isConnected = ref(false);
   const channels = ref([]);
   const selectedChannel = ref(null);
   const messages = ref([]);
@@ -45,16 +45,13 @@ export const useSlackStore = defineStore('slack', () => {
       }
 
       const response = await slackAPI.handleCallback(code, state);
-      const integration = response.data;
-
-      // Add to integrations list
-      integrations.value.push(integration);
-      selectedIntegration.value = integration;
+      integration.value = response.data;
+      isConnected.value = true;
 
       // Clean up
       sessionStorage.removeItem('slack_oauth_state');
 
-      return integration;
+      return integration.value;
     } catch (err) {
       error.value = err.response?.data?.message || 'OAuth callback failed';
       throw err;
@@ -63,56 +60,55 @@ export const useSlackStore = defineStore('slack', () => {
     }
   };
 
-  const fetchIntegrations = async () => {
+  const fetchIntegrationStatus = async () => {
     try {
       loading.value = true;
       error.value = null;
 
-      const response = await slackAPI.getIntegrations();
-      integrations.value = response.data;
-
-      // Set first integration as selected if none selected
-      if (integrations.value.length > 0 && !selectedIntegration.value) {
-        selectedIntegration.value = integrations.value[0];
-      }
+      const response = await slackAPI.getIntegrationStatus();
+      integration.value = response.data;
+      isConnected.value = response.data.isActive || false;
     } catch (err) {
-      error.value = err.response?.data?.message || 'Failed to fetch integrations';
+      // Not connected or error
+      integration.value = null;
+      isConnected.value = false;
+
+      // Don't throw error if just not connected (404)
+      if (err.response?.status !== 404) {
+        error.value = err.response?.data?.message || 'Failed to fetch integration status';
+      }
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const disconnectIntegration = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      await slackAPI.disconnectIntegration();
+
+      // Clear state
+      integration.value = null;
+      isConnected.value = false;
+      channels.value = [];
+      selectedChannel.value = null;
+      messages.value = [];
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Failed to disconnect integration';
       throw err;
     } finally {
       loading.value = false;
     }
   };
 
-  const deleteIntegration = async (integrationId) => {
+  const fetchChannels = async () => {
     try {
       loading.value = true;
       error.value = null;
 
-      await slackAPI.deleteIntegration(integrationId);
-
-      // Remove from list
-      integrations.value = integrations.value.filter(i => i.id !== integrationId);
-
-      // Clear selection if deleted
-      if (selectedIntegration.value?.id === integrationId) {
-        selectedIntegration.value = integrations.value[0] || null;
-        channels.value = [];
-        selectedChannel.value = null;
-      }
-    } catch (err) {
-      error.value = err.response?.data?.message || 'Failed to delete integration';
-      throw err;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const fetchChannels = async (integrationId) => {
-    try {
-      loading.value = true;
-      error.value = null;
-
-      const response = await slackAPI.getChannels(integrationId);
+      const response = await slackAPI.getChannels();
       channels.value = response.data;
 
       // Clear selected channel
@@ -125,12 +121,12 @@ export const useSlackStore = defineStore('slack', () => {
     }
   };
 
-  const sendMessage = async (integrationId, channelId, text) => {
+  const sendMessage = async (channelId, text) => {
     try {
       loading.value = true;
       error.value = null;
 
-      await slackAPI.sendMessage(integrationId, {
+      await slackAPI.sendMessage({
         channelId,
         text
       });
@@ -144,34 +140,22 @@ export const useSlackStore = defineStore('slack', () => {
     }
   };
 
-  const selectIntegration = async (integration) => {
-    selectedIntegration.value = integration;
-    selectedChannel.value = null;
-
-    // Fetch channels for this integration
-    if (integration) {
-      await fetchChannels(integration.id);
-    } else {
-      channels.value = [];
-    }
-  };
-
   const selectChannel = async (channel) => {
     selectedChannel.value = channel;
     messages.value = [];
 
     // Fetch message history when channel is selected
-    if (channel && selectedIntegration.value) {
-      await fetchMessageHistory(selectedIntegration.value.id, channel.id);
+    if (channel) {
+      await fetchMessageHistory(channel.id);
     }
   };
 
-  const fetchMessageHistory = async (integrationId, channelId) => {
+  const fetchMessageHistory = async (channelId) => {
     try {
       loading.value = true;
       error.value = null;
 
-      const response = await slackAPI.getMessageHistory(integrationId, channelId);
+      const response = await slackAPI.getMessageHistory(channelId);
       messages.value = response.data.reverse(); // Reverse to show oldest first
 
       return messages.value;
@@ -185,8 +169,8 @@ export const useSlackStore = defineStore('slack', () => {
 
   return {
     // State
-    integrations,
-    selectedIntegration,
+    integration,
+    isConnected,
     channels,
     selectedChannel,
     messages,
@@ -196,11 +180,10 @@ export const useSlackStore = defineStore('slack', () => {
     // Actions
     getAuthUrl,
     handleOAuthCallback,
-    fetchIntegrations,
-    deleteIntegration,
+    fetchIntegrationStatus,
+    disconnectIntegration,
     fetchChannels,
     sendMessage,
-    selectIntegration,
     selectChannel,
     fetchMessageHistory
   };

@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800">메신저</h1>
       <button
-        v-if="integrations.length === 0"
+        v-if="!isConnected"
         @click="connectSlack"
         :disabled="loading"
         class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -14,18 +14,6 @@
         <span v-if="loading">연동 중...</span>
         <span v-else>Slack 연동</span>
       </button>
-      <button
-        v-else
-        @click="connectSlack"
-        :disabled="loading"
-        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
-        </svg>
-        <span v-if="loading">연동 중...</span>
-        <span v-else>추가 워크스페이스 연동</span>
-      </button>
     </div>
 
     <!-- Error Message -->
@@ -33,8 +21,8 @@
       {{ error }}
     </div>
 
-    <!-- No Integrations -->
-    <div v-if="!loading && integrations.length === 0" class="bg-white rounded-lg shadow-md p-12 text-center">
+    <!-- No Integration -->
+    <div v-if="!loading && !isConnected" class="bg-white rounded-lg shadow-md p-12 text-center">
       <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
@@ -51,26 +39,33 @@
       </button>
     </div>
 
-    <!-- Main UI with Integrations -->
+    <!-- Main UI with Integration -->
     <div v-else class="grid grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
-      <!-- Workspace & Channels List -->
+      <!-- Channels List -->
       <div class="col-span-4 bg-white rounded-lg shadow-md p-4 overflow-y-auto">
-        <!-- Workspace Selector -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">워크스페이스</label>
-          <select
-            v-model="selectedIntegration"
-            @change="onIntegrationChange"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-          >
-            <option v-for="integration in integrations" :key="integration.id" :value="integration">
-              {{ integration.workspaceName }}
-            </option>
-          </select>
+        <!-- Workspace Info -->
+        <div v-if="integration" class="mb-4 pb-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-800">{{ integration.workspaceName }}</h2>
+              <p class="text-xs text-gray-500 mt-1">
+                <span v-if="integration.isActive" class="text-green-600">● 연결됨</span>
+                <span v-else class="text-gray-400">● 비활성</span>
+              </p>
+            </div>
+            <button
+              @click="disconnectSlack"
+              :disabled="loading"
+              class="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
+              title="연동 해제"
+            >
+              연동 해제
+            </button>
+          </div>
         </div>
 
-        <!-- Integration Actions -->
-        <div v-if="selectedIntegration" class="mb-4 flex gap-2">
+        <!-- Channel Actions -->
+        <div class="mb-4 flex gap-2">
           <button
             @click="refreshChannels"
             :disabled="loading"
@@ -78,20 +73,13 @@
           >
             새로고침
           </button>
-          <button
-            @click="removeIntegration"
-            :disabled="loading"
-            class="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
-          >
-            연동 해제
-          </button>
         </div>
 
         <!-- Channels List -->
-        <div v-if="selectedIntegration">
+        <div>
           <h2 class="text-lg font-semibold text-gray-800 mb-3">채널</h2>
 
-          <div v-if="loading" class="text-center py-8">
+          <div v-if="loading && channels.length === 0" class="text-center py-8">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
           </div>
 
@@ -134,8 +122,8 @@
           <h3 class="text-lg font-semibold text-gray-800">
             # {{ selectedChannel.name }}
           </h3>
-          <p class="text-sm text-gray-500">
-            {{ selectedIntegration.workspaceName }}
+          <p v-if="integration" class="text-sm text-gray-500">
+            {{ integration.workspaceName }}
           </p>
         </div>
 
@@ -208,20 +196,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useSlackStore } from '@/stores/slack';
 import { storeToRefs } from 'pinia';
 
 const slackStore = useSlackStore();
-const { integrations, selectedIntegration, channels, selectedChannel, messages, loading, error } = storeToRefs(slackStore);
+const { integration, isConnected, channels, selectedChannel, messages, loading, error } = storeToRefs(slackStore);
 
 const messageText = ref('');
 
 onMounted(async () => {
   try {
-    await slackStore.fetchIntegrations();
+    await slackStore.fetchIntegrationStatus();
+
+    // If connected, load channels
+    if (isConnected.value) {
+      await slackStore.fetchChannels();
+    }
   } catch (err) {
-    console.error('Failed to fetch integrations:', err);
+    console.error('Failed to fetch integration status:', err);
   }
 });
 
@@ -235,28 +228,20 @@ const connectSlack = async () => {
   }
 };
 
-const onIntegrationChange = async () => {
-  if (selectedIntegration.value) {
-    await slackStore.selectIntegration(selectedIntegration.value);
+const disconnectSlack = async () => {
+  if (!integration.value) return;
+
+  if (confirm(`정말로 "${integration.value.workspaceName}" 연동을 해제하시겠습니까?`)) {
+    try {
+      await slackStore.disconnectIntegration();
+    } catch (err) {
+      console.error('Failed to disconnect integration:', err);
+    }
   }
 };
 
 const refreshChannels = async () => {
-  if (selectedIntegration.value) {
-    await slackStore.fetchChannels(selectedIntegration.value.id);
-  }
-};
-
-const removeIntegration = async () => {
-  if (!selectedIntegration.value) return;
-
-  if (confirm(`정말로 "${selectedIntegration.value.workspaceName}" 연동을 해제하시겠습니까?`)) {
-    try {
-      await slackStore.deleteIntegration(selectedIntegration.value.id);
-    } catch (err) {
-      console.error('Failed to delete integration:', err);
-    }
-  }
+  await slackStore.fetchChannels();
 };
 
 const selectChannel = (channel) => {
@@ -264,13 +249,12 @@ const selectChannel = (channel) => {
 };
 
 const sendSlackMessage = async () => {
-  if (!messageText.value.trim() || !selectedChannel.value || !selectedIntegration.value) {
+  if (!messageText.value.trim() || !selectedChannel.value) {
     return;
   }
 
   try {
     await slackStore.sendMessage(
-      selectedIntegration.value.id,
       selectedChannel.value.id,
       messageText.value
     );
