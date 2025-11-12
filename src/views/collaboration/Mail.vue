@@ -191,7 +191,12 @@
                       ></span>
                     </div>
                     <p class="text-sm text-gray-600 mb-1">
-                      {{ email.fromName || email.fromAddress }}
+                      <span v-if="currentFolder === 'SentItems'">
+                        받는이: {{ email.toRecipients?.split(';')[0].trim() || '(수신자 없음)' }}
+                      </span>
+                      <span v-else>
+                        {{ email.fromName || email.fromAddress }}
+                      </span>
                     </p>
                     <p class="text-sm text-gray-500 truncate">
                       {{ email.bodyPreview }}
@@ -240,7 +245,12 @@
                   ></span>
                 </div>
                 <p class="text-sm text-gray-600 mb-1">
-                  {{ email.fromName || email.fromAddress }}
+                  <span v-if="currentFolder === 'SentItems'">
+                    받는이: {{ email.toRecipients?.split(';')[0].trim() || '(수신자 없음)' }}
+                  </span>
+                  <span v-else>
+                    {{ email.fromName || email.fromAddress }}
+                  </span>
                 </p>
                 <p class="text-sm text-gray-500 truncate">
                   {{ email.bodyPreview }}

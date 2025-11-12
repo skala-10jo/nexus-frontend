@@ -236,6 +236,9 @@
                     영어
                   </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                    베트남어
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                     약어
                   </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
@@ -272,6 +275,9 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">{{ term.englishTerm || '-' }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{{ term.vietnameseTerm || '-' }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-500">{{ term.abbreviation || '-' }}</div>
@@ -351,14 +357,64 @@
             </table>
           </div>
 
-          <!-- Load More -->
-          <div v-if="hasMore && !loading" class="px-6 py-4 border-t border-gray-200">
-            <button
-              @click="loadMore"
-              class="w-full px-4 py-2 text-sm font-medium text-orange-primary hover:bg-orange-50 rounded-lg transition"
-            >
-              더 보기
-            </button>
+          <!-- Pagination -->
+          <div v-if="pagination.totalPages > 1" class="px-6 py-4 border-t border-gray-200">
+            <div class="flex flex-col items-center space-y-3">
+              <div class="text-sm text-gray-600">
+                <span class="font-medium">{{ pagination.totalElements }}</span>개 중
+                <span class="font-medium">{{ Math.min((pagination.page + 1) * pagination.size, pagination.totalElements) }}</span>개 표시
+              </div>
+              <div class="flex items-center space-x-2">
+                <!-- Previous Button -->
+                <button
+                  @click="goToPage(pagination.page - 1)"
+                  :disabled="pagination.page === 0"
+                  :class="[
+                    'px-3 py-2 text-sm font-medium rounded-lg transition',
+                    pagination.page === 0
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  ]"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <!-- Page Numbers -->
+                <template v-for="page in displayedPages" :key="page">
+                  <button
+                    v-if="page !== '...'"
+                    @click="goToPage(page)"
+                    :class="[
+                      'px-3 py-2 text-sm font-medium rounded-lg transition',
+                      pagination.page === page
+                        ? 'bg-orange-primary text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    ]"
+                  >
+                    {{ page + 1 }}
+                  </button>
+                  <span v-else class="px-2 text-gray-400">...</span>
+                </template>
+
+                <!-- Next Button -->
+                <button
+                  @click="goToPage(pagination.page + 1)"
+                  :disabled="pagination.page >= pagination.totalPages - 1"
+                  :class="[
+                    'px-3 py-2 text-sm font-medium rounded-lg transition',
+                    pagination.page >= pagination.totalPages - 1
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  ]"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
     </div>
@@ -379,12 +435,283 @@
         @close="handleExtractionClose"
       />
 
-      <!-- Add Term Modal (placeholder) -->
-      <div v-if="showAddTermModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
-          <h3 class="text-lg font-semibold mb-4">용어 추가</h3>
-          <p class="text-gray-600">용어 추가 기능이 곧 구현됩니다.</p>
-          <button @click="showAddTermModal = false" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg">닫기</button>
+      <!-- Add Term Modal -->
+      <div
+        v-if="showAddTermModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="closeAddTermModal"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">용어 추가</h3>
+            <button
+              @click="closeAddTermModal"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form @submit.prevent="saveNewTerm" class="space-y-4">
+            <!-- Korean Term (Required) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                한국어 용어 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="newTermForm.koreanTerm"
+                type="text"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: 인공지능"
+              />
+            </div>
+
+            <!-- English Term (Required) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                영어 용어 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="newTermForm.englishTerm"
+                type="text"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: Artificial Intelligence"
+              />
+            </div>
+
+            <!-- Vietnamese Term (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                베트남어 용어
+              </label>
+              <input
+                v-model="newTermForm.vietnameseTerm"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: Trí tuệ nhân tạo"
+              />
+            </div>
+
+            <!-- Abbreviation (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                약어
+              </label>
+              <input
+                v-model="newTermForm.abbreviation"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: AI"
+              />
+            </div>
+
+            <!-- Domain (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                도메인
+              </label>
+              <input
+                v-model="newTermForm.domain"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: IT, 의료, 법률"
+              />
+            </div>
+
+            <!-- Definition (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                정의
+              </label>
+              <textarea
+                v-model="newTermForm.definition"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어의 정의를 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Context (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                문맥
+              </label>
+              <textarea
+                v-model="newTermForm.context"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어가 사용되는 문맥을 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Example Sentence (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                예문
+              </label>
+              <textarea
+                v-model="newTermForm.exampleSentence"
+                rows="2"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어 사용 예문을 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Note (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                참고사항
+              </label>
+              <textarea
+                v-model="newTermForm.note"
+                rows="2"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="추가 설명 및 참고사항을 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                @click="closeAddTermModal"
+                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
+              >
+                추가
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Term Detail Modal -->
+      <div
+        v-if="showTermDetail"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="closeTermDetail"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">용어 상세정보</h3>
+            <button
+              @click="closeTermDetail"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div v-if="selectedTerm" class="space-y-4">
+            <!-- Korean Term -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">한국어 용어</label>
+              <p class="text-gray-900">{{ selectedTerm.koreanTerm }}</p>
+            </div>
+
+            <!-- English Term -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">영어 용어</label>
+              <p class="text-gray-900">{{ selectedTerm.englishTerm || '-' }}</p>
+            </div>
+
+            <!-- Vietnamese Term -->
+            <div v-if="selectedTerm.vietnameseTerm">
+              <label class="block text-sm font-medium text-gray-700 mb-1">베트남어 용어</label>
+              <p class="text-gray-900">{{ selectedTerm.vietnameseTerm }}</p>
+            </div>
+
+            <!-- Abbreviation -->
+            <div v-if="selectedTerm.abbreviation">
+              <label class="block text-sm font-medium text-gray-700 mb-1">약어</label>
+              <p class="text-gray-900">{{ selectedTerm.abbreviation }}</p>
+            </div>
+
+            <!-- Domain -->
+            <div v-if="selectedTerm.domain">
+              <label class="block text-sm font-medium text-gray-700 mb-1">도메인</label>
+              <p class="text-gray-900">{{ selectedTerm.domain }}</p>
+            </div>
+
+            <!-- Definition -->
+            <div v-if="selectedTerm.definition">
+              <label class="block text-sm font-medium text-gray-700 mb-1">정의</label>
+              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.definition }}</p>
+            </div>
+
+            <!-- Context -->
+            <div v-if="selectedTerm.context">
+              <label class="block text-sm font-medium text-gray-700 mb-1">문맥</label>
+              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.context }}</p>
+            </div>
+
+            <!-- Example Sentence -->
+            <div v-if="selectedTerm.exampleSentence">
+              <label class="block text-sm font-medium text-gray-700 mb-1">예문</label>
+              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.exampleSentence }}</p>
+            </div>
+
+            <!-- Note -->
+            <div v-if="selectedTerm.note">
+              <label class="block text-sm font-medium text-gray-700 mb-1">참고사항</label>
+              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.note }}</p>
+            </div>
+
+            <!-- Status & Verification -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">상태</label>
+                <span
+                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="getStatusBadgeClass(selectedTerm.status)"
+                >
+                  {{ getStatusLabel(selectedTerm.status) }}
+                </span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">검증 상태</label>
+                <span
+                  v-if="selectedTerm.isVerified"
+                  class="inline-flex items-center text-green-600"
+                >
+                  <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  검증됨
+                </span>
+                <span v-else class="text-gray-400">미검증</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                @click="closeTermDetail"
+                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                @click="editTermFromDetail"
+                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
+              >
+                수정
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -433,6 +760,19 @@
                 required
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
                 placeholder="예: Artificial Intelligence"
+              />
+            </div>
+
+            <!-- Vietnamese Term (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                베트남어 용어
+              </label>
+              <input
+                v-model="editForm.vietnameseTerm"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                placeholder="예: Trí tuệ nhân tạo"
               />
             </div>
 
@@ -488,6 +828,32 @@
               ></textarea>
             </div>
 
+            <!-- Example Sentence (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                예문
+              </label>
+              <textarea
+                v-model="editForm.exampleSentence"
+                rows="2"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="용어 사용 예문을 입력하세요"
+              ></textarea>
+            </div>
+
+            <!-- Note (Optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                참고사항
+              </label>
+              <textarea
+                v-model="editForm.note"
+                rows="2"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
+                placeholder="추가 설명 및 참고사항을 입력하세요"
+              ></textarea>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-3 pt-4">
               <button
@@ -538,15 +904,36 @@ const editingTermId = ref(null);
 const editForm = ref({
   koreanTerm: '',
   englishTerm: '',
+  vietnameseTerm: '',
   abbreviation: '',
   definition: '',
   context: '',
+  exampleSentence: '',
+  note: '',
   domain: ''
 });
+
+// Add term form state
+const newTermForm = ref({
+  koreanTerm: '',
+  englishTerm: '',
+  vietnameseTerm: '',
+  abbreviation: '',
+  definition: '',
+  context: '',
+  exampleSentence: '',
+  note: '',
+  domain: ''
+});
+
+// Term detail modal state
+const showTermDetail = ref(false);
+const selectedTerm = ref(null);
 
 // Computed
 const projects = computed(() => projectStore.projects);
 const allTerms = computed(() => glossaryStore.terms);
+const statistics = computed(() => glossaryStore.statistics);
 const loading = computed(() => glossaryStore.loading);
 const hasMore = computed(() => glossaryStore.hasMore);
 const pagination = computed(() => glossaryStore.pagination);
@@ -592,18 +979,63 @@ const terms = computed(() => {
   return filtered;
 });
 
-const verifiedTermsCount = computed(() =>
-  terms.value.filter(t => t.isVerified).length
-);
-const unverifiedTermsCount = computed(() =>
-  terms.value.filter(t => !t.isVerified).length
-);
-const autoExtractedCount = computed(() =>
-  terms.value.filter(t => t.status === 'AUTO_EXTRACTED').length
-);
+const verifiedTermsCount = computed(() => statistics.value.verifiedTerms);
+const unverifiedTermsCount = computed(() => statistics.value.unverifiedTerms);
+const autoExtractedCount = computed(() => statistics.value.autoExtractedTerms);
 const isAllSelected = computed(() =>
   terms.value.length > 0 && selectedTermIds.value.length === terms.value.length
 );
+
+// Pagination - displayed pages
+const displayedPages = computed(() => {
+  const pages = [];
+  const currentPage = pagination.value.page;
+  const totalPages = pagination.value.totalPages;
+
+  if (totalPages <= 7) {
+    // Show all pages if total is 7 or less
+    for (let i = 0; i < totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(0);
+
+    // Calculate range around current page
+    let startPage = Math.max(1, currentPage - 1);
+    let endPage = Math.min(totalPages - 2, currentPage + 1);
+
+    // Adjust if near beginning
+    if (currentPage <= 2) {
+      endPage = 3;
+    }
+
+    // Adjust if near end
+    if (currentPage >= totalPages - 3) {
+      startPage = totalPages - 4;
+    }
+
+    // Add ellipsis before middle pages if needed
+    if (startPage > 1) {
+      pages.push('...');
+    }
+
+    // Add middle pages
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    // Add ellipsis after middle pages if needed
+    if (endPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    // Always show last page
+    pages.push(totalPages - 1);
+  }
+
+  return pages;
+});
 
 // Methods
 const handleProjectChange = async () => {
@@ -616,9 +1048,11 @@ const loadTerms = async () => {
     if (selectedProjectId.value) {
       // Load terms filtered by project
       await glossaryStore.fetchTerms(selectedProjectId.value);
+      await glossaryStore.fetchStatistics(selectedProjectId.value);
     } else {
       // Load all user terms
       await glossaryStore.fetchAllTerms();
+      await glossaryStore.fetchStatistics();
     }
   } catch (error) {
     console.error('Failed to load terms:', error);
@@ -649,11 +1083,32 @@ const refreshTerms = () => {
   loadTerms();
 };
 
-const loadMore = async () => {
+const goToPage = async (page) => {
+  if (page < 0 || page >= pagination.value.totalPages) return;
+
   try {
-    await glossaryStore.loadMore(selectedProjectId.value);
+    selectedTermIds.value = []; // Clear selection when changing page
+
+    // Check if in search mode
+    if (searchQuery.value) {
+      if (selectedProjectId.value) {
+        await glossaryStore.searchTerms(selectedProjectId.value, searchQuery.value, { page });
+      } else {
+        await glossaryStore.searchAllTerms(searchQuery.value, { page });
+      }
+    } else {
+      // Normal pagination
+      if (selectedProjectId.value) {
+        await glossaryStore.fetchTerms(selectedProjectId.value, { page });
+      } else {
+        await glossaryStore.fetchAllTerms({ page });
+      }
+    }
+
+    // Scroll to top of table
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
-    console.error('Failed to load more:', error);
+    console.error('Failed to load page:', error);
   }
 };
 
@@ -675,7 +1130,20 @@ const handleExtractionClose = () => {
 };
 
 const openTermDetail = (term) => {
-  console.log('Open term detail:', term);
+  selectedTerm.value = term;
+  showTermDetail.value = true;
+};
+
+const closeTermDetail = () => {
+  showTermDetail.value = false;
+  selectedTerm.value = null;
+};
+
+const editTermFromDetail = () => {
+  if (selectedTerm.value) {
+    closeTermDetail();
+    editTerm(selectedTerm.value);
+  }
 };
 
 const editTerm = (term) => {
@@ -683,9 +1151,12 @@ const editTerm = (term) => {
   editForm.value = {
     koreanTerm: term.koreanTerm || '',
     englishTerm: term.englishTerm || '',
+    vietnameseTerm: term.vietnameseTerm || '',
     abbreviation: term.abbreviation || '',
     definition: term.definition || '',
     context: term.context || '',
+    exampleSentence: term.exampleSentence || '',
+    note: term.note || '',
     domain: term.domain || ''
   };
   showEditDialog.value = true;
@@ -697,9 +1168,12 @@ const closeEditDialog = () => {
   editForm.value = {
     koreanTerm: '',
     englishTerm: '',
+    vietnameseTerm: '',
     abbreviation: '',
     definition: '',
     context: '',
+    exampleSentence: '',
+    note: '',
     domain: ''
   };
 };
@@ -724,9 +1198,46 @@ const saveEdit = async () => {
   }
 };
 
+const closeAddTermModal = () => {
+  showAddTermModal.value = false;
+  newTermForm.value = {
+    koreanTerm: '',
+    englishTerm: '',
+    vietnameseTerm: '',
+    abbreviation: '',
+    definition: '',
+    context: '',
+    exampleSentence: '',
+    note: '',
+    domain: ''
+  };
+};
+
+const saveNewTerm = async () => {
+  // Validate required fields
+  if (!newTermForm.value.koreanTerm.trim()) {
+    alert('한국어 용어는 필수입니다.');
+    return;
+  }
+  if (!newTermForm.value.englishTerm.trim()) {
+    alert('영어 용어는 필수입니다.');
+    return;
+  }
+
+  try {
+    await glossaryStore.createTerm(newTermForm.value);
+    closeAddTermModal();
+    await loadTerms(); // Reload terms list
+  } catch (error) {
+    console.error('Failed to create term:', error);
+    alert('용어 추가에 실패했습니다.');
+  }
+};
+
 const verifyTerm = async (term) => {
   try {
     await glossaryStore.verifyTerm(term.id);
+    await glossaryStore.fetchStatistics(selectedProjectId.value);
   } catch (error) {
     console.error('Failed to verify term:', error);
   }
@@ -739,6 +1250,7 @@ const unverifyTerm = async (term) => {
 
   try {
     await glossaryStore.unverifyTerm(term.id);
+    await glossaryStore.fetchStatistics(selectedProjectId.value);
   } catch (error) {
     console.error('Failed to unverify term:', error);
     alert('검증 해제에 실패했습니다.');

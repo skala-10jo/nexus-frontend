@@ -13,6 +13,14 @@ export const useGlossaryStore = defineStore('glossary', {
       totalElements: 0,
       totalPages: 0,
     },
+    statistics: {
+      totalTerms: 0,
+      verifiedTerms: 0,
+      unverifiedTerms: 0,
+      autoExtractedTerms: 0,
+      userAddedTerms: 0,
+      userEditedTerms: 0,
+    },
     hasMore: false,
     loading: false,
     extracting: false,
@@ -370,6 +378,15 @@ export const useGlossaryStore = defineStore('glossary', {
       this.extractionJob = null;
     },
 
+    async fetchStatistics(projectId = null) {
+      try {
+        const response = await glossaryService.getStatistics(projectId);
+        this.statistics = response.data.data || response.data;
+      } catch (error) {
+        console.error('Failed to fetch statistics:', error);
+      }
+    },
+
     resetState() {
       this.stopPolling();
       this.terms = [];
@@ -380,6 +397,14 @@ export const useGlossaryStore = defineStore('glossary', {
         size: 20,
         totalElements: 0,
         totalPages: 0,
+      };
+      this.statistics = {
+        totalTerms: 0,
+        verifiedTerms: 0,
+        unverifiedTerms: 0,
+        autoExtractedTerms: 0,
+        userAddedTerms: 0,
+        userEditedTerms: 0,
       };
       this.hasMore = false;
       this.loading = false;
