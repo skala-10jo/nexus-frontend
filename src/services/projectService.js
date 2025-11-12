@@ -71,3 +71,11 @@ export const projectService = {
     return api.get(`/projects/${projectId}/schedules`);
   }
 };
+
+// Named exports for convenience
+export const getUserProjects = projectService.getUserProjects.bind(projectService);
+export const getProject = projectService.getProject.bind(projectService);
+export const createProject = projectService.createProject.bind(projectService);
+export const updateProject = projectService.updateProject.bind(projectService);
+export const deleteProject = projectService.deleteProject.bind(projectService);
+export const getProjectSchedules = projectService.getProjectSchedules.bind(projectService);
