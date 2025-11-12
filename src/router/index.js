@@ -90,6 +90,12 @@ const routes = [
     component: () => import('@/views/collaboration/Messenger.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/collaboration/messenger/slack/callback',
+    name: 'SlackCallback',
+    component: () => import('@/views/collaboration/SlackCallback.vue'),
+    meta: { requiresAuth: true }
+  },
   // Settings route
   {
     path: '/settings',
