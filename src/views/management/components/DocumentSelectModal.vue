@@ -174,7 +174,7 @@ const loadDocuments = async () => {
 };
 
 const selectDocument = (document) => {
-  if (document.status !== 'READY') {
+  if (document.status !== 'PROCESSED') {
     alert('이 문서는 아직 준비되지 않았습니다. 처리가 완료된 문서만 선택할 수 있습니다.');
     return;
   }
@@ -195,8 +195,8 @@ const getStatusIcon = (status) => {
   const icons = {
     UPLOADED: ArrowPathIcon,
     PROCESSING: ArrowPathIcon,
-    READY: CheckCircleIcon,
-    ERROR: XCircleIcon
+    PROCESSED: CheckCircleIcon,
+    FAILED: XCircleIcon
   };
   return icons[status] || CheckCircleIcon;
 };
@@ -205,8 +205,8 @@ const getStatusClass = (status) => {
   const classes = {
     UPLOADED: 'bg-blue-100 text-blue-700',
     PROCESSING: 'bg-yellow-100 text-yellow-700',
-    READY: 'bg-green-100 text-green-700',
-    ERROR: 'bg-red-100 text-red-700'
+    PROCESSED: 'bg-green-100 text-green-700',
+    FAILED: 'bg-red-100 text-red-700'
   };
   return classes[status] || 'bg-gray-100 text-gray-700';
 };
@@ -215,8 +215,8 @@ const getStatusText = (status) => {
   const texts = {
     UPLOADED: '업로드됨',
     PROCESSING: '처리 중',
-    READY: '준비됨',
-    ERROR: '오류'
+    PROCESSED: '처리 완료',
+    FAILED: '오류'
   };
   return texts[status] || status;
 };

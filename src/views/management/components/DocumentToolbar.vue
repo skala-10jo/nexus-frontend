@@ -44,8 +44,8 @@
             <option value="">모든 상태</option>
             <option value="UPLOADED">업로드됨</option>
             <option value="PROCESSING">분석 중</option>
-            <option value="READY">준비됨</option>
-            <option value="ERROR">오류</option>
+            <option value="PROCESSED">처리 완료</option>
+            <option value="FAILED">오류</option>
           </select>
 
           <!-- Sort -->
