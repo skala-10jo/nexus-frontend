@@ -1,5 +1,7 @@
 <template>
-  <div class="p-8">
+  <div class="flex h-screen overflow-hidden relative">
+    <!-- 메인 콘텐츠 영역 -->
+    <div class="flex-1 p-8 overflow-y-auto transition-all duration-300" :style="{ marginRight: showChatPanel ? '384px' : '0' }">
     <!-- 상단 헤더 -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex justify-between items-center">
@@ -57,10 +59,10 @@
           <div class="flex items-center gap-2">
             <button
               @click="syncMails"
-              :disabled="syncing"
+              :disabled="syncing || embedding"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-medium"
             >
-              {{ syncing ? '동기화 중...' : '동기화' }}
+              {{ embedding ? '임베딩 중...' : syncing ? '동기화 중...' : '동기화' }}
             </button>
             <button
               @click="openComposeModal"
@@ -296,7 +298,7 @@
     </div>
 
     <!-- 메일 상세 모달 -->
-    <div v-if="selectedEmail" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeEmail">
+    <div v-if="selectedEmail" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60" @click.self="closeEmail">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <!-- 헤더 -->
         <div class="p-6 border-b border-gray-200">
@@ -376,7 +378,7 @@
     </div>
 
     <!-- 메일 작성 모달 -->
-    <div v-if="showComposeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeComposeModal">
+    <div v-if="showComposeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4" @click.self="closeComposeModal">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl">
         <div class="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-2xl font-bold text-gray-800">새 메일</h2>
@@ -452,7 +454,7 @@
     </div>
 
     <!-- Outlook 연동 모달 -->
-    <div v-if="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeAuthModal">
+    <div v-if="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60" @click.self="closeAuthModal">
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Outlook 연동</h2>
 
@@ -485,6 +487,103 @@
         </button>
       </div>
     </div>
+
+    <!-- 플로팅 챗봇 버튼 -->
+    <button
+      v-if="!showChatPanel"
+      @click="showChatPanel = true"
+      class="fixed bottom-8 right-8 w-16 h-16 bg-orange-primary text-white rounded-full shadow-lg hover:bg-orange-medium transition flex items-center justify-center z-40"
+      title="AI 메일 Agent"
+    >
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      </svg>
+    </button>
+    </div>
+    <!-- 메인 콘텐츠 영역 끝 -->
+
+    <!-- 슬라이딩 챗 패널 -->
+    <transition name="slide-left">
+      <div
+        v-if="showChatPanel"
+        class="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl flex flex-col border-l border-gray-200"
+      >
+        <!-- 챗 헤더 -->
+        <div class="p-4 bg-orange-primary text-white flex justify-between items-center">
+          <h3 class="text-lg font-bold">AI 메일 Agent</h3>
+          <button @click="showChatPanel = false" class="text-white hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 챗 메시지 영역 -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div v-for="(msg, idx) in chatMessages" :key="idx">
+            <!-- 사용자 메시지 -->
+            <div v-if="msg.role === 'user'" class="flex justify-end">
+              <div class="bg-orange-100 text-gray-800 rounded-lg px-4 py-2 max-w-[80%]">
+                {{ msg.content }}
+              </div>
+            </div>
+
+            <!-- AI 응답 -->
+            <div v-else class="flex justify-start">
+              <div class="bg-gray-100 text-gray-800 rounded-lg px-4 py-2 max-w-[80%]">
+                {{ msg.content }}
+
+                <!-- 검색 결과 표시 -->
+                <div v-if="msg.searchResults && msg.searchResults.length > 0" class="mt-3 space-y-2">
+                  <div class="text-xs text-gray-500 font-semibold">검색 결과 ({{ msg.searchResults.length }}개)</div>
+                  <div
+                    v-for="result in msg.searchResults"
+                    :key="result.email_id"
+                    @click="openEmailFromChat(result.email_id)"
+                    class="bg-white border border-gray-200 rounded p-2 hover:bg-gray-50 cursor-pointer text-xs"
+                  >
+                    <div class="font-semibold text-gray-800 truncate">{{ result.subject }}</div>
+                    <div class="text-gray-600 mt-1">{{ result.from_name }}</div>
+                    <div class="text-gray-400 text-xs mt-1">유사도: {{ (result.similarity * 100).toFixed(1) }}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 로딩 -->
+          <div v-if="chatLoading" class="flex justify-start">
+            <div class="bg-gray-100 rounded-lg px-4 py-2">
+              <div class="flex gap-1">
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 입력창 -->
+        <div class="p-4 border-t border-gray-200">
+          <div class="flex gap-2">
+            <input
+              v-model="chatInput"
+              @keyup.enter="sendChatMessage"
+              type="text"
+              placeholder="메일 검색 요청을 입력하세요..."
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
+            >
+            <button
+              @click="sendChatMessage"
+              :disabled="!chatInput.trim() || chatLoading"
+              class="px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
+            >
+              전송
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -500,6 +599,7 @@ const selectedEmail = ref(null)
 const selectedProjectId = ref(null)
 const loading = ref(false)
 const syncing = ref(false)
+const embedding = ref(false)
 const searchQuery = ref('')
 const currentFolder = ref('Inbox')
 const currentProjectId = ref(null)
@@ -526,6 +626,12 @@ const newEmail = ref({
   subject: '',
   body: ''
 })
+
+// 챗봇 상태
+const showChatPanel = ref(false)
+const chatMessages = ref([])
+const chatInput = ref('')
+const chatLoading = ref(false)
 
 // HTML 컨텐츠 감지 함수
 const isHtmlContent = (email) => {
@@ -661,6 +767,8 @@ const connectOutlook = async () => {
         closeAuthModal()
         await checkAuthStatus()
         await loadEmails()
+        // 전체 임베딩 생성
+        await generateAllEmbeddings()
       }
     }, 5000)
 
@@ -711,6 +819,9 @@ const syncMails = async () => {
     await api.post('/outlook/sync')
     await loadEmails()
     alert('메일 동기화가 완료되었습니다.')
+
+    // 새 메일 임베딩 생성
+    await generateAllEmbeddings()
   } catch (error) {
     console.error('메일 동기화 실패:', error)
     alert('메일 동기화에 실패했습니다.')
@@ -999,6 +1110,109 @@ const sendNewEmail = async () => {
   }
 }
 
+// 챗봇 메시지 전송
+const sendChatMessage = async () => {
+  if (!chatInput.value.trim()) return
+
+  const userMessage = chatInput.value.trim()
+  chatInput.value = ''
+
+  // 사용자 메시지 추가
+  chatMessages.value.push({
+    role: 'user',
+    content: userMessage
+  })
+
+  chatLoading.value = true
+
+  try {
+    // 사용자 ID 가져오기
+    const userStr = localStorage.getItem('user')
+    const userId = userStr ? JSON.parse(userStr).id : null
+
+    if (!userId) {
+      throw new Error('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.')
+    }
+
+    // Python Backend API 호출
+    const response = await fetch('http://localhost:8000/api/ai/mail/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: userMessage,
+        user_id: userId,
+        conversation_history: chatMessages.value
+          .filter(msg => msg.role !== 'system')
+          .map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+      })
+    })
+
+    const data = await response.json()
+
+    // AI 응답 추가
+    chatMessages.value.push({
+      role: 'assistant',
+      content: data.response,
+      searchResults: data.search_results
+    })
+  } catch (error) {
+    console.error('챗봇 API 호출 실패:', error)
+    chatMessages.value.push({
+      role: 'assistant',
+      content: '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.'
+    })
+  } finally {
+    chatLoading.value = false
+  }
+}
+
+// 챗에서 메일 열기
+const openEmailFromChat = async (emailId) => {
+  // 채팅창은 유지하고 메일 상세만 열기
+  await openEmail(emailId)
+}
+
+// 전체 임베딩 생성
+const generateAllEmbeddings = async () => {
+  // 사용자 ID 가져오기
+  const userStr = localStorage.getItem('user')
+  const userId = userStr ? JSON.parse(userStr).id : null
+
+  if (!userId) {
+    console.error('User ID not found')
+    return
+  }
+
+  embedding.value = true
+  try {
+    console.log('전체 메일 임베딩 생성 시작...')
+
+    const response = await fetch('http://localhost:8000/api/ai/mail/embeddings/batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: userId
+      })
+    })
+
+    const data = await response.json()
+
+    console.log('임베딩 생성 완료:', data)
+    console.log(`처리: ${data.processed}개, 스킵: ${data.skipped}개, 실패: ${data.failed}개`)
+  } catch (error) {
+    console.error('임베딩 생성 실패:', error)
+  } finally {
+    embedding.value = false
+  }
+}
+
 // 초기화
 onMounted(async () => {
   await checkAuthStatus()
@@ -1060,5 +1274,19 @@ onBeforeUnmount(() => {
 .email-body :deep(ol) {
   margin-left: 1.5em;
   margin-bottom: 1em;
+}
+
+/* 슬라이딩 애니메이션 */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-left-leave-to {
+  transform: translateX(100%);
 }
 </style>
