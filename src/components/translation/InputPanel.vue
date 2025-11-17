@@ -179,6 +179,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 1rem;
   height: 100%;
+  width: 100%;
 }
 
 .panel-header {
