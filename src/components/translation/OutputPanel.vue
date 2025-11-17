@@ -276,15 +276,16 @@ function handleTermClick(term) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 0.625rem;
+  border-radius: 0.5rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -305,9 +306,9 @@ function handleTermClick(term) {
 }
 
 .btn-ghost {
-  color: #4B5563;
+  color: #6B7280;
   background-color: #FFFFFF;
-  border: 2px solid #E5E7EB;
+  border: 1.5px solid #D1D5DB;
 }
 
 .btn-ghost:hover {

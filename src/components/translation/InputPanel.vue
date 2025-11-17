@@ -301,15 +301,16 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 0.625rem;
+  border-radius: 0.5rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .btn:disabled {
@@ -336,21 +337,21 @@ onUnmounted(() => {
 }
 
 .btn-large {
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  min-width: 180px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
 }
 
 .btn-ghost {
-  color: #4B5563;
-  background-color: transparent;
-  border: 2px solid #E5E7EB;
+  color: #6B7280;
+  background-color: #FFFFFF;
+  border: 1.5px solid #D1D5DB;
 }
 
 .btn-ghost:hover:not(:disabled) {
   color: #2563EB;
   border-color: #2563EB;
   background-color: #EFF6FF;
+  transform: translateY(-1px);
 }
 
 .btn-icon {
