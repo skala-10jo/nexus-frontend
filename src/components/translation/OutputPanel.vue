@@ -277,7 +277,7 @@ function handleTermClick(term) {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 0.5rem;
@@ -286,12 +286,14 @@ function handleTermClick(term) {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
   white-space: nowrap;
+  min-width: 100px;
 }
 
 .btn-primary {
   color: #FFFFFF;
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  min-width: 100px;
 }
 
 .btn-primary:hover {
@@ -309,6 +311,7 @@ function handleTermClick(term) {
   color: #6B7280;
   background-color: #FFFFFF;
   border: 1.5px solid #D1D5DB;
+  min-width: 110px;
 }
 
 .btn-ghost:hover {

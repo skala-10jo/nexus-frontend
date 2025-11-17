@@ -302,7 +302,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 0.5rem;
@@ -311,6 +311,7 @@ onUnmounted(() => {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
   white-space: nowrap;
+  min-width: 100px;
 }
 
 .btn:disabled {
@@ -337,14 +338,16 @@ onUnmounted(() => {
 }
 
 .btn-large {
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.75rem;
   font-size: 0.9375rem;
+  min-width: 120px;
 }
 
 .btn-ghost {
   color: #6B7280;
   background-color: #FFFFFF;
   border: 1.5px solid #D1D5DB;
+  min-width: 110px;
 }
 
 .btn-ghost:hover:not(:disabled) {
