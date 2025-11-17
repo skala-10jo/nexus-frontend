@@ -1157,7 +1157,7 @@ const sendChatMessage = async () => {
     // AI 응답 추가
     chatMessages.value.push({
       role: 'assistant',
-      content: data.response,
+      content: data.answer,  // AnswerAgent가 생성한 자연어 답변
       searchResults: data.search_results
     })
   } catch (error) {
