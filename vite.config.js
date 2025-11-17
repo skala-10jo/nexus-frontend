@@ -13,7 +13,7 @@ export default defineConfig({
     port: 5173,
     host: true,
     allowedHosts: [
-      'nonsubversively-contributable-florine.ngrok-free.dev'
+      '18b115e54257.ngrok-free.app'
     ]
   }
 })
