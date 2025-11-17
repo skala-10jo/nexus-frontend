@@ -47,6 +47,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/conversation/practice/:scenarioId',
+    name: 'Practice',
+    component: () => import('@/views/conversation/Practice.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/conversation/expression',
     name: 'Expression',
     component: () => import('@/views/conversation/Expression.vue'),

@@ -231,7 +231,10 @@
                   </div>
 
                   <!-- 액션 버튼 -->
-                  <button class="w-full py-2 bg-orange-primary text-white text-sm font-medium rounded-lg hover:bg-orange-medium transition-colors">
+                  <button
+                    @click="startPractice(scenario.id)"
+                    class="w-full py-2 bg-orange-primary text-white text-sm font-medium rounded-lg hover:bg-orange-medium transition-colors"
+                  >
                     연습 시작하기
                   </button>
                 </div>
@@ -592,8 +595,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
+
+const router = useRouter()
 
 const projects = ref([])
 const upcomingSchedules = ref([])
@@ -1105,6 +1111,11 @@ async function saveEditedScenario() {
   } finally {
     scenariosLoading.value = false
   }
+}
+
+// 시나리오 연습 시작
+function startPractice(scenarioId) {
+  router.push(`/conversation/practice/${scenarioId}`)
 }
 
 // 시나리오 삭제
