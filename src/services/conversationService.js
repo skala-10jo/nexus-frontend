@@ -33,6 +33,22 @@ const conversationService = {
   },
 
   /**
+   * 메시지 피드백 생성
+   * @param {string} scenarioId - 시나리오 ID
+   * @param {string} message - 사용자 메시지
+   * @param {Array} detectedTerms - 감지된 전문용어
+   * @returns {Promise} 피드백 (문법 교정, 용어 사용, 제안, 점수)
+   */
+  async getFeedback(scenarioId, message, detectedTerms = []) {
+    const response = await pythonAPI.post('/conversations/feedback', {
+      scenarioId,
+      message,
+      detectedTerms
+    })
+    return response.data
+  },
+
+  /**
    * 대화 종료 (선택 사항)
    * @param {string} scenarioId - 시나리오 ID
    * @param {Array} history - 대화 히스토리

@@ -368,10 +368,24 @@ const sendMessage = async () => {
       detectedTerms.value = [...new Set([...detectedTerms.value, ...response.detectedTerms])]
     }
 
-    // TODO: 백엔드에서 피드백 받아오기
-    // 임시 더미 피드백 생성
-    const dummyFeedback = generateDummyFeedback(message, response.detectedTerms || [])
-    messageFeedbacks.value.push(dummyFeedback)
+    // 실제 피드백 받아오기
+    try {
+      const feedbackResponse = await conversationService.getFeedback(
+        scenarioId,
+        message,
+        response.detectedTerms || []
+      )
+      messageFeedbacks.value.push(feedbackResponse.feedback)
+    } catch (feedbackError) {
+      console.error('Failed to get feedback:', feedbackError)
+      // 피드백 실패해도 대화는 계속 진행
+      messageFeedbacks.value.push({
+        score: 0,
+        grammar_corrections: [],
+        terminology_usage: { used: response.detectedTerms || [] },
+        suggestions: ['피드백 생성에 실패했습니다.']
+      })
+    }
 
     // 새 메시지를 자동 선택
     selectedMessageIndex.value = userMessages.value.length - 1
@@ -430,32 +444,6 @@ const getScoreClass = (score) => {
   if (score >= 6) return 'good'
   if (score >= 4) return 'fair'
   return 'poor'
-}
-
-// 더미 피드백 생성 (TODO: 백엔드 구현 후 제거)
-const generateDummyFeedback = (message, detectedTerms) => {
-  const score = Math.floor(Math.random() * 3) + 7 // 7-9점
-
-  const grammarSamples = [
-    '시제 일치에 주의하세요',
-    '전치사 사용이 정확합니다',
-    '관사 사용을 확인해보세요'
-  ]
-
-  const suggestionSamples = [
-    '좀 더 격식 있는 표현을 사용해보세요',
-    '문장이 간결하고 명확합니다',
-    '다양한 어휘를 활용하면 더 좋습니다'
-  ]
-
-  return {
-    score,
-    grammar_corrections: Math.random() > 0.5 ? [grammarSamples[Math.floor(Math.random() * grammarSamples.length)]] : [],
-    terminology_usage: {
-      used: detectedTerms
-    },
-    suggestions: [suggestionSamples[Math.floor(Math.random() * suggestionSamples.length)]]
-  }
 }
 
 // 종합 피드백 탭 전환 시 자동 로드
@@ -821,7 +809,7 @@ textarea:disabled {
 
 /* 피드백 사이드바 */
 .feedback-sidebar {
-  width: 400px;
+  width: 600px;
   display: flex;
   flex-direction: column;
   background: white;
