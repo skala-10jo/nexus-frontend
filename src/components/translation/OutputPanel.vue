@@ -195,12 +195,18 @@ function handleTermClick(term) {
 
 .output-wrapper {
   flex: 1;
-  min-height: 300px;
-  padding: 1rem;
-  background-color: #F9FAFB;
+  min-height: 480px;
+  padding: 1.25rem;
+  background: linear-gradient(to bottom right, #FAFBFC, #F3F4F6);
   border: 2px solid #E5E7EB;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   overflow-y: auto;
+  transition: all 0.2s ease;
+}
+
+.output-wrapper:hover {
+  border-color: #D1D5DB;
+  background: linear-gradient(to bottom right, #FFFFFF, #FAFBFC);
 }
 
 .empty-state,
@@ -210,29 +216,31 @@ function handleTermClick(term) {
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 250px;
+  min-height: 400px;
+  gap: 1rem;
 }
 
 .empty-icon {
-  width: 4rem;
-  height: 4rem;
+  width: 5rem;
+  height: 5rem;
   color: #D1D5DB;
-  margin-bottom: 1rem;
+  opacity: 0.8;
 }
 
 .empty-text {
   color: #9CA3AF;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  font-weight: 500;
   margin: 0;
 }
 
 .loading-spinner {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border: 4px solid #E5E7EB;
   border-top-color: #2563EB;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -243,50 +251,61 @@ function handleTermClick(term) {
 
 .loading-text {
   color: #6B7280;
-  font-size: 0.875rem;
-  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
 }
 
 .translated-content {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 1rem;
-  line-height: 1.75;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.9;
   color: #111827;
+  padding: 0.5rem;
 }
 
 .action-bar {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  padding-top: 0.5rem;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 0.625rem;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
 }
 
 .btn-primary {
   color: #FFFFFF;
-  background-color: #2563EB;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-primary:hover {
-  background-color: #1D4ED8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-ghost {
   color: #4B5563;
-  background-color: transparent;
+  background-color: #FFFFFF;
   border: 2px solid #E5E7EB;
 }
 
@@ -294,11 +313,17 @@ function handleTermClick(term) {
   color: #2563EB;
   border-color: #2563EB;
   background-color: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.btn-ghost:active {
+  transform: translateY(0);
 }
 
 .btn-icon {
   width: 1.25rem;
   height: 1.25rem;
+  flex-shrink: 0;
 }
 
 /* Responsive */

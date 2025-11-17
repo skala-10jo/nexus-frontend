@@ -224,36 +224,40 @@ onUnmounted(() => {
 .textarea-wrapper {
   position: relative;
   flex: 1;
-  min-height: 300px;
+  min-height: 480px;
+  display: flex;
 }
 
 .text-input {
   width: 100%;
   height: 100%;
-  padding: 1rem;
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 1rem;
-  line-height: 1.75;
+  padding: 1.25rem;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.8;
   color: #111827;
-  background-color: #FFFFFF;
+  background-color: #FAFBFC;
   border: 2px solid #E5E7EB;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   resize: none;
   transition: all 0.2s ease;
 }
 
 .text-input::placeholder {
   color: #9CA3AF;
+  font-size: 1rem;
 }
 
 .text-input:hover {
   border-color: #9CA3AF;
+  background-color: #FFFFFF;
 }
 
 .text-input:focus {
   outline: none;
   border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .clear-button {
@@ -289,44 +293,51 @@ onUnmounted(() => {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  padding-top: 0.5rem;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 0.625rem;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn-primary {
   color: #FFFFFF;
-  background-color: #2563EB;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #1D4ED8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-large {
-  padding: 0.875rem 1.5rem;
+  padding: 1rem 2rem;
   font-size: 1rem;
+  min-width: 180px;
 }
 
 .btn-ghost {
