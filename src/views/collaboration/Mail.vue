@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen overflow-hidden relative">
     <!-- 메인 콘텐츠 영역 -->
-    <div class="flex-1 p-8 overflow-y-auto transition-all duration-300" :style="{ marginRight: showChatPanel ? '384px' : '0' }">
+    <div class="flex-1 p-8 overflow-y-auto transition-all duration-300" :style="{ marginRight: showChatPanel ? '512px' : '0' }">
     <!-- 상단 헤더 -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex justify-between items-center">
@@ -506,7 +506,7 @@
     <transition name="slide-left">
       <div
         v-if="showChatPanel"
-        class="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl flex flex-col border-l border-gray-200"
+        class="fixed top-0 right-0 h-full w-[512px] bg-white shadow-2xl flex flex-col border-l border-gray-200"
       >
         <!-- 챗 헤더 -->
         <div class="p-4 bg-orange-primary text-white flex justify-between items-center">
@@ -523,17 +523,69 @@
           <div v-for="(msg, idx) in chatMessages" :key="idx">
             <!-- 사용자 메시지 -->
             <div v-if="msg.role === 'user'" class="flex justify-end">
-              <div class="bg-orange-100 text-gray-800 rounded-lg px-4 py-2 max-w-[80%]">
+              <div class="bg-orange-100 text-gray-800 rounded-lg px-4 py-2 max-w-[85%]">
                 {{ msg.content }}
               </div>
             </div>
 
             <!-- AI 응답 -->
             <div v-else class="flex justify-start">
-              <div class="bg-gray-100 text-gray-800 rounded-lg px-4 py-2 max-w-[80%]">
-                {{ msg.content }}
+              <div class="bg-gray-100 text-gray-800 rounded-lg px-4 py-2 max-w-[90%]">
+                <!-- draft/translate일 때는 content 숨기고 카드만 표시 -->
+                <div v-if="msg.queryType !== 'draft' && msg.queryType !== 'translate'" class="whitespace-pre-wrap">{{ msg.content }}</div>
 
-                <!-- 검색 결과 표시 -->
+                <!-- 메일 초안 작성 결과 (draft) -->
+                <div v-if="msg.queryType === 'draft' && msg.emailDraft" class="bg-white border-2 border-orange-200 rounded-lg p-3" :class="{ 'mt-4': msg.queryType !== 'draft' && msg.queryType !== 'translate' }">
+                  <div class="text-xs text-orange-600 font-semibold mb-2 flex items-center gap-1">
+                    ✉️ 작성된 메일 초안
+                  </div>
+                  <div class="space-y-2">
+                    <div v-if="msg.subject" class="text-sm">
+                      <span class="font-semibold text-gray-700">제목:</span>
+                      <span class="ml-2 text-gray-800">{{ msg.subject }}</span>
+                    </div>
+                    <div class="border-t border-gray-200 pt-2">
+                      <div class="text-xs text-gray-500 mb-1">본문:</div>
+                      <div class="text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 rounded">{{ msg.emailDraft }}</div>
+                    </div>
+                    <div v-if="msg.ragSections && msg.ragSections.length > 0" class="border-t border-gray-200 pt-2">
+                      <div class="text-xs text-gray-500">참고한 BizGuide 섹션:</div>
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        <span
+                          v-for="(section, idx) in msg.ragSections"
+                          :key="idx"
+                          class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full"
+                        >
+                          {{ section }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 메일 번역 결과 (translate) -->
+                <div v-if="msg.queryType === 'translate' && msg.translatedEmail" class="bg-white border-2 border-blue-200 rounded-lg p-3" :class="{ 'mt-4': msg.queryType !== 'draft' && msg.queryType !== 'translate' }">
+                  <div class="text-xs text-blue-600 font-semibold mb-2 flex items-center gap-1">
+                    🌐 번역 결과
+                  </div>
+                  <div class="space-y-2">
+                    <div class="text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 rounded">{{ msg.translatedEmail }}</div>
+                    <div v-if="msg.ragSections && msg.ragSections.length > 0" class="border-t border-gray-200 pt-2">
+                      <div class="text-xs text-gray-500">참고한 BizGuide 섹션:</div>
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        <span
+                          v-for="(section, idx) in msg.ragSections"
+                          :key="idx"
+                          class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"
+                        >
+                          {{ section }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 검색 결과 표시 (search) -->
                 <div v-if="msg.searchResults && msg.searchResults.length > 0" class="mt-3 space-y-2">
                   <div class="text-xs text-gray-500 font-semibold">검색 결과 ({{ msg.searchResults.length }}개)</div>
                   <div
@@ -570,7 +622,7 @@
               v-model="chatInput"
               @keyup.enter="sendChatMessage"
               type="text"
-              placeholder="메일 검색 요청을 입력하세요..."
+              placeholder="메일 검색, 작성, 번역 요청을 입력하세요..."
               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
             >
             <button
@@ -1157,8 +1209,13 @@ const sendChatMessage = async () => {
     // AI 응답 추가
     chatMessages.value.push({
       role: 'assistant',
-      content: data.response,
-      searchResults: data.search_results
+      content: data.answer,
+      queryType: data.query_type,  // search/draft/translate/general
+      searchResults: data.search_results,
+      emailDraft: data.email_draft,
+      subject: data.subject,
+      translatedEmail: data.translated_email,
+      ragSections: data.rag_sections
     })
   } catch (error) {
     console.error('챗봇 API 호출 실패:', error)

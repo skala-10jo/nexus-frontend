@@ -1,6 +1,6 @@
 <template>
-  <div class="p-8">
-    <div class="flex justify-between items-center mb-6">
+  <div class="flex flex-col" style="height: calc(100vh - 4rem);">
+    <div class="flex justify-between items-center px-8 pt-8 pb-4 flex-shrink-0">
       <h1 class="text-3xl font-bold text-gray-800">메신저</h1>
       <button
         v-if="!isConnected"
@@ -17,12 +17,13 @@
     </div>
 
     <!-- Error Message -->
-    <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+    <div v-if="error" class="mx-8 mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex-shrink-0">
       {{ error }}
     </div>
 
     <!-- No Integration -->
-    <div v-if="!loading && !isConnected" class="bg-white rounded-lg shadow-md p-12 text-center">
+    <div v-if="!loading && !isConnected" class="flex-1 flex items-center justify-center px-8 overflow-hidden">
+      <div class="bg-white rounded-lg shadow-md p-12 text-center">
       <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
@@ -37,14 +38,16 @@
         </svg>
         Slack 연동하기
       </button>
+      </div>
     </div>
 
     <!-- Main UI with Integration -->
-    <div v-else class="grid grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
+    <div v-else class="flex-1 px-8 pb-8 overflow-hidden">
+      <div class="grid grid-cols-12 gap-6 h-full">
       <!-- Channels List -->
-      <div class="col-span-4 bg-white rounded-lg shadow-md p-4 overflow-y-auto">
+      <div class="col-span-4 bg-white rounded-lg shadow-md flex flex-col overflow-hidden">
         <!-- Workspace Info -->
-        <div v-if="integration" class="mb-4 pb-4 border-b border-gray-200">
+        <div v-if="integration" class="p-4 border-b border-gray-200 flex-shrink-0">
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-lg font-semibold text-gray-800">{{ integration.workspaceName }}</h2>
@@ -65,7 +68,7 @@
         </div>
 
         <!-- Channel Actions -->
-        <div class="mb-4 flex gap-2">
+        <div class="px-4 pt-4 pb-2 flex gap-2 flex-shrink-0">
           <button
             @click="refreshChannels"
             :disabled="loading"
@@ -76,7 +79,7 @@
         </div>
 
         <!-- Channels List -->
-        <div>
+        <div class="flex-1 overflow-y-auto px-4 pb-4">
           <h2 class="text-lg font-semibold text-gray-800 mb-3">채널</h2>
 
           <div v-if="loading && channels.length === 0" class="text-center py-8">
@@ -116,9 +119,9 @@
       </div>
 
       <!-- Message Area -->
-      <div class="col-span-8 bg-white rounded-lg shadow-md flex flex-col">
+      <div class="col-span-8 bg-white rounded-lg shadow-md flex flex-col overflow-hidden">
         <!-- Channel Header -->
-        <div v-if="selectedChannel" class="border-b border-gray-200 p-4">
+        <div v-if="selectedChannel" class="border-b border-gray-200 p-4 flex-shrink-0">
           <h3 class="text-lg font-semibold text-gray-800">
             # {{ selectedChannel.name }}
           </h3>
@@ -128,9 +131,9 @@
         </div>
 
         <!-- Message Area -->
-        <div v-if="selectedChannel" class="flex-1 flex flex-col">
+        <div v-if="selectedChannel" class="flex-1 flex flex-col overflow-hidden">
           <!-- Message History -->
-          <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+          <div class="flex-1 overflow-y-auto p-6 bg-gray-50" ref="messageContainer" style="min-height: 0;">
             <div v-if="loading && messages.length === 0" class="text-center py-8">
               <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
             </div>
@@ -139,20 +142,45 @@
               메시지가 없습니다
             </div>
 
-            <div v-else class="space-y-4">
-              <div v-for="(message, index) in messages" :key="index" class="bg-white rounded-lg p-4 shadow-sm">
-                <div class="flex items-start gap-3">
+            <div v-else class="space-y-3">
+              <div v-for="(message, index) in messages" :key="index"
+                   :class="[
+                     'flex',
+                     isMyMessage(message) ? 'justify-end' : 'justify-start'
+                   ]">
+                <!-- Other person's message (left) -->
+                <div v-if="!isMyMessage(message)" class="flex items-start gap-3 max-w-[70%]">
                   <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                     <span class="text-purple-600 font-semibold text-sm">
                       {{ message.username ? message.username.charAt(0).toUpperCase() : 'U' }}
                     </span>
                   </div>
-                  <div class="flex-1">
+                  <div>
                     <div class="flex items-baseline gap-2 mb-1">
-                      <span class="font-semibold text-gray-900">{{ message.username || 'Unknown' }}</span>
+                      <span class="font-semibold text-gray-900 text-sm">{{ message.username || 'Unknown' }}</span>
                       <span class="text-xs text-gray-500">{{ formatTimestamp(message.timestamp) }}</span>
                     </div>
-                    <p class="text-gray-700 whitespace-pre-wrap">{{ message.text }}</p>
+                    <div class="bg-white rounded-lg rounded-tl-none p-3 shadow-sm">
+                      <p class="text-gray-700 whitespace-pre-wrap">{{ message.text }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- My message (right) -->
+                <div v-else class="flex items-start gap-3 max-w-[70%] flex-row-reverse">
+                  <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <span class="text-green-600 font-semibold text-sm">
+                      {{ currentUser ? currentUser.username.charAt(0).toUpperCase() : 'Me' }}
+                    </span>
+                  </div>
+                  <div>
+                    <div class="flex items-baseline gap-2 mb-1 justify-end">
+                      <span class="text-xs text-gray-500">{{ formatTimestamp(message.timestamp) }}</span>
+                      <span class="font-semibold text-gray-900 text-sm">나</span>
+                    </div>
+                    <div class="bg-purple-600 text-white rounded-lg rounded-tr-none p-3 shadow-sm">
+                      <p class="whitespace-pre-wrap">{{ message.text }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -160,7 +188,7 @@
           </div>
 
           <!-- Message Input -->
-          <div class="border-t border-gray-200 bg-white p-4">
+          <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0">
             <div class="flex gap-2">
               <textarea
                 v-model="messageText"
@@ -191,22 +219,74 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useSlackStore } from '@/stores/slack';
 import { storeToRefs } from 'pinia';
+import { useSlackWebSocket } from '@/composables/useSlackWebSocket';
 
 const slackStore = useSlackStore();
 const { integration, isConnected, channels, selectedChannel, messages, loading, error } = storeToRefs(slackStore);
 
 const messageText = ref('');
+const messageContainer = ref(null);
+const currentUser = ref(null);
+
+// WebSocket composable
+const wsConnection = ref(null);
+const wsMessages = ref([]);
+
+// Auto-scroll to bottom when new messages arrive
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    }
+  });
+};
+
+// Watch for new messages and auto-scroll
+watch(messages, () => {
+  scrollToBottom();
+}, { deep: true });
+
+// Check if message is from current user
+const isMyMessage = (message) => {
+  if (!currentUser.value) {
+    console.log('[Messenger] No current user');
+    return false;
+  }
+
+  console.log('[Messenger] Checking message:', {
+    messageUsername: message.username,
+    messageUserId: message.userId,
+    currentUsername: currentUser.value.username,
+    currentUserId: currentUser.value.id
+  });
+
+  // Compare both username and userId for accuracy
+  const isMatch = message.username === currentUser.value.username ||
+         message.userId === String(currentUser.value.id) ||
+         message.userId === currentUser.value.id;
+
+  console.log('[Messenger] Is my message:', isMatch);
+  return isMatch;
+};
 
 onMounted(async () => {
   try {
+    // Load current user from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      currentUser.value = JSON.parse(userStr);
+      console.log('[Messenger] Loaded current user:', currentUser.value);
+    }
+
     await slackStore.fetchIntegrationStatus();
 
     // If connected, load channels
@@ -246,6 +326,45 @@ const refreshChannels = async () => {
 
 const selectChannel = (channel) => {
   slackStore.selectChannel(channel);
+
+  // Disconnect previous WebSocket
+  if (wsConnection.value) {
+    wsConnection.value.disconnect();
+  }
+
+  // Connect to new channel's WebSocket
+  wsConnection.value = useSlackWebSocket(channel.id);
+  wsConnection.value.connect();
+
+  console.log('[Messenger] WebSocket connected to channel:', channel.id);
+
+  // Setup watch for this connection's messages
+  setupMessageWatch();
+};
+
+// Setup watch for WebSocket messages
+const setupMessageWatch = () => {
+  if (!wsConnection.value) return;
+
+  // Note: wsConnection.value.messages is already unwrapped
+  watch(() => wsConnection.value.messages, (newMessages) => {
+    if (newMessages && newMessages.length > 0) {
+      // Get last message (newest)
+      const lastMessage = newMessages[newMessages.length - 1];
+      console.log('[Messenger] Received WebSocket message:', lastMessage);
+
+      // Add to messages if not already present
+      const exists = messages.value.some(m =>
+        m.text === lastMessage.text &&
+        m.timestamp === lastMessage.timestamp
+      );
+
+      if (!exists) {
+        messages.value.push(lastMessage);
+        console.log('[Messenger] Added message to list, total:', messages.value.length);
+      }
+    }
+  }, { deep: true, immediate: true });
 };
 
 const sendSlackMessage = async () => {
@@ -254,16 +373,27 @@ const sendSlackMessage = async () => {
   }
 
   try {
-    await slackStore.sendMessage(
-      selectedChannel.value.id,
-      messageText.value
-    );
+    console.log('[Messenger] wsConnection:', wsConnection.value);
+    console.log('[Messenger] wsConnection.connected:', wsConnection.value?.connected);
+
+    // Send via WebSocket (will also send to Slack via backend)
+    // Note: wsConnection.value.connected is already unwrapped, no need for .value
+    if (wsConnection.value && wsConnection.value.connected) {
+      wsConnection.value.sendMessage(messageText.value);
+      console.log('[Messenger] Message sent via WebSocket');
+    } else {
+      // Fallback to REST API if WebSocket not connected
+      console.warn('[Messenger] WebSocket not connected, falling back to REST API');
+      await slackStore.sendMessage(
+        selectedChannel.value.id,
+        messageText.value
+      );
+      console.log('[Messenger] Message sent via REST API');
+    }
 
     // Clear message
     messageText.value = '';
 
-    // Show success
-    alert('메시지가 전송되었습니다!');
   } catch (err) {
     console.error('Failed to send message:', err);
     alert('메시지 전송에 실패했습니다.');
