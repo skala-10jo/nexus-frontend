@@ -17,7 +17,8 @@ export default defineConfig({
     host: true,
     https: false,
     allowedHosts: [
-      'nonsubversively-contributable-florine.ngrok-free.dev'
+      'nonsubversively-contributable-florine.ngrok-free.dev',
+      '18b115e54257.ngrok-free.app'
     ],
     proxy: {
       // Proxy API requests to backend

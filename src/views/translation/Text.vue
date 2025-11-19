@@ -1,8 +1,8 @@
 <template>
   <div class="translation-page">
-    <!-- Header Section -->
+    <!-- Compact Header with Integrated Controls -->
     <header class="page-header">
-      <div class="header-content">
+      <div class="header-row">
         <div class="header-left">
           <h1 class="page-title">
             <svg class="title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,34 +13,36 @@
                 d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
               />
             </svg>
-            텍스트 번역
+            <div class="title-content">
+              <span class="title-text">텍스트 번역</span>
+              <span class="title-subtitle">AI 기반 고품질 다국어 번역</span>
+            </div>
           </h1>
-          <p class="page-subtitle">AI 기반 고품질 다국어 번역</p>
         </div>
-      </div>
 
-      <!-- Project & Language Selector -->
-      <div class="control-bar">
-        <ProjectSelector
-          v-model="selectedProjectId"
-          :projects="projects"
-          :context-info="contextInfo"
-          @change="onProjectChange"
-        />
+        <!-- Integrated Control Bar -->
+        <div class="header-controls">
+          <ProjectSelector
+            v-model="selectedProjectId"
+            :projects="projects"
+            :context-info="contextInfo"
+            @change="onProjectChange"
+          />
 
-        <LanguageSwitcher
-          v-model:source-language="sourceLang"
-          v-model:target-language="targetLang"
-          @swap="onLanguageSwap"
-        />
+          <LanguageSwitcher
+            v-model:source-language="sourceLang"
+            v-model:target-language="targetLang"
+            @swap="onLanguageSwap"
+          />
+        </div>
       </div>
     </header>
 
-    <!-- Main Workspace -->
+    <!-- Enhanced Main Workspace -->
     <div class="translation-workspace">
       <div class="workspace-grid">
         <!-- Input Panel -->
-        <div class="workspace-column">
+        <div class="workspace-column input-column">
           <InputPanel
             v-model="sourceText"
             :is-translating="isTranslating"
@@ -52,7 +54,7 @@
         </div>
 
         <!-- Output Panel -->
-        <div class="workspace-column">
+        <div class="workspace-column output-column">
           <OutputPanel
             :translated-text="translatedText"
             :detected-terms="detectedTerms"
@@ -297,81 +299,113 @@ onMounted(() => {
 .translation-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  max-width: 1600px;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+  max-width: 1800px;
   margin: 0 auto;
   min-height: 100vh;
 }
 
+/* Compact Header */
 .page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  background-color: #FFFFFF;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.header-content {
+.header-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
 }
 
 .page-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
+  gap: 1rem;
   margin: 0;
 }
 
 .title-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   color: #2563EB;
+  flex-shrink: 0;
 }
 
-.page-subtitle {
-  font-size: 1rem;
-  color: #6B7280;
-  margin: 0;
-}
-
-.control-bar {
+.title-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  gap: 0.25rem;
 }
 
+.title-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.title-subtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-weight: 400;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Enhanced Workspace */
 .translation-workspace {
   flex: 1;
+  display: flex;
 }
 
 .workspace-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  min-height: 500px;
+  gap: 1.25rem;
+  width: 100%;
+  min-height: 650px;
 }
 
 .workspace-column {
   display: flex;
   background-color: #FFFFFF;
   border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.75rem;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.workspace-column:hover {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
+}
+
+.input-column {
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.input-column:focus-within {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.output-column {
+  background: linear-gradient(to bottom, #FFFFFF, #F9FAFB);
 }
 
 .context-panel {
@@ -501,33 +535,61 @@ onMounted(() => {
   transform: translateX(2rem);
 }
 
-/* Responsive */
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 1024px) {
   .workspace-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    min-height: auto;
+  }
+
+  .workspace-column {
+    min-height: 500px;
   }
 }
 
 @media (max-width: 768px) {
   .translation-page {
     padding: 1rem;
+    gap: 1rem;
   }
 
-  .page-title {
-    font-size: 1.5rem;
+  .page-header {
+    padding: 1rem;
+  }
+
+  .title-text {
+    font-size: 1.25rem;
+  }
+
+  .title-subtitle {
+    font-size: 0.75rem;
   }
 
   .title-icon {
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
-  .control-bar {
-    padding: 1rem;
+  .header-controls {
+    flex-direction: column;
+    width: 100%;
   }
 
   .workspace-column {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   .toast {
