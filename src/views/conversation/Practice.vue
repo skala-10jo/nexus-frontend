@@ -106,7 +106,7 @@
           :class="['btn-record', { recording: isRecording, processing: isProcessingVoice }]"
           :disabled="isLoading || isProcessingVoice || !scenario"
         >
-          <span v-if="!isRecording && !isProcessingVoice">🎤 녹음 시작</span>
+          <span v-if="!isRecording && !isProcessingVoice">🎤 {{ useRealtimeSTT ? '실시간 녹음' : '녹음 시작' }}</span>
           <span v-else-if="isRecording">⏹ 녹음 중지</span>
           <span v-else>⏳ 처리 중...</span>
         </button>
@@ -114,6 +114,23 @@
         <div v-if="isRecording" class="recording-indicator">
           <span class="recording-dot"></span>
           <span class="recording-time">{{ recordingTime }}초</span>
+        </div>
+
+        <!-- 실시간 STT 결과 표시 -->
+        <div v-if="useRealtimeSTT && isRecording" class="realtime-stt-result">
+          <!-- 확정된 텍스트들 (검정) -->
+          <div v-for="(text, index) in finalTexts" :key="`final-${index}`" class="final-text">
+            {{ text }}
+          </div>
+
+          <!-- 실시간 인식 중인 텍스트 (회색, 이탤릭) -->
+          <div v-if="interimText" class="interim-text">
+            {{ interimText }}
+          </div>
+
+          <div v-if="!interimText && finalTexts.length === 0" class="waiting-text">
+            말씀하세요...
+          </div>
         </div>
 
         <div v-if="recognizedText && !isRecording" class="recognized-text">
@@ -310,6 +327,7 @@ import { useRoute, useRouter } from 'vue-router'
 import conversationService from '@/services/conversationService'
 import voiceRecorder from '@/services/voiceRecorder'
 import voiceSTTService from '@/services/voiceSTTService'
+import voiceSTTStreamService from '@/services/voiceSTTStreamService'
 
 const route = useRoute()
 const router = useRouter()
@@ -330,6 +348,11 @@ const isProcessingVoice = ref(false)
 const recognizedText = ref('')
 const recordingTime = ref(0)
 let recordingInterval = null
+
+// 실시간 STT 상태
+const useRealtimeSTT = ref(true) // 실시간 STT 사용 여부
+const interimText = ref('') // 실시간 인식 중인 텍스트 (회색)
+const finalTexts = ref([]) // 확정된 텍스트들 (검정)
 
 // 피드백 상태
 const activeTab = ref('messages') // 'messages' or 'comprehensive'
@@ -485,17 +508,25 @@ const toggleInputMode = () => {
 const startRecording = async () => {
   try {
     error.value = null
-    isRecording.value = true
     recognizedText.value = ''
     recordingTime.value = 0
 
-    // 타이머 시작
-    recordingInterval = setInterval(() => {
-      recordingTime.value++
-    }, 1000)
+    // 실시간 STT 사용 여부에 따라 분기
+    if (useRealtimeSTT.value) {
+      // 실시간 스트리밍 STT
+      await startRealtimeSTT()
+    } else {
+      // 기존 POST 방식 STT
+      isRecording.value = true
 
-    // 녹음 시작
-    await voiceRecorder.startRecording()
+      // 타이머 시작
+      recordingInterval = setInterval(() => {
+        recordingTime.value++
+      }, 1000)
+
+      // 녹음 시작
+      await voiceRecorder.startRecording()
+    }
   } catch (err) {
     error.value = err.message || '녹음 시작 실패'
     isRecording.value = false
@@ -508,36 +539,145 @@ const startRecording = async () => {
 // 녹음 중지 및 텍스트 변환
 const stopRecording = async () => {
   try {
+    // 실시간 STT 사용 여부에 따라 분기
+    if (useRealtimeSTT.value) {
+      // 실시간 스트리밍 STT 중지
+      await stopRealtimeSTT()
+    } else {
+      // 기존 POST 방식 STT
+      isRecording.value = false
+      if (recordingInterval) {
+        clearInterval(recordingInterval)
+      }
+
+      isProcessingVoice.value = true
+
+      // 녹음 중지 및 Blob 가져오기
+      const audioBlob = await voiceRecorder.stopRecording()
+
+      // STT 처리
+      const result = await voiceSTTService.transcribe(audioBlob, 'en-US')
+
+      if (result.success && result.data.text) {
+        recognizedText.value = result.data.text
+        userInput.value = result.data.text
+      } else {
+        error.value = '음성 인식 실패'
+      }
+
+      isProcessingVoice.value = false
+    }
+  } catch (err) {
+    error.value = err.message || '음성 처리 실패'
+    isProcessingVoice.value = false
+  }
+}
+
+// 실시간 STT 시작
+const startRealtimeSTT = async () => {
+  try {
+    // 상태 초기화
+    interimText.value = ''
+    finalTexts.value = []
+    isRecording.value = true
+
+    // 타이머 시작
+    recordingInterval = setInterval(() => {
+      recordingTime.value++
+    }, 1000)
+
+    // WebSocket 스트리밍 시작
+    await voiceSTTStreamService.startStreaming({
+      language: 'en-US',
+
+      // Interim 결과 콜백 (실시간 인식 중)
+      onInterim: (text) => {
+        console.log('📝 Interim:', text)
+        interimText.value = text
+      },
+
+      // Final 결과 콜백 (확정된 텍스트)
+      onFinal: (text, confidence) => {
+        console.log('✅ Final:', text, confidence)
+
+        if (text && text.trim()) {
+          // 확정된 텍스트 추가
+          finalTexts.value.push(text.trim())
+
+          // interim 초기화
+          interimText.value = ''
+        }
+      },
+
+      // 에러 콜백
+      onError: (errorMessage) => {
+        console.error('❌ STT Error:', errorMessage)
+        error.value = errorMessage
+        stopRealtimeSTT()
+      },
+
+      // 연결 종료 콜백
+      onClose: () => {
+        console.log('🔌 Connection closed')
+        isRecording.value = false
+        if (recordingInterval) {
+          clearInterval(recordingInterval)
+        }
+      }
+    })
+
+    console.log('🎙️ Realtime STT started')
+
+  } catch (err) {
+    console.error('Realtime STT start failed:', err)
+    error.value = err.message || '실시간 음성 인식 시작 실패'
+    isRecording.value = false
+    if (recordingInterval) {
+      clearInterval(recordingInterval)
+    }
+  }
+}
+
+// 실시간 STT 중지
+const stopRealtimeSTT = async () => {
+  try {
+    console.log('⏹️ Stopping realtime STT...')
+
     isRecording.value = false
     if (recordingInterval) {
       clearInterval(recordingInterval)
     }
 
-    isProcessingVoice.value = true
+    // WebSocket 스트리밍 중지
+    await voiceSTTStreamService.stopStreaming()
 
-    // 녹음 중지 및 Blob 가져오기
-    const audioBlob = await voiceRecorder.stopRecording()
-
-    // STT 처리
-    const result = await voiceSTTService.transcribe(audioBlob, 'en-US')
-
-    if (result.success && result.data.text) {
-      recognizedText.value = result.data.text
-      userInput.value = result.data.text
-    } else {
-      error.value = '음성 인식 실패'
+    // 확정된 텍스트들을 userInput에 결합
+    const allText = finalTexts.value.join(' ')
+    if (allText.trim()) {
+      recognizedText.value = allText
+      userInput.value = allText
+    } else if (interimText.value.trim()) {
+      // final이 없고 interim만 있으면 interim 사용
+      recognizedText.value = interimText.value
+      userInput.value = interimText.value
     }
+
+    console.log('✅ Realtime STT stopped')
+
   } catch (err) {
-    error.value = err.message || '음성 처리 실패'
-  } finally {
-    isProcessingVoice.value = false
+    console.error('Realtime STT stop failed:', err)
+    error.value = err.message || '실시간 음성 인식 중지 실패'
   }
 }
 
 // 컴포넌트 정리
 onUnmounted(() => {
   if (isRecording.value) {
-    voiceRecorder.cancel()
+    if (useRealtimeSTT.value) {
+      voiceSTTStreamService.stopStreaming()
+    } else {
+      voiceRecorder.cancel()
+    }
   }
   if (recordingInterval) {
     clearInterval(recordingInterval)
@@ -1447,6 +1587,41 @@ textarea:disabled {
   50% {
     opacity: 1;
   }
+}
+
+/* 실시간 STT 결과 */
+.realtime-stt-result {
+  padding: 12px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  min-height: 60px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.realtime-stt-result .final-text {
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+.realtime-stt-result .interim-text {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.realtime-stt-result .waiting-text {
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
 }
 
 </style>
