@@ -79,16 +79,57 @@
 
     <!-- 입력 영역 -->
     <div class="input-area">
+      <!-- 모드 전환 버튼 -->
+      <button
+        @click="toggleInputMode"
+        class="btn-mode-toggle"
+        :disabled="isLoading || !scenario"
+        :title="inputMode === 'text' ? '음성 입력으로 전환' : '텍스트 입력으로 전환'"
+      >
+        {{ inputMode === 'text' ? '🎤' : '⌨️' }}
+      </button>
+
+      <!-- 텍스트 입력 모드 -->
       <textarea
+        v-if="inputMode === 'text'"
         v-model="userInput"
         @keydown.enter.prevent="sendMessage"
         placeholder="메시지를 입력하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
         :disabled="isLoading || !scenario"
         rows="3"
       ></textarea>
+
+      <!-- 음성 입력 모드 -->
+      <div v-else class="voice-input-container">
+        <button
+          @click="isRecording ? stopRecording() : startRecording()"
+          :class="['btn-record', { recording: isRecording, processing: isProcessingVoice }]"
+          :disabled="isLoading || isProcessingVoice || !scenario"
+        >
+          <span v-if="!isRecording && !isProcessingVoice">🎤 녹음 시작</span>
+          <span v-else-if="isRecording">⏹ 녹음 중지</span>
+          <span v-else>⏳ 처리 중...</span>
+        </button>
+
+        <div v-if="isRecording" class="recording-indicator">
+          <span class="recording-dot"></span>
+          <span class="recording-time">{{ recordingTime }}초</span>
+        </div>
+
+        <div v-if="recognizedText && !isRecording" class="recognized-text">
+          <span class="label">인식된 텍스트:</span>
+          <span class="text">{{ recognizedText }}</span>
+        </div>
+
+        <div v-if="isProcessingVoice" class="processing-indicator">
+          음성 인식 중...
+        </div>
+      </div>
+
+      <!-- 전송 버튼 -->
       <button
         @click="sendMessage"
-        :disabled="!userInput.trim() || isLoading || !scenario"
+        :disabled="!userInput.trim() || isLoading || !scenario || isRecording || isProcessingVoice"
         class="btn-send"
       >
         전송
@@ -264,9 +305,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import conversationService from '@/services/conversationService'
+import voiceRecorder from '@/services/voiceRecorder'
+import voiceSTTService from '@/services/voiceSTTService'
 
 const route = useRoute()
 const router = useRouter()
@@ -279,6 +322,14 @@ const userInput = ref('')
 const isLoading = ref(false)
 const error = ref(null)
 const conversationArea = ref(null)
+
+// 음성 입력 상태
+const inputMode = ref('text') // 'text' | 'voice'
+const isRecording = ref(false)
+const isProcessingVoice = ref(false)
+const recognizedText = ref('')
+const recordingTime = ref(0)
+let recordingInterval = null
 
 // 피드백 상태
 const activeTab = ref('messages') // 'messages' or 'comprehensive'
@@ -410,6 +461,88 @@ const endConversation = () => {
     router.push('/conversation/scenario')
   }
 }
+
+// 입력 모드 전환
+const toggleInputMode = () => {
+  if (inputMode.value === 'text') {
+    // 브라우저 지원 확인
+    if (!voiceRecorder.constructor.isSupported()) {
+      error.value = '이 브라우저는 음성 녹음을 지원하지 않습니다.'
+      return
+    }
+    inputMode.value = 'voice'
+    recognizedText.value = ''
+  } else {
+    // 녹음 중이면 중지
+    if (isRecording.value) {
+      stopRecording()
+    }
+    inputMode.value = 'text'
+  }
+}
+
+// 녹음 시작
+const startRecording = async () => {
+  try {
+    error.value = null
+    isRecording.value = true
+    recognizedText.value = ''
+    recordingTime.value = 0
+
+    // 타이머 시작
+    recordingInterval = setInterval(() => {
+      recordingTime.value++
+    }, 1000)
+
+    // 녹음 시작
+    await voiceRecorder.startRecording()
+  } catch (err) {
+    error.value = err.message || '녹음 시작 실패'
+    isRecording.value = false
+    if (recordingInterval) {
+      clearInterval(recordingInterval)
+    }
+  }
+}
+
+// 녹음 중지 및 텍스트 변환
+const stopRecording = async () => {
+  try {
+    isRecording.value = false
+    if (recordingInterval) {
+      clearInterval(recordingInterval)
+    }
+
+    isProcessingVoice.value = true
+
+    // 녹음 중지 및 Blob 가져오기
+    const audioBlob = await voiceRecorder.stopRecording()
+
+    // STT 처리
+    const result = await voiceSTTService.transcribe(audioBlob, 'en-US')
+
+    if (result.success && result.data.text) {
+      recognizedText.value = result.data.text
+      userInput.value = result.data.text
+    } else {
+      error.value = '음성 인식 실패'
+    }
+  } catch (err) {
+    error.value = err.message || '음성 처리 실패'
+  } finally {
+    isProcessingVoice.value = false
+  }
+}
+
+// 컴포넌트 정리
+onUnmounted(() => {
+  if (isRecording.value) {
+    voiceRecorder.cancel()
+  }
+  if (recordingInterval) {
+    clearInterval(recordingInterval)
+  }
+})
 
 // 시간 포맷
 const formatTime = (timestamp) => {
@@ -1170,6 +1303,150 @@ textarea:disabled {
   font-weight: 600;
   color: #667eea;
   text-align: center;
+}
+
+/* 음성 입력 UI */
+.btn-mode-toggle {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+  min-width: 50px;
+}
+
+.btn-mode-toggle:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #007bff;
+}
+
+.btn-mode-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voice-input-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.btn-record {
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-record:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-record.recording {
+  background: #dc3545;
+  animation: pulse 1.5s infinite;
+}
+
+.btn-record.recording:hover {
+  background: #c82333;
+}
+
+.btn-record.processing {
+  background: #6c757d;
+}
+
+.btn-record:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc3545;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background: #dc3545;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.recording-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.recognized-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #28a745;
+}
+
+.recognized-text .label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.recognized-text .text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.processing-indicator {
+  color: #666;
+  font-size: 13px;
+  text-align: center;
+  animation: fadeInOut 1.5s infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 </style>
