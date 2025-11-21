@@ -1,14 +1,14 @@
 /**
- * Azure Speech Service Configuration
+ * Azure Speech Service 설정
  *
- * Supported languages, voices, and recognition settings for Azure Speech SDK.
+ * Azure Speech SDK를 위한 지원 언어, 음성 및 인식 설정
  *
  * @see https://learn.microsoft.com/azure/ai-services/speech-service/language-support
  */
 
 /**
- * Supported languages for speech recognition and translation.
- * BCP-47 format (e.g., 'ko-KR', 'en-US')
+ * 음성 인식 및 번역을 위한 지원 언어
+ * BCP-47 형식 (예: 'ko-KR', 'en-US')
  */
 export const SUPPORTED_LANGUAGES = [
   { code: 'ko-KR', label: '한국어 (Korean)', flag: '🇰🇷' },
@@ -34,8 +34,8 @@ export const SUPPORTED_LANGUAGES = [
 ]
 
 /**
- * Neural voices for each language.
- * Premium quality voices using neural TTS technology.
+ * 각 언어별 뉴럴 음성
+ * 뉴럴 TTS 기술을 사용한 프리미엄 품질 음성
  */
 export const NEURAL_VOICES = {
   'ko-KR': [
@@ -132,8 +132,8 @@ export const NEURAL_VOICES = {
 }
 
 /**
- * Translation target languages (2-letter ISO codes).
- * Used for Azure Speech Translation API.
+ * 번역 대상 언어 (2글자 ISO 코드)
+ * Azure Speech Translation API에서 사용됨
  */
 export const TRANSLATION_LANGUAGES = [
   { code: 'ko', label: '한국어 (Korean)' },
@@ -158,7 +158,7 @@ export const TRANSLATION_LANGUAGES = [
 ]
 
 /**
- * Map recognition language (ko-KR) to translation language (ko).
+ * 인식 언어(ko-KR)를 번역 언어(ko)로 매핑
  */
 export const RECOGNITION_TO_TRANSLATION_MAP = {
   'ko-KR': 'ko',
@@ -184,7 +184,7 @@ export const RECOGNITION_TO_TRANSLATION_MAP = {
 }
 
 /**
- * Map translation language (ko) to TTS language (ko-KR).
+ * 번역 언어(ko)를 TTS 언어(ko-KR)로 매핑
  */
 export const TRANSLATION_TO_TTS_MAP = {
   'ko': 'ko-KR',
@@ -209,18 +209,18 @@ export const TRANSLATION_TO_TTS_MAP = {
 }
 
 /**
- * Get voices for a specific language.
- * @param {string} languageCode - BCP-47 language code (e.g., 'ko-KR')
- * @returns {Array} - Array of voice options
+ * 특정 언어의 음성 목록 가져오기
+ * @param {string} languageCode - BCP-47 언어 코드 (예: 'ko-KR')
+ * @returns {Array} - 음성 옵션 배열
  */
 export function getVoicesForLanguage(languageCode) {
   return NEURAL_VOICES[languageCode] || []
 }
 
 /**
- * Get default voice for a language.
- * @param {string} languageCode - BCP-47 language code
- * @returns {string} - Default voice name
+ * 언어의 기본 음성 가져오기
+ * @param {string} languageCode - BCP-47 언어 코드
+ * @returns {string} - 기본 음성 이름
  */
 export function getDefaultVoice(languageCode) {
   const voices = getVoicesForLanguage(languageCode)
@@ -228,18 +228,18 @@ export function getDefaultVoice(languageCode) {
 }
 
 /**
- * Convert recognition language to translation language.
- * @param {string} recognitionLang - BCP-47 format (ko-KR)
- * @returns {string} - 2-letter ISO code (ko)
+ * 인식 언어를 번역 언어로 변환
+ * @param {string} recognitionLang - BCP-47 형식 (ko-KR)
+ * @returns {string} - 2글자 ISO 코드 (ko)
  */
 export function recognitionToTranslation(recognitionLang) {
   return RECOGNITION_TO_TRANSLATION_MAP[recognitionLang] || 'en'
 }
 
 /**
- * Convert translation language to TTS language.
- * @param {string} translationLang - 2-letter ISO code (ko)
- * @returns {string} - BCP-47 format (ko-KR)
+ * 번역 언어를 TTS 언어로 변환
+ * @param {string} translationLang - 2글자 ISO 코드 (ko)
+ * @returns {string} - BCP-47 형식 (ko-KR)
  */
 export function translationToTTS(translationLang) {
   return TRANSLATION_TO_TTS_MAP[translationLang] || 'en-US'

@@ -1,105 +1,106 @@
 /**
  * Azure Speech Composable
  *
- * Handles real-time Speech-to-Text and Translation using Azure Speech SDK.
+ * Azure Speech SDK를 사용한 실시간 음성-텍스트 변환 및 번역 처리
  *
- * Features:
- * - Real-time speech recognition from microphone
- * - Simultaneous translation to target language
- * - Partial (recognizing) and final (recognized) results
- * - VAD (Voice Activity Detection) configuration
- * - Phrase list support for better recognition
- * - Error handling and reconnection
+ * 주요 기능:
+ * - 마이크를 통한 실시간 음성 인식
+ * - 목표 언어로 동시 번역
+ * - 부분(인식 중) 및 최종(인식 완료) 결과 제공
+ * - VAD (음성 활동 감지) 설정
+ * - 특정 용어 인식률 향상을 위한 구문 목록 지원
+ * - 에러 처리 및 재연결
  *
  * @see https://learn.microsoft.com/azure/ai-services/speech-service/
  */
 import { ref, computed } from 'vue'
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
-import { getSpeechToken } from '../services/azureSpeechService'
+import { useAzureSpeechStore } from '../stores/azureSpeechStore'
 import { recognitionToTranslation } from '../config/azureSpeechConfig'
 
 export function useAzureSpeech() {
-  // State
+  // Pinia 스토어 (싱글톤)
+  const speechStore = useAzureSpeechStore()
+
+  // 상태
   const isInitialized = ref(false)
   const isRecognizing = ref(false)
   const isConnecting = ref(false)
   const error = ref(null)
 
-  // Recognition results
+  // 인식 결과
   const partialText = ref('')
   const finalText = ref('')
   const partialTranslation = ref('')
   const finalTranslation = ref('')
 
-  // All recognized sentences
+  // 인식된 모든 문장
   const recognizedSentences = ref([])
   const translatedSentences = ref([])
 
-  // Azure SDK instances
+  // Azure SDK 인스턴스
   let speechConfig = null
   let audioConfig = null
   let translationRecognizer = null
 
-  // Configuration
+  // 설정
   const fromLanguage = ref('ko-KR')
   const toLanguage = ref('en')
 
-  // VAD settings
-  const vadSilenceTimeout = ref(1000) // ms, default 1000ms
+  // VAD 설정
+  const vadSilenceTimeout = ref(1000) // ms, 기본값 1000ms
 
-  // Phrase list for better recognition
+  // 인식률 향상을 위한 구문 목록
   const phraseList = ref([])
 
   /**
-   * Initialize Azure Speech SDK with token from backend.
+   * 백엔드에서 토큰을 받아 Azure Speech SDK 초기화
    *
-   * @param {string} sourceLang - Source language (BCP-47 format, e.g., 'ko-KR')
-   * @param {string} targetLang - Target language (2-letter ISO code, e.g., 'en')
-   * @throws {Error} If initialization fails
+   * @param {string} sourceLang - 원본 언어 (BCP-47 형식, 예: 'ko-KR')
+   * @param {string} targetLang - 목표 언어 (2글자 ISO 코드, 예: 'en')
+   * @throws {Error} 초기화 실패 시
    */
   async function initialize(sourceLang, targetLang) {
     try {
       isConnecting.value = true
       error.value = null
 
-      // Get token from backend
-      console.log('🔑 Requesting Azure Speech token from backend...')
-      const { token, region } = await getSpeechToken()
-      console.log(`✅ Token received for region: ${region}`)
+      // 스토어에서 토큰 가져오기 (캐싱 지원)
+      const { token, region } = await speechStore.ensureToken()
 
-      // Create speech config
+      // Speech 설정 생성
       speechConfig = SpeechSDK.SpeechTranslationConfig.fromAuthorizationToken(token, region)
 
-      // Set source language (recognition)
+      // 원본 언어 설정 (인식)
       speechConfig.speechRecognitionLanguage = sourceLang
       fromLanguage.value = sourceLang
 
-      // Set target language (translation)
+      // 목표 언어 설정 (번역)
       speechConfig.addTargetLanguage(targetLang)
       toLanguage.value = targetLang
 
-      // VAD configuration
-      // Speech_SegmentationSilenceTimeoutMs: How long to wait before considering end of speech
-      // Lower values (700ms): Quick response, may cut off speech
-      // Higher values (1500ms): Better for long sentences, slower response
+      // VAD 설정
+      // Speech_SegmentationSilenceTimeoutMs: 발화 종료로 간주하기 전 대기 시간
+      // 낮은 값 (700ms): 빠른 응답, 발화가 잘릴 수 있음
+      // 높은 값 (1500ms): 긴 문장에 유리, 응답 느림
       speechConfig.setProperty(
         SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs,
         vadSilenceTimeout.value.toString()
       )
 
-      // Enable detailed results
+      // 상세 결과 활성화
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed
 
-      // Create audio config from default microphone
+      // 기본 마이크에서 오디오 설정 생성
       audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput()
 
-      // Create translation recognizer
+      // 번역 인식기 생성
       translationRecognizer = new SpeechSDK.TranslationRecognizer(speechConfig, audioConfig)
 
-      // Set up event handlers
+      // 이벤트 핸들러 설정
       setupEventHandlers()
 
-      // Apply phrase list if exists
+      // 구문 목록이 있으면 적용
       if (phraseList.value.length > 0) {
         applyPhraseList()
       }
@@ -118,18 +119,18 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Set up event handlers for translation recognizer.
+   * 번역 인식기의 이벤트 핸들러 설정
    */
   function setupEventHandlers() {
     if (!translationRecognizer) return
 
-    // Recognizing (partial results)
+    // 인식 중 (부분 결과)
     translationRecognizer.recognizing = (s, e) => {
       if (e.result.reason === SpeechSDK.ResultReason.TranslatingSpeech) {
-        // Original text (partial)
+        // 원본 텍스트 (부분)
         partialText.value = e.result.text
 
-        // Translated text (partial)
+        // 번역된 텍스트 (부분)
         const translations = e.result.translations
         if (translations.get(toLanguage.value)) {
           partialTranslation.value = translations.get(toLanguage.value)
@@ -140,7 +141,7 @@ export function useAzureSpeech() {
       }
     }
 
-    // Recognized (final results)
+    // 인식 완료 (최종 결과)
     translationRecognizer.recognized = (s, e) => {
       if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
         const originalText = e.result.text
@@ -148,11 +149,11 @@ export function useAzureSpeech() {
         const translatedText = translations.get(toLanguage.value) || ''
 
         if (originalText && originalText.trim()) {
-          // Add to final text
+          // 최종 텍스트에 추가
           finalText.value += (finalText.value ? ' ' : '') + originalText
           finalTranslation.value += (finalTranslation.value ? ' ' : '') + translatedText
 
-          // Add to sentences array
+          // 문장 배열에 추가
           recognizedSentences.value.push({
             text: originalText,
             timestamp: new Date().toISOString(),
@@ -170,7 +171,7 @@ export function useAzureSpeech() {
           console.log(`✅ Translated: "${translatedText}"`)
         }
 
-        // Clear partial results
+        // 부분 결과 초기화
         partialText.value = ''
         partialTranslation.value = ''
       } else if (e.result.reason === SpeechSDK.ResultReason.NoMatch) {
@@ -178,14 +179,14 @@ export function useAzureSpeech() {
       }
     }
 
-    // Canceled (error handling)
+    // 취소됨 (에러 처리)
     translationRecognizer.canceled = (s, e) => {
       console.error('❌ Recognition canceled:', e.errorDetails)
 
       if (e.reason === SpeechSDK.CancellationReason.Error) {
         error.value = e.errorDetails
 
-        // Handle token expiration
+        // 토큰 만료 처리
         if (e.errorDetails.includes('authentication') || e.errorDetails.includes('token')) {
           console.log('🔄 Token expired, need to reinitialize')
         }
@@ -194,12 +195,12 @@ export function useAzureSpeech() {
       stopRecognition()
     }
 
-    // Session started
+    // 세션 시작됨
     translationRecognizer.sessionStarted = (s, e) => {
       console.log('🎙️ Speech recognition session started')
     }
 
-    // Session stopped
+    // 세션 중지됨
     translationRecognizer.sessionStopped = (s, e) => {
       console.log('⏹️ Speech recognition session stopped')
       isRecognizing.value = false
@@ -207,7 +208,7 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Apply phrase list for better recognition of specific terms.
+   * 특정 용어 인식률 향상을 위한 구문 목록 적용
    */
   function applyPhraseList() {
     if (!translationRecognizer || phraseList.value.length === 0) return
@@ -222,7 +223,7 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Start continuous speech recognition and translation.
+   * 연속 음성 인식 및 번역 시작
    */
   async function startRecognition() {
     if (!isInitialized.value) {
@@ -250,7 +251,7 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Stop continuous speech recognition.
+   * 연속 음성 인식 중지
    */
   async function stopRecognition() {
     if (!isRecognizing.value) {
@@ -270,9 +271,9 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Update VAD silence timeout.
+   * VAD 무음 타임아웃 업데이트
    *
-   * @param {number} timeoutMs - Silence timeout in milliseconds (700-1500 recommended)
+   * @param {number} timeoutMs - 무음 타임아웃(밀리초) (700-1500 권장)
    */
   function updateVADSettings(timeoutMs) {
     vadSilenceTimeout.value = timeoutMs
@@ -288,9 +289,9 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Add phrases to phrase list for better recognition.
+   * 인식률 향상을 위한 구문 추가
    *
-   * @param {string[]} phrases - Array of phrases
+   * @param {string[]} phrases - 구문 배열
    */
   function addPhrases(phrases) {
     phraseList.value = [...phraseList.value, ...phrases]
@@ -301,14 +302,14 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Clear phrase list.
+   * 구문 목록 초기화
    */
   function clearPhrases() {
     phraseList.value = []
   }
 
   /**
-   * Clear all recognition results.
+   * 모든 인식 결과 초기화
    */
   function clearResults() {
     partialText.value = ''
@@ -320,7 +321,7 @@ export function useAzureSpeech() {
   }
 
   /**
-   * Dispose all resources.
+   * 모든 리소스 정리
    */
   function dispose() {
     if (translationRecognizer) {
@@ -336,7 +337,7 @@ export function useAzureSpeech() {
     console.log('🗑️ Azure Speech SDK disposed')
   }
 
-  // Computed
+  // 계산된 값
   const fullOriginalText = computed(() => {
     return finalText.value + (partialText.value ? ' ' + partialText.value : '')
   })
@@ -348,13 +349,13 @@ export function useAzureSpeech() {
   const recognizedCount = computed(() => recognizedSentences.value.length)
 
   return {
-    // State
+    // 상태
     isInitialized,
     isRecognizing,
     isConnecting,
     error,
 
-    // Results
+    // 결과
     partialText,
     finalText,
     partialTranslation,
@@ -365,13 +366,13 @@ export function useAzureSpeech() {
     fullTranslatedText,
     recognizedCount,
 
-    // Configuration
+    // 설정
     fromLanguage,
     toLanguage,
     vadSilenceTimeout,
     phraseList,
 
-    // Methods
+    // 메서드
     initialize,
     startRecognition,
     stopRecognition,

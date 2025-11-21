@@ -1,7 +1,7 @@
 /**
  * Azure Speech Service API
  *
- * Handles token retrieval from backend for Azure Speech SDK usage.
+ * Azure Speech SDK 사용을 위한 백엔드 토큰 요청 처리
  */
 import axios from 'axios'
 
@@ -15,11 +15,11 @@ const pythonApi = axios.create({
 })
 
 /**
- * Get Azure Speech authorization token from backend.
- * Token is valid for 10 minutes.
+ * 백엔드에서 Azure Speech 인증 토큰 가져오기
+ * 토큰 유효 시간: 10분
  *
- * @returns {Promise<{token: string, region: string}>} Token and region
- * @throws {Error} If token request fails
+ * @returns {Promise<{token: string, region: string}>} 토큰 및 리전
+ * @throws {Error} 토큰 요청 실패 시
  */
 export async function getSpeechToken() {
   try {
@@ -40,9 +40,9 @@ export async function getSpeechToken() {
 }
 
 /**
- * Refresh Azure Speech token (force new token).
+ * Azure Speech 토큰 갱신 (강제로 새 토큰 발급)
  *
- * @returns {Promise<{token: string, region: string}>} Token and region
+ * @returns {Promise<{token: string, region: string}>} 토큰 및 리전
  */
 export async function refreshSpeechToken() {
   try {
@@ -63,9 +63,9 @@ export async function refreshSpeechToken() {
 }
 
 /**
- * Get Azure Speech region.
+ * Azure Speech 리전 가져오기
  *
- * @returns {Promise<string>} Region
+ * @returns {Promise<string>} 리전
  */
 export async function getSpeechRegion() {
   try {
