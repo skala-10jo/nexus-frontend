@@ -13,7 +13,10 @@
             <span class="badge">{{ scenario?.language }}</span>
           </div>
         </div>
-        <button @click="endConversation" class="btn-end">대화 종료</button>
+        <div class="header-actions">
+          <button @click="resetConversation" class="btn-reset" :disabled="isLoading">대화 초기화</button>
+          <button @click="endConversation" class="btn-end">대화 종료</button>
+        </div>
       </div>
 
       <!-- 역할 정보 -->
@@ -53,26 +56,41 @@
         :key="index"
         :class="['message', message.speaker]"
       >
-        <div class="message-header">
-          <span class="speaker-name">
-            {{ message.speaker === 'user' ? '나' : 'AI' }}
-          </span>
-          <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
-        </div>
-        <div class="message-content">
-          {{ message.message }}
+        <div class="message-bubble">
+          <div class="message-header">
+            <span class="speaker-name">
+              {{ message.speaker === 'user' ? (scenario?.roles?.user || '나') : (scenario?.roles?.ai || 'AI') }}
+            </span>
+            <button
+              v-if="message.speaker === 'ai'"
+              @click="toggleTranslation(index)"
+              class="btn-translate"
+              :disabled="translationLoading[index]"
+              :title="message.showTranslation ? '원문 보기' : '한글 번역'"
+            >
+              {{ translationLoading[index] ? '...' : (message.showTranslation ? '🔄 원문' : '🌐 한글') }}
+            </button>
+          </div>
+          <div class="message-content">
+            {{ message.showTranslation ? (message.translatedText || message.message) : message.message }}
+          </div>
+          <div class="message-footer">
+            <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+          </div>
         </div>
       </div>
 
       <!-- 로딩 인디케이터 -->
       <div v-if="isLoading" class="message ai">
-        <div class="message-header">
-          <span class="speaker-name">AI</span>
-        </div>
-        <div class="message-content loading">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
+        <div class="message-bubble">
+          <div class="message-header">
+            <span class="speaker-name">{{ scenario?.roles?.ai || 'AI' }}</span>
+          </div>
+          <div class="message-content loading">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -189,23 +207,41 @@
         </div>
 
         <div v-else class="message-feedbacks">
-          <!-- 메시지 선택 버튼 -->
-          <div class="message-selector">
+          <!-- 메시지 선택 버튼 (화살표 캐러셀) -->
+          <div class="message-carousel">
             <button
-              v-for="(msg, index) in userMessages"
-              :key="index"
-              :class="['message-btn', { active: selectedMessageIndex === index }]"
-              @click="selectMessage(index)"
+              class="nav-arrow"
+              @click="scrollMessages('left')"
+              :disabled="scrollPosition <= 0"
             >
-              <span class="message-number">메시지 {{ index + 1 }}</span>
-              <span class="message-preview">{{ truncateMessage(msg.message) }}</span>
+              ←
+            </button>
+            <div class="message-selector-container" ref="messageContainer">
+              <div class="message-selector" :style="{ transform: `translateX(-${scrollPosition}px)` }">
+                <button
+                  v-for="(msg, index) in reversedUserMessages"
+                  :key="index"
+                  :class="['message-btn', { active: selectedMessageIndex === (userMessages.length - 1 - index) }]"
+                  @click="selectMessage(userMessages.length - 1 - index)"
+                >
+                  <span class="message-number">{{ formatMessageTime(msg.timestamp) }}</span>
+                  <span class="message-preview">{{ truncateMessage(msg.message) }}</span>
+                </button>
+              </div>
+            </div>
+            <button
+              class="nav-arrow"
+              @click="scrollMessages('right')"
+              :disabled="scrollPosition >= maxScrollPosition"
+            >
+              →
             </button>
           </div>
 
           <!-- 선택된 메시지의 피드백 -->
           <div v-if="selectedMessageFeedback" class="selected-feedback">
             <div class="feedback-header">
-              <h3>메시지 {{ selectedMessageIndex + 1 }} 피드백</h3>
+              <h3>메시지 피드백</h3>
             </div>
 
             <!-- 원본 메시지 -->
@@ -255,6 +291,22 @@
               <h4>⭐ 점수</h4>
               <div class="score-badge" :class="getScoreClass(selectedMessageFeedback.score)">
                 {{ selectedMessageFeedback.score }}/10
+              </div>
+
+              <!-- 점수 세부 정보 -->
+              <div v-if="selectedMessageFeedback.score_breakdown" class="score-breakdown">
+                <div class="breakdown-item">
+                  <span class="breakdown-label">문법 (Grammar)</span>
+                  <span class="breakdown-value">{{ selectedMessageFeedback.score_breakdown.grammar }}/10</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">어휘 (Vocabulary)</span>
+                  <span class="breakdown-value">{{ selectedMessageFeedback.score_breakdown.vocabulary }}/10</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">유창성 (Fluency)</span>
+                  <span class="breakdown-value">{{ selectedMessageFeedback.score_breakdown.fluency }}/10</span>
+                </div>
               </div>
             </div>
           </div>
@@ -339,6 +391,9 @@ const detectedTerms = ref([])
 const userInput = ref('')
 const isLoading = ref(false)
 const error = ref(null)
+
+// 번역 상태
+const translationLoading = ref({})
 const conversationArea = ref(null)
 
 // 음성 입력 상태
@@ -362,12 +417,22 @@ const comprehensiveFeedback = ref(null)
 const selectedMessageIndex = ref(0)
 const messageFeedbacks = ref([]) // 각 사용자 메시지에 대한 피드백 배열
 
+// 캐러셀 스크롤 상태
+const messageContainer = ref(null)
+const scrollPosition = ref(0)
+const maxScrollPosition = ref(0)
+
 // 시나리오 ID
 const scenarioId = route.params.scenarioId
 
-// 사용자 메시지만 필터링
+// 사용자 메시지만 필터링 (원본 순서 유지)
 const userMessages = computed(() =>
   messages.value.filter(msg => msg.speaker === 'user')
+)
+
+// 표시용 역순 메시지 (최신이 먼저)
+const reversedUserMessages = computed(() =>
+  [...userMessages.value].reverse()
 )
 
 // 선택된 메시지의 피드백
@@ -375,22 +440,74 @@ const selectedMessageFeedback = computed(() =>
   messageFeedbacks.value[selectedMessageIndex.value] || null
 )
 
-// 대화 시작
+// 대화 시작 또는 기존 대화 불러오기
 onMounted(async () => {
   try {
     isLoading.value = true
-    const response = await conversationService.start(scenarioId)
 
-    scenario.value = response.scenario
+    // 1. 먼저 저장된 대화 히스토리 확인
+    const historyResponse = await conversationService.getHistory(scenarioId)
 
-    // 초기 AI 메시지가 있으면 추가
-    if (response.initialMessage) {
-      messages.value.push({
-        speaker: 'ai',
-        message: response.initialMessage,
-        timestamp: new Date()
+    if (historyResponse.sessionId && historyResponse.messages?.length > 0) {
+      // 2. 저장된 대화가 있으면 불러오기
+      console.log('📥 Loading saved conversation:', historyResponse.messages.length, 'messages')
+
+      // 시나리오 정보 가져오기 (start API는 기존 세션이 있으면 초기 메시지 생성 안 함)
+      const startResponse = await conversationService.start(scenarioId)
+      scenario.value = startResponse.scenario
+
+      // 저장된 메시지 복원
+      messages.value = historyResponse.messages.map(msg => ({
+        speaker: msg.sender,
+        message: msg.message,
+        translatedText: msg.translatedText,
+        timestamp: new Date(msg.createdAt),
+        showTranslation: false
+      }))
+
+      // 사용된 용어 복원 및 피드백 복원
+      historyResponse.messages.forEach(msg => {
+        if (msg.detectedTerms?.length > 0) {
+          detectedTerms.value = [...new Set([...detectedTerms.value, ...msg.detectedTerms])]
+        }
+        // 사용자 메시지의 피드백 복원
+        if (msg.sender === 'user') {
+          // 저장된 피드백이 있으면 사용, 없으면 기본값
+          messageFeedbacks.value.push(msg.feedback ? JSON.parse(msg.feedback) : {
+            score: 0,
+            grammar_corrections: [],
+            terminology_usage: { used: msg.detectedTerms || [] },
+            suggestions: ['피드백이 저장되지 않았습니다.']
+          })
+        }
       })
+
+      // 마지막 사용자 메시지 선택
+      if (userMessages.value.length > 0) {
+        selectedMessageIndex.value = userMessages.value.length - 1
+      }
+
+    } else {
+      // 3. 저장된 대화가 없으면 새로 시작
+      console.log('🆕 Starting new conversation')
+      const response = await conversationService.start(scenarioId)
+
+      scenario.value = response.scenario
+
+      // 초기 AI 메시지가 있으면 추가
+      if (response.initialMessage) {
+        messages.value.push({
+          speaker: 'ai',
+          message: response.initialMessage,
+          timestamp: new Date()
+        })
+      }
     }
+
+    // 초기 스크롤 계산 및 스크롤 맨 아래로
+    await nextTick()
+    updateMaxScroll()
+    scrollToBottom()
   } catch (err) {
     error.value = err.message || '대화를 시작할 수 없습니다.'
     console.error('Failed to start conversation:', err)
@@ -417,6 +534,10 @@ const sendMessage = async () => {
       timestamp: new Date()
     })
 
+    // 사용자 메시지 추가 직후 스크롤
+    await nextTick()
+    scrollToBottom()
+
     // 대화 히스토리 준비 (마지막 메시지 제외)
     const history = messages.value.slice(0, -1).map(msg => ({
       speaker: msg.speaker,
@@ -437,12 +558,19 @@ const sendMessage = async () => {
       timestamp: new Date()
     })
 
+    // AI 응답이 추가되었으므로 로딩 종료
+    isLoading.value = false
+
+    // AI 응답 추가 직후 스크롤
+    await nextTick()
+    scrollToBottom()
+
     // 감지된 용어 업데이트
     if (response.detectedTerms) {
       detectedTerms.value = [...new Set([...detectedTerms.value, ...response.detectedTerms])]
     }
 
-    // 실제 피드백 받아오기
+    // 실제 피드백 받아오기 (백그라운드에서 진행)
     try {
       const feedbackResponse = await conversationService.getFeedback(
         scenarioId,
@@ -461,24 +589,59 @@ const sendMessage = async () => {
       })
     }
 
-    // 새 메시지를 자동 선택
+    // 항상 최신 메시지 선택 (원본 배열의 마지막 = 최신)
     selectedMessageIndex.value = userMessages.value.length - 1
-
-    // 스크롤 맨 아래로
-    await nextTick()
-    scrollToBottom()
 
   } catch (err) {
     error.value = err.message || '메시지 전송에 실패했습니다.'
     console.error('Failed to send message:', err)
     // 실패 시 사용자 메시지 제거
     messages.value.pop()
+    isLoading.value = false
+  }
+}
+
+// 대화 초기화
+const resetConversation = async () => {
+  if (!confirm('대화를 초기화하시겠습니까?\n모든 대화 내용과 피드백이 삭제됩니다.')) {
+    return
+  }
+
+  try {
+    isLoading.value = true
+
+    // 1. 서버에서 대화 초기화 (세션 및 메시지 삭제)
+    await conversationService.reset(scenarioId)
+
+    // 2. 로컬 상태 초기화
+    messages.value = []
+    detectedTerms.value = []
+    messageFeedbacks.value = []
+    selectedMessageIndex.value = 0
+    comprehensiveFeedback.value = null
+    error.value = null
+
+    // 3. 새 대화 시작 (초기 AI 메시지 생성)
+    const response = await conversationService.start(scenarioId)
+    scenario.value = response.scenario
+
+    if (response.initialMessage) {
+      messages.value.push({
+        speaker: 'ai',
+        message: response.initialMessage,
+        timestamp: new Date()
+      })
+    }
+
+    console.log('🔄 Conversation reset successfully')
+  } catch (err) {
+    error.value = err.message || '대화 초기화에 실패했습니다.'
+    console.error('Failed to reset conversation:', err)
   } finally {
     isLoading.value = false
   }
 }
 
-// 대화 종료
 const endConversation = () => {
   if (confirm('대화를 종료하시겠습니까?')) {
     router.push('/conversation/scenario')
@@ -705,10 +868,48 @@ const selectMessage = (index) => {
   selectedMessageIndex.value = index
 }
 
+// 캐러셀 스크롤
+const scrollMessages = (direction) => {
+  const SCROLL_AMOUNT = 200 // 한 번에 이동할 픽셀
+
+  if (direction === 'left') {
+    scrollPosition.value = Math.max(0, scrollPosition.value - SCROLL_AMOUNT)
+  } else {
+    scrollPosition.value = Math.min(maxScrollPosition.value, scrollPosition.value + SCROLL_AMOUNT)
+  }
+}
+
+// 최대 스크롤 위치 계산
+const updateMaxScroll = () => {
+  if (messageContainer.value) {
+    const container = messageContainer.value
+    const selector = container.querySelector('.message-selector')
+    if (selector) {
+      maxScrollPosition.value = Math.max(0, selector.scrollWidth - container.clientWidth)
+    }
+  }
+}
+
+// 메시지 추가 시 스크롤 업데이트
+watch(userMessages, async () => {
+  await nextTick()
+  updateMaxScroll()
+  // 최신 메시지로 스크롤 (맨 왼쪽)
+  scrollPosition.value = 0
+})
+
 // 메시지 미리보기 (30자 제한)
 const truncateMessage = (message) => {
   if (message.length <= 30) return message
   return message.substring(0, 30) + '...'
+}
+
+// 메시지 전송 시각 포맷팅 (HH:MM 형식)
+const formatMessageTime = (timestamp) => {
+  const date = new Date(timestamp)
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 // 점수 클래스 결정
@@ -717,6 +918,37 @@ const getScoreClass = (score) => {
   if (score >= 6) return 'good'
   if (score >= 4) return 'fair'
   return 'poor'
+}
+
+// 번역 토글
+const toggleTranslation = async (messageIndex) => {
+  const message = messages.value[messageIndex]
+
+  // 이미 번역된 경우 토글
+  if (message.translatedText) {
+    message.showTranslation = !message.showTranslation
+    return
+  }
+
+  // 번역 요청
+  try {
+    translationLoading.value[messageIndex] = true
+
+    const response = await conversationService.translateMessage(
+      message.message,
+      'ko'
+    )
+
+    // 번역 결과 저장
+    message.translatedText = response.translatedText
+    message.showTranslation = true
+
+  } catch (err) {
+    console.error('Translation failed:', err)
+    error.value = '번역에 실패했습니다.'
+  } finally {
+    translationLoading.value[messageIndex] = false
+  }
 }
 
 // 종합 피드백 탭 전환 시 자동 로드
@@ -831,6 +1063,31 @@ const loadComprehensiveFeedback = async () => {
   background: #c82333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-reset {
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-reset:hover {
+  background: #5a6268;
+}
+
+.btn-reset:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
 /* 역할 정보 */
 .roles-info {
   display: flex;
@@ -915,21 +1172,32 @@ const loadComprehensiveFeedback = async () => {
 
 .message {
   display: flex;
-  flex-direction: column;
   max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 12px;
   animation: fadeIn 0.3s;
 }
 
 .message.user {
   align-self: flex-end;
-  background: #007bff;
-  color: white;
 }
 
 .message.ai {
   align-self: flex-start;
+}
+
+.message-bubble {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.message.user .message-bubble {
+  background: #007bff;
+  color: white;
+}
+
+.message.ai .message-bubble {
   background: #f8f9fa;
   color: #333;
 }
@@ -937,13 +1205,52 @@ const loadComprehensiveFeedback = async () => {
 .message-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 4px;
+  align-items: center;
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+
+.message.user .message-header {
+  text-align: right;
+  flex-direction: row-reverse;
+}
+
+.message.ai .message-header {
+  text-align: left;
 }
 
 .speaker-name {
   font-weight: 600;
+}
+
+.btn-translate {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.message.ai .btn-translate {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #666;
+}
+
+.btn-translate:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: scale(1.05);
+}
+
+.btn-translate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .message-content {
@@ -951,6 +1258,25 @@ const loadComprehensiveFeedback = async () => {
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  margin: 4px 0;
+}
+
+.message.user .message-content {
+  text-align: right;
+}
+
+.message-footer {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.message.user .message-footer {
+  text-align: right;
+}
+
+.message.ai .message-footer {
+  text-align: left;
 }
 
 /* 로딩 애니메이션 */
@@ -1092,14 +1418,14 @@ textarea:disabled {
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 24px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -1112,10 +1438,10 @@ textarea:disabled {
 
 .tab-button {
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: transparent;
   border: none;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: #666;
   cursor: pointer;
@@ -1150,27 +1476,72 @@ textarea:disabled {
 .message-feedbacks {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 20px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* 화살표 캐러셀 */
+.message-carousel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.nav-arrow {
+  width: 40px;
+  height: 40px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.nav-arrow:hover:not(:disabled) {
+  background: #5568d3;
+  transform: scale(1.05);
+}
+
+.nav-arrow:disabled {
+  background: #e9ecef;
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.message-selector-container {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .message-selector {
   display: flex;
-  flex-direction: column;
   gap: 8px;
+  transition: transform 0.3s ease;
 }
 
 .message-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 12px;
+  padding: 12px 16px;
   background: #f8f9fa;
   border: 2px solid transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
+  min-width: 180px;
+  flex-shrink: 0;
 }
 
 .message-btn:hover {
@@ -1185,17 +1556,17 @@ textarea:disabled {
 }
 
 .message-number {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #667eea;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .message-preview {
-  font-size: 13px;
+  font-size: 15px;
   color: #333;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .selected-feedback {
@@ -1203,42 +1574,52 @@ textarea:disabled {
 }
 
 .feedback-header h3 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 16px 0;
+  font-size: 17px;
   font-weight: 600;
   color: #667eea;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
   border-bottom: 2px solid #e0e0e0;
 }
 
 .original-message {
-  padding: 12px;
+  padding: 16px;
   background: #f8f9fa;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .original-message h4 {
-  margin: 0 0 8px 0;
-  font-size: 12px;
+  margin: 0 0 10px 0;
+  font-size: 14px;
   font-weight: 600;
   color: #666;
 }
 
 .original-message p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .feedback-section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #fafbfc;
+  border-radius: 8px;
+  border-left: 4px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.feedback-section:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateX(2px);
 }
 
 .feedback-section h4 {
-  margin: 0 0 8px 0;
-  font-size: 13px;
+  margin: 0 0 12px 0;
+  font-size: 15px;
   font-weight: 600;
   color: #333;
 }
@@ -1252,65 +1633,115 @@ textarea:disabled {
 
 .correction-list li,
 .suggestion-list li {
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: #666;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #555;
   position: relative;
-  padding-left: 12px;
-  line-height: 1.5;
+  padding: 12px 12px 12px 28px;
+  line-height: 1.6;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
 }
 
-.correction-list li::before,
-.suggestion-list li::before {
-  content: "•";
+.correction-list li {
+  border-left: 3px solid #ffc107;
+}
+
+.suggestion-list li {
+  border-left: 3px solid #17a2b8;
+}
+
+.correction-list li::before {
+  content: "⚠️";
   position: absolute;
-  left: 0;
-  color: #667eea;
+  left: 8px;
+  font-size: 14px;
+}
+
+.suggestion-list li::before {
+  content: "💡";
+  position: absolute;
+  left: 8px;
+  font-size: 14px;
 }
 
 .score-badge {
   display: inline-block;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .score-badge.excellent {
-  background: #d4edda;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
   color: #155724;
+  border: 2px solid #28a745;
 }
 
 .score-badge.good {
-  background: #d1ecf1;
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
   color: #0c5460;
+  border: 2px solid #17a2b8;
 }
 
 .score-badge.fair {
-  background: #fff3cd;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
   color: #856404;
+  border: 2px solid #ffc107;
 }
 
 .score-badge.poor {
-  background: #f8d7da;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
   color: #721c24;
+  border: 2px solid #dc3545;
+}
+
+.score-breakdown {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.breakdown-label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.breakdown-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #667eea;
 }
 
 .term-group {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .term-group-title {
-  margin: 0 0 8px 0;
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #555;
+  font-weight: 600;
 }
 
 .term-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .term-tag {
@@ -1373,15 +1804,15 @@ textarea:disabled {
 }
 
 .score-label {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.9;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .score-value {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
 }
 
@@ -1390,8 +1821,8 @@ textarea:disabled {
 }
 
 .comprehensive-section h4 {
-  margin: 0 0 10px 0;
-  font-size: 14px;
+  margin: 0 0 12px 0;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
@@ -1403,10 +1834,10 @@ textarea:disabled {
 }
 
 .comprehensive-section li {
-  margin-bottom: 8px;
-  font-size: 13px;
+  margin-bottom: 10px;
+  font-size: 14px;
   color: #666;
-  line-height: 1.5;
+  line-height: 1.6;
   position: relative;
   padding-left: 12px;
 }
