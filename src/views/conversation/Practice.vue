@@ -380,6 +380,7 @@ import conversationService from '@/services/conversationService'
 import voiceRecorder from '@/services/voiceRecorder'
 import voiceSTTService from '@/services/voiceSTTService'
 import voiceSTTStreamService from '@/services/voiceSTTStreamService'
+import voiceTTSService from '@/services/voiceTTSService'
 
 const route = useRoute()
 const router = useRouter()
@@ -408,6 +409,10 @@ let recordingInterval = null
 const useRealtimeSTT = ref(true) // 실시간 STT 사용 여부
 const interimText = ref('') // 실시간 인식 중인 텍스트 (회색)
 const finalTexts = ref([]) // 확정된 텍스트들 (검정)
+
+// TTS 상태
+const autoPlayTTS = ref(true) // AI 메시지 자동 재생 여부
+const isTTSPlaying = ref(false) // 현재 TTS 재생 중 여부
 
 // 피드백 상태
 const activeTab = ref('messages') // 'messages' or 'comprehensive'
@@ -565,6 +570,11 @@ const sendMessage = async () => {
     await nextTick()
     scrollToBottom()
 
+    // AI 메시지 자동 TTS 재생
+    if (autoPlayTTS.value && response.aiMessage) {
+      playTTS(response.aiMessage)
+    }
+
     // 감지된 용어 업데이트
     if (response.detectedTerms) {
       detectedTerms.value = [...new Set([...detectedTerms.value, ...response.detectedTerms])]
@@ -644,8 +654,37 @@ const resetConversation = async () => {
 
 const endConversation = () => {
   if (confirm('대화를 종료하시겠습니까?')) {
+    // TTS 중지
+    stopTTS()
     router.push('/conversation/scenario')
   }
+}
+
+// TTS 재생
+const playTTS = async (text) => {
+  if (!text || isTTSPlaying.value) return
+
+  try {
+    isTTSPlaying.value = true
+    // 시나리오 언어에 맞게 TTS 재생
+    const language = scenario.value?.language || 'en-US'
+    await voiceTTSService.speak(text, language)
+  } catch (err) {
+    console.error('TTS 재생 실패:', err)
+    // 에러가 발생해도 사용자에게 알림 없이 조용히 실패
+  } finally {
+    isTTSPlaying.value = false
+  }
+}
+
+// TTS 중지
+const stopTTS = async () => {
+  try {
+    await voiceTTSService.stop()
+  } catch (err) {
+    console.error('TTS 중지 실패:', err)
+  }
+  isTTSPlaying.value = false
 }
 
 // 입력 모드 전환
@@ -835,6 +874,9 @@ const stopRealtimeSTT = async () => {
 
 // 컴포넌트 정리
 onUnmounted(() => {
+  // TTS 중지
+  stopTTS()
+
   if (isRecording.value) {
     if (useRealtimeSTT.value) {
       voiceSTTStreamService.stopStreaming()
