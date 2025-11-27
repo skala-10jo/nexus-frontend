@@ -2,39 +2,224 @@
   <div class="p-8 max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Biz 표현 학습</h1>
 
-    <!-- Unit Selection -->
-    <div class="mb-6 bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Unit 선택</h2>
-      <div class="flex flex-wrap gap-3">
+    <!-- Progress Indicator -->
+    <div v-if="currentView !== 'selection'" class="mb-6">
+      <div class="flex items-center gap-2 mb-4">
         <button
-          v-for="unit in units"
-          :key="unit.unit"
-          @click="selectUnit(unit.unit)"
-          class="px-4 py-2 rounded-lg border transition-all duration-200"
-          :class="selectedUnit === unit.unit
-            ? 'bg-orange-primary text-white border-orange-primary'
-            : 'bg-white text-gray-700 border-gray-300 hover:border-orange-primary'"
+          @click="handleBackButton"
+          class="flex items-center gap-1 text-gray-600 hover:text-gray-800 transition"
         >
-          {{ unit.unit }}
-          <span class="ml-2 text-sm opacity-75">({{ unit.learnedCount }}/{{ unit.totalCount }})</span>
+          <ChevronLeftIcon class="w-5 h-5" />
+          <span>{{ backButtonText }}</span>
         </button>
+      </div>
+
+      <!-- Session Progress (세션 선택 후) -->
+      <div v-if="currentView === 'practice' || currentView === 'quiz'" class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span
+            class="flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm"
+            :class="currentView === 'practice' ? 'bg-orange-primary' : 'bg-green-500'"
+          >
+            <CheckIcon v-if="currentView === 'quiz'" class="w-5 h-5" />
+            <span v-else>1</span>
+          </span>
+          <span class="font-medium" :class="currentView === 'practice' ? 'text-orange-primary' : 'text-green-600'">발음 연습</span>
+        </div>
+        <div class="flex-1 h-1 bg-gray-200 rounded">
+          <div
+            class="h-full bg-orange-primary rounded transition-all duration-300"
+            :style="{ width: currentView === 'quiz' ? '100%' : '0%' }"
+          ></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm"
+            :class="currentView === 'quiz' ? 'bg-orange-primary text-white' : 'bg-gray-200 text-gray-500'"
+          >
+            2
+          </span>
+          <span class="font-medium" :class="currentView === 'quiz' ? 'text-orange-primary' : 'text-gray-500'">퀴즈</span>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 mt-2">
+        {{ selectedUnit }} > {{ selectedChapter }}
+        <span v-if="currentView === 'practice' || currentView === 'quiz'"> > 세션 {{ currentSessionIndex + 1 }}</span>
+      </p>
+    </div>
+
+    <!-- View: Unit/Chapter Selection -->
+    <div v-if="currentView === 'selection'">
+      <!-- Step 1: Unit Selection -->
+      <div class="mb-6 bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">1</span>
+          <h2 class="text-xl font-semibold text-gray-800">Unit 선택</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            v-for="unit in units"
+            :key="unit.unit"
+            @click="selectUnit(unit.unit)"
+            class="p-6 rounded-xl border-2 transition-all duration-200 text-left"
+            :class="selectedUnit === unit.unit
+              ? 'bg-orange-50 border-orange-primary shadow-md'
+              : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-sm'"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ unit.unit }}</h3>
+                <div class="flex items-center gap-2">
+                  <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-orange-primary rounded-full transition-all duration-300"
+                      :style="{ width: `${(unit.learnedCount / unit.totalCount) * 100}%` }"
+                    ></div>
+                  </div>
+                  <span class="text-sm text-gray-600">{{ unit.learnedCount }}/{{ unit.totalCount }}</span>
+                </div>
+              </div>
+              <div
+                v-if="selectedUnit === unit.unit"
+                class="w-6 h-6 rounded-full bg-orange-primary flex items-center justify-center"
+              >
+                <CheckIcon class="w-4 h-4 text-white" />
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Chapter Selection -->
+      <div v-if="selectedUnit && chapters.length > 0" class="mb-6 bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">2</span>
+          <h2 class="text-xl font-semibold text-gray-800">Chapter 선택</h2>
+          <span class="text-sm text-gray-500 ml-2">{{ selectedUnit }}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            v-for="chapter in chapters"
+            :key="chapter.chapter"
+            @click="selectChapter(chapter.chapter)"
+            class="p-4 rounded-xl border-2 transition-all duration-200 text-left hover:border-blue-300 hover:shadow-sm bg-white border-gray-200"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-medium text-gray-800 mb-2">{{ chapter.chapter }}</h3>
+                <div class="flex items-center gap-2">
+                  <div class="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-blue-500 rounded-full transition-all duration-300"
+                      :style="{ width: `${(chapter.learnedCount / chapter.totalCount) * 100}%` }"
+                    ></div>
+                  </div>
+                  <span class="text-xs text-gray-500">{{ chapter.learnedCount }}/{{ chapter.totalCount }}</span>
+                </div>
+              </div>
+              <PlayIcon class="w-5 h-5 text-blue-500" />
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary"></div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary"></div>
+    <!-- View: Session Selection -->
+    <div v-else-if="currentView === 'sessionSelect'" class="space-y-6">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">3</span>
+          <h2 class="text-xl font-semibold text-gray-800">학습 세션 선택</h2>
+        </div>
+
+        <p class="text-gray-600 mb-6">
+          이 챕터에는 총 <strong>{{ allExpressions.length }}개</strong>의 표현이 있습니다.
+          학습 효율을 위해 <strong>{{ sessions.length }}개의 세션</strong>으로 나누어 학습합니다.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            v-for="(session, idx) in sessions"
+            :key="idx"
+            @click="startSession(idx)"
+            class="p-6 rounded-xl border-2 transition-all duration-200 text-left"
+            :class="session.completed
+              ? 'bg-green-50 border-green-500'
+              : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex items-center gap-2">
+                <span
+                  class="flex items-center justify-center w-10 h-10 rounded-full font-bold"
+                  :class="session.completed ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-primary'"
+                >
+                  <CheckIcon v-if="session.completed" class="w-6 h-6" />
+                  <span v-else>{{ idx + 1 }}</span>
+                </span>
+                <div>
+                  <h3 class="font-semibold text-gray-800">세션 {{ idx + 1 }}</h3>
+                  <p class="text-sm text-gray-500">{{ session.expressions.length }}개 표현</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-xs text-gray-500 truncate" v-for="(expr, exprIdx) in session.expressions.slice(0, 3)" :key="exprIdx">
+                • {{ expr.expression }}
+              </p>
+              <p v-if="session.expressions.length > 3" class="text-xs text-gray-400">
+                ... 외 {{ session.expressions.length - 3 }}개
+              </p>
+            </div>
+
+            <div class="mt-4 pt-3 border-t">
+              <span
+                class="text-sm font-medium"
+                :class="session.completed ? 'text-green-600' : 'text-orange-primary'"
+              >
+                {{ session.completed ? '완료됨' : '학습하기 →' }}
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Chapter Complete Check -->
+        <div v-if="allSessionsCompleted" class="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div class="flex items-center gap-3">
+            <CheckCircleIcon class="w-8 h-8 text-green-500" />
+            <div>
+              <h4 class="font-semibold text-green-800">챕터 학습 완료!</h4>
+              <p class="text-sm text-green-600">모든 세션을 완료했습니다. 다른 챕터를 선택하거나 복습할 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Expression Practice Area -->
-    <div v-else-if="expressions.length > 0" class="space-y-6">
-      <!-- Current Expression Card -->
+    <!-- View: Pronunciation Practice -->
+    <div v-else-if="currentView === 'practice'" class="space-y-6">
       <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <span class="text-sm text-gray-500">{{ currentExpressionIndex + 1 }} / {{ expressions.length }}</span>
-            <span v-if="currentExpression.isLearned" class="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-              학습 완료
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">발음 연습</h2>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">{{ currentExpressionIndex + 1 }} / {{ currentSessionExpressions.length }}</span>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2">
+            <span
+              v-if="practiceCompletedForCurrent"
+              class="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full flex items-center gap-1"
+            >
+              <CheckIcon class="w-4 h-4" />
+              연습 완료
             </span>
           </div>
           <div class="flex gap-2">
@@ -47,7 +232,7 @@
             </button>
             <button
               @click="nextExpression"
-              :disabled="currentExpressionIndex === expressions.length - 1"
+              :disabled="currentExpressionIndex === currentSessionExpressions.length - 1"
               class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRightIcon class="w-5 h-5" />
@@ -55,7 +240,7 @@
           </div>
         </div>
 
-        <!-- Expression Summary (간략하게) -->
+        <!-- Expression Summary -->
         <div class="bg-gray-50 border-l-4 border-orange-primary rounded-r-lg p-4 mb-6">
           <div class="flex items-center justify-between">
             <div>
@@ -76,7 +261,7 @@
           </div>
         </div>
 
-        <!-- Example Sentences (메인) -->
+        <!-- Example Sentences -->
         <div v-if="currentExpression.examples && currentExpression.examples.length > 0">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">예문 연습</h3>
           <div class="space-y-4">
@@ -111,25 +296,186 @@
           </div>
         </div>
 
-        <!-- Mark as Learned Button -->
+        <!-- Progress Indicator & Next Button -->
         <div class="mt-6 pt-6 border-t">
+          <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>세션 진행률</span>
+              <span>{{ practiceCompletedCount }} / {{ currentSessionExpressions.length }} 완료</span>
+            </div>
+            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-green-500 rounded-full transition-all duration-300"
+                :style="{ width: `${(practiceCompletedCount / currentSessionExpressions.length) * 100}%` }"
+              ></div>
+            </div>
+          </div>
+
           <button
-            @click="markAsLearned"
-            :disabled="currentExpression.isLearned"
-            class="w-full py-3 rounded-lg transition"
-            :class="currentExpression.isLearned
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-green-500 text-white hover:bg-green-600'"
+            v-if="allPracticeCompleted"
+            @click="goToQuiz"
+            class="w-full py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center gap-2"
           >
-            {{ currentExpression.isLearned ? '이미 학습 완료됨' : '학습 완료로 표시' }}
+            <AcademicCapIcon class="w-5 h-5" />
+            퀴즈 풀러가기
           </button>
+          <p v-else class="text-center text-gray-500 text-sm">
+            모든 표현의 발음 연습을 완료하면 퀴즈로 넘어갈 수 있습니다
+          </p>
         </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else-if="selectedUnit" class="bg-white rounded-lg shadow-md p-12 text-center">
-      <p class="text-gray-500">선택한 Unit에 표현이 없습니다.</p>
+    <!-- View: Quiz -->
+    <div v-else-if="currentView === 'quiz'" class="space-y-6">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">빈칸 채우기 퀴즈</h2>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">{{ currentQuizIndex + 1 }} / {{ quizQuestions.length }}</span>
+          </div>
+        </div>
+
+        <!-- Quiz Question -->
+        <div v-if="currentQuizQuestion" class="mb-6">
+          <div class="bg-blue-50 rounded-lg p-6 mb-4">
+            <p class="text-sm text-gray-600 mb-2">다음 빈칸에 들어갈 표현을 입력하세요:</p>
+            <p class="text-xl font-medium text-gray-800" v-html="currentQuizQuestion.questionHtml"></p>
+            <p class="text-gray-600 mt-2">{{ currentQuizQuestion.translation }}</p>
+          </div>
+
+          <!-- Hint -->
+          <div class="mb-4">
+            <button
+              @click="showHint = !showHint"
+              class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              <LightBulbIcon class="w-4 h-4" />
+              {{ showHint ? '힌트 숨기기' : '힌트 보기' }}
+            </button>
+            <p v-if="showHint" class="mt-2 text-sm text-gray-600 bg-yellow-50 p-2 rounded">
+              의미: {{ currentQuizQuestion.meaning }}
+            </p>
+          </div>
+
+          <!-- Answer Input -->
+          <div class="mb-4">
+            <input
+              v-model="userAnswer"
+              @keyup.enter="checkAnswer"
+              type="text"
+              placeholder="정답을 입력하세요"
+              class="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:border-orange-primary text-lg"
+              :class="{
+                'border-green-500 bg-green-50': answerStatus === 'correct',
+                'border-red-500 bg-red-50': answerStatus === 'wrong',
+                'border-gray-300': answerStatus === null
+              }"
+              :disabled="answerStatus !== null"
+            />
+          </div>
+
+          <!-- Answer Feedback -->
+          <div v-if="answerStatus === 'correct'" class="mb-4 p-4 bg-green-100 rounded-lg">
+            <p class="text-green-700 font-semibold flex items-center gap-2">
+              <CheckCircleIcon class="w-5 h-5" />
+              정답입니다!
+            </p>
+          </div>
+          <div v-else-if="answerStatus === 'wrong'" class="mb-4 p-4 bg-red-100 rounded-lg">
+            <p class="text-red-700 font-semibold flex items-center gap-2">
+              <XCircleIcon class="w-5 h-5" />
+              오답입니다. 정답: {{ currentQuizQuestion.answer }}
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <button
+              v-if="answerStatus === null"
+              @click="checkAnswer"
+              :disabled="!userAnswer.trim()"
+              class="flex-1 py-3 rounded-lg bg-orange-primary text-white hover:bg-orange-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              정답 확인
+            </button>
+            <button
+              v-else-if="currentQuizIndex < quizQuestions.length - 1"
+              @click="nextQuiz"
+              class="flex-1 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+            >
+              다음 문제
+            </button>
+            <button
+              v-else
+              @click="completeSession"
+              class="flex-1 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center gap-2"
+            >
+              <CheckIcon class="w-5 h-5" />
+              세션 완료
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Progress -->
+        <div class="mt-6 pt-6 border-t">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>퀴즈 진행률</span>
+            <span>{{ quizCorrectCount }} / {{ quizQuestions.length }} 정답</span>
+          </div>
+          <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-green-500 rounded-full transition-all duration-300"
+              :style="{ width: `${(currentQuizIndex / quizQuestions.length) * 100}%` }"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Complete Modal -->
+    <div
+      v-if="showCompletionModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircleIcon class="w-12 h-12 text-green-500" />
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">세션 {{ currentSessionIndex + 1 }} 완료!</h3>
+        <p class="text-gray-600 mb-4">
+          {{ currentSessionExpressions.length }}개 표현 학습을 완료했습니다.
+        </p>
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">퀴즈 점수</p>
+              <p class="text-2xl font-bold text-orange-primary">{{ quizCorrectCount }} / {{ quizQuestions.length }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">정답률</p>
+              <p class="text-2xl font-bold text-green-600">{{ Math.round((quizCorrectCount / quizQuestions.length) * 100) }}%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Session or Back -->
+        <div class="space-y-3">
+          <button
+            v-if="hasNextSession"
+            @click="goToNextSession"
+            class="w-full py-3 rounded-lg bg-orange-primary text-white hover:bg-orange-medium transition"
+          >
+            다음 세션으로 (세션 {{ currentSessionIndex + 2 }})
+          </button>
+          <button
+            @click="goBackToSessionSelect"
+            class="w-full py-3 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+          >
+            세션 선택으로 돌아가기
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Recording Modal -->
@@ -208,12 +554,6 @@
             </div>
           </div>
 
-          <!-- Prosody Score (if available) -->
-          <div v-if="pronunciationResult.prosody_score" class="bg-pink-50 rounded-lg p-3 text-center mb-4">
-            <p class="text-sm text-gray-600">억양/리듬</p>
-            <p class="text-2xl font-bold text-pink-600">{{ Math.round(pronunciationResult.prosody_score) }}</p>
-          </div>
-
           <!-- Word-level Results -->
           <div v-if="pronunciationResult.words && pronunciationResult.words.length > 0" class="mt-4">
             <h5 class="text-sm font-medium text-gray-700 mb-2">단어별 정확도</h5>
@@ -250,23 +590,23 @@
                 </div>
               </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">* 단어를 클릭하면 음소별 점수를 볼 수 있습니다</p>
-          </div>
-
-          <!-- Recognized Text -->
-          <div v-if="pronunciationResult.recognized_text" class="mt-4 bg-gray-50 rounded-lg p-3">
-            <p class="text-sm text-gray-600 mb-1">인식된 텍스트:</p>
-            <p class="text-gray-800">{{ pronunciationResult.recognized_text }}</p>
           </div>
         </div>
 
         <!-- Close Button -->
-        <div class="mt-6 flex justify-end">
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            v-if="pronunciationResult && pronunciationResult.pronunciation_score >= 60"
+            @click="markPracticeComplete"
+            class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+          >
+            연습 완료
+          </button>
           <button
             @click="closeRecordingModal"
             class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
-            닫기
+            {{ pronunciationResult ? '다시 연습' : '닫기' }}
           </button>
         </div>
       </div>
@@ -282,16 +622,46 @@ import {
   ChevronRightIcon,
   SpeakerWaveIcon,
   MicrophoneIcon,
-  StopIcon
+  StopIcon,
+  CheckIcon,
+  PlayIcon,
+  AcademicCapIcon,
+  LightBulbIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/vue/24/outline'
 
-// State
+// Constants
+const SESSION_COUNT = 3
+
+// View State: 'selection' | 'sessionSelect' | 'practice' | 'quiz'
+const currentView = ref('selection')
+
+// Selection State
 const units = ref([])
 const selectedUnit = ref('')
-const expressions = ref([])
-const currentExpressionIndex = ref(0)
+const chapters = ref([])
+const selectedChapter = ref('')
 const loading = ref(false)
 const ttsLoading = ref(false)
+
+// Session State
+const allExpressions = ref([]) // 전체 표현
+const sessions = ref([]) // 세션별로 분할된 표현 배열
+const currentSessionIndex = ref(0)
+const currentExpressionIndex = ref(0)
+
+// Practice State
+const practiceCompletedSet = ref(new Set())
+
+// Quiz State
+const quizQuestions = ref([])
+const currentQuizIndex = ref(0)
+const userAnswer = ref('')
+const answerStatus = ref(null)
+const showHint = ref(false)
+const quizCorrectCount = ref(0)
+const showCompletionModal = ref(false)
 
 // Recording State
 const showRecordingModal = ref(false)
@@ -305,13 +675,50 @@ const selectedWordIndex = ref(null)
 
 // WebSocket & Audio
 let websocket = null
-let mediaRecorder = null
 let audioContext = null
 let audioProcessor = null
 
 // Computed
+const currentSessionExpressions = computed(() => {
+  return sessions.value[currentSessionIndex.value]?.expressions || []
+})
+
 const currentExpression = computed(() => {
-  return expressions.value[currentExpressionIndex.value] || {}
+  return currentSessionExpressions.value[currentExpressionIndex.value] || {}
+})
+
+const practiceCompletedForCurrent = computed(() => {
+  return practiceCompletedSet.value.has(currentExpression.value.id)
+})
+
+const practiceCompletedCount = computed(() => {
+  return practiceCompletedSet.value.size
+})
+
+const allPracticeCompleted = computed(() => {
+  return currentSessionExpressions.value.length > 0 &&
+    practiceCompletedSet.value.size >= currentSessionExpressions.value.length
+})
+
+const currentQuizQuestion = computed(() => {
+  return quizQuestions.value[currentQuizIndex.value] || null
+})
+
+const allSessionsCompleted = computed(() => {
+  return sessions.value.length > 0 && sessions.value.every(s => s.completed)
+})
+
+const hasNextSession = computed(() => {
+  return currentSessionIndex.value < sessions.value.length - 1
+})
+
+const backButtonText = computed(() => {
+  if (currentView.value === 'sessionSelect') {
+    return 'Unit/Chapter 선택으로 돌아가기'
+  } else if (currentView.value === 'practice' || currentView.value === 'quiz') {
+    return '세션 선택으로 돌아가기'
+  }
+  return '뒤로가기'
 })
 
 // Methods
@@ -319,9 +726,6 @@ const fetchUnits = async () => {
   try {
     const response = await api.get('/expressions/units')
     units.value = response.data.data || []
-    if (units.value.length > 0) {
-      selectUnit(units.value[0].unit)
-    }
   } catch (error) {
     console.error('Failed to fetch units:', error)
   }
@@ -329,20 +733,96 @@ const fetchUnits = async () => {
 
 const selectUnit = async (unit) => {
   selectedUnit.value = unit
+  selectedChapter.value = ''
+  allExpressions.value = []
+  sessions.value = []
   loading.value = true
-  currentExpressionIndex.value = 0
 
   try {
-    const response = await api.get('/expressions', {
-      params: { unit, limit: 10 }
+    const response = await api.get('/expressions/chapters', {
+      params: { unit }
     })
-    expressions.value = response.data.data || []
+    chapters.value = response.data.data || []
   } catch (error) {
-    console.error('Failed to fetch expressions:', error)
-    expressions.value = []
+    console.error('Failed to fetch chapters:', error)
+    chapters.value = []
   } finally {
     loading.value = false
   }
+}
+
+const selectChapter = async (chapter) => {
+  selectedChapter.value = chapter
+  loading.value = true
+
+  try {
+    const response = await api.get('/expressions', {
+      params: { unit: selectedUnit.value, chapter, limit: 100 }
+    })
+    allExpressions.value = response.data.data || []
+
+    if (allExpressions.value.length > 0) {
+      // 세션으로 분할
+      splitIntoSessions()
+      currentView.value = 'sessionSelect'
+    }
+  } catch (error) {
+    console.error('Failed to fetch expressions:', error)
+    allExpressions.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+const splitIntoSessions = () => {
+  const total = allExpressions.value.length
+  const sessionSize = Math.ceil(total / SESSION_COUNT)
+
+  sessions.value = []
+  for (let i = 0; i < SESSION_COUNT; i++) {
+    const start = i * sessionSize
+    const end = Math.min(start + sessionSize, total)
+    if (start < total) {
+      sessions.value.push({
+        expressions: allExpressions.value.slice(start, end),
+        completed: false
+      })
+    }
+  }
+}
+
+const startSession = (sessionIndex) => {
+  currentSessionIndex.value = sessionIndex
+  currentExpressionIndex.value = 0
+  practiceCompletedSet.value = new Set()
+  currentView.value = 'practice'
+}
+
+const handleBackButton = () => {
+  if (currentView.value === 'sessionSelect') {
+    goBackToSelection()
+  } else if (currentView.value === 'practice' || currentView.value === 'quiz') {
+    goBackToSessionSelect()
+  }
+}
+
+const goBackToSelection = () => {
+  currentView.value = 'selection'
+  sessions.value = []
+  allExpressions.value = []
+  practiceCompletedSet.value = new Set()
+  quizQuestions.value = []
+  currentQuizIndex.value = 0
+  quizCorrectCount.value = 0
+}
+
+const goBackToSessionSelect = () => {
+  currentView.value = 'sessionSelect'
+  practiceCompletedSet.value = new Set()
+  quizQuestions.value = []
+  currentQuizIndex.value = 0
+  quizCorrectCount.value = 0
+  showCompletionModal.value = false
 }
 
 const prevExpression = () => {
@@ -353,7 +833,7 @@ const prevExpression = () => {
 }
 
 const nextExpression = () => {
-  if (currentExpressionIndex.value < expressions.value.length - 1) {
+  if (currentExpressionIndex.value < currentSessionExpressions.value.length - 1) {
     currentExpressionIndex.value++
     pronunciationResult.value = null
   }
@@ -401,7 +881,6 @@ const startPronunciationPractice = (type, exampleIndex = 0) => {
 
 const startRecording = async () => {
   try {
-    // Get microphone access
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         sampleRate: 16000,
@@ -411,12 +890,10 @@ const startRecording = async () => {
       }
     })
 
-    // Setup WebSocket
     const wsUrl = `ws://localhost:8000/api/ai/expression/speech/assess-realtime`
     websocket = new WebSocket(wsUrl)
 
     websocket.onopen = () => {
-      // Send initial data
       const initData = {
         expression_id: currentExpression.value.id,
         type: practiceType.value,
@@ -466,7 +943,6 @@ const startAudioCapture = async (stream) => {
   audioContext = new AudioContext({ sampleRate: 16000 })
   const source = audioContext.createMediaStreamSource(stream)
 
-  // Use ScriptProcessor for audio processing
   audioProcessor = audioContext.createScriptProcessor(4096, 1, 1)
 
   audioProcessor.onaudioprocess = (event) => {
@@ -474,14 +950,12 @@ const startAudioCapture = async (stream) => {
 
     const inputBuffer = event.inputBuffer.getChannelData(0)
 
-    // Convert Float32 to Int16
     const int16Buffer = new Int16Array(inputBuffer.length)
     for (let i = 0; i < inputBuffer.length; i++) {
       const s = Math.max(-1, Math.min(1, inputBuffer[i]))
       int16Buffer[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
     }
 
-    // Send audio chunk
     websocket.send(int16Buffer.buffer)
   }
 
@@ -507,6 +981,11 @@ const stopRecording = () => {
   recordingStatus.value = '결과 처리 중...'
 }
 
+const markPracticeComplete = () => {
+  practiceCompletedSet.value.add(currentExpression.value.id)
+  closeRecordingModal()
+}
+
 const closeRecordingModal = () => {
   if (websocket) {
     websocket.close()
@@ -517,22 +996,81 @@ const closeRecordingModal = () => {
   isRecording.value = false
 }
 
-const markAsLearned = async () => {
-  if (currentExpression.value.isLearned) return
+// Quiz Methods
+const goToQuiz = () => {
+  generateQuizQuestions()
+  currentQuizIndex.value = 0
+  quizCorrectCount.value = 0
+  userAnswer.value = ''
+  answerStatus.value = null
+  showHint.value = false
+  currentView.value = 'quiz'
+}
 
+const generateQuizQuestions = () => {
+  quizQuestions.value = currentSessionExpressions.value.map(expr => {
+    const exampleIndex = Math.floor(Math.random() * expr.examples.length)
+    const example = expr.examples[exampleIndex]
+
+    const expression = expr.expression
+    const questionHtml = example.text.replace(
+      new RegExp(expression, 'gi'),
+      '<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>'
+    )
+
+    return {
+      expressionId: expr.id,
+      expression: expression,
+      meaning: formatMeaning(expr.meaning),
+      originalText: example.text,
+      questionHtml: questionHtml,
+      translation: example.translation,
+      answer: expression
+    }
+  })
+}
+
+const checkAnswer = () => {
+  if (!userAnswer.value.trim()) return
+
+  const isCorrect = userAnswer.value.trim().toLowerCase() === currentQuizQuestion.value.answer.toLowerCase()
+  answerStatus.value = isCorrect ? 'correct' : 'wrong'
+
+  if (isCorrect) {
+    quizCorrectCount.value++
+  }
+}
+
+const nextQuiz = () => {
+  currentQuizIndex.value++
+  userAnswer.value = ''
+  answerStatus.value = null
+  showHint.value = false
+}
+
+const completeSession = async () => {
   try {
-    await api.post('/expressions/learned', {
-      expressionIds: [currentExpression.value.id]
-    })
+    // 현재 세션의 표현들을 학습 완료 처리
+    const expressionIds = currentSessionExpressions.value.map(e => e.id)
+    await api.post('/expressions/learned', { expressionIds })
 
-    // Update local state
-    expressions.value[currentExpressionIndex.value].isLearned = true
+    // 세션 완료 표시
+    sessions.value[currentSessionIndex.value].completed = true
 
-    // Refresh units to update count
+    // 데이터 새로고침
     fetchUnits()
+
+    showCompletionModal.value = true
   } catch (error) {
     console.error('Failed to mark as learned:', error)
     alert('학습 완료 처리에 실패했습니다.')
+  }
+}
+
+const goToNextSession = () => {
+  showCompletionModal.value = false
+  if (hasNextSession.value) {
+    startSession(currentSessionIndex.value + 1)
   }
 }
 
