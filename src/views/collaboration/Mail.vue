@@ -1,641 +1,222 @@
 <template>
-  <div class="flex h-screen overflow-hidden relative">
-    <!-- 메인 콘텐츠 영역 -->
-    <div class="flex-1 p-8 overflow-y-auto transition-all duration-300" :style="{ marginRight: showChatPanel ? '512px' : '0' }">
-    <!-- 상단 헤더 -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-800">메일</h1>
-
-        <!-- Outlook 연동 상태 -->
-        <div v-if="!authStatus.isConnected" class="flex items-center gap-3">
-          <span class="text-sm text-gray-500">Outlook 계정을 연동하세요</span>
-          <button
-            @click="connectOutlook"
-            class="px-6 py-2.5 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition font-medium"
-          >
-            Outlook 연동
-          </button>
+  <div class="flex h-screen bg-gray-100 font-sans overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-80 bg-gray-100 flex flex-col p-6 border-r border-gray-200/50">
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-10">
+        <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold text-xl">
+          A
         </div>
-        <div v-else class="flex items-center gap-4">
-          <!-- 프로필 드롭다운 -->
-          <div class="relative">
-            <button
-              @click="showProfileMenu = !showProfileMenu"
-              class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
-            >
-              <svg class="w-8 h-8 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <div class="text-left">
-                <div class="font-medium text-sm">내 계정</div>
-                <div class="text-xs text-gray-500">{{ authStatus.outlookEmail }}</div>
-              </div>
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <!-- 드롭다운 메뉴 -->
-            <div
-              v-if="showProfileMenu"
-              @click.stop
-              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-10"
-            >
-              <div class="px-4 py-3 border-b border-gray-200">
-                <div class="text-sm font-medium text-gray-900">{{ authStatus.outlookEmail }}</div>
-                <div class="text-xs text-gray-500 mt-1">Outlook 연동됨</div>
-              </div>
-              <button
-                @click="disconnectOutlook"
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-              >
-                연동 해제
-              </button>
-            </div>
-          </div>
-
-          <!-- 액션 버튼들 -->
-          <div class="flex items-center gap-2">
-            <button
-              @click="syncMails"
-              :disabled="syncing || embedding"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-medium"
-            >
-              {{ embedding ? '임베딩 중...' : syncing ? '동기화 중...' : '동기화' }}
-            </button>
-            <button
-              @click="openComposeModal"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
-            >
-              메일 작성
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 필터 바 -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div class="flex justify-between items-center">
-        <!-- 왼쪽: 받은/보낸 편지함 탭 -->
-        <div class="flex gap-2">
-          <button
-            @click="selectFolder('Inbox')"
-            :class="currentFolder === 'Inbox' ? 'bg-orange-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-            class="px-6 py-2 rounded-lg transition font-medium"
-          >
-            받은편지함
-            <span v-if="unreadCount > 0 && currentFolder === 'Inbox'" class="ml-2 bg-white text-orange-primary px-2 py-0.5 rounded-full text-xs font-bold">
-              {{ unreadCount }}
-            </span>
-          </button>
-          <button
-            @click="selectFolder('SentItems')"
-            :class="currentFolder === 'SentItems' ? 'bg-orange-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-            class="px-6 py-2 rounded-lg transition font-medium"
-          >
-            보낸편지함
-          </button>
-        </div>
-
-        <!-- 오른쪽: 프로젝트 드롭다운 + 검색창 -->
-        <div class="flex gap-3">
-          <select
-            v-model="currentProjectId"
-            @change="onProjectChange"
-            class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary bg-white"
-          >
-            <option :value="null">전체 프로젝트</option>
-            <option v-for="project in projects" :key="project.id" :value="project.id">
-              {{ project.name }}
-            </option>
-          </select>
-
-          <div class="flex gap-2">
-            <input
-              v-model="searchQuery"
-              @keyup.enter="searchMails"
-              type="text"
-              placeholder="메일 검색 (제목, 발신자)..."
-              class="w-80 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
-            >
-            <button
-              @click="searchMails"
-              class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition font-medium"
-            >
-              검색
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 메일 목록 -->
-    <div class="bg-white rounded-lg shadow-md">
-      <div class="p-6">
-        <div v-if="loading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary mx-auto"></div>
-          <p class="text-gray-500 mt-4">메일을 불러오는 중...</p>
-        </div>
-
-        <div v-else-if="emails.length === 0" class="text-center py-12">
-          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <span class="text-xl font-bold text-gray-900">Aceagency</span>
+        <button class="ml-auto w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-800">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          <p class="text-gray-500">{{ authStatus.isConnected ? '메일이 없습니다' : 'Outlook을 연동하여 메일을 확인하세요' }}</p>
-        </div>
-
-        <!-- 프로젝트별 그룹핑 (전체 프로젝트 보기일 때만) -->
-        <div v-else-if="currentProjectId === null && !searchQuery" class="space-y-6">
-          <div v-for="group in groupedEmails" :key="group.projectId || 'unassigned'">
-            <!-- 프로젝트 헤더 -->
-            <div class="mb-3 flex items-center gap-3 bg-gray-50 p-3 rounded-lg border-l-4" :class="group.projectId ? 'border-orange-primary' : 'border-gray-400'">
-              <span v-if="group.projectId" class="text-2xl">📁</span>
-              <span v-else class="text-2xl">📭</span>
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold" :class="group.projectId ? 'text-orange-700' : 'text-gray-600'">
-                  {{ group.projectName }}
-                </h3>
-                <span class="text-xs text-gray-500">{{ group.emails.length }}개의 메일</span>
-              </div>
-            </div>
-
-            <!-- 메일 목록 -->
-            <div class="space-y-2 ml-4">
-              <div
-                v-for="email in group.emails"
-                :key="email.id"
-                @click="openEmail(email.id)"
-                class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
-                :class="{ 'bg-blue-50 border-blue-200': !email.isRead, 'bg-white': email.isRead }"
-              >
-                <div class="flex items-start justify-between">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <h3
-                        class="font-semibold text-gray-800 truncate"
-                        :class="{ 'font-bold': !email.isRead }"
-                      >
-                        {{ email.subject || '(제목 없음)' }}
-                      </h3>
-                      <span
-                        v-if="email.hasAttachments"
-                        class="text-gray-400"
-                        title="첨부파일 있음"
-                      >
-                        📎
-                      </span>
-                      <span
-                        v-if="!email.isRead"
-                        class="w-2 h-2 bg-orange-primary rounded-full"
-                        title="읽지 않음"
-                      ></span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-1">
-                      <span v-if="currentFolder === 'SentItems'">
-                        받는이: {{ email.toRecipients?.split(';')[0].trim() || '(수신자 없음)' }}
-                      </span>
-                      <span v-else>
-                        {{ email.fromName || email.fromAddress }}
-                      </span>
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      {{ email.bodyPreview }}
-                    </p>
-                  </div>
-                  <div class="ml-4 flex flex-col items-end gap-2">
-                    <span class="text-xs text-gray-500 whitespace-nowrap">
-                      {{ formatDate(email.receivedDateTime) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 일반 메일 목록 (특정 프로젝트 선택 또는 검색 시) -->
-        <div v-else class="space-y-2">
-          <div
-            v-for="email in emails"
-            :key="email.id"
-            @click="openEmail(email.id)"
-            class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
-            :class="{ 'bg-blue-50 border-blue-200': !email.isRead, 'bg-white': email.isRead }"
-          >
-            <div class="flex items-start justify-between">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h3
-                    class="font-semibold text-gray-800 truncate"
-                    :class="{ 'font-bold': !email.isRead }"
-                  >
-                    {{ email.subject || '(제목 없음)' }}
-                  </h3>
-                  <span
-                    v-if="email.hasAttachments"
-                    class="text-gray-400"
-                    title="첨부파일 있음"
-                  >
-                    📎
-                  </span>
-                  <span
-                    v-if="!email.isRead"
-                    class="w-2 h-2 bg-orange-primary rounded-full"
-                    title="읽지 않음"
-                  ></span>
-                </div>
-                <p class="text-sm text-gray-600 mb-1">
-                  <span v-if="currentFolder === 'SentItems'">
-                    받는이: {{ email.toRecipients?.split(';')[0].trim() || '(수신자 없음)' }}
-                  </span>
-                  <span v-else>
-                    {{ email.fromName || email.fromAddress }}
-                  </span>
-                </p>
-                <p class="text-sm text-gray-500 truncate">
-                  {{ email.bodyPreview }}
-                </p>
-              </div>
-              <div class="ml-4 flex flex-col items-end gap-2">
-                <span class="text-xs text-gray-500 whitespace-nowrap">
-                  {{ formatDate(email.receivedDateTime) }}
-                </span>
-                <span
-                  v-if="email.projectName"
-                  class="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-medium border border-orange-200"
-                  title="프로젝트 할당됨"
-                >
-                  📁 {{ email.projectName }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 페이지네이션 -->
-        <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-8 pt-6 border-t border-gray-200">
-          <button
-            @click="prevPage"
-            :disabled="currentPage === 0"
-            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            이전
-          </button>
-          <span class="px-4 py-2 text-gray-700 font-medium">
-            {{ currentPage + 1 }} / {{ totalPages }}
-          </span>
-          <button
-            @click="nextPage"
-            :disabled="currentPage >= totalPages - 1"
-            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            다음
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 메일 상세 모달 -->
-    <div v-if="selectedEmail" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60" @click.self="closeEmail">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <!-- 헤더 -->
-        <div class="p-6 border-b border-gray-200">
-          <div class="flex justify-between items-start mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">{{ selectedEmail.subject || '(제목 없음)' }}</h2>
-            <button @click="closeEmail" class="text-gray-500 hover:text-gray-700">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="space-y-2 text-sm">
-            <div class="flex gap-2">
-              <span class="text-gray-500 w-16">보낸이:</span>
-              <span class="text-gray-800">{{ selectedEmail.fromName }} &lt;{{ selectedEmail.fromAddress }}&gt;</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="text-gray-500 w-16">받는이:</span>
-              <span class="text-gray-800">{{ selectedEmail.toRecipients }}</span>
-            </div>
-            <div v-if="selectedEmail.ccRecipients" class="flex gap-2">
-              <span class="text-gray-500 w-16">참조:</span>
-              <span class="text-gray-800">{{ selectedEmail.ccRecipients }}</span>
-            </div>
-            <div class="flex gap-2">
-              <span class="text-gray-500 w-16">날짜:</span>
-              <span class="text-gray-800">{{ formatDateFull(selectedEmail.receivedDateTime) }}</span>
-            </div>
-          </div>
-
-          <!-- 액션 버튼 -->
-          <div class="flex gap-2 mt-4">
-            <button
-              @click="toggleReadStatus"
-              class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
-            >
-              {{ selectedEmail.isRead ? '읽지 않음으로 표시' : '읽음으로 표시' }}
-            </button>
-            <div class="relative">
-              <select
-                v-model="selectedProjectId"
-                @change="assignProject"
-                class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary text-sm min-w-[200px]"
-                :class="selectedEmail.projectId ? 'border-orange-300 bg-orange-50' : ''"
-              >
-                <option :value="null">{{ selectedEmail.projectId ? '프로젝트 할당 해제' : '프로젝트 선택' }}</option>
-                <option v-for="project in projects" :key="project.id" :value="project.id">
-                  {{ project.name }}
-                </option>
-              </select>
-              <div v-if="selectedEmail.projectName" class="absolute -top-2 -right-2 bg-orange-primary text-white text-xs px-2 py-0.5 rounded-full">
-                할당됨
-              </div>
-            </div>
-            <button
-              @click="deleteEmail"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm ml-auto"
-            >
-              삭제
-            </button>
-          </div>
-        </div>
-
-        <!-- 본문 -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div
-            v-if="isHtmlContent(selectedEmail)"
-            v-html="selectedEmail.body"
-            class="prose max-w-none email-body"
-          ></div>
-          <div
-            v-else
-            class="whitespace-pre-wrap text-gray-800"
-          >{{ selectedEmail.body }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 메일 작성 모달 -->
-    <div v-if="showComposeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4" @click.self="closeComposeModal">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-gray-800">새 메일</h2>
-          <button @click="closeComposeModal" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div class="p-6 space-y-4">
-          <!-- 받는 사람 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">받는 사람 *</label>
-            <input
-              v-model="newEmail.to"
-              type="text"
-              placeholder="email@example.com (여러 명일 경우 쉼표로 구분)"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
-            >
-          </div>
-
-          <!-- 참조 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">참조 (CC)</label>
-            <input
-              v-model="newEmail.cc"
-              type="text"
-              placeholder="email@example.com (여러 명일 경우 쉼표로 구분)"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
-            >
-          </div>
-
-          <!-- 제목 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">제목 *</label>
-            <input
-              v-model="newEmail.subject"
-              type="text"
-              placeholder="메일 제목을 입력하세요"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
-            >
-          </div>
-
-          <!-- 본문 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">본문 *</label>
-            <textarea
-              v-model="newEmail.body"
-              rows="10"
-              placeholder="메일 내용을 입력하세요"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary resize-y"
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
-          <button
-            @click="closeComposeModal"
-            class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-          >
-            취소
-          </button>
-          <button
-            @click="sendNewEmail"
-            :disabled="sending"
-            class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
-          >
-            {{ sending ? '발송 중...' : '발송' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Outlook 연동 모달 -->
-    <div v-if="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60" @click.self="closeAuthModal">
-      <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Outlook 연동</h2>
-
-        <div v-if="deviceCode" class="space-y-4">
-          <p class="text-gray-700">다음 코드를 입력하여 인증하세요:</p>
-          <div class="bg-gray-100 p-4 rounded-lg text-center">
-            <p class="text-3xl font-mono font-bold text-orange-primary">{{ deviceCode.userCode }}</p>
-          </div>
-          <button
-            @click="openAuthPage"
-            class="block w-full px-4 py-3 bg-orange-primary text-white text-center rounded-lg hover:bg-orange-medium transition"
-          >
-            인증 페이지 열기
-          </button>
-          <p class="text-sm text-gray-500 text-center">
-            인증 후 자동으로 완료됩니다 ({{ authTimeout }}초)
-          </p>
-        </div>
-
-        <div v-else class="text-center py-4">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary mx-auto"></div>
-          <p class="text-gray-500 mt-4">인증 준비 중...</p>
-        </div>
-
-        <button
-          @click="closeAuthModal"
-          class="w-full mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-        >
-          취소
         </button>
       </div>
-    </div>
 
-    <!-- 플로팅 챗봇 버튼 -->
-    <button
-      v-if="!showChatPanel"
-      @click="showChatPanel = true"
-      class="fixed bottom-8 right-8 w-16 h-16 bg-orange-primary text-white rounded-full shadow-lg hover:bg-orange-medium transition flex items-center justify-center z-40"
-      title="AI 메일 Agent"
-    >
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-      </svg>
-    </button>
-    </div>
-    <!-- 메인 콘텐츠 영역 끝 -->
-
-    <!-- 슬라이딩 챗 패널 -->
-    <transition name="slide-left">
-      <div
-        v-if="showChatPanel"
-        class="fixed top-0 right-0 h-full w-[512px] bg-white shadow-2xl flex flex-col border-l border-gray-200"
-      >
-        <!-- 챗 헤더 -->
-        <div class="p-4 bg-orange-primary text-white flex justify-between items-center">
-          <h3 class="text-lg font-bold">AI 메일 Agent</h3>
-          <button @click="showChatPanel = false" class="text-white hover:text-gray-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- 챗 메시지 영역 -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-4">
-          <div v-for="(msg, idx) in chatMessages" :key="idx">
-            <!-- 사용자 메시지 -->
-            <div v-if="msg.role === 'user'" class="flex justify-end">
-              <div class="bg-orange-100 text-gray-800 rounded-lg px-4 py-2 max-w-[85%]">
-                {{ msg.content }}
-              </div>
+      <!-- Menu -->
+      <div class="mb-8">
+        <div class="text-xs font-bold text-gray-400 mb-4 tracking-wider">MENU</div>
+        <nav class="space-y-1">
+          <a
+            v-for="item in menuItems"
+            :key="item.name"
+            href="#"
+            class="flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group"
+            :class="item.active ? 'bg-white shadow-sm' : 'hover:bg-gray-200/50 text-gray-500'"
+          >
+            <div class="flex items-center gap-3">
+              <!-- Icons (Mock) -->
+              <span class="w-5 h-5 flex items-center justify-center">
+                 <svg v-if="item.icon === 'briefcase'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                 <svg v-if="item.icon === 'clipboard'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                 <svg v-if="item.icon === 'tag'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                 <svg v-if="item.icon === 'academic-cap'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>
+                 <svg v-if="item.icon === 'shield-check'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                 <svg v-if="item.icon === 'lightning-bolt'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              </span>
+              <span class="font-medium" :class="item.active ? 'text-gray-900' : ''">{{ item.name }}</span>
             </div>
+            <span v-if="item.count" class="w-5 h-5 flex items-center justify-center bg-blue-600 text-white text-xs rounded-full font-bold">
+              {{ item.count }}
+            </span>
+          </a>
+        </nav>
+      </div>
 
-            <!-- AI 응답 -->
-            <div v-else class="flex justify-start">
-              <div class="bg-gray-100 text-gray-800 rounded-lg px-4 py-2 max-w-[90%]">
-                <!-- draft/translate일 때는 content 숨기고 카드만 표시 -->
-                <div v-if="msg.queryType !== 'draft' && msg.queryType !== 'translate'" class="whitespace-pre-wrap">{{ msg.content }}</div>
-
-                <!-- 메일 초안 작성 결과 (draft) -->
-                <div v-if="msg.queryType === 'draft' && msg.emailDraft" class="bg-white border-2 border-orange-200 rounded-lg p-3" :class="{ 'mt-4': msg.queryType !== 'draft' && msg.queryType !== 'translate' }">
-                  <div class="text-xs text-orange-600 font-semibold mb-2 flex items-center gap-1">
-                    ✉️ 작성된 메일 초안
-                  </div>
-                  <div class="space-y-2">
-                    <div v-if="msg.subject" class="text-sm">
-                      <span class="font-semibold text-gray-700">제목:</span>
-                      <span class="ml-2 text-gray-800">{{ msg.subject }}</span>
-                    </div>
-                    <div class="border-t border-gray-200 pt-2">
-                      <div class="text-xs text-gray-500 mb-1">본문:</div>
-                      <div class="text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 rounded">{{ msg.emailDraft }}</div>
-                    </div>
-                    <div v-if="msg.ragSections && msg.ragSections.length > 0" class="border-t border-gray-200 pt-2">
-                      <div class="text-xs text-gray-500">참고한 BizGuide 섹션:</div>
-                      <div class="flex flex-wrap gap-1 mt-1">
-                        <span
-                          v-for="(section, idx) in msg.ragSections"
-                          :key="idx"
-                          class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full"
-                        >
-                          {{ section }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 메일 번역 결과 (translate) -->
-                <div v-if="msg.queryType === 'translate' && msg.translatedEmail" class="bg-white border-2 border-blue-200 rounded-lg p-3" :class="{ 'mt-4': msg.queryType !== 'draft' && msg.queryType !== 'translate' }">
-                  <div class="text-xs text-blue-600 font-semibold mb-2 flex items-center gap-1">
-                    🌐 번역 결과
-                  </div>
-                  <div class="space-y-2">
-                    <div class="text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 rounded">{{ msg.translatedEmail }}</div>
-                    <div v-if="msg.ragSections && msg.ragSections.length > 0" class="border-t border-gray-200 pt-2">
-                      <div class="text-xs text-gray-500">참고한 BizGuide 섹션:</div>
-                      <div class="flex flex-wrap gap-1 mt-1">
-                        <span
-                          v-for="(section, idx) in msg.ragSections"
-                          :key="idx"
-                          class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full"
-                        >
-                          {{ section }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 검색 결과 표시 (search) -->
-                <div v-if="msg.searchResults && msg.searchResults.length > 0" class="mt-3 space-y-2">
-                  <div class="text-xs text-gray-500 font-semibold">검색 결과 ({{ msg.searchResults.length }}개)</div>
-                  <div
-                    v-for="result in msg.searchResults"
-                    :key="result.email_id"
-                    @click="openEmailFromChat(result.email_id)"
-                    class="bg-white border border-gray-200 rounded p-2 hover:bg-gray-50 cursor-pointer text-xs"
-                  >
-                    <div class="font-semibold text-gray-800 truncate">{{ result.subject }}</div>
-                    <div class="text-gray-600 mt-1">{{ result.from_name }}</div>
-                    <div class="text-gray-400 text-xs mt-1">유사도: {{ (result.similarity * 100).toFixed(1) }}%</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 로딩 -->
-          <div v-if="chatLoading" class="flex justify-start">
-            <div class="bg-gray-100 rounded-lg px-4 py-2">
-              <div class="flex gap-1">
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-              </div>
-            </div>
+      <!-- Messages -->
+      <div class="flex-1 flex flex-col min-h-0">
+        <div class="flex justify-between items-center mb-4 px-1">
+          <div class="text-xs font-bold text-gray-400 tracking-wider">MESSAGES</div>
+          <div class="flex gap-1">
+            <button class="text-gray-400 hover:text-gray-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <button class="text-gray-400 hover:text-gray-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></button>
           </div>
         </div>
 
-        <!-- 입력창 -->
-        <div class="p-4 border-t border-gray-200">
-          <div class="flex gap-2">
-            <input
-              v-model="chatInput"
-              @keyup.enter="sendChatMessage"
-              type="text"
-              placeholder="메일 검색, 작성, 번역 요청을 입력하세요..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-primary"
-            >
-            <button
-              @click="sendChatMessage"
-              :disabled="!chatInput.trim() || chatLoading"
-              class="px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
-            >
-              전송
-            </button>
+        <div class="bg-white rounded-3xl shadow-lg p-2 flex-1 flex flex-col mb-6 relative overflow-hidden">
+          <div class="flex-1 overflow-y-auto space-y-1 p-2">
+            <div v-for="user in messageUsers" :key="user.name" class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl cursor-pointer group">
+              <div class="flex items-center gap-3">
+                <img :src="user.avatar" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" alt="">
+                <span class="text-sm font-medium text-gray-800 group-hover:text-black">{{ user.name }}</span>
+              </div>
+              <span v-if="user.count" class="w-5 h-5 flex items-center justify-center bg-gray-200 text-gray-600 text-xs rounded-full font-bold">
+                {{ user.count }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- All messages button -->
+          <div class="p-2 mt-auto relative z-10">
+             <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors shadow-md shadow-blue-200">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+               All messages
+             </button>
+          </div>
+          
+          <!-- Gradient overlay for scroll -->
+          <div class="absolute bottom-[70px] left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+        </div>
+      </div>
+
+      <!-- User Profile -->
+      <div class="mt-auto pt-4 border-t border-gray-200/50">
+        <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all">
+          <img :src="currentUser.avatar" class="w-10 h-10 rounded-full object-cover" alt="">
+          <div>
+            <div class="text-sm font-bold text-gray-900">{{ currentUser.name }}</div>
+            <div class="text-xs text-gray-500">{{ currentUser.role }}</div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 bg-white m-4 rounded-[2.5rem] shadow-sm overflow-hidden relative">
+      <!-- Top Bar -->
+      <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-between px-8 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+           <h2 class="text-2xl font-bold text-gray-800">Inbox</h2>
+           <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ emails.length }}</span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+           <!-- Search -->
+           <div class="relative">
+             <input type="text" placeholder="Search..." class="bg-gray-100 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64">
+             <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+           </div>
+           
+           <!-- Actions -->
+           <button @click="syncMails" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Sync">
+             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+           </button>
+           <button @click="openComposeModal" class="bg-black text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors">
+             Compose
+           </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="h-full overflow-y-auto pt-20 px-8 pb-8">
+         <div v-if="loading" class="flex justify-center items-center h-64">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+         </div>
+         
+         <div v-else-if="emails.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400">
+            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            <p>{{ authStatus.isConnected ? 'No mails found' : 'Please connect Outlook' }}</p>
+            <button v-if="!authStatus.isConnected" @click="connectOutlook" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Connect Outlook</button>
+         </div>
+
+         <div v-else class="space-y-2">
+            <div v-for="email in emails" :key="email.id" @click="openEmail(email.id)" class="group bg-white border border-gray-100 hover:border-blue-200 hover:shadow-md rounded-2xl p-4 cursor-pointer transition-all duration-200 flex items-center gap-4">
+               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm shrink-0">
+                  {{ email.fromName ? email.fromName[0].toUpperCase() : '?' }}
+               </div>
+               <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-start">
+                     <h3 class="font-bold text-gray-900 truncate pr-4" :class="{'text-blue-600': !email.isRead}">{{ email.subject || '(No Subject)' }}</h3>
+                     <span class="text-xs text-gray-400 whitespace-nowrap">{{ formatDate(email.receivedDateTime) }}</span>
+                  </div>
+                  <p class="text-sm text-gray-500 truncate mt-1">{{ email.bodyPreview }}</p>
+               </div>
+               <div v-if="!email.isRead" class="w-2 h-2 bg-blue-600 rounded-full shrink-0"></div>
+            </div>
+         </div>
+      </div>
+    </div>
+
+    <!-- Modals (Keep existing functionality but maybe restyle later if needed) -->
+    <!-- Mail Detail Modal -->
+    <div v-if="selectedEmail" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50" @click.self="closeEmail">
+       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col m-4">
+          <div class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
+             <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">{{ selectedEmail.subject }}</h2>
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                   <span class="font-medium">{{ selectedEmail.fromName }}</span>
+                   <span class="text-gray-400">&lt;{{ selectedEmail.fromAddress }}&gt;</span>
+                </div>
+             </div>
+             <button @click="closeEmail" class="p-2 hover:bg-gray-100 rounded-full transition"><svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-8 bg-white">
+             <div v-if="isHtmlContent(selectedEmail)" v-html="selectedEmail.body" class="prose max-w-none"></div>
+             <div v-else class="whitespace-pre-wrap text-gray-800">{{ selectedEmail.body }}</div>
+          </div>
+       </div>
+    </div>
+
+    <!-- Compose Modal -->
+    <div v-if="showComposeModal" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50" @click.self="closeComposeModal">
+       <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl m-4 overflow-hidden">
+          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+             <h2 class="text-xl font-bold text-gray-900">New Message</h2>
+             <button @click="closeComposeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          </div>
+          <div class="p-6 space-y-4">
+             <input v-model="newEmail.to" type="text" placeholder="To" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 transition">
+             <input v-model="newEmail.subject" type="text" placeholder="Subject" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 transition">
+             <textarea v-model="newEmail.body" rows="8" placeholder="Write your message..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 transition resize-none"></textarea>
+          </div>
+          <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+             <button @click="closeComposeModal" class="px-6 py-2 text-gray-500 hover:bg-gray-100 rounded-full transition">Cancel</button>
+             <button @click="sendNewEmail" class="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition shadow-lg shadow-gray-200">Send</button>
+          </div>
+       </div>
+    </div>
+
+    <!-- Chat Panel (Floating Button) -->
+    <button v-if="!showChatPanel" @click="showChatPanel = true" class="fixed bottom-8 right-8 w-14 h-14 bg-black text-white rounded-full shadow-xl hover:scale-105 transition flex items-center justify-center z-40">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+    </button>
+
+    <!-- Chat Panel -->
+    <transition name="slide-left">
+       <div v-if="showChatPanel" class="fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl flex flex-col z-50 border-l border-gray-100">
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+             <h3 class="font-bold text-gray-900">AI Assistant</h3>
+             <button @click="showChatPanel = false" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+             <div v-for="(msg, idx) in chatMessages" :key="idx" class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                <div class="max-w-[85%] rounded-2xl px-4 py-3 text-sm" :class="msg.role === 'user' ? 'bg-black text-white' : 'bg-white shadow-sm text-gray-800'">
+                   {{ msg.content }}
+                </div>
+             </div>
+          </div>
+          <div class="p-4 border-t border-gray-100 bg-white">
+             <div class="relative">
+                <input v-model="chatInput" @keyup.enter="sendChatMessage" type="text" placeholder="Ask AI..." class="w-full pl-4 pr-12 py-3 bg-gray-100 rounded-xl border-none focus:ring-2 focus:ring-gray-200 transition text-sm">
+                <button @click="sendChatMessage" class="absolute right-2 top-2 p-1 bg-black text-white rounded-lg hover:bg-gray-800 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg></button>
+             </div>
+          </div>
+       </div>
     </transition>
+
   </div>
 </template>
 
@@ -684,6 +265,29 @@ const showChatPanel = ref(false)
 const chatMessages = ref([])
 const chatInput = ref('')
 const chatLoading = ref(false)
+
+// Sidebar Data
+const menuItems = [
+  { name: 'My Offers', icon: 'briefcase' },
+  { name: 'User\'s Task', icon: 'clipboard' },
+  { name: 'Product Discounts', icon: 'tag' },
+  { name: 'Case Study', icon: 'academic-cap', active: true, count: 2 },
+  { name: 'Security', icon: 'shield-check' },
+  { name: 'Your Ability', icon: 'lightning-bolt' },
+]
+
+const messageUsers = [
+  { name: 'Max Maraston', avatar: 'https://i.pravatar.cc/150?u=1', count: 2 },
+  { name: 'Celia W McCombs', avatar: 'https://i.pravatar.cc/150?u=2' },
+  { name: 'Edna J Critchlow', avatar: 'https://i.pravatar.cc/150?u=3', count: 1 },
+  { name: 'Dima Groshev', avatar: 'https://i.pravatar.cc/150?u=4' },
+]
+
+const currentUser = {
+  name: 'Amir Baqian',
+  role: 'Product Designer',
+  avatar: 'https://i.pravatar.cc/150?u=5'
+}
 
 // HTML 컨텐츠 감지 함수
 const isHtmlContent = (email) => {
