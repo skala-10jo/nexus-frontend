@@ -9,12 +9,12 @@
 
     <div class="select-wrapper">
       <select
-        :value="modelValue"
+        :value="modelValue || ''"
         @change="handleChange"
         class="project-select"
         :class="{ 'has-project': modelValue }"
       >
-        <option :value="null">프로젝트 선택 (선택사항)</option>
+        <option value="">프로젝트 선택 (선택사항)</option>
         <option
           v-for="project in projects"
           :key="project.id"
@@ -67,7 +67,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change'])
 
 function handleChange(event) {
-  const value = event.target.value === 'null' ? null : event.target.value
+  const value = event.target.value === '' ? null : event.target.value
   emit('update:modelValue', value)
   emit('change', value)
 }
