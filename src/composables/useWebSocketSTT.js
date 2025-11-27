@@ -7,7 +7,6 @@
  * - WebSocket 연결 관리
  * - 마이크 입력 스트리밍
  * - 실시간 STT 결과 수신
- * - 화자 분리 지원
  *
  * @see backend-python/app/api/voice_stt.py
  */
@@ -23,7 +22,6 @@ export function useWebSocketSTT() {
   // STT 결과
   const recognizingText = ref('')  // 중간 인식 결과
   const recognizedText = ref('')   // 최종 인식 결과
-  const speakerId = ref(null)      // 화자 ID
   const confidence = ref(0)        // 신뢰도
 
   // WebSocket 및 MediaRecorder
@@ -35,13 +33,12 @@ export function useWebSocketSTT() {
    * WebSocket 연결 및 녹음 시작
    *
    * @param {string} language - BCP-47 언어 코드 (예: ko-KR, en-US)
-   * @param {boolean} enableDiarization - 화자 분리 활성화
    * @param {Object} callbacks - 추가 콜백 함수 (선택사항)
    * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백
    * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백
    * @returns {Promise<void>}
    */
-  async function startRecording(language = 'ko-KR', enableDiarization = true, callbacks = {}) {
+  async function startRecording(language = 'ko-KR', callbacks = {}) {
     try {
       error.value = null
 
@@ -60,7 +57,7 @@ export function useWebSocketSTT() {
 
       // 2. WebSocket 연결 생성
       console.log('🔌 Connecting to WebSocket STT...')
-      wsConnection = createSTTStream(language, enableDiarization, {
+      wsConnection = createSTTStream(language, {
         onRecognizing: (message) => {
           recognizingText.value = message.text || ''
           console.log('🔄 Recognizing:', message.text)
@@ -73,11 +70,10 @@ export function useWebSocketSTT() {
 
         onRecognized: (message) => {
           recognizedText.value = message.text || ''
-          speakerId.value = message.speaker_id || 'Unknown'
           confidence.value = message.confidence || 0
           recognizingText.value = '' // 중간 결과 초기화
 
-          console.log('✅ Recognized:', message.text, `(Speaker: ${message.speaker_id})`)
+          console.log('✅ Recognized:', message.text)
 
           // 사용자 정의 콜백 호출
           if (callbacks.onRecognized) {
@@ -167,7 +163,6 @@ export function useWebSocketSTT() {
   function clearResults() {
     recognizingText.value = ''
     recognizedText.value = ''
-    speakerId.value = null
     confidence.value = 0
     error.value = null
   }
@@ -188,7 +183,6 @@ export function useWebSocketSTT() {
     // STT 결과
     recognizingText,
     recognizedText,
-    speakerId,
     confidence,
 
     // 메서드

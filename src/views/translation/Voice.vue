@@ -1,11 +1,11 @@
 <template>
   <div class="voice-translation-page">
-    <AzureRealtimeTranslator />
+    <MultiLanguageTranslator />
   </div>
 </template>
 
 <script setup>
-import AzureRealtimeTranslator from '@/components/voice/AzureRealtimeTranslator.vue'
+import MultiLanguageTranslator from '@/components/voice/MultiLanguageTranslator.vue'
 </script>
 
 <style scoped>
