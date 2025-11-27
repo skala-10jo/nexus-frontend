@@ -37,13 +37,15 @@ const conversationService = {
    * @param {string} scenarioId - 시나리오 ID
    * @param {string} message - 사용자 메시지
    * @param {Array} detectedTerms - 감지된 전문용어
-   * @returns {Promise} 피드백 (문법 교정, 용어 사용, 제안, 점수)
+   * @param {string} audioData - Base64 인코딩된 오디오 데이터 (선택)
+   * @returns {Promise} 피드백 (문법 교정, 용어 사용, 제안, 점수, 상세 발음 정보)
    */
-  async getFeedback(scenarioId, message, detectedTerms = []) {
+  async getFeedback(scenarioId, message, detectedTerms = [], audioData = null) {
     const response = await pythonAPI.post('/conversations/feedback', {
       scenarioId,
       message,
-      detectedTerms
+      detectedTerms,
+      audioData
     })
     return response.data
   },

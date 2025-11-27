@@ -45,8 +45,21 @@
       </div>
     </div>
 
-    <!-- 대화 영역 -->
-    <div class="conversation-area" ref="conversationArea">
+    <!-- Avatar 비디오 영역 (Avatar 활성화 시에만 표시) -->
+    <div v-if="avatarEnabled" class="avatar-video-container">
+      <video
+        ref="avatarVideoElement"
+        class="avatar-video"
+        autoplay
+        playsinline
+      ></video>
+      <div class="avatar-status">
+        <span class="avatar-indicator">● Avatar 활성화</span>
+      </div>
+    </div>
+
+    <!-- 대화 영역 (Avatar 비활성화 시에만 표시) -->
+    <div v-if="!avatarEnabled" class="conversation-area" ref="conversationArea">
       <div v-if="messages.length === 0" class="empty-state">
         대화를 시작하세요!
       </div>
@@ -105,6 +118,17 @@
         :title="inputMode === 'text' ? '음성 입력으로 전환' : '텍스트 입력으로 전환'"
       >
         {{ inputMode === 'text' ? '🎤' : '⌨️' }}
+      </button>
+
+      <!-- Avatar 토글 버튼 (음성 입력 모드에서만 표시) -->
+      <button
+        v-if="inputMode === 'voice'"
+        @click="toggleAvatar"
+        :class="['btn-avatar-toggle', { active: avatarEnabled, initializing: isAvatarInitializing }]"
+        :disabled="isLoading || !scenario || isAvatarInitializing"
+        :title="avatarEnabled ? 'Avatar 비활성화' : 'Avatar 활성화'"
+      >
+        {{ isAvatarInitializing ? '⏳' : (avatarEnabled ? '🎭✓' : '🎭') }}
       </button>
 
       <!-- 텍스트 입력 모드 -->
@@ -307,6 +331,124 @@
                   <span class="breakdown-label">유창성 (Fluency)</span>
                   <span class="breakdown-value">{{ selectedMessageFeedback.score_breakdown.fluency }}/10</span>
                 </div>
+                <div v-if="selectedMessageFeedback.score_breakdown.pronunciation !== undefined" class="breakdown-item">
+                  <span class="breakdown-label">발음 (Pronunciation)</span>
+                  <span class="breakdown-value">{{ selectedMessageFeedback.score_breakdown.pronunciation }}/10</span>
+                </div>
+              </div>
+
+              <!-- 상세 발음 평가 (Azure 발음 평가 결과가 있는 경우) -->
+              <div v-if="selectedMessageFeedback.pronunciation_details" class="pronunciation-details">
+                <h4>🎤 상세 발음 분석 (Azure Pronunciation Assessment)</h4>
+
+                <!-- 전체 발음 점수 (강조) -->
+                <div class="overall-score-highlight">
+                  <div class="overall-score-badge">
+                    <span class="overall-score-label">발음 종합 점수</span>
+                    <span class="overall-score-value">{{ selectedMessageFeedback.pronunciation_details.pronunciation_score.toFixed(1) }}</span>
+                  </div>
+                </div>
+
+                <!-- 세부 점수들 -->
+                <div class="pronunciation-scores">
+                  <div class="score-badge">
+                    <span class="score-label">정확도</span>
+                    <span class="score-value">{{ selectedMessageFeedback.pronunciation_details.accuracy_score.toFixed(1) }}</span>
+                  </div>
+                  <div class="score-badge">
+                    <span class="score-label">유창성</span>
+                    <span class="score-value">{{ selectedMessageFeedback.pronunciation_details.fluency_score.toFixed(1) }}</span>
+                  </div>
+                  <div class="score-badge">
+                    <span class="score-label">운율</span>
+                    <span class="score-value">{{ selectedMessageFeedback.pronunciation_details.prosody_score.toFixed(1) }}</span>
+                  </div>
+                  <div class="score-badge">
+                    <span class="score-label">완성도</span>
+                    <span class="score-value">{{ selectedMessageFeedback.pronunciation_details.completeness_score.toFixed(1) }}</span>
+                  </div>
+                </div>
+
+                <!-- 단어별 발음 분석 -->
+                <div class="words-analysis">
+                  <h5>단어별 분석</h5>
+                  <div class="words-list">
+                    <div
+                      v-for="(word, idx) in selectedMessageFeedback.pronunciation_details.words"
+                      :key="idx"
+                      :class="[
+                        'word-item',
+                        getAccuracyClass(word.accuracy_score),
+                        { 'prosody-issue': hasProsodyIssue(word) }
+                      ]"
+                    >
+                      <div class="word-main">
+                        <span class="word-text">{{ word.word }}</span>
+                        <span class="word-score">{{ word.accuracy_score.toFixed(0) }}</span>
+                        <span v-if="word.error_type !== 'None'" class="word-error">{{ word.error_type }}</span>
+                        <!-- 운율 문제 표시 -->
+                        <span v-if="hasProsodyIssue(word)" class="prosody-warning">⚠️ 운율</span>
+                      </div>
+                      <!-- Prosody 세부 정보 (있는 경우) -->
+                      <div v-if="word.prosody && (word.prosody.break_score || word.prosody.intonation_score)" class="word-prosody">
+                        <span v-if="word.prosody.break_score" :class="['prosody-detail', { 'low-score': word.prosody.break_score < 70 }]">
+                          호흡: {{ word.prosody.break_score.toFixed(0) }}
+                        </span>
+                        <span v-if="word.prosody.intonation_score" :class="['prosody-detail', { 'low-score': word.prosody.intonation_score < 70 }]">
+                          억양: {{ word.prosody.intonation_score.toFixed(0) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Prosody 문제가 있는 단어들 -->
+                <div v-if="getProsodyIssues(selectedMessageFeedback.pronunciation_details.words).length > 0" class="prosody-issues">
+                  <h5>운율 개선이 필요한 단어 (억양/호흡)</h5>
+                  <div class="prosody-list">
+                    <div
+                      v-for="(issue, idx) in getProsodyIssues(selectedMessageFeedback.pronunciation_details.words)"
+                      :key="idx"
+                      class="prosody-item"
+                    >
+                      <span class="prosody-word">{{ issue.word }}</span>
+                      <div class="prosody-scores">
+                        <span v-if="issue.break_score" class="prosody-badge break">
+                          <span class="prosody-label">호흡</span>
+                          <span class="prosody-value">{{ issue.break_score.toFixed(0) }}</span>
+                        </span>
+                        <span v-if="issue.intonation_score" class="prosody-badge intonation">
+                          <span class="prosody-label">억양</span>
+                          <span class="prosody-value">{{ issue.intonation_score.toFixed(0) }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 문제 음소 표시 -->
+                <div v-if="getProblemPhonemes(selectedMessageFeedback.pronunciation_details.words).length > 0" class="phonemes-issues">
+                  <h5>개선이 필요한 소리 (음소)</h5>
+                  <div class="phonemes-list">
+                    <div
+                      v-for="(wordGroup, idx) in getProblemPhonemes(selectedMessageFeedback.pronunciation_details.words)"
+                      :key="idx"
+                      class="phoneme-item"
+                    >
+                      <span class="phoneme-word">{{ wordGroup.word }}</span>
+                      <div class="phoneme-sounds">
+                        <span
+                          v-for="(phoneme, pIdx) in wordGroup.phonemes"
+                          :key="pIdx"
+                          class="phoneme-sound-group"
+                        >
+                          <span class="phoneme-sound">/{{ phoneme.phoneme }}/</span>
+                          <span class="phoneme-score">{{ phoneme.score.toFixed(0) }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -381,6 +523,7 @@ import voiceRecorder from '@/services/voiceRecorder'
 import voiceSTTService from '@/services/voiceSTTService'
 import voiceSTTStreamService from '@/services/voiceSTTStreamService'
 import voiceTTSService from '@/services/voiceTTSService'
+import voiceAvatarService from '@/services/voiceAvatarService'
 
 const route = useRoute()
 const router = useRouter()
@@ -403,6 +546,7 @@ const isRecording = ref(false)
 const isProcessingVoice = ref(false)
 const recognizedText = ref('')
 const recordingTime = ref(0)
+const lastAudioBlob = ref(null) // 마지막 녹음된 오디오 (발음 평가용)
 let recordingInterval = null
 
 // 실시간 STT 상태
@@ -413,6 +557,11 @@ const finalTexts = ref([]) // 확정된 텍스트들 (검정)
 // TTS 상태
 const autoPlayTTS = ref(true) // AI 메시지 자동 재생 여부
 const isTTSPlaying = ref(false) // 현재 TTS 재생 중 여부
+
+// Avatar 상태
+const avatarEnabled = ref(false) // Avatar 활성화 여부
+const isAvatarInitializing = ref(false) // Avatar 초기화 중
+const avatarVideoElement = ref(null) // Avatar 비디오 엘리먼트
 
 // 피드백 상태
 const activeTab = ref('messages') // 'messages' or 'comprehensive'
@@ -570,9 +719,13 @@ const sendMessage = async () => {
     await nextTick()
     scrollToBottom()
 
-    // AI 메시지 자동 TTS 재생
+    // AI 메시지 자동 TTS 재생 (Avatar 활성화 시 Avatar 사용)
     if (autoPlayTTS.value && response.aiMessage) {
-      playTTS(response.aiMessage)
+      if (avatarEnabled.value) {
+        playAvatarTTS(response.aiMessage)
+      } else {
+        playTTS(response.aiMessage)
+      }
     }
 
     // 감지된 용어 업데이트
@@ -582,11 +735,28 @@ const sendMessage = async () => {
 
     // 실제 피드백 받아오기 (백그라운드에서 진행)
     try {
+      // 오디오가 있으면 Base64로 변환
+      let audioData = null
+      if (lastAudioBlob.value) {
+        console.log('🔄 Converting audio blob to base64...', lastAudioBlob.value.size, 'bytes')
+        audioData = await blobToBase64(lastAudioBlob.value)
+        console.log('✅ Base64 conversion completed, length:', audioData ? audioData.length : 0)
+        // 사용 후 초기화
+        lastAudioBlob.value = null
+      } else {
+        console.warn('⚠️ No audio blob available for pronunciation assessment')
+      }
+
+      console.log('📤 Sending feedback request with audioData:', audioData ? 'YES (' + audioData.length + ' chars)' : 'NO')
+
       const feedbackResponse = await conversationService.getFeedback(
         scenarioId,
         message,
-        response.detectedTerms || []
+        response.detectedTerms || [],
+        audioData
       )
+
+      console.log('📥 Feedback response received:', feedbackResponse)
       messageFeedbacks.value.push(feedbackResponse.feedback)
     } catch (feedbackError) {
       console.error('Failed to get feedback:', feedbackError)
@@ -687,8 +857,82 @@ const stopTTS = async () => {
   isTTSPlaying.value = false
 }
 
+// Avatar 토글
+const toggleAvatar = async () => {
+  if (avatarEnabled.value) {
+    // Avatar 비활성화
+    await stopAvatar()
+    avatarEnabled.value = false
+  } else {
+    // Avatar 활성화
+    try {
+      isAvatarInitializing.value = true
+      error.value = null
+
+      // 먼저 avatarEnabled를 true로 설정하여 비디오 엘리먼트 렌더링
+      avatarEnabled.value = true
+
+      // DOM이 업데이트될 때까지 대기
+      await nextTick()
+
+      if (!avatarVideoElement.value) {
+        throw new Error('Avatar 비디오 엘리먼트를 찾을 수 없습니다.')
+      }
+
+      const language = scenario.value?.language || 'en-US'
+      await voiceAvatarService.initialize(
+        avatarVideoElement.value,
+        language
+      )
+
+      console.log('Avatar 활성화 완료 (배치 합성 방식)')
+
+      // Avatar 초기화 후 환영 메시지 자동 재생
+      const welcomeMessage = language === 'ko-KR'
+        ? '안녕하세요! 대화를 시작해주세요.'
+        : 'Hello! Please start the conversation.'
+
+      await voiceAvatarService.speak(welcomeMessage)
+      console.log('Avatar 환영 메시지 재생 완료')
+    } catch (err) {
+      error.value = err.message || 'Avatar 초기화 실패'
+      console.error('Avatar 초기화 실패:', err)
+      // 초기화 실패 시 다시 비활성화
+      avatarEnabled.value = false
+    } finally {
+      isAvatarInitializing.value = false
+    }
+  }
+}
+
+// Avatar 중지
+const stopAvatar = async () => {
+  try {
+    await voiceAvatarService.stop()
+    console.log('Avatar 중지됨')
+  } catch (err) {
+    console.error('Avatar 중지 실패:', err)
+  }
+}
+
+// Avatar로 TTS 재생 (비디오 포함)
+const playAvatarTTS = async (text) => {
+  if (!text || !avatarEnabled.value) return
+
+  try {
+    isTTSPlaying.value = true
+    await voiceAvatarService.speak(text)
+  } catch (err) {
+    console.error('Avatar TTS 재생 실패:', err)
+    // 실패하면 일반 TTS로 폴백
+    await playTTS(text)
+  } finally {
+    isTTSPlaying.value = false
+  }
+}
+
 // 입력 모드 전환
-const toggleInputMode = () => {
+const toggleInputMode = async () => {
   if (inputMode.value === 'text') {
     // 브라우저 지원 확인
     if (!voiceRecorder.constructor.isSupported()) {
@@ -701,6 +945,11 @@ const toggleInputMode = () => {
     // 녹음 중이면 중지
     if (isRecording.value) {
       stopRecording()
+    }
+    // Avatar 활성화되어 있으면 중지
+    if (avatarEnabled.value) {
+      await stopAvatar()
+      avatarEnabled.value = false
     }
     inputMode.value = 'text'
   }
@@ -757,6 +1006,9 @@ const stopRecording = async () => {
       // 녹음 중지 및 Blob 가져오기
       const audioBlob = await voiceRecorder.stopRecording()
 
+      // 발음 평가를 위해 오디오 저장
+      lastAudioBlob.value = audioBlob
+
       // STT 처리
       const result = await voiceSTTService.transcribe(audioBlob, 'en-US')
 
@@ -788,7 +1040,7 @@ const startRealtimeSTT = async () => {
       recordingTime.value++
     }, 1000)
 
-    // WebSocket 스트리밍 시작
+    // WebSocket 스트리밍 시작 (발음 평가용 녹음도 자동으로 시작됨)
     await voiceSTTStreamService.startStreaming({
       language: 'en-US',
 
@@ -850,8 +1102,15 @@ const stopRealtimeSTT = async () => {
       clearInterval(recordingInterval)
     }
 
-    // WebSocket 스트리밍 중지
-    await voiceSTTStreamService.stopStreaming()
+    // WebSocket 스트리밍 중지 및 발음 평가용 오디오 Blob 받기
+    const audioBlob = await voiceSTTStreamService.stopStreaming()
+
+    if (audioBlob) {
+      lastAudioBlob.value = audioBlob
+      console.log('🎤 Audio saved for pronunciation assessment:', audioBlob.size, 'bytes')
+    } else {
+      console.warn('⚠️ No audio blob received from STT stream service')
+    }
 
     // 확정된 텍스트들을 userInput에 결합
     const allText = finalTexts.value.join(' ')
@@ -877,6 +1136,11 @@ onUnmounted(() => {
   // TTS 중지
   stopTTS()
 
+  // Avatar 중지
+  if (avatarEnabled.value) {
+    stopAvatar()
+  }
+
   if (isRecording.value) {
     if (useRealtimeSTT.value) {
       voiceSTTStreamService.stopStreaming()
@@ -888,6 +1152,98 @@ onUnmounted(() => {
     clearInterval(recordingInterval)
   }
 })
+
+// Blob을 Base64로 변환
+const blobToBase64 = (blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      // data:audio/webm;base64, 부분 제거
+      const base64String = reader.result.split(',')[1]
+      resolve(base64String)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+// 정확도 점수에 따른 CSS 클래스 반환
+const getAccuracyClass = (score) => {
+  if (score >= 90) return 'excellent'
+  if (score >= 80) return 'good'
+  if (score >= 70) return 'fair'
+  if (score >= 60) return 'poor'
+  return 'very-poor'
+}
+
+// 단어에 Prosody 문제가 있는지 확인
+const hasProsodyIssue = (word) => {
+  if (!word.prosody) return false
+  const breakScore = word.prosody.break_score
+  const intonationScore = word.prosody.intonation_score
+  return (breakScore && breakScore < 70) || (intonationScore && intonationScore < 70)
+}
+
+// Prosody 문제가 있는 단어 추출 (호흡/억양 점수 70% 미만)
+const getProsodyIssues = (words) => {
+  const issues = []
+
+  words.forEach(word => {
+    if (word.prosody) {
+      const breakScore = word.prosody.break_score
+      const intonationScore = word.prosody.intonation_score
+
+      // 호흡 또는 억양 점수가 70 미만이면 문제로 간주
+      if ((breakScore && breakScore < 70) || (intonationScore && intonationScore < 70)) {
+        issues.push({
+          word: word.word,
+          break_score: breakScore,
+          intonation_score: intonationScore,
+          minScore: Math.min(breakScore || 100, intonationScore || 100)
+        })
+      }
+    }
+  })
+
+  // 점수가 낮은 순으로 정렬
+  return issues.sort((a, b) => a.minScore - b.minScore)
+}
+
+// 문제가 있는 음소 추출 및 단어별로 묶기 (정확도 70% 미만)
+const getProblemPhonemes = (words) => {
+  const groupedProblems = {}
+
+  words.forEach(word => {
+    if (word.phonemes) {
+      const problemPhonemes = word.phonemes.filter(phoneme => phoneme.accuracy_score < 70)
+
+      if (problemPhonemes.length > 0) {
+        if (!groupedProblems[word.word]) {
+          groupedProblems[word.word] = {
+            word: word.word,
+            phonemes: [],
+            minScore: 100
+          }
+        }
+
+        problemPhonemes.forEach(phoneme => {
+          groupedProblems[word.word].phonemes.push({
+            phoneme: phoneme.phoneme,
+            score: phoneme.accuracy_score
+          })
+
+          // 가장 낮은 점수 기록
+          if (phoneme.accuracy_score < groupedProblems[word.word].minScore) {
+            groupedProblems[word.word].minScore = phoneme.accuracy_score
+          }
+        })
+      }
+    }
+  })
+
+  // 객체를 배열로 변환하고 점수순으로 정렬
+  return Object.values(groupedProblems).sort((a, b) => a.minScore - b.minScore)
+}
 
 // 시간 포맷
 const formatTime = (timestamp) => {
@@ -2095,6 +2451,416 @@ textarea:disabled {
   font-style: italic;
   text-align: center;
   padding: 20px 0;
+}
+
+/* Avatar UI */
+.avatar-video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #000;
+}
+
+.avatar-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.avatar-indicator {
+  color: #4ade80;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-avatar-toggle {
+  padding: 12px 16px;
+  background: #8b5cf6;
+  border: 2px solid #8b5cf6;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+  min-width: 50px;
+  color: white;
+}
+
+.btn-avatar-toggle:hover:not(:disabled) {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  transform: scale(1.05);
+}
+
+.btn-avatar-toggle.active {
+  background: #4ade80;
+  border-color: #4ade80;
+  animation: avatarPulse 2s infinite;
+}
+
+.btn-avatar-toggle.initializing {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  animation: spin 1s linear infinite;
+}
+
+.btn-avatar-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes avatarPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pronunciation Details Styles */
+.pronunciation-details {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.pronunciation-details h4 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pronunciation-details h5 {
+  margin: 16px 0 12px 0;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 전체 발음 점수 강조 영역 */
+.overall-score-highlight {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.overall-score-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.overall-score-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.overall-score-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pronunciation-scores {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  min-width: 90px;
+}
+
+.score-badge .score-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.score-badge .score-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0ea5e9;
+}
+
+.words-analysis {
+  margin-bottom: 20px;
+}
+
+.words-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.word-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 2px solid #e2e8f0;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+/* 운율 문제가 있는 단어 강조 */
+.word-item.prosody-issue {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(90deg, #fffbeb 0%, white 100%);
+}
+
+.word-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.word-prosody {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.prosody-detail {
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.prosody-detail.low-score {
+  background: #fee2e2;
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.prosody-warning {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 3px;
+  font-weight: 700;
+  border: 1px solid #f59e0b;
+}
+
+.word-item.excellent {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.word-item.good {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.word-item.fair {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.word-item.poor {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.word-item.very-poor {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.word-text {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.word-score {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: #64748b;
+}
+
+.word-error {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.phonemes-issues {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.phonemes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phoneme-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 6px;
+  border-left: 4px solid #ef4444;
+}
+
+.phoneme-word {
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 80px;
+  padding-top: 4px;
+}
+
+.phoneme-sounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.phoneme-sound-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phoneme-sound {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border-radius: 4px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.phoneme-score {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+}
+
+/* Prosody Issues 스타일 */
+.prosody-issues {
+  margin-bottom: 20px;
+}
+
+.prosody-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prosody-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 6px;
+  border-left: 4px solid #f59e0b;
+}
+
+.prosody-word {
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 80px;
+}
+
+.prosody-scores {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.prosody-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.prosody-badge.break {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+}
+
+.prosody-badge.intonation {
+  background: #ddd6fe;
+  border: 1px solid #a78bfa;
+}
+
+.prosody-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.prosody-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 </style>

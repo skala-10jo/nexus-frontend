@@ -16,6 +16,10 @@ class VoiceSTTStreamService {
     this.onFinal = null    // (text, confidence) => {}
     this.onError = null    // (error) => {}
     this.onClose = null    // () => {}
+
+    // 발음 평가용 오디오 녹음
+    this.audioChunks = []  // MediaRecorder로 녹음된 청크들
+    this.mediaRecorderForPronunciation = null  // 별도 MediaRecorder
   }
 
   /**
@@ -257,6 +261,35 @@ class VoiceSTTStreamService {
     this.audioContext = audioContext
     this.scriptNode = scriptNode
     this.source = source
+
+    // 발음 평가용 MediaRecorder 시작 (같은 스트림 사용)
+    this.audioChunks = []
+
+    // MediaRecorder 지원 확인 및 최적 포맷 선택
+    let mimeType = 'audio/webm;codecs=opus'
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'audio/webm'
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/ogg;codecs=opus'
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = '' // 브라우저 기본값
+        }
+      }
+    }
+
+    this.mediaRecorderForPronunciation = new MediaRecorder(this.stream, {
+      mimeType: mimeType || undefined
+    })
+
+    this.mediaRecorderForPronunciation.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        this.audioChunks.push(event.data)
+        console.log(`🎤 Audio chunk for pronunciation: ${event.data.size} bytes`)
+      }
+    }
+
+    this.mediaRecorderForPronunciation.start(1000) // 1초마다 청크 수집
+    console.log('🎙️ MediaRecorder started for pronunciation assessment')
   }
 
   /**
@@ -350,6 +383,7 @@ class VoiceSTTStreamService {
 
   /**
    * 녹음 중지 및 WebSocket 종료
+   * @returns {Promise<Blob|null>} 발음 평가용 오디오 Blob
    */
   async stopStreaming() {
     console.log('⏹️ Stopping streaming...')
@@ -364,10 +398,30 @@ class VoiceSTTStreamService {
       console.error('Stop signal send failed:', error)
     }
 
+    // 발음 평가용 MediaRecorder 중지 및 Blob 생성
+    let audioBlob = null
+    if (this.mediaRecorderForPronunciation && this.mediaRecorderForPronunciation.state !== 'inactive') {
+      audioBlob = await new Promise((resolve) => {
+        this.mediaRecorderForPronunciation.onstop = () => {
+          if (this.audioChunks.length > 0) {
+            const blob = new Blob(this.audioChunks, { type: 'audio/webm' })
+            console.log(`🎤 Audio blob created for pronunciation: ${blob.size} bytes`)
+            resolve(blob)
+          } else {
+            console.warn('⚠️ No audio chunks collected')
+            resolve(null)
+          }
+        }
+        this.mediaRecorderForPronunciation.stop()
+      })
+    }
+
     this.cleanup()
     this.isRecording = false
 
     console.log('✅ Streaming stopped')
+
+    return audioBlob
   }
 
   /**
@@ -412,6 +466,17 @@ class VoiceSTTStreamService {
       }
     }
     this.mediaRecorder = null
+
+    // 발음 평가용 MediaRecorder 정리
+    if (this.mediaRecorderForPronunciation && this.mediaRecorderForPronunciation.state !== 'inactive') {
+      try {
+        this.mediaRecorderForPronunciation.stop()
+      } catch (error) {
+        console.error('MediaRecorder for pronunciation stop error:', error)
+      }
+    }
+    this.mediaRecorderForPronunciation = null
+    this.audioChunks = []
 
     // 마이크 스트림 정리
     if (this.stream) {
