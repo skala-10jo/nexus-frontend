@@ -109,7 +109,7 @@
                 <div :class="getProjectIconClass(index)" class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold">
                   {{ project.name.substring(0, 1) }}
                 </div>
-                <span class="text-xs text-gray-500">{{ project.documentCount || 0 }}개</span>
+                <span class="text-xs text-gray-500">💬 {{ getProjectScenarioCount(project.id) }}개</span>
               </div>
               <h3 class="font-bold text-gray-800 text-sm mb-1 truncate">{{ project.name }}</h3>
               <p class="text-xs text-gray-500 line-clamp-1">{{ project.description || '설명 없음' }}</p>
@@ -653,6 +653,16 @@ const iconClasses = [
 
 function getProjectIconClass(index) {
   return iconClasses[index % iconClasses.length]
+}
+
+// 프로젝트별 시나리오 개수 계산
+function getProjectScenarioCount(projectId) {
+  // scenarios 배열에서 해당 프로젝트를 포함하는 시나리오 개수 반환
+  return scenarios.value.filter(scenario => {
+    // scenario.projectIds가 없으면 빈 배열로 처리
+    const projectIds = scenario.projectIds || []
+    return projectIds.includes(projectId)
+  }).length
 }
 
 // 수동 생성 폼 유효성 검사
