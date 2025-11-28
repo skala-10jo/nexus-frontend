@@ -1,13 +1,15 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-8">
-    <!-- Header Section -->
-    <div class="mb-8">
-      <!-- Title and Create Button -->
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">프로젝트 관리</h1>
+  <div class="h-full overflow-y-auto">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-8 py-6 border-b border-gray-100">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
+          <p class="text-sm text-gray-500 mt-1">프로젝트를 생성하고 문서를 관리하세요</p>
+        </div>
         <button
           @click="openCreateModal"
-          class="px-6 py-2.5 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition-colors flex items-center gap-2 shadow-sm hover:shadow-md"
+          class="px-5 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -15,51 +17,82 @@
           <span class="font-medium">새 프로젝트</span>
         </button>
       </div>
+    </div>
+
+    <div class="p-8">
 
       <!-- Search and Filter Bar -->
-      <div class="flex flex-col sm:flex-row gap-4 mb-4">
-        <!-- Search Input -->
-        <div class="flex-1 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Search Input -->
+          <div class="flex-1 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="프로젝트 이름으로 검색..."
+              class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
+            />
           </div>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="프로젝트 이름으로 검색..."
-            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent transition-all"
-          />
-        </div>
 
-        <!-- Filter Dropdown -->
-        <select
-          v-model="statusFilter"
-          class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent transition-all bg-white"
-        >
-          <option value="ALL">전체 상태</option>
-          <option value="ACTIVE">진행중</option>
-          <option value="ARCHIVED">마감</option>
-        </select>
+          <!-- Filter Dropdown -->
+          <select
+            v-model="statusFilter"
+            class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
+          >
+            <option value="ALL">전체 상태</option>
+            <option value="ACTIVE">진행중</option>
+            <option value="ARCHIVED">마감</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Statistics -->
-      <div class="flex flex-wrap gap-4 text-sm">
-        <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
-          <span class="font-medium text-gray-600">전체</span>
-          <span class="font-bold text-gray-900">{{ statistics.total }}</span>
+      <!-- Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-blue-100 text-sm font-medium">전체 프로젝트</p>
+              <p class="text-3xl font-bold mt-1">{{ statistics.total }}</p>
+            </div>
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
-          <span class="font-medium text-green-700">진행중</span>
-          <span class="font-bold text-green-900">{{ statistics.active }}</span>
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-emerald-100 text-sm font-medium">진행중</p>
+              <p class="text-3xl font-bold mt-1">{{ statistics.active }}</p>
+            </div>
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
-          <span class="font-medium text-gray-600">마감</span>
-          <span class="font-bold text-gray-700">{{ statistics.archived }}</span>
+        <div class="bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl p-5 text-white shadow-lg shadow-gray-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-100 text-sm font-medium">마감</p>
+              <p class="text-3xl font-bold mt-1">{{ statistics.archived }}</p>
+            </div>
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Projects Grid -->
     <div v-if="!loading && filteredProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,7 +106,7 @@
           <!-- Header with Status and Dropdown -->
           <div class="flex justify-between items-start mb-4">
             <div class="flex-1 pr-2">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-orange-primary transition-colors line-clamp-1">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-500 transition-colors line-clamp-1">
                 {{ project.name }}
               </h3>
               <span
@@ -199,10 +232,11 @@
       <button
         v-if="!searchQuery && statusFilter === 'ALL'"
         @click="openCreateModal"
-        class="px-6 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition-colors"
+        class="px-6 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
       >
         프로젝트 생성
       </button>
+    </div>
     </div>
 
     <!-- Project Detail Modal -->
@@ -232,7 +266,7 @@
           <!-- Project Info -->
           <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               프로젝트 정보
@@ -243,7 +277,7 @@
               <input
                 v-model="formData.name"
                 type="text"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent transition-all"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
                 placeholder="프로젝트 이름을 입력하세요"
                 required
               />
@@ -254,7 +288,7 @@
               <textarea
                 v-model="formData.description"
                 rows="3"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent transition-all resize-none"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none bg-gray-50"
                 placeholder="프로젝트에 대한 설명을 입력하세요"
               ></textarea>
             </div>
@@ -263,7 +297,7 @@
           <!-- Document Selection -->
           <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               관련 문서 선택
@@ -280,7 +314,7 @@
                 v-model="documentSearchQuery"
                 type="text"
                 placeholder="문서 이름으로 검색..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
               />
             </div>
 
@@ -295,7 +329,7 @@
                   type="checkbox"
                   :value="doc.id"
                   v-model="formData.documentIds"
-                  class="w-4 h-4 text-orange-primary border-gray-300 rounded focus:ring-orange-primary cursor-pointer"
+                  class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                 />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-800 truncate">{{ doc.originalFilename }}</p>
@@ -322,12 +356,12 @@
                 <span
                   v-for="docId in formData.documentIds"
                   :key="docId"
-                  class="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full"
+                  class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                 >
                   {{ getDocumentName(docId) }}
                   <button
                     @click="removeDocument(docId)"
-                    class="hover:bg-orange-200 rounded-full p-0.5 transition-colors"
+                    class="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                   >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -352,7 +386,7 @@
             </button>
             <button
               @click="saveProject"
-              class="px-6 py-2.5 text-sm font-medium bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-6 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="!formData.name"
             >
               {{ isEditing ? '수정' : '생성' }}

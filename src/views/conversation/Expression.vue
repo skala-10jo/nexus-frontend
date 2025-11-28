@@ -1,6 +1,6 @@
 <template>
-  <div class="p-8 max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Biz 표현 학습</h1>
+  <div class="h-full overflow-y-auto p-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Biz 표현 학습</h1>
 
     <!-- Unit Selection -->
     <div class="mb-6 bg-white rounded-lg shadow-md p-6">
@@ -12,8 +12,8 @@
           @click="selectUnit(unit.unit)"
           class="px-4 py-2 rounded-lg border transition-all duration-200"
           :class="selectedUnit === unit.unit
-            ? 'bg-orange-primary text-white border-orange-primary'
-            : 'bg-white text-gray-700 border-gray-300 hover:border-orange-primary'"
+            ? 'bg-violet-500 text-white border-violet-500'
+            : 'bg-white text-gray-700 border-gray-300 hover:border-violet-500'"
         >
           {{ unit.unit }}
           <span class="ml-2 text-sm opacity-75">({{ unit.learnedCount }}/{{ unit.totalCount }})</span>
@@ -23,7 +23,7 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
     </div>
 
     <!-- Expression Practice Area -->
@@ -56,7 +56,7 @@
         </div>
 
         <!-- Expression Summary (간략하게) -->
-        <div class="bg-gray-50 border-l-4 border-orange-primary rounded-r-lg p-4 mb-6">
+        <div class="bg-gray-50 border-l-4 border-violet-500 rounded-r-lg p-4 mb-6">
           <div class="flex items-center justify-between">
             <div>
               <span class="text-lg font-semibold text-gray-800">{{ currentExpression.expression }}</span>
@@ -83,7 +83,7 @@
             <div
               v-for="(example, idx) in currentExpression.examples"
               :key="idx"
-              class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200"
+              class="bg-gradient-to-r from-violet-50 to-violet-100 rounded-xl p-5 border border-violet-200"
             >
               <div class="mb-4">
                 <p class="text-xl font-medium text-gray-800 mb-2" v-html="highlightExpression(example.text)"></p>
@@ -101,7 +101,7 @@
                 <button
                   @click="startPronunciationPractice('example', idx)"
                   :disabled="isRecording"
-                  class="flex items-center gap-2 px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
+                  class="flex items-center gap-2 px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition disabled:opacity-50"
                 >
                   <MicrophoneIcon class="w-5 h-5" />
                   발음 연습
@@ -144,7 +144,7 @@
         </div>
 
         <!-- Reference Text -->
-        <div class="bg-orange-50 rounded-lg p-4 mb-6">
+        <div class="bg-violet-50 rounded-lg p-4 mb-6">
           <p class="text-lg font-medium text-gray-800 text-center">{{ referenceText }}</p>
         </div>
 
@@ -169,7 +169,7 @@
           <button
             v-if="!isRecording"
             @click="startRecording"
-            class="px-6 py-3 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition flex items-center gap-2"
+            class="px-6 py-3 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition flex items-center gap-2"
           >
             <MicrophoneIcon class="w-5 h-5" />
             녹음 시작

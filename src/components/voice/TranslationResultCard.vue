@@ -1,65 +1,90 @@
 <template>
   <div
-    class="translation-card"
-    :class="[`speaker-${speakerId}`, { 'new-speaker': isNewSpeaker }]"
+    class="bg-white rounded-2xl p-5 mb-4 border-l-4 shadow-sm hover:shadow-md transition-all duration-200 group"
+    :class="[`speaker-${speakerId}`, { 'animate-slide-in': isNewSpeaker }]"
     :style="{ borderLeftColor: speakerColor }"
   >
     <!-- 화자 정보 -->
-    <div class="speaker-header">
-      <div class="speaker-info">
-        <div class="speaker-icon" :style="{ backgroundColor: speakerColor }">
-          {{ speakerEmoji }}
-        </div>
-        <span class="speaker-label">화자 {{ speakerId }}</span>
-
-        <!-- 신뢰도 표시 -->
-        <span
-          v-if="speakerConfidence"
-          class="confidence-badge"
-          :class="getConfidenceClass(speakerConfidence)"
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-3">
+        <!-- 화자 아이콘 -->
+        <div 
+          class="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm"
+          :style="{ backgroundColor: speakerColor }"
         >
-          {{ Math.round(speakerConfidence * 100) }}%
-        </span>
-
-        <!-- 새 화자 표시 -->
-        <span v-if="isNewSpeaker" class="new-badge">
-          새 화자
-        </span>
+          <UserIcon class="w-5 h-5" />
+        </div>
+        
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-gray-900 text-sm">Speaker {{ speakerId }}</span>
+            <span v-if="isNewSpeaker" class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full uppercase tracking-wide">
+              New
+            </span>
+          </div>
+          
+          <!-- 신뢰도 -->
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <div class="h-1.5 w-12 bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                class="h-full rounded-full transition-all duration-500"
+                :class="getConfidenceColorClass(speakerConfidence)"
+                :style="{ width: `${speakerConfidence * 100}%` }"
+              ></div>
+            </div>
+            <span class="text-[10px] font-medium text-gray-400">{{ Math.round(speakerConfidence * 100) }}%</span>
+          </div>
+        </div>
       </div>
 
       <!-- 타임스탬프 -->
-      <div class="timestamp">
+      <div class="text-xs font-medium text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded-lg">
         {{ formattedTime }}
       </div>
     </div>
 
     <!-- 원문 -->
-    <div class="original-text">
-      <span class="language-tag">{{ getLanguageName(inputLanguage) }}</span>
-      <p class="text-content">{{ originalText }}</p>
+    <div class="mb-4 pl-13">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded">
+          {{ getLanguageName(inputLanguage) }}
+        </span>
+      </div>
+      <p class="text-gray-900 text-lg font-medium leading-relaxed">{{ originalText }}</p>
     </div>
 
     <!-- 번역 결과 -->
-    <div class="translations">
+    <div class="space-y-3 pt-3 border-t border-gray-100">
       <div
         v-for="(translation, lang) in translations"
         :key="lang"
-        class="translation-item"
+        class="group/trans"
       >
-        <span class="language-tag">{{ getLanguageName(lang) }}</span>
-        <p class="text-content">{{ translation }}</p>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-1.5 py-0.5 rounded">
+            {{ getLanguageName(lang) }}
+          </span>
+        </div>
+        <p class="text-gray-600 leading-relaxed group-hover/trans:text-gray-900 transition-colors">{{ translation }}</p>
       </div>
     </div>
 
-    <!-- STT 신뢰도 (낮을 때만 표시) -->
-    <div v-if="sttConfidence < 0.7" class="warning-badge">
-      ⚠️ 음성 인식 신뢰도 낮음 ({{ Math.round(sttConfidence * 100) }}%)
+    <!-- STT 신뢰도 경고 -->
+    <div v-if="sttConfidence < 0.7" class="mt-4 flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
+      <ExclamationTriangleIcon class="w-5 h-5 text-amber-500 flex-shrink-0" />
+      <div>
+        <p class="text-xs font-bold text-amber-700 mb-0.5">Low Confidence</p>
+        <p class="text-xs text-amber-600">
+          Speech recognition confidence is low ({{ Math.round(sttConfidence * 100) }}%). The translation might be inaccurate.
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { UserIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/solid'
 
 const props = defineProps({
   speakerId: {
@@ -96,23 +121,18 @@ const props = defineProps({
   }
 })
 
-// 화자별 색상 (최대 5명)
+// 화자별 색상 (Aceagency Palette)
 const SPEAKER_COLORS = [
-  { primary: '#3B82F6', emoji: '👤' },    // 파란색
-  { primary: '#10B981', emoji: '👥' },    // 초록색
-  { primary: '#F59E0B', emoji: '🧑' },    // 주황색
-  { primary: '#8B5CF6', emoji: '👨' },    // 보라색
-  { primary: '#EF4444', emoji: '👩' },    // 빨간색
+  '#3B82F6', // Blue
+  '#10B981', // Emerald
+  '#F59E0B', // Amber
+  '#8B5CF6', // Violet
+  '#EC4899', // Pink
 ]
 
 const speakerColor = computed(() => {
   const index = (props.speakerId - 1) % SPEAKER_COLORS.length
-  return SPEAKER_COLORS[index].primary
-})
-
-const speakerEmoji = computed(() => {
-  const index = (props.speakerId - 1) % SPEAKER_COLORS.length
-  return SPEAKER_COLORS[index].emoji
+  return SPEAKER_COLORS[index]
 })
 
 const formattedTime = computed(() => {
@@ -129,177 +149,35 @@ const formattedTime = computed(() => {
 
 const getLanguageName = (code) => {
   const names = {
-    'ko': '한국어',
-    'en': '영어',
-    'vi': '베트남어'
+    'ko': 'Korean',
+    'en': 'English',
+    'vi': 'Vietnamese',
+    'ja': 'Japanese',
+    'zh': 'Chinese'
   }
-  return names[code] || code
+  return names[code] || code.toUpperCase()
 }
 
-const getConfidenceClass = (confidence) => {
-  if (confidence >= 0.8) return 'high'
-  if (confidence >= 0.6) return 'medium'
-  return 'low'
+const getConfidenceColorClass = (confidence) => {
+  if (confidence >= 0.8) return 'bg-green-500'
+  if (confidence >= 0.6) return 'bg-amber-500'
+  return 'bg-red-500'
 }
 </script>
 
 <style scoped>
-.translation-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  border-left: 4px solid;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.translation-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.translation-card.new-speaker {
-  animation: slideIn 0.3s ease-out;
+.animate-slide-in {
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.speaker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.speaker-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.speaker-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: white;
-}
-
-.speaker-label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.confidence-badge {
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.confidence-badge.high {
-  background: #D1FAE5;
-  color: #059669;
-}
-
-.confidence-badge.medium {
-  background: #FEF3C7;
-  color: #D97706;
-}
-
-.confidence-badge.low {
-  background: #FEE2E2;
-  color: #DC2626;
-}
-
-.new-badge {
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: #DBEAFE;
-  color: #2563EB;
-}
-
-.timestamp {
-  font-size: 0.85rem;
-  color: #9CA3AF;
-  font-family: 'Courier New', monospace;
-}
-
-.original-text,
-.translation-item {
-  margin-bottom: 0.75rem;
-}
-
-.language-tag {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  background: #F3F4F6;
-  color: #6B7280;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-bottom: 0.4rem;
-  text-transform: uppercase;
-}
-
-.text-content {
-  margin: 0.5rem 0 0 0;
-  color: #1F2937;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.original-text .text-content {
-  font-weight: 500;
-  font-size: 1.05rem;
-}
-
-.translations {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #E5E7EB;
-}
-
-.warning-badge {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  background: #FEF3C7;
-  border-left: 3px solid #F59E0B;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  color: #92400E;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 640px) {
-  .translation-card {
-    padding: 1rem;
-  }
-
-  .speaker-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .text-content {
-    font-size: 0.95rem;
+    transform: translateY(0);
   }
 }
 </style>

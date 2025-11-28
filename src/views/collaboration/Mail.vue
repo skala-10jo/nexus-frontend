@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-100 font-sans overflow-hidden">
+  <!-- <div class="flex h-screen bg-gray-100 font-sans overflow-hidden">
     <!-- Sidebar -->
     <div class="w-80 bg-gray-100 flex flex-col p-6 border-r border-gray-200/50">
       <!-- Header -->
@@ -13,7 +13,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-      </div>
+      </div> -->
 
       <!-- Menu -->
       <div class="mb-8">

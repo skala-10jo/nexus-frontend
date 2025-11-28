@@ -1,20 +1,25 @@
 <template>
-  <div class="p-8 bg-gray-50 min-h-screen">
-    <div class="max-w-7xl mx-auto">
-      <!-- Header with Add Button -->
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">일정관리</h1>
+  <div class="h-full overflow-y-auto">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-8 py-6 border-b border-gray-100">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">일정관리</h1>
+          <p class="text-sm text-gray-500 mt-1">프로젝트 일정을 관리하고 추적하세요</p>
+        </div>
         <button
           @click="openCreateModal"
-          class="flex items-center px-5 py-2.5 bg-gradient-to-r from-orange-primary to-orange-medium text-white rounded-lg hover:from-orange-medium hover:to-orange-dark transition shadow-md"
+          class="flex items-center px-5 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition shadow-sm"
         >
           <PlusIcon class="w-5 h-5 mr-2" />
           새 일정 추가
         </button>
       </div>
+    </div>
 
+    <div class="p-8">
       <!-- Full Width Calendar -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="bg-white rounded-2xl border border-gray-100 p-6">
         <FullCalendar ref="fullCalendar" :options="calendarOptions" />
       </div>
     </div>
@@ -26,7 +31,7 @@
       @click.self="closeModal"
     >
       <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-gradient-to-r from-orange-primary to-orange-medium text-white px-6 py-4 flex justify-between items-center">
+        <div class="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
           <h2 class="text-xl font-semibold">
             {{ isEditMode ? '일정 수정' : '새 일정 추가' }}
           </h2>
@@ -42,7 +47,7 @@
               v-model="eventForm.title"
               type="text"
               required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="일정 제목을 입력하세요"
             />
           </div>
@@ -52,7 +57,7 @@
             <textarea
               v-model="eventForm.description"
               rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="일정에 대한 설명을 입력하세요"
             ></textarea>
           </div>
@@ -62,7 +67,7 @@
               <input
                 v-model="eventForm.allDay"
                 type="checkbox"
-                class="w-4 h-4 text-orange-primary border-gray-300 rounded focus:ring-orange-primary"
+                class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
               />
               <span class="ml-2 text-sm text-gray-700">하루 종일</span>
             </label>
@@ -77,7 +82,7 @@
                 v-model="eventForm.startTime"
                 :type="eventForm.allDay ? 'date' : 'datetime-local'"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -88,7 +93,7 @@
               <input
                 v-model="eventForm.endTime"
                 :type="eventForm.allDay ? 'date' : 'datetime-local'"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -98,7 +103,7 @@
             <input
               v-model="eventForm.location"
               type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="장소를 입력하세요"
             />
           </div>
@@ -108,7 +113,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
             <select
               v-model="eventForm.projectId"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option :value="null">프로젝트 없음</option>
               <option v-for="project in projects" :key="project.id" :value="project.id">
@@ -141,7 +146,7 @@
             </button>
             <button
               type="submit"
-              class="px-4 py-2 bg-gradient-to-r from-orange-primary to-orange-medium text-white rounded-lg hover:from-orange-medium hover:to-orange-dark transition"
+              class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition"
             >
               저장
             </button>
@@ -184,7 +189,7 @@ const eventForm = ref({
   startTime: '',
   endTime: '',
   allDay: false,
-  color: '#fb923c',
+  color: '#3b82f6',
   location: '',
   projectId: null, // Single project ID
   categoryIds: [] // Multiple category IDs
@@ -313,7 +318,7 @@ function handleDateSelect(selectInfo) {
     startTime: startTimeFormatted,
     endTime: endTimeFormatted,
     allDay: selectInfo.allDay,
-    color: '#fb923c',
+    color: '#3b82f6',
     location: '',
     categoryIds: []
   };
@@ -398,7 +403,7 @@ function openCreateModal() {
     startTime: formatDateTimeLocal(now),
     endTime: formatDateTimeLocal(tomorrow),
     allDay: false,
-    color: '#fb923c',
+    color: '#3b82f6',
     location: '',
     projectId: null,
     categoryIds: []
@@ -549,23 +554,23 @@ onMounted(() => {
 }
 
 .fc .fc-button-primary {
-  background-color: #fb923c;
-  border-color: #fb923c;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .fc .fc-button-primary:hover {
-  background-color: #f97316;
-  border-color: #f97316;
+  background-color: #2563eb;
+  border-color: #2563eb;
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-  background-color: #ea580c;
-  border-color: #ea580c;
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 .fc .fc-button-primary:disabled {
-  background-color: #fdba74;
-  border-color: #fdba74;
+  background-color: #93c5fd;
+  border-color: #93c5fd;
 }
 
 .fc-theme-standard td,
@@ -574,7 +579,7 @@ onMounted(() => {
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  background-color: #fff7ed;
+  background-color: #eff6ff;
 }
 
 .fc-event {
