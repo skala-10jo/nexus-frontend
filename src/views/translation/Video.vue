@@ -523,7 +523,6 @@ async function handleVideoFile(file) {
 
     uploadedVideo.value = {
       id: response.id,
-      documentId: response.documentId,
       filename: file.name,
       fileSize: file.size,
       duration: null
@@ -572,21 +571,21 @@ async function handleExtractSubtitles() {
   if (!uploadedVideo.value) return
 
   console.log('🎬 Uploaded Video:', uploadedVideo.value)
-  console.log('📄 Document ID:', uploadedVideo.value.documentId)
+  console.log('📄 Video File ID:', uploadedVideo.value.id)
 
   isExtracting.value = true
 
   try {
     // Step 1: STT 처리 (원본 언어)
     await extractSubtitles({
-      videoDocumentId: uploadedVideo.value.documentId,
+      videoDocumentId: uploadedVideo.value.id,
       sourceLanguage: sourceLang.value
     })
 
     // Step 2: 자동 번역 (목표 언어가 있고 원본과 다르면)
     if (targetLang.value && targetLang.value !== sourceLang.value) {
       await translateSubtitles({
-        videoDocumentId: uploadedVideo.value.documentId,
+        videoDocumentId: uploadedVideo.value.id,
         documentIds: selectedDocuments.value,
         sourceLanguage: sourceLang.value,
         targetLanguage: targetLang.value
@@ -594,7 +593,7 @@ async function handleExtractSubtitles() {
     }
 
     // Step 3: 다국어 자막 조회
-    const result = await getMultilingualSubtitles(uploadedVideo.value.documentId)
+    const result = await getMultilingualSubtitles(uploadedVideo.value.id)
 
     // Step 4: 상태 업데이트
     subtitleData.value = {
@@ -637,14 +636,14 @@ async function handleAddTranslation({ targetLanguage, documentIds }) {
   try {
     // Step 1: 번역 처리
     await translateSubtitles({
-      videoDocumentId: uploadedVideo.value.documentId,
+      videoDocumentId: uploadedVideo.value.id,
       documentIds: documentIds,
       sourceLanguage: subtitleData.value.originalLanguage,
       targetLanguage: targetLanguage
     })
 
     // Step 2: 다국어 자막 다시 조회
-    const updatedData = await getMultilingualSubtitles(uploadedVideo.value.documentId)
+    const updatedData = await getMultilingualSubtitles(uploadedVideo.value.id)
 
     // Step 3: 상태 업데이트
     subtitleData.value = {

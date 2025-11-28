@@ -60,6 +60,42 @@ const conversationService = {
       history
     })
     return response.data
+  },
+
+  /**
+   * 메시지 번역
+   * @param {string} message - 번역할 메시지
+   * @param {string} targetLanguage - 목표 언어 (기본값: "ko")
+   * @returns {Promise} 번역된 텍스트
+   */
+  async translateMessage(message, targetLanguage = 'ko') {
+    const response = await pythonAPI.post('/conversations/translate', {
+      message,
+      targetLanguage
+    })
+    return response.data
+  },
+
+  /**
+   * 대화 초기화 - 해당 시나리오의 모든 세션 및 메시지 삭제
+   * @param {string} scenarioId - 시나리오 ID
+   * @returns {Promise} 초기화 성공 메시지
+   */
+  async reset(scenarioId) {
+    const response = await pythonAPI.post('/conversations/reset', {
+      scenarioId
+    })
+    return response.data
+  },
+
+  /**
+   * 저장된 대화 히스토리 조회
+   * @param {string} scenarioId - 시나리오 ID
+   * @returns {Promise} 세션 정보 및 메시지 목록
+   */
+  async getHistory(scenarioId) {
+    const response = await pythonAPI.get(`/conversations/history/${scenarioId}`)
+    return response.data
   }
 }
 

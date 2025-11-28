@@ -82,16 +82,16 @@ export async function uploadVideo(formData) {
 export async function extractSubtitles({ videoDocumentId, sourceLanguage }) {
   try {
     const response = await aiApi.post('/api/ai/video/stt', {
-      video_document_id: videoDocumentId,
+      video_file_id: videoDocumentId,  // Changed from video_document_id to video_file_id
       source_language: sourceLanguage
     })
 
     // Python 백엔드 응답 형식: VideoSTTResponse
     const data = response.data
     return {
-      videoId: data.video_document_id,
+      videoId: data.video_file_id,  // Changed from video_document_id
       subtitles: (data.segments || []).map((segment) => ({
-        id: `${data.video_document_id}-${segment.sequence_number}`, // 임시 ID
+        id: `${data.video_file_id}-${segment.sequence_number}`, // 임시 ID
         startTime: segment.start_time_ms / 1000, // 밀리초 → 초 변환
         endTime: segment.end_time_ms / 1000,     // 밀리초 → 초 변환
         text: segment.text,
@@ -124,7 +124,7 @@ export async function translateSubtitles({
 }) {
   try {
     const response = await aiApi.post('/api/ai/video/translate', {
-      video_document_id: videoDocumentId,
+      video_file_id: videoDocumentId,  // Changed from video_document_id
       document_ids: documentIds || [],
       source_language: sourceLanguage,
       target_language: targetLanguage
@@ -133,9 +133,9 @@ export async function translateSubtitles({
     // Python 백엔드 응답 형식: VideoTranslationResponse
     const data = response.data
     return {
-      videoId: data.video_document_id,
+      videoId: data.video_file_id,  // Changed from video_document_id
       translatedSubtitles: (data.segments || []).map((segment) => ({
-        id: `${data.video_document_id}-${segment.sequence_number}`, // 임시 ID
+        id: `${data.video_file_id}-${segment.sequence_number}`, // 임시 ID
         startTime: segment.start_time_ms / 1000, // 밀리초 → 초 변환
         endTime: segment.end_time_ms / 1000,     // 밀리초 → 초 변환
         text: segment.original_text,
@@ -162,16 +162,16 @@ export async function translateSubtitles({
  */
 export async function getMultilingualSubtitles(videoDocumentId) {
   try {
-    const response = await aiApi.get(`/api/ai/video/subtitles/${videoDocumentId}`)
+    const response = await aiApi.get(`/api/ai/video/subtitles/${videoDocumentId}`)  // URL path stays same
 
     // Python 백엔드 응답 형식: MultilingualSubtitlesResponse
     const data = response.data
     return {
-      videoDocumentId: data.video_document_id,
+      videoDocumentId: data.video_file_id,  // Changed from video_document_id
       originalLanguage: data.original_language,
       availableLanguages: data.available_languages,
       subtitles: (data.segments || []).map((segment) => ({
-        id: `${data.video_document_id}-${segment.sequence_number}`,
+        id: `${data.video_file_id}-${segment.sequence_number}`,  // Changed
         sequenceNumber: segment.sequence_number,
         startTime: segment.start_time_ms / 1000, // 밀리초 → 초
         endTime: segment.end_time_ms / 1000,
@@ -200,7 +200,7 @@ export async function downloadSubtitles({ videoDocumentId, language }) {
   try {
     const response = await aiApi.get('/api/ai/video/subtitles/download', {
       params: {
-        video_document_id: videoDocumentId,
+        video_file_id: videoDocumentId,  // Changed from video_document_id
         language: language
       },
       responseType: 'blob'
