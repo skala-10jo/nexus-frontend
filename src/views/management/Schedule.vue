@@ -39,29 +39,70 @@
           </button>
 
           <!-- Project Items -->
-          <button
-            v-for="project in projects"
-            :key="project.id"
-            @click="selectProject(project.id)"
-            class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-            :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'hover:bg-gray-50 text-gray-600'"
-          >
-            <div 
-              class="w-2 h-2 rounded-full transition-colors" 
-              :class="selectedProjectId === project.id ? 'bg-blue-500' : 'bg-gray-300 group-hover:bg-gray-400'"
-            ></div>
-            <div class="flex-1 min-w-0">
-              <div class="font-bold text-sm truncate">{{ project.name }}</div>
-              <div class="text-xs text-gray-400 truncate mt-0.5">{{ project.description || '설명 없음' }}</div>
+          <div v-for="project in projects" :key="project.id" class="space-y-1">
+            <button
+              @click="selectProject(project.id)"
+              class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
+              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'hover:bg-gray-50 text-gray-600'"
+            >
+              <div 
+                class="w-2 h-2 rounded-full transition-colors" 
+                :class="selectedProjectId === project.id ? 'bg-blue-500' : 'bg-gray-300 group-hover:bg-gray-400'"
+              ></div>
+              <div class="flex-1 min-w-0">
+                <div class="font-bold text-sm truncate">{{ project.name }}</div>
+                <div class="text-xs text-gray-400 truncate mt-0.5">{{ project.description || '설명 없음' }}</div>
+              </div>
+            </button>
+
+            <!-- Project Events List -->
+            <div v-if="getProjectEvents(project.id).length > 0" class="pl-9 pr-2 space-y-1">
+              <div 
+                v-for="event in getProjectEvents(project.id)" 
+                :key="event.id"
+                @click="handleEventClick({ event: event })"
+                class="text-xs py-1.5 px-2 rounded-lg cursor-pointer hover:bg-gray-50 text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-2"
+              >
+                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                <span class="truncate">{{ event.title }}</span>
+                <span class="text-[10px] text-gray-400 ml-auto whitespace-nowrap">{{ formatEventMeta(event) }}</span>
+              </div>
             </div>
-          </button>
+          </div>
         </div>
       </div>
 
-      <!-- Right Content: Calendar -->
+      <!-- Right Content: Calendar, Project Detail, or Project Edit -->
       <div class="flex-1 flex flex-col min-w-0">
         <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-2xl shadow-blue-900/5 flex-1 flex flex-col relative overflow-hidden">
-          <FullCalendar ref="fullCalendar" :options="calendarOptions" class="h-full w-full calendar-custom" />
+          
+          <!-- Project Edit View -->
+          <ProjectEdit
+            v-if="selectedProjectId && isProjectEditing"
+            :project="selectedProject"
+            :allDocuments="allDocuments"
+            class="h-full"
+            @save="saveProject"
+            @cancel="cancelEdit"
+          />
+
+          <!-- Project Detail View -->
+          <ProjectDetail
+            v-else-if="selectedProjectId"
+            :project="selectedProject"
+            :allDocuments="allDocuments"
+            :showCloseButton="false"
+            class="h-full"
+            @edit="openEditProjectModal"
+          />
+
+          <!-- Calendar View -->
+          <FullCalendar 
+            v-else
+            ref="fullCalendar" 
+            :options="calendarOptions" 
+            class="h-full w-full calendar-custom" 
+          />
         </div>
       </div>
     </div>
@@ -208,12 +249,13 @@
     </div>
 
     <!-- Category Manager Modal -->
+    <!-- Category Manager Modal -->
     <CategoryManager v-if="showCategoryManager" @close="showCategoryManager = false" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -225,6 +267,9 @@ import CategorySelector from '@/components/schedule/CategorySelector.vue';
 import CategoryManager from '@/components/schedule/CategoryManager.vue';
 import { useScheduleCategoryStore } from '@/stores/scheduleCategory';
 import { useProjectStore } from '@/stores/projects';
+import ProjectDetail from '@/components/ProjectDetail.vue';
+import ProjectEdit from '@/components/ProjectEdit.vue';
+import { documentService } from '@/services/documentService';
 
 const fullCalendar = ref(null);
 const showModal = ref(false);
@@ -235,6 +280,16 @@ const categoryStore = useScheduleCategoryStore();
 const projectStore = useProjectStore();
 const projects = ref([]);
 const selectedProjectId = ref(null);
+const allEvents = ref([]);
+const allDocuments = ref([]);
+
+// Project Edit State
+const isProjectEditing = ref(false);
+const currentProjectId = ref(null);
+
+const selectedProject = computed(() => {
+  return projects.value.find(p => p.id === selectedProjectId.value) || {};
+});
 
 const eventForm = ref({
   title: '',
@@ -337,6 +392,9 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
           }
         };
       });
+
+      // Store all events for sidebar display
+      allEvents.value = events;
 
       // Filter by selected project if one is selected
       if (selectedProjectId.value) {
@@ -571,6 +629,36 @@ function formatDateOnly(date) {
   return `${year}-${month}-${day}`;
 }
 
+function formatShortDate(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const month = String(d.getMonth() + 1);
+  const day = String(d.getDate());
+  return `${month}/${day}`;
+}
+
+function formatEventMeta(event) {
+  if (!event.start) return '';
+  const d = new Date(event.start);
+  const month = String(d.getMonth() + 1);
+  const day = String(d.getDate());
+  const dateStr = `${month}/${day}`;
+
+  if (event.allDay) {
+    return dateStr;
+  } else {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${dateStr} ${hours}:${minutes}`;
+  }
+}
+
+function getProjectEvents(projectId) {
+  return allEvents.value.filter(event => 
+    event.extendedProps.project && event.extendedProps.project.id === projectId
+  );
+}
+
 // datetime-local 문자열을 명시적으로 로컬 타임존 Date 객체로 변환
 function parseLocalDateTime(dateTimeString) {
   if (!dateTimeString) return null;
@@ -593,15 +681,53 @@ async function loadProjects() {
   }
 }
 
+async function loadDocuments() {
+  try {
+    const response = await documentService.getAll({ page: 0, size: 1000 });
+    allDocuments.value = response.data.data?.content || response.data?.content || response.content || [];
+  } catch (error) {
+    console.error('Failed to load documents:', error);
+  }
+}
+
 function selectProject(projectId) {
   selectedProjectId.value = projectId;
-  refreshCalendar();
+  // Calendar refresh is not needed if we are hiding it, but good to keep if we switch back
+  if (!projectId) {
+    refreshCalendar();
+  }
+}
+
+function openEditProjectModal(project) {
+  isProjectEditing.value = true;
+  currentProjectId.value = project.id;
+}
+
+function cancelEdit() {
+  isProjectEditing.value = false;
+  currentProjectId.value = null;
+}
+
+async function saveProject(formData) {
+  try {
+    await projectStore.updateProject(currentProjectId.value, formData);
+    // Update local projects list if needed, or rely on store reactivity
+    // Refresh selected project if it was the one edited
+    if (selectedProjectId.value === currentProjectId.value) {
+      // Force update or re-fetch if necessary, but store should handle it
+    }
+    cancelEdit();
+    loadProjects(); // Refresh list
+  } catch (error) {
+    console.error('Failed to save project:', error);
+    alert('프로젝트 저장에 실패했습니다.');
+  }
 }
 
 onMounted(() => {
   // 초기 로드는 FullCalendar가 자동으로 처리
   loadProjects();
-  categoryStore.fetchCategories();
+  loadDocuments();
   categoryStore.fetchCategories();
 });
 
