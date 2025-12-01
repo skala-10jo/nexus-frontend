@@ -69,7 +69,7 @@
               선택한 프로젝트에 다가오는 일정이 없습니다
             </p>
             <p v-else class="text-gray-500 text-sm mb-2">다가오는 일정이 없습니다</p>
-            <router-link to="/schedule" class="text-orange-primary text-sm hover:underline">
+            <router-link to="/management/schedule" class="text-orange-primary text-sm hover:underline">
               일정 추가하기
             </router-link>
           </div>
