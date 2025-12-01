@@ -4,9 +4,9 @@
     <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Documents</h1>
+          <h1 class="text-2xl font-bold text-gray-900">문서 관리</h1>
           <p class="text-sm text-gray-500 mt-1 font-medium">
-            Manage and organize your files
+            파일을 관리하고 정리하세요
           </p>
         </div>
         <button
@@ -16,7 +16,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          {{ isUploadCollapsed ? 'Upload File' : 'Close Upload' }}
+          {{ isUploadCollapsed ? '파일 업로드' : '닫기' }}
         </button>
       </div>
     </div>
@@ -41,7 +41,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Files</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">전체 파일</p>
               <p class="text-3xl font-bold text-gray-900">{{ totalDocuments }}</p>
             </div>
             <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-600 group-hover:bg-gray-100 transition-colors">
@@ -53,7 +53,7 @@
 
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Size</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">전체 용량</p>
               <p class="text-3xl font-bold text-gray-900">{{ formatFileSize(totalSize) }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
@@ -65,7 +65,7 @@
 
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Recent Upload</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">최근 업로드</p>
               <p class="text-3xl font-bold text-gray-900">{{ formatDate(recentUploadDate) }}</p>
             </div>
             <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 group-hover:bg-green-100 transition-colors">
@@ -87,7 +87,7 @@
                 <input
                   v-model="searchQuery"
                   type="text"
-                  placeholder="Search documents..."
+                  placeholder="문서 검색..."
                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,11 +103,11 @@
                   v-model="filterFileType"
                   class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
                 >
-                  <option value="">All Types</option>
+                  <option value="">전체 유형</option>
                   <option value="PDF">PDF</option>
                   <option value="DOCX">Word</option>
                   <option value="XLSX">Excel</option>
-                  <option value="IMAGE">Image</option>
+                  <option value="IMAGE">이미지</option>
                 </select>
                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -120,10 +120,10 @@
                   v-model="sortOption"
                   class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
                 >
-                  <option value="uploadDate:desc">Newest</option>
-                  <option value="uploadDate:asc">Oldest</option>
-                  <option value="originalFilename:asc">Name A-Z</option>
-                  <option value="fileSize:desc">Size</option>
+                  <option value="uploadDate:desc">최신순</option>
+                  <option value="uploadDate:asc">오래된순</option>
+                  <option value="originalFilename:asc">이름순</option>
+                  <option value="fileSize:desc">크기순</option>
                 </select>
                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -164,7 +164,7 @@
             <div v-if="loading && documents.length === 0" class="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-sm font-medium text-gray-500">Loading documents...</p>
+                <p class="text-sm font-medium text-gray-500">문서 불러오는 중...</p>
               </div>
             </div>
 
@@ -175,13 +175,13 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-gray-900 mb-1">No documents found</h3>
-              <p class="text-sm text-gray-500 mb-6">Upload your first document to get started.</p>
+              <h3 class="text-lg font-bold text-gray-900 mb-1">문서가 없습니다</h3>
+              <p class="text-sm text-gray-500 mb-6">첫 번째 문서를 업로드하여 시작하세요.</p>
               <button
                 @click="scrollToUpload"
                 class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
               >
-                Upload Document
+                문서 업로드
               </button>
             </div>
 
@@ -241,11 +241,11 @@
               <table class="w-full">
                 <thead>
                   <tr class="border-b border-gray-100 bg-gray-50/50">
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-12">Type</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Size</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider w-12">유형</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">파일명</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">크기</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">날짜</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">작업</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -322,10 +322,10 @@
     <Teleport to="body">
       <ConfirmDialog
         v-if="documentToDelete"
-        title="Delete Document"
-        :message="`Are you sure you want to delete '${documentToDelete.originalFilename}'? This action cannot be undone.`"
+        title="문서 삭제"
+        :message="`'${documentToDelete.originalFilename}' 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`"
         type="danger"
-        confirmText="Delete"
+        confirmText="삭제"
         @confirm="handleDelete"
         @cancel="documentToDelete = null"
       />
@@ -352,7 +352,7 @@ const searchQuery = ref('');
 const filterFileType = ref('');
 const filterStatus = ref('');
 const sortOption = ref('uploadDate:desc');
-const viewMode = ref('grid'); // Default to grid for modern look
+const viewMode = ref('list'); // Default to list view
 const selectedDocument = ref(null);
 const documentToDelete = ref(null);
 const loadMoreTrigger = ref(null);
@@ -376,7 +376,7 @@ const handleUploadStart = () => {
 
 const handleUploadComplete = () => {
   refreshDocuments();
-  toast.success('Document uploaded successfully');
+  toast.success('문서가 업로드되었습니다');
 
   setTimeout(() => {
     if (documents.value.length > 5) {
@@ -386,7 +386,7 @@ const handleUploadComplete = () => {
 };
 
 const handleUploadError = (error) => {
-  toast.error(`Upload failed: ${error.message}`);
+  toast.error(`업로드 실패: ${error.message}`);
 };
 
 const refreshDocuments = async () => {
@@ -398,7 +398,7 @@ const refreshDocuments = async () => {
       sort: sortOption.value,
     });
   } catch (error) {
-    toast.error('Failed to load documents');
+    toast.error('문서를 불러오는데 실패했습니다');
   }
 };
 
@@ -407,16 +407,16 @@ const openDocumentDetail = async (document) => {
     const detail = await documentStore.getDocumentDetail(document.id);
     selectedDocument.value = detail;
   } catch (error) {
-    toast.error('Failed to load document details');
+    toast.error('문서 상세 정보를 불러오는데 실패했습니다');
   }
 };
 
 const downloadDocument = async (document) => {
   try {
     await documentStore.downloadDocument(document.id, document.originalFilename);
-    toast.success('Download started');
+    toast.success('다운로드가 시작되었습니다');
   } catch (error) {
-    toast.error('Download failed');
+    toast.error('다운로드에 실패했습니다');
   }
 };
 
@@ -427,11 +427,11 @@ const confirmDelete = (document) => {
 const handleDelete = async () => {
   try {
     await documentStore.deleteDocument(documentToDelete.value.id);
-    toast.success('Document deleted successfully');
+    toast.success('문서가 삭제되었습니다');
     documentToDelete.value = null;
     selectedDocument.value = null;
   } catch (error) {
-    toast.error('Delete failed');
+    toast.error('삭제에 실패했습니다');
   }
 };
 
@@ -461,9 +461,9 @@ const formatFileSize = (bytes) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric'
   });
 };

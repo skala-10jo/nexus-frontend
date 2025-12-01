@@ -76,8 +76,8 @@
           />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">일정</router-link>
           <router-link to="/management/project" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/project') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">일정</router-link>
           <router-link to="/management/documents" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/documents') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서</router-link>
           <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">전문용어사전</router-link>
         </div>

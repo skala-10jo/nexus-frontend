@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50/30">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">일정 관리</h1>
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-h-0 p-6 overflow-hidden">
+    <div class="flex-1 flex flex-col min-h-0 px-6 pt-4 pb-12 overflow-hidden">
       <div class="w-full max-w-[1600px] mx-auto flex-1 flex flex-col h-full">
         <!-- Calendar Section -->
         <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-2xl shadow-blue-900/5 flex-1 flex flex-col relative overflow-hidden">
@@ -62,9 +62,11 @@
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">설명</label>
               <textarea
+                ref="descriptionTextarea"
                 v-model="eventForm.description"
+                @input="autoResize"
                 rows="3"
-                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white overflow-hidden"
                 placeholder="일정 설명을 입력하세요"
               ></textarea>
             </div>
@@ -173,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -546,6 +548,26 @@ onMounted(() => {
   // 초기 로드는 FullCalendar가 자동으로 처리
   loadProjects();
   categoryStore.fetchCategories();
+  categoryStore.fetchCategories();
+});
+
+const descriptionTextarea = ref(null);
+
+const autoResize = () => {
+  const element = descriptionTextarea.value;
+  if (element) {
+    element.style.height = 'auto';
+    element.style.height = element.scrollHeight + 'px';
+  }
+};
+
+// Watch for modal open to resize textarea for existing content
+watch(showModal, async (newVal) => {
+  if (newVal) {
+    // Wait for DOM update
+    await nextTick();
+    autoResize();
+  }
 });
 </script>
 
