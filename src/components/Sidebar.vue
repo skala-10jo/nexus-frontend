@@ -76,10 +76,10 @@
           />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Schedule</router-link>
-          <router-link to="/management/project" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Projects</router-link>
-          <router-link to="/management/documents" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Documents</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Glossary</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Schedule</router-link>
+          <router-link to="/management/project" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/project') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Projects</router-link>
+          <router-link to="/management/documents" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/documents') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Documents</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Glossary</router-link>
         </div>
       </div>
 
@@ -106,9 +106,9 @@
           />
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Scenario</router-link>
-          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Expressions</router-link>
-          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Mistakes</router-link>
+          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Scenario</router-link>
+          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Expressions</router-link>
+          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Mistakes</router-link>
         </div>
       </div>
 
@@ -135,9 +135,9 @@
           />
         </button>
         <div v-show="openMenus.has('translation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/translation/text" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Text</router-link>
-          <router-link to="/translation/voice" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Voice</router-link>
-          <router-link to="/translation/video" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Video</router-link>
+          <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/translation/text') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Text</router-link>
+          <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/translation/voice') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Voice</router-link>
+          <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/translation/video') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Video</router-link>
         </div>
       </div>
 
@@ -164,8 +164,8 @@
           />
         </button>
         <div v-show="openMenus.has('collaboration') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Mail</router-link>
-          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-xl hover:bg-white/50 transition">Messenger</router-link>
+          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/collaboration/mail') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Mail</router-link>
+          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/collaboration/messenger') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Messenger</router-link>
         </div>
       </div>
 
@@ -193,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
@@ -216,7 +216,27 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const openMenus = ref(new Set(['collaboration'])); 
+const openMenus = ref(new Set());
+
+// Auto-open menu based on current route
+const updateOpenMenus = () => {
+  const path = route.path;
+  if (path.startsWith('/management')) {
+    openMenus.value.add('management');
+  } else if (path.startsWith('/conversation')) {
+    openMenus.value.add('conversation');
+  } else if (path.startsWith('/translation')) {
+    openMenus.value.add('translation');
+  } else if (path.startsWith('/collaboration')) {
+    openMenus.value.add('collaboration');
+  }
+};
+
+// Watch for route changes
+watch(() => route.path, updateOpenMenus);
+
+// Initialize on mount
+onMounted(updateOpenMenus);
 
 const toggleMenu = (menuName) => {
   if (openMenus.value.has(menuName)) {
@@ -231,6 +251,10 @@ const isActive = (path) => {
     return route.path === '/';
   }
   return route.path.startsWith(path);
+};
+
+const isSubActive = (path) => {
+  return route.path === path || route.path.startsWith(path + '/');
 };
 
 </script>
