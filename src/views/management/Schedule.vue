@@ -1,29 +1,29 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50/50">
+  <div class="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50/30">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Schedule</h1>
+          <h1 class="text-2xl font-bold text-gray-900">일정 관리</h1>
           <p class="text-sm text-gray-500 mt-1 font-medium">
-            Manage and track your project timelines
+            프로젝트 타임라인을 관리하고 추적하세요
           </p>
         </div>
         <button
           @click="openCreateModal"
-          class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+          class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
         >
           <PlusIcon class="w-5 h-5" />
-          Add Event
+          일정 추가
         </button>
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-8">
-      <div class="max-w-7xl mx-auto">
+    <div class="flex-1 flex flex-col min-h-0 px-6 pt-4 pb-12 overflow-hidden">
+      <div class="w-full max-w-[1600px] mx-auto flex-1 flex flex-col h-full">
         <!-- Calendar Section -->
-        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm" style="min-height: calc(100vh - 200px);">
-          <FullCalendar ref="fullCalendar" :options="calendarOptions" class="h-full w-full" />
+        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-2xl shadow-blue-900/5 flex-1 flex flex-col relative overflow-hidden">
+          <FullCalendar ref="fullCalendar" :options="calendarOptions" class="h-full w-full calendar-custom" />
         </div>
       </div>
     </div>
@@ -34,11 +34,11 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-blue-900/20 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/50 transform transition-all scale-100">
         <!-- Modal Header -->
         <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
           <h2 class="text-xl font-bold text-gray-900">
-            {{ isEditMode ? 'Edit Event' : 'New Event' }}
+            {{ isEditMode ? '일정 수정' : '새 일정' }}
           </h2>
           <button @click="closeModal" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
             <XMarkIcon class="w-6 h-6" />
@@ -49,23 +49,25 @@
         <form @submit.prevent="saveEvent" class="flex-1 overflow-y-auto">
           <div class="p-8 space-y-6">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">제목 *</label>
               <input
                 v-model="eventForm.title"
                 type="text"
                 required
-                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
-                placeholder="Enter event title"
+                class="w-full px-5 py-4 border border-gray-200/60 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white text-lg font-medium placeholder:text-gray-400"
+                placeholder="일정 제목을 입력하세요"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">설명</label>
               <textarea
+                ref="descriptionTextarea"
                 v-model="eventForm.description"
+                @input="autoResize"
                 rows="3"
-                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white"
-                placeholder="Enter event description"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white overflow-hidden"
+                placeholder="일정 설명을 입력하세요"
               ></textarea>
             </div>
 
@@ -76,14 +78,14 @@
                   type="checkbox"
                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span class="ml-3 text-sm font-medium text-gray-700">All Day Event</span>
+                <span class="ml-3 text-sm font-medium text-gray-700">종일</span>
               </label>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  {{ eventForm.allDay ? 'Start Date *' : 'Start Time *' }}
+                  {{ eventForm.allDay ? '시작 날짜 *' : '시작 시간 *' }}
                 </label>
                 <input
                   v-model="eventForm.startTime"
@@ -95,7 +97,7 @@
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  {{ eventForm.allDay ? 'End Date' : 'End Time' }}
+                  {{ eventForm.allDay ? '종료 날짜' : '종료 시간' }}
                 </label>
                 <input
                   v-model="eventForm.endTime"
@@ -106,23 +108,23 @@
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">장소</label>
               <input
                 v-model="eventForm.location"
                 type="text"
                 class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
-                placeholder="Enter location"
+                placeholder="장소를 입력하세요"
               />
             </div>
 
             <!-- Project Selector -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Project</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">프로젝트</label>
               <select
                 v-model="eventForm.projectId"
                 class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
               >
-                <option :value="null">No Project</option>
+                <option :value="null">프로젝트 없음</option>
                 <option v-for="project in projects" :key="project.id" :value="project.id">
                   {{ project.name }}
                 </option>
@@ -131,7 +133,7 @@
 
             <!-- Category Selector -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Categories</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">카테고리</label>
               <CategorySelector
                 v-model="eventForm.categoryIds"
                 @open-manager="showCategoryManager = true"
@@ -147,20 +149,20 @@
               @click="deleteEvent"
               class="px-6 py-2.5 text-sm font-medium text-red-600 bg-red-50 border border-transparent rounded-xl hover:bg-red-100 transition-all"
             >
-              Delete
+              삭제
             </button>
             <button
               type="button"
               @click="closeModal"
               class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
             >
-              Cancel
+              취소
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
+              class="px-8 py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
             >
-              Save Event
+              저장
             </button>
           </div>
         </form>
@@ -173,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -230,11 +232,11 @@ const calendarOptions = {
   },
   locale: 'en', // Changed to English for consistency
   buttonText: {
-    today: 'Today',
-    month: 'Month',
-    week: 'Week',
-    day: 'Day',
-    list: 'List'
+    today: '오늘',
+    month: '월',
+    week: '주',
+    day: '일',
+    list: '목록'
   },
   editable: true,
   selectable: true,
@@ -246,11 +248,14 @@ const calendarOptions = {
   eventClick: handleEventClick,
   eventDrop: handleEventDrop,
   eventResize: handleEventResize,
+  eventResize: handleEventResize,
   height: '100%', // Use 100% height
-  contentHeight: 'auto',
+  // contentHeight: 'auto', // REMOVED: This causes the calendar to expand and breaks internal scrolling
   expandRows: true, // Expand rows to fill height
   stickyHeaderDates: true,
   dayHeaderFormat: { weekday: 'short' }, // Short weekday names
+  dragScroll: true,
+  dragRevertDuration: 0, // Fix drag visual lag
   slotLabelFormat: {
     hour: 'numeric',
     minute: '2-digit',
@@ -371,7 +376,7 @@ async function handleEventDrop(dropInfo) {
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
-    alert('Failed to move event.');
+    alert('일정 이동에 실패했습니다.');
     dropInfo.revert();
   }
 }
@@ -390,7 +395,7 @@ async function handleEventResize(resizeInfo) {
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
-    alert('Failed to resize event.');
+    alert('일정 크기 조정에 실패했습니다.');
     resizeInfo.revert();
   }
 }
@@ -470,12 +475,12 @@ async function saveEvent() {
     closeModal();
   } catch (error) {
     console.error('Failed to save schedule:', error);
-    alert('Failed to save event.');
+    alert('일정 저장에 실패했습니다.');
   }
 }
 
 async function deleteEvent() {
-  if (!confirm('Are you sure you want to delete this event?')) return;
+  if (!confirm('이 일정을 삭제하시겠습니까?')) return;
 
   try {
     await scheduleAPI.deleteSchedule(currentEventId.value);
@@ -485,7 +490,7 @@ async function deleteEvent() {
     closeModal();
   } catch (error) {
     console.error('Failed to delete schedule:', error);
-    alert('Failed to delete event.');
+    alert('일정 삭제에 실패했습니다.');
   }
 }
 
@@ -543,77 +548,160 @@ onMounted(() => {
   // 초기 로드는 FullCalendar가 자동으로 처리
   loadProjects();
   categoryStore.fetchCategories();
+  categoryStore.fetchCategories();
+});
+
+const descriptionTextarea = ref(null);
+
+const autoResize = () => {
+  const element = descriptionTextarea.value;
+  if (element) {
+    element.style.height = 'auto';
+    element.style.height = element.scrollHeight + 'px';
+  }
+};
+
+// Watch for modal open to resize textarea for existing content
+watch(showModal, async (newVal) => {
+  if (newVal) {
+    // Wait for DOM update
+    await nextTick();
+    autoResize();
+  }
 });
 </script>
 
 <style scoped>
 /* FullCalendar Custom Styles */
 :deep(.fc) {
-  --fc-border-color: #f3f4f6;
-  --fc-button-bg-color: #3b82f6;
-  --fc-button-border-color: #3b82f6;
-  --fc-button-hover-bg-color: #2563eb;
-  --fc-button-hover-border-color: #2563eb;
-  --fc-button-active-bg-color: #1d4ed8;
-  --fc-button-active-border-color: #1d4ed8;
+  --fc-border-color: transparent;
+  --fc-button-bg-color: white;
+  --fc-button-border-color: #e5e7eb;
+  --fc-button-text-color: #374151;
+  --fc-button-hover-bg-color: #f9fafb;
+  --fc-button-hover-border-color: #d1d5db;
+  --fc-button-active-bg-color: #f3f4f6;
+  --fc-button-active-border-color: #d1d5db;
   --fc-event-bg-color: #3b82f6;
-  --fc-event-border-color: #3b82f6;
+  --fc-event-border-color: transparent;
   --fc-today-bg-color: #eff6ff;
   --fc-neutral-bg-color: #f9fafb;
   --fc-list-event-hover-bg-color: #f3f4f6;
   font-family: inherit;
 }
 
+/* Header Toolbar */
+:deep(.fc-header-toolbar) {
+  margin-bottom: 2rem !important;
+  padding: 0 0.5rem;
+}
+
 :deep(.fc-toolbar-title) {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #111827;
-}
-
-:deep(.fc-col-header-cell-cushion) {
-  padding: 12px 0;
-  font-weight: 600;
-  color: #4b5563;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
-
-:deep(.fc-daygrid-day-number) {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  padding: 8px;
+  letter-spacing: -0.025em;
 }
 
 :deep(.fc-button) {
-  border-radius: 0.75rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
   text-transform: capitalize;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  border: 1px solid #f3f4f6;
+}
+
+:deep(.fc-button:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.05), 0 3px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+:deep(.fc-button-active) {
+  background-color: #111827 !important;
+  border-color: #111827 !important;
+  color: white !important;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
 :deep(.fc-button-group) {
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 :deep(.fc-button-group > .fc-button) {
-  border-radius: 0.75rem;
+  border-radius: 1rem !important;
   margin-left: 0 !important;
 }
 
+/* Calendar Grid */
+:deep(.fc-theme-standard td),
+:deep(.fc-theme-standard th) {
+  border-color: #f3f4f6;
+}
+
+:deep(.fc-col-header-cell-cushion) {
+  padding: 16px 0;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+:deep(.fc-daygrid-day-number) {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+:deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
+  background-color: #111827;
+  color: white;
+}
+
+/* Weekend Background */
+:deep(.fc-day-sat),
+:deep(.fc-day-sun) {
+  background-color: #f9fafb;
+}
+
+/* Events */
 :deep(.fc-event) {
   border-radius: 0.5rem;
-  padding: 2px 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 1px 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
   border: none;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 1px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+:deep(.fc-event:hover) {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+:deep(.fc-daygrid-event-dot) {
+  border-width: 3px;
+  border-radius: 50%;
 }
 
 :deep(.fc-daygrid-day-frame) {
-  padding: 4px;
+  padding: 8px;
 }
 
 :deep(.fc-scrollgrid) {
@@ -621,6 +709,72 @@ onMounted(() => {
 }
 
 :deep(.fc-scrollgrid-section-header > td) {
-  border-bottom-width: 1px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* TimeGrid View */
+:deep(.fc-timegrid-slot) {
+  height: 0.5rem;
+  border-bottom: 1px dashed #f3f4f6;
+}
+
+:deep(.fc-timegrid-slot-label) {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+:deep(.fc-v-event) {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* List View */
+:deep(.fc-list) {
+  border: none;
+}
+
+:deep(.fc-list-day-cushion) {
+  background-color: transparent;
+  padding: 1.5rem 1rem 0.5rem;
+}
+
+:deep(.fc-list-day-text) {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+:deep(.fc-list-day-side-text) {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+:deep(.fc-list-event) {
+  cursor: pointer;
+}
+
+:deep(.fc-list-event:hover td) {
+  background-color: #f9fafb;
+}
+
+:deep(.fc-list-event-dot) {
+  border-width: 4px;
+}
+
+:deep(.fc-list-event-title) {
+  font-weight: 600;
+  color: #374151;
+}
+
+:deep(.fc-list-event-time) {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* Fix for drag mirror positioning */
+:deep(.fc-event-dragging) {
+  z-index: 9999 !important;
 }
 </style>
