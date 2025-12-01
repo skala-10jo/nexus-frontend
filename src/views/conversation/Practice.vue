@@ -706,12 +706,17 @@ const toggleTranslation = async (index) => {
   }
 
   translationLoading.value[index] = true
-  // Mock translation
-  setTimeout(() => {
-    msg.translatedText = "[Translated] " + msg.message
+  try {
+    const response = await conversationService.translateMessage(msg.message, 'ko')
+    msg.translatedText = response.translatedText
     msg.showTranslation = true
+  } catch (err) {
+    console.error('Translation failed:', err)
+    msg.translatedText = '[번역 실패] ' + msg.message
+    msg.showTranslation = true
+  } finally {
     translationLoading.value[index] = false
-  }, 500)
+  }
 }
 
 const resetConversation = async () => {
