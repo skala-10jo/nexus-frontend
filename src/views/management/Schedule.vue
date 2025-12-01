@@ -1,154 +1,166 @@
 <template>
-  <div class="h-full overflow-y-auto">
+  <div class="h-full flex flex-col bg-gray-50/50">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-8 py-6 border-b border-gray-100">
-      <div class="flex justify-between items-center">
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">일정관리</h1>
-          <p class="text-sm text-gray-500 mt-1">프로젝트 일정을 관리하고 추적하세요</p>
+          <h1 class="text-2xl font-bold text-gray-900">Schedule</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">
+            Manage and track your project timelines
+          </p>
         </div>
         <button
           @click="openCreateModal"
-          class="flex items-center px-5 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition shadow-sm"
+          class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
         >
-          <PlusIcon class="w-5 h-5 mr-2" />
-          새 일정 추가
+          <PlusIcon class="w-5 h-5" />
+          Add Event
         </button>
       </div>
     </div>
 
-    <div class="p-8">
-      <!-- Full Width Calendar -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-6">
-        <FullCalendar ref="fullCalendar" :options="calendarOptions" />
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-7xl mx-auto">
+        <!-- Calendar Section -->
+        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm" style="min-height: calc(100vh - 200px);">
+          <FullCalendar ref="fullCalendar" :options="calendarOptions" class="h-full w-full" />
+        </div>
       </div>
     </div>
 
     <!-- Event Detail/Edit Modal -->
     <div
       v-if="showModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
-          <h2 class="text-xl font-semibold">
-            {{ isEditMode ? '일정 수정' : '새 일정 추가' }}
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Modal Header -->
+        <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ isEditMode ? 'Edit Event' : 'New Event' }}
           </h2>
-          <button @click="closeModal" class="text-white hover:text-gray-200">
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
             <XMarkIcon class="w-6 h-6" />
           </button>
         </div>
 
-        <form @submit.prevent="saveEvent" class="p-6 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">제목 *</label>
-            <input
-              v-model="eventForm.title"
-              type="text"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="일정 제목을 입력하세요"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
-            <textarea
-              v-model="eventForm.description"
-              rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="일정에 대한 설명을 입력하세요"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="flex items-center mb-4">
-              <input
-                v-model="eventForm.allDay"
-                type="checkbox"
-                class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">하루 종일</span>
-            </label>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Modal Form -->
+        <form @submit.prevent="saveEvent" class="flex-1 overflow-y-auto">
+          <div class="p-8 space-y-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                {{ eventForm.allDay ? '시작 날짜 *' : '시작 시간 *' }}
-              </label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
               <input
-                v-model="eventForm.startTime"
-                :type="eventForm.allDay ? 'date' : 'datetime-local'"
+                v-model="eventForm.title"
+                type="text"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                placeholder="Enter event title"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                {{ eventForm.allDay ? '종료 날짜' : '종료 시간' }}
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+              <textarea
+                v-model="eventForm.description"
+                rows="3"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white"
+                placeholder="Enter event description"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="flex items-center p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  v-model="eventForm.allDay"
+                  type="checkbox"
+                  class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span class="ml-3 text-sm font-medium text-gray-700">All Day Event</span>
               </label>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  {{ eventForm.allDay ? 'Start Date *' : 'Start Time *' }}
+                </label>
+                <input
+                  v-model="eventForm.startTime"
+                  :type="eventForm.allDay ? 'date' : 'datetime-local'"
+                  required
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  {{ eventForm.allDay ? 'End Date' : 'End Time' }}
+                </label>
+                <input
+                  v-model="eventForm.endTime"
+                  :type="eventForm.allDay ? 'date' : 'datetime-local'"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Location</label>
               <input
-                v-model="eventForm.endTime"
-                :type="eventForm.allDay ? 'date' : 'datetime-local'"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                v-model="eventForm.location"
+                type="text"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                placeholder="Enter location"
+              />
+            </div>
+
+            <!-- Project Selector -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Project</label>
+              <select
+                v-model="eventForm.projectId"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+              >
+                <option :value="null">No Project</option>
+                <option v-for="project in projects" :key="project.id" :value="project.id">
+                  {{ project.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Category Selector -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Categories</label>
+              <CategorySelector
+                v-model="eventForm.categoryIds"
+                @open-manager="showCategoryManager = true"
               />
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">장소</label>
-            <input
-              v-model="eventForm.location"
-              type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="장소를 입력하세요"
-            />
-          </div>
-
-          <!-- Project Selector (Single Selection) -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 (선택)</label>
-            <select
-              v-model="eventForm.projectId"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option :value="null">프로젝트 없음</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Category Selector (Multiple Selection) -->
-          <CategorySelector
-            v-model="eventForm.categoryIds"
-            @open-manager="showCategoryManager = true"
-          />
-
-          <div class="flex justify-end space-x-3 pt-4">
+          <!-- Modal Footer -->
+          <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
             <button
               v-if="isEditMode"
               type="button"
               @click="deleteEvent"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              class="px-6 py-2.5 text-sm font-medium text-red-600 bg-red-50 border border-transparent rounded-xl hover:bg-red-100 transition-all"
             >
-              삭제
+              Delete
             </button>
             <button
               type="button"
               @click="closeModal"
-              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+              class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
             >
-              취소
+              Cancel
             </button>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition"
+              class="px-6 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
             >
-              저장
+              Save Event
             </button>
           </div>
         </form>
@@ -204,7 +216,7 @@ watch(() => eventForm.value.categoryIds, (newCategoryIds) => {
     }
   } else {
     // No category selected, use default color
-    eventForm.value.color = '#fb923c';
+    eventForm.value.color = '#3b82f6';
   }
 }, { deep: true });
 
@@ -216,13 +228,13 @@ const calendarOptions = {
     center: 'title',
     right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
   },
-  locale: 'ko',
+  locale: 'en', // Changed to English for consistency
   buttonText: {
-    today: '오늘',
-    month: '월',
-    week: '주',
-    day: '일',
-    list: '목록'
+    today: 'Today',
+    month: 'Month',
+    week: 'Week',
+    day: 'Day',
+    list: 'List'
   },
   editable: true,
   selectable: true,
@@ -234,8 +246,17 @@ const calendarOptions = {
   eventClick: handleEventClick,
   eventDrop: handleEventDrop,
   eventResize: handleEventResize,
-  height: 700,
-  contentHeight: 650
+  height: '100%', // Use 100% height
+  contentHeight: 'auto',
+  expandRows: true, // Expand rows to fill height
+  stickyHeaderDates: true,
+  dayHeaderFormat: { weekday: 'short' }, // Short weekday names
+  slotLabelFormat: {
+    hour: 'numeric',
+    minute: '2-digit',
+    omitZeroMinute: false,
+    meridiem: 'short'
+  }
 };
 
 // FullCalendar의 events 함수 - 이벤트를 동적으로 로드
@@ -251,7 +272,7 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
         // Use first category color if available, otherwise use schedule color
         const categoryColor = schedule.categories && schedule.categories.length > 0
           ? schedule.categories[0].color
-          : schedule.color || '#fb923c';
+          : schedule.color || '#3b82f6';
 
         return {
           id: schedule.id,
@@ -284,15 +305,6 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
 function handleDateSelect(selectInfo) {
   const calendarApi = selectInfo.view.calendar;
 
-  // 디버깅: 선택된 날짜/시간 정보 확인
-  console.log('📅 Date Select:', {
-    allDay: selectInfo.allDay,
-    start: selectInfo.start,
-    end: selectInfo.end,
-    startISO: selectInfo.start.toISOString(),
-    endISO: selectInfo.end?.toISOString()
-  });
-
   // 날짜 선택 해제
   calendarApi.unselect();
 
@@ -306,11 +318,6 @@ function handleDateSelect(selectInfo) {
   const endTimeFormatted = selectInfo.allDay
     ? formatDateOnly(selectInfo.end || selectInfo.start)
     : formatDateTimeLocal(selectInfo.end || selectInfo.start);
-
-  console.log('📝 Formatted times:', {
-    startTime: startTimeFormatted,
-    endTime: endTimeFormatted
-  });
 
   eventForm.value = {
     title: '',
@@ -364,7 +371,7 @@ async function handleEventDrop(dropInfo) {
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
-    alert('일정 이동에 실패했습니다.');
+    alert('Failed to move event.');
     dropInfo.revert();
   }
 }
@@ -383,7 +390,7 @@ async function handleEventResize(resizeInfo) {
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
-    alert('일정 크기 변경에 실패했습니다.');
+    alert('Failed to resize event.');
     resizeInfo.revert();
   }
 }
@@ -420,12 +427,6 @@ async function saveEvent() {
     // allDay 이벤트의 경우 날짜만 사용, 시간은 자정으로 설정
     let startTime, endTime;
 
-    console.log('💾 Saving event:', {
-      allDay: eventForm.value.allDay,
-      startTimeInput: eventForm.value.startTime,
-      endTimeInput: eventForm.value.endTime
-    });
-
     if (eventForm.value.allDay) {
       // 날짜만 있는 경우 (YYYY-MM-DD 형식) - 자정부터 자정까지
       const startDate = parseLocalDateTime(eventForm.value.startTime + 'T00:00');
@@ -445,8 +446,6 @@ async function saveEvent() {
       startTime = startDate.toISOString();
       endTime = endDate ? endDate.toISOString() : null;
     }
-
-    console.log('🌐 ISO times:', { startTime, endTime });
 
     const scheduleData = {
       title: eventForm.value.title,
@@ -471,12 +470,12 @@ async function saveEvent() {
     closeModal();
   } catch (error) {
     console.error('Failed to save schedule:', error);
-    alert('일정 저장에 실패했습니다.');
+    alert('Failed to save event.');
   }
 }
 
 async function deleteEvent() {
-  if (!confirm('이 일정을 삭제하시겠습니까?')) return;
+  if (!confirm('Are you sure you want to delete this event?')) return;
 
   try {
     await scheduleAPI.deleteSchedule(currentEventId.value);
@@ -486,7 +485,7 @@ async function deleteEvent() {
     closeModal();
   } catch (error) {
     console.error('Failed to delete schedule:', error);
-    alert('일정 삭제에 실패했습니다.');
+    alert('Failed to delete event.');
   }
 }
 
@@ -547,42 +546,81 @@ onMounted(() => {
 });
 </script>
 
-<style>
-/* FullCalendar 커스텀 스타일 */
-.fc {
+<style scoped>
+/* FullCalendar Custom Styles */
+:deep(.fc) {
+  --fc-border-color: #f3f4f6;
+  --fc-button-bg-color: #3b82f6;
+  --fc-button-border-color: #3b82f6;
+  --fc-button-hover-bg-color: #2563eb;
+  --fc-button-hover-border-color: #2563eb;
+  --fc-button-active-bg-color: #1d4ed8;
+  --fc-button-active-border-color: #1d4ed8;
+  --fc-event-bg-color: #3b82f6;
+  --fc-event-border-color: #3b82f6;
+  --fc-today-bg-color: #eff6ff;
+  --fc-neutral-bg-color: #f9fafb;
+  --fc-list-event-hover-bg-color: #f3f4f6;
   font-family: inherit;
 }
 
-.fc .fc-button-primary {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
+:deep(.fc-toolbar-title) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
 }
 
-.fc .fc-button-primary:hover {
-  background-color: #2563eb;
-  border-color: #2563eb;
+:deep(.fc-col-header-cell-cushion) {
+  padding: 12px 0;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
 }
 
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-  background-color: #1d4ed8;
-  border-color: #1d4ed8;
+:deep(.fc-daygrid-day-number) {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  padding: 8px;
 }
 
-.fc .fc-button-primary:disabled {
-  background-color: #93c5fd;
-  border-color: #93c5fd;
+:deep(.fc-button) {
+  border-radius: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  text-transform: capitalize;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.fc-theme-standard td,
-.fc-theme-standard th {
-  border-color: #e5e7eb;
+:deep(.fc-button-group) {
+  gap: 0.5rem;
 }
 
-.fc .fc-daygrid-day.fc-day-today {
-  background-color: #eff6ff;
+:deep(.fc-button-group > .fc-button) {
+  border-radius: 0.75rem;
+  margin-left: 0 !important;
 }
 
-.fc-event {
-  cursor: pointer;
+:deep(.fc-event) {
+  border-radius: 0.5rem;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+:deep(.fc-daygrid-day-frame) {
+  padding: 4px;
+}
+
+:deep(.fc-scrollgrid) {
+  border: none;
+}
+
+:deep(.fc-scrollgrid-section-header > td) {
+  border-bottom-width: 1px;
 }
 </style>

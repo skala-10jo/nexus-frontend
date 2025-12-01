@@ -1,242 +1,245 @@
 <template>
-  <div class="h-full overflow-y-auto">
+  <div class="h-full flex flex-col bg-gray-50/50">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-8 py-6 border-b border-gray-100">
-      <div class="flex justify-between items-center">
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
-          <p class="text-sm text-gray-500 mt-1">프로젝트를 생성하고 문서를 관리하세요</p>
+          <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">
+            Manage your projects and documents efficiently
+          </p>
         </div>
         <button
           @click="openCreateModal"
-          class="px-5 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm"
+          class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span class="font-medium">새 프로젝트</span>
+          New Project
         </button>
       </div>
     </div>
 
-    <div class="p-8">
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-7xl mx-auto space-y-8">
 
-      <!-- Search and Filter Bar -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-        <div class="flex flex-col sm:flex-row gap-4">
-          <!-- Search Input -->
-          <div class="flex-1 relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="프로젝트 이름으로 검색..."
-              class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
-            />
-          </div>
-
-          <!-- Filter Dropdown -->
-          <select
-            v-model="statusFilter"
-            class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
-          >
-            <option value="ALL">전체 상태</option>
-            <option value="ACTIVE">진행중</option>
-            <option value="ARCHIVED">마감</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-200">
-          <div class="flex items-center justify-between">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-blue-100 text-sm font-medium">전체 프로젝트</p>
-              <p class="text-3xl font-bold mt-1">{{ statistics.total }}</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Projects</p>
+              <p class="text-3xl font-bold text-gray-900">{{ statistics.total }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-600 group-hover:bg-gray-100 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
           </div>
-        </div>
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200">
-          <div class="flex items-center justify-between">
+
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-emerald-100 text-sm font-medium">진행중</p>
-              <p class="text-3xl font-bold mt-1">{{ statistics.active }}</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active</p>
+              <p class="text-3xl font-bold text-gray-900">{{ statistics.active }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
           </div>
-        </div>
-        <div class="bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl p-5 text-white shadow-lg shadow-gray-200">
-          <div class="flex items-center justify-between">
+
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
             <div>
-              <p class="text-gray-100 text-sm font-medium">마감</p>
-              <p class="text-3xl font-bold mt-1">{{ statistics.archived }}</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Archived</p>
+              <p class="text-3xl font-bold text-gray-900">{{ statistics.archived }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-100 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
             </div>
           </div>
         </div>
-      </div>
 
-    <!-- Projects Grid -->
-    <div v-if="!loading && filteredProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div
-        v-for="project in filteredProjects"
-        :key="project.id"
-        class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer group relative overflow-hidden"
-      >
-        <!-- Card Content (Clickable) -->
-        <div @click="viewProjectDetail(project)" class="p-6">
-          <!-- Header with Status and Dropdown -->
-          <div class="flex justify-between items-start mb-4">
-            <div class="flex-1 pr-2">
-              <h3 class="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-500 transition-colors line-clamp-1">
-                {{ project.name }}
-              </h3>
-              <span
-                :class="[
-                  'inline-block px-3 py-1 text-xs font-medium rounded-full',
-                  getStatusClass(project.status)
-                ]"
-              >
-                {{ getStatusText(project.status) }}
-              </span>
-            </div>
+        <!-- Main Content Area -->
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
 
-            <!-- Dropdown Menu -->
-            <div class="relative" @click.stop>
-              <button
-                @click="toggleDropdown(project.id)"
-                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="메뉴"
-              >
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          <!-- Toolbar -->
+          <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between bg-white">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <!-- Search -->
+              <div class="relative flex-1 max-w-md">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search projects..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                />
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </button>
+              </div>
+            </div>
 
-              <!-- Dropdown Content -->
-              <Transition name="dropdown">
-                <div
-                  v-if="openDropdownId === project.id"
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+            <div class="flex items-center gap-3">
+              <!-- Status Filter -->
+              <div class="relative">
+                <select
+                  v-model="statusFilter"
+                  class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
                 >
-                  <button
-                    @click="editProject(project)"
-                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  <option value="ALL">All Status</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="ARCHIVED">Archived</option>
+                </select>
+                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Area -->
+          <div class="relative">
+            <!-- Projects Grid -->
+            <div v-if="!loading && filteredProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div
+                v-for="project in filteredProjects"
+                :key="project.id"
+                class="group bg-gray-50 rounded-2xl p-6 hover:bg-blue-50/50 transition-all duration-300 cursor-pointer relative"
+                @click="viewProjectDetail(project)"
+              >
+                <!-- Status Badge -->
+                <div class="flex justify-between items-start mb-4">
+                  <span
+                    :class="[
+                      'px-2.5 py-1 inline-flex text-[10px] font-bold rounded-full uppercase tracking-wide',
+                      project.status === 'ACTIVE'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                    ]"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    편집
-                  </button>
-                  <button
-                    v-if="project.status === 'ACTIVE'"
-                    @click="archiveProject(project)"
-                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                    마감 처리
-                  </button>
-                  <button
-                    v-else-if="project.status === 'ARCHIVED'"
-                    @click="unarchiveProject(project)"
-                    class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    진행중으로 변경
-                  </button>
-                  <hr class="my-1">
-                  <button
-                    @click="confirmDeleteProject(project)"
-                    class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    삭제
-                  </button>
+                    {{ getStatusText(project.status) }}
+                  </span>
+
+                  <!-- Menu Button -->
+                  <div class="relative" @click.stop>
+                    <button
+                      @click="toggleDropdown(project.id)"
+                      class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                      </svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <Transition name="dropdown">
+                      <div
+                        v-if="openDropdownId === project.id"
+                        class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20"
+                      >
+                        <button
+                          @click="editProject(project)"
+                          class="w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2.5"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          v-if="project.status === 'ACTIVE'"
+                          @click="archiveProject(project)"
+                          class="w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2.5"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                          </svg>
+                          Archive
+                        </button>
+                        <button
+                          v-else-if="project.status === 'ARCHIVED'"
+                          @click="unarchiveProject(project)"
+                          class="w-full px-4 py-2.5 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2.5"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          Restore
+                        </button>
+                        <div class="h-px bg-gray-100 my-1"></div>
+                        <button
+                          @click="confirmDeleteProject(project)"
+                          class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2.5"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </button>
+                      </div>
+                    </Transition>
+                  </div>
                 </div>
-              </Transition>
+
+                <!-- Project Info -->
+                <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">
+                  {{ project.name }}
+                </h3>
+                <p class="text-gray-500 text-sm mb-6 line-clamp-2 min-h-[2.5rem] leading-relaxed">
+                  {{ project.description || 'No description provided.' }}
+                </p>
+
+                <!-- Footer Info -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200/50">
+                  <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="font-medium">{{ project.documentCount || 0 }} files</span>
+                  </div>
+                  <span class="text-xs text-gray-400 font-medium">
+                    {{ formatDate(project.createdAt) }}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Description -->
-          <p class="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
-            {{ project.description || '설명 없음' }}
-          </p>
-
-          <!-- Metrics -->
-          <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
-            <div class="flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>{{ project.documentCount || 0 }}개 문서</span>
+            <!-- Loading State -->
+            <div v-if="loading" class="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm font-medium text-gray-500">Loading projects...</p>
+              </div>
             </div>
-          </div>
 
-          <!-- Date -->
-          <div class="text-xs text-gray-400">
-            {{ formatDate(project.createdAt) }}
+            <!-- Empty State -->
+            <div v-if="!loading && filteredProjects.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
+              <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-1">
+                {{ searchQuery || statusFilter !== 'ALL' ? 'No projects found' : 'No projects yet' }}
+              </h3>
+              <p class="text-sm text-gray-500 mb-6">
+                {{ searchQuery || statusFilter !== 'ALL' ? 'Try adjusting your search or filters.' : 'Create your first project to start organizing your documents.' }}
+              </p>
+              <button
+                v-if="!searchQuery && statusFilter === 'ALL'"
+                @click="openCreateModal"
+                class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+              >
+                Create Project
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="i in 6" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
-        <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
-        <div class="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
-        <div class="flex gap-4">
-          <div class="h-4 bg-gray-200 rounded w-20"></div>
-          <div class="h-4 bg-gray-200 rounded w-20"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div v-if="!loading && filteredProjects.length === 0" class="bg-white rounded-xl shadow-md p-12 text-center">
-      <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-      </svg>
-      <p class="text-gray-500 text-lg mb-2">
-        {{ searchQuery || statusFilter !== 'ALL' ? '검색 결과가 없습니다' : '아직 프로젝트가 없습니다' }}
-      </p>
-      <p class="text-gray-400 text-sm mb-4">
-        {{ searchQuery || statusFilter !== 'ALL' ? '다른 검색어나 필터를 시도해보세요.' : '첫 프로젝트를 생성하여 시작하세요!' }}
-      </p>
-      <button
-        v-if="!searchQuery && statusFilter === 'ALL'"
-        @click="openCreateModal"
-        class="px-6 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-      >
-        프로젝트 생성
-      </button>
-    </div>
     </div>
 
     <!-- Project Detail Modal -->
@@ -249,149 +252,122 @@
     />
 
     <!-- Create/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeModal">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-2xl">
-          <h2 class="text-2xl font-bold text-gray-800">
-            {{ isEditing ? '프로젝트 수정' : '새 프로젝트 생성' }}
+    <div v-if="showModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="closeModal">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ isEditing ? 'Edit Project' : 'New Project' }}
           </h2>
-          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div class="p-6">
+        <div class="p-8 overflow-y-auto">
           <!-- Project Info -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              프로젝트 정보
-            </h3>
-
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 이름 *</label>
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Project Name</label>
               <input
                 v-model="formData.name"
                 type="text"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
-                placeholder="프로젝트 이름을 입력하세요"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                placeholder="Enter project name"
                 required
               />
             </div>
 
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 설명</label>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
               <textarea
                 v-model="formData.description"
                 rows="3"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none bg-gray-50"
-                placeholder="프로젝트에 대한 설명을 입력하세요"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white"
+                placeholder="What is this project about?"
               ></textarea>
             </div>
-          </div>
 
-          <!-- Document Selection -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              관련 문서 선택
-            </h3>
-
-            <!-- Document Search -->
-            <div class="relative mb-3">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                v-model="documentSearchQuery"
-                type="text"
-                placeholder="문서 이름으로 검색..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-              />
-            </div>
-
-            <!-- Document List -->
-            <div v-if="filteredDocuments.length > 0" class="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
-              <div
-                v-for="doc in filteredDocuments"
-                :key="doc.id"
-                class="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-200 last:border-b-0 transition-colors"
-              >
+            <div class="pt-4 border-t border-gray-100">
+              <label class="block text-sm font-semibold text-gray-700 mb-4">Related Documents</label>
+              
+              <!-- Document Search -->
+              <div class="relative mb-4">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
                 <input
-                  type="checkbox"
-                  :value="doc.id"
-                  v-model="formData.documentIds"
-                  class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  v-model="documentSearchQuery"
+                  type="text"
+                  placeholder="Search documents to link..."
+                  class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-gray-50 focus:bg-white transition-all text-sm"
                 />
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-800 truncate">{{ doc.originalFilename }}</p>
-                  <p class="text-xs text-gray-500">
-                    {{ doc.fileType }} · {{ formatFileSize(doc.fileSize) }} · {{ formatDate(doc.uploadDate) }}
-                  </p>
+              </div>
+
+              <!-- Document List -->
+              <div v-if="filteredDocuments.length > 0" class="border border-gray-200 rounded-xl max-h-60 overflow-y-auto scrollbar-thin">
+                <div
+                  v-for="doc in filteredDocuments"
+                  :key="doc.id"
+                  class="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer"
+                  @click="toggleDocumentSelection(doc.id)"
+                >
+                  <div class="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      :checked="formData.documentIds.includes(doc.id)"
+                      class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                      @click.stop
+                      @change="toggleDocumentSelection(doc.id)"
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ doc.originalFilename }}</p>
+                    <p class="text-xs text-gray-500">
+                      {{ doc.fileType }} · {{ formatFileSize(doc.fileSize) }}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div v-else class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-              <svg class="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p class="text-gray-500 text-sm">
-                {{ documentSearchQuery ? '검색 결과가 없습니다' : '업로드된 문서가 없습니다' }}
-              </p>
-            </div>
+              <div v-else class="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <p class="text-gray-500 text-sm">
+                  {{ documentSearchQuery ? 'No documents found' : 'No documents available' }}
+                </p>
+              </div>
 
-            <!-- Selected Documents Tags -->
-            <div v-if="formData.documentIds.length > 0" class="mt-3">
-              <p class="text-sm font-medium text-gray-700 mb-2">선택된 문서:</p>
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="docId in formData.documentIds"
-                  :key="docId"
-                  class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+              <!-- Selected Count -->
+              <div class="mt-3 flex justify-between items-center text-sm">
+                <span class="text-gray-500">{{ formData.documentIds.length }} documents selected</span>
+                <button 
+                  v-if="formData.documentIds.length > 0"
+                  @click="formData.documentIds = []"
+                  class="text-blue-600 hover:text-blue-700 font-medium text-xs"
                 >
-                  {{ getDocumentName(docId) }}
-                  <button
-                    @click="removeDocument(docId)"
-                    class="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                  >
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
+                  Clear all
+                </button>
               </div>
             </div>
-
-            <p class="text-sm text-gray-500 mt-2">
-              선택된 문서: {{ formData.documentIds.length }}개
-            </p>
           </div>
+        </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3 justify-end pt-4 border-t">
-            <button
-              @click="closeModal"
-              class="px-6 py-2.5 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              취소
-            </button>
-            <button
-              @click="saveProject"
-              class="px-6 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!formData.name"
-            >
-              {{ isEditing ? '수정' : '생성' }}
-            </button>
-          </div>
+        <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+          <button
+            @click="closeModal"
+            class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveProject"
+            class="px-6 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!formData.name"
+          >
+            {{ isEditing ? 'Save Changes' : 'Create Project' }}
+          </button>
         </div>
       </div>
     </div>
@@ -446,7 +422,7 @@ const confirmDialog = ref({
   title: '',
   message: '',
   type: 'danger',
-  confirmText: '확인',
+  confirmText: 'Confirm',
   onConfirm: () => {}
 })
 
@@ -493,7 +469,7 @@ async function loadProjects() {
     projects.value = response.data.data || response.data || response
   } catch (error) {
     console.error('Failed to load projects:', error)
-    toast.error('프로젝트 목록을 불러오는데 실패했습니다.')
+    toast.error('Failed to load projects.')
   } finally {
     loading.value = false
   }
@@ -526,7 +502,6 @@ async function editProject(project) {
   currentProjectId.value = project.id
   documentSearchQuery.value = ''
 
-  // 프로젝트 상세 정보를 조회하여 연결된 문서 ID 가져오기
   try {
     const response = await projectService.getProject(project.id)
     const projectDetail = response.data.data || response.data
@@ -538,13 +513,12 @@ async function editProject(project) {
     }
   } catch (error) {
     console.error('Failed to load project details:', error)
-    // 실패 시 기본값 사용
     formData.value = {
       name: project.name,
       description: project.description || '',
       documentIds: []
     }
-    toast.warning('프로젝트 문서 정보를 불러오지 못했습니다.')
+    toast.warning('Failed to load project details.')
   }
 
   showModal.value = true
@@ -569,33 +543,33 @@ function closeModal() {
 
 async function saveProject() {
   if (!formData.value.name.trim()) {
-    toast.warning('프로젝트 이름을 입력해주세요.')
+    toast.warning('Please enter a project name.')
     return
   }
 
   try {
     if (isEditing.value) {
       await projectService.update(currentProjectId.value, formData.value)
-      toast.success('프로젝트가 수정되었습니다.')
+      toast.success('Project updated successfully.')
     } else {
       await projectService.create(formData.value)
-      toast.success('프로젝트가 생성되었습니다.')
+      toast.success('Project created successfully.')
     }
     closeModal()
     loadProjects()
   } catch (error) {
     console.error('Failed to save project:', error)
-    toast.error('프로젝트 저장에 실패했습니다.')
+    toast.error('Failed to save project.')
   }
 }
 
 function confirmDeleteProject(project) {
   closeDropdown()
   confirmDialog.value = {
-    title: '프로젝트 삭제',
-    message: `"${project.name}" 프로젝트를 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`,
+    title: 'Delete Project',
+    message: `Are you sure you want to delete "${project.name}"?\n\n⚠️ This action cannot be undone.`,
     type: 'danger',
-    confirmText: '삭제',
+    confirmText: 'Delete',
     onConfirm: () => deleteProject(project)
   }
   showConfirmDialog.value = true
@@ -604,11 +578,11 @@ function confirmDeleteProject(project) {
 async function deleteProject(project) {
   try {
     await projectService.delete(project.id)
-    toast.success('프로젝트가 삭제되었습니다.')
+    toast.success('Project deleted successfully.')
     loadProjects()
   } catch (error) {
     console.error('Failed to delete project:', error)
-    toast.error('프로젝트 삭제에 실패했습니다.')
+    toast.error('Failed to delete project.')
   } finally {
     closeConfirmDialog()
   }
@@ -617,18 +591,18 @@ async function deleteProject(project) {
 function archiveProject(project) {
   closeDropdown()
   confirmDialog.value = {
-    title: '프로젝트 마감',
-    message: `"${project.name}" 프로젝트를 마감 처리하시겠습니까?`,
+    title: 'Archive Project',
+    message: `Are you sure you want to archive "${project.name}"?`,
     type: 'warning',
-    confirmText: '마감',
-    onConfirm: () => updateProjectStatus(project, 'ARCHIVED', '프로젝트가 마감 처리되었습니다.')
+    confirmText: 'Archive',
+    onConfirm: () => updateProjectStatus(project, 'ARCHIVED', 'Project archived successfully.')
   }
   showConfirmDialog.value = true
 }
 
 function unarchiveProject(project) {
   closeDropdown()
-  updateProjectStatus(project, 'ACTIVE', '프로젝트가 진행중으로 변경되었습니다.')
+  updateProjectStatus(project, 'ACTIVE', 'Project restored successfully.')
 }
 
 async function updateProjectStatus(project, status, successMessage) {
@@ -637,13 +611,12 @@ async function updateProjectStatus(project, status, successMessage) {
       name: project.name,
       description: project.description,
       status: status
-      // Don't send documentIds to avoid clearing linked documents
     })
     toast.success(successMessage)
     loadProjects()
   } catch (error) {
     console.error('Failed to update project status:', error)
-    toast.error('프로젝트 상태 변경에 실패했습니다.')
+    toast.error('Failed to update project status.')
   } finally {
     closeConfirmDialog()
   }
@@ -677,36 +650,23 @@ function handleClickOutside(event) {
   }
 }
 
-function getDocumentName(docId) {
-  const doc = allDocuments.value.find(d => d.id === docId)
-  return doc ? doc.originalFilename : 'Unknown'
-}
-
-function removeDocument(docId) {
-  formData.value.documentIds = formData.value.documentIds.filter(id => id !== docId)
-}
-
-function getStatusClass(status) {
-  switch (status) {
-    case 'ACTIVE':
-      return 'bg-green-100 text-green-800'
-    case 'ARCHIVED':
-      return 'bg-gray-100 text-gray-800'
-    case 'DELETED':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
+function toggleDocumentSelection(docId) {
+  const index = formData.value.documentIds.indexOf(docId)
+  if (index === -1) {
+    formData.value.documentIds.push(docId)
+  } else {
+    formData.value.documentIds.splice(index, 1)
   }
 }
 
 function getStatusText(status) {
   switch (status) {
     case 'ACTIVE':
-      return '진행중'
+      return 'Active'
     case 'ARCHIVED':
-      return '마감'
+      return 'Archived'
     case 'DELETED':
-      return '삭제됨'
+      return 'Deleted'
     default:
       return status
   }
@@ -715,9 +675,9 @@ function getStatusText(status) {
 function formatDate(dateString) {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('ko-KR', {
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric'
   })
 }
@@ -740,7 +700,7 @@ function formatFileSize(bytes) {
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-10px) scale(0.95);
 }
 
 .line-clamp-1 {
@@ -755,5 +715,17 @@ function formatFileSize(bytes) {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* Custom Scrollbar for document list */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
 }
 </style>

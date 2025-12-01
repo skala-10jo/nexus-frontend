@@ -27,8 +27,8 @@
         <div class="px-6 py-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           <!-- File Info -->
           <div class="flex items-start gap-4 mb-6">
-            <div class="flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100">
-              <component :is="getFileIcon(document.fileType)" class="w-9 h-9 text-orange-primary" />
+            <div class="flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100">
+              <component :is="getFileIcon(document.fileType)" class="w-9 h-9 text-blue-600" />
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="text-lg font-semibold text-gray-900 mb-1 break-words">{{ document.originalFilename }}</h3>
@@ -96,7 +96,7 @@
           </button>
           <button
             @click="$emit('download', document)"
-            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-primary hover:bg-orange-medium rounded-lg transition-colors"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
             <ArrowDownTrayIcon class="w-4 h-4" />
             <span>다운로드</span>
