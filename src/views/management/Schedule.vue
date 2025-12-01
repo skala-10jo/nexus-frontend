@@ -21,62 +21,61 @@
 
     <div class="flex-1 flex min-h-0 px-6 pt-4 pb-12 overflow-hidden gap-6">
       <!-- Left Sidebar: Project List -->
-      <div class="w-80 flex-shrink-0 flex flex-col bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-900/5 overflow-hidden">
-        <div class="p-6 border-b border-gray-50">
-          <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
-          <p class="text-xs text-gray-500 mt-1">프로젝트별 일정을 확인하세요</p>
+      <div class="w-72 flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="p-5">
+          <h2 class="text-base font-bold text-gray-900">프로젝트</h2>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
           <!-- All Projects Button -->
           <button
             @click="selectProject(null)"
-            class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-            :class="!selectedProjectId ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+            class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+            :class="!selectedProjectId ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
           >
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-              :class="!selectedProjectId ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-6 h-6 rounded flex items-center justify-center transition-colors"
+              :class="!selectedProjectId ? 'text-gray-700' : 'text-gray-400 group-hover:text-gray-600'">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
             </div>
-            <span class="font-semibold">전체 프로젝트</span>
+            <span class="text-sm">전체 프로젝트</span>
           </button>
 
           <!-- Project List -->
-          <div v-for="project in projects" :key="project.id" class="space-y-1">
+          <div v-for="project in projects" :key="project.id" class="space-y-0.5">
             <button
               @click="selectProject(project.id)"
-              class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
             >
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
-                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
+                :class="selectedProjectId === project.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
               </div>
-              <span class="font-medium truncate">{{ project.name }}</span>
+              <span class="text-sm truncate flex-1">{{ project.name }}</span>
               <span v-if="getProjectEvents(project.id).length > 0" 
-                class="ml-auto text-xs font-medium px-2 py-0.5 rounded-full"
-                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'">
+                class="text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-colors"
+                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:text-gray-500'">
                 {{ getProjectEvents(project.id).length }}
               </span>
             </button>
 
             <!-- Project Events List (Sidebar) -->
-            <div v-if="getProjectEvents(project.id).length > 0" class="pl-12 pr-2 pb-2 space-y-1">
+            <div v-if="getProjectEvents(project.id).length > 0" class="ml-6 pl-3 border-l border-gray-100 my-1 space-y-0.5">
               <div 
                 v-for="event in getProjectEvents(project.id).slice(0, 3)" 
                 :key="event.id"
-                class="text-xs py-1.5 px-2 rounded-lg hover:bg-gray-50 text-gray-500 cursor-pointer flex items-center gap-2 transition-colors"
+                class="text-[11px] py-1 px-2 rounded hover:bg-gray-50 text-gray-500 cursor-pointer flex items-center gap-2 transition-colors group/event"
                 @click.stop="handleEventClick({ event: { id: event.id, extendedProps: event } })"
               >
-                <div class="w-1.5 h-1.5 rounded-full flex-shrink-0" :style="{ backgroundColor: event.backgroundColor }"></div>
-                <span class="font-medium text-gray-400 w-16 flex-shrink-0">{{ formatEventTime(event) }}</span>
-                <span class="truncate text-gray-600">{{ event.title }}</span>
+                <div class="w-1 h-1 rounded-full flex-shrink-0 transition-transform group-hover/event:scale-125" :style="{ backgroundColor: event.backgroundColor }"></div>
+                <span class="font-medium text-gray-400 w-14 flex-shrink-0 tabular-nums tracking-tight">{{ formatEventTime(event) }}</span>
+                <span class="truncate text-gray-600 group-hover/event:text-gray-900">{{ event.title }}</span>
               </div>
-              <div v-if="getProjectEvents(project.id).length > 3" class="pl-3 text-[10px] text-gray-400 font-medium">
+              <div v-if="getProjectEvents(project.id).length > 3" class="pl-2 py-0.5 text-[10px] text-gray-300 font-medium hover:text-gray-500 cursor-pointer transition-colors">
                 + {{ getProjectEvents(project.id).length - 3 }}개 더보기
               </div>
             </div>
