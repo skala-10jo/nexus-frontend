@@ -19,9 +19,47 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-h-0 px-6 pt-4 pb-12 overflow-hidden">
-      <div class="w-full max-w-[1600px] mx-auto flex-1 flex flex-col h-full">
-        <!-- Calendar Section -->
+    <div class="flex-1 flex min-h-0 px-6 pt-4 pb-12 overflow-hidden gap-6">
+      <!-- Left Sidebar: Project List -->
+      <div class="w-80 flex-shrink-0 flex flex-col bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-900/5 overflow-hidden">
+        <div class="p-6 border-b border-gray-50">
+          <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
+          <p class="text-xs text-gray-500 mt-1">프로젝트별 일정을 확인하세요</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+          <!-- All Projects Option -->
+          <button
+            @click="selectProject(null)"
+            class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
+            :class="selectedProjectId === null ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'hover:bg-gray-50 text-gray-600'"
+          >
+            <div class="w-2 h-2 rounded-full" :class="selectedProjectId === null ? 'bg-white' : 'bg-gray-300 group-hover:bg-gray-400'"></div>
+            <span class="font-bold text-sm">전체 프로젝트</span>
+          </button>
+
+          <!-- Project Items -->
+          <button
+            v-for="project in projects"
+            :key="project.id"
+            @click="selectProject(project.id)"
+            class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
+            :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'hover:bg-gray-50 text-gray-600'"
+          >
+            <div 
+              class="w-2 h-2 rounded-full transition-colors" 
+              :class="selectedProjectId === project.id ? 'bg-blue-500' : 'bg-gray-300 group-hover:bg-gray-400'"
+            ></div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm truncate">{{ project.name }}</div>
+              <div class="text-xs text-gray-400 truncate mt-0.5">{{ project.description || '설명 없음' }}</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Content: Calendar -->
+      <div class="flex-1 flex flex-col min-w-0">
         <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-2xl shadow-blue-900/5 flex-1 flex flex-col relative overflow-hidden">
           <FullCalendar ref="fullCalendar" :options="calendarOptions" class="h-full w-full calendar-custom" />
         </div>
@@ -196,6 +234,7 @@ const currentEventId = ref(null);
 const categoryStore = useScheduleCategoryStore();
 const projectStore = useProjectStore();
 const projects = ref([]);
+const selectedProjectId = ref(null);
 
 const eventForm = ref({
   title: '',
@@ -230,7 +269,7 @@ const calendarOptions = {
     center: 'title',
     right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
   },
-  locale: 'en', // Changed to English for consistency
+  locale: 'ko', // Korean locale
   buttonText: {
     today: '오늘',
     month: '월',
@@ -261,6 +300,9 @@ const calendarOptions = {
     minute: '2-digit',
     omitZeroMinute: false,
     meridiem: 'short'
+  },
+  dayCellContent: (arg) => {
+    return arg.date.getDate().toString();
   }
 };
 
@@ -269,7 +311,7 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
   try {
     const response = await scheduleAPI.getAllSchedules();
     if (response.data.success) {
-      const events = response.data.data.map(schedule => {
+      let events = response.data.data.map(schedule => {
         // ISO 문자열을 Date 객체로 변환 (list view 호환성)
         const startDate = schedule.startTime ? new Date(schedule.startTime) : null;
         const endDate = schedule.endTime ? new Date(schedule.endTime) : null;
@@ -295,6 +337,13 @@ async function loadEvents(fetchInfo, successCallback, failureCallback) {
           }
         };
       });
+
+      // Filter by selected project if one is selected
+      if (selectedProjectId.value) {
+        events = events.filter(event => 
+          event.extendedProps.project && event.extendedProps.project.id === selectedProjectId.value
+        );
+      }
 
       console.log('📅 Loaded events:', events);
       successCallback(events);
@@ -542,6 +591,11 @@ async function loadProjects() {
   } catch (error) {
     console.error('Failed to load projects:', error);
   }
+}
+
+function selectProject(projectId) {
+  selectedProjectId.value = projectId;
+  refreshCalendar();
 }
 
 onMounted(() => {
