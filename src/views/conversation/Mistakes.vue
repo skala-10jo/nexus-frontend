@@ -1,11 +1,11 @@
 <template>
-  <div class="p-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">오답노트</h1>
+  <div class="h-full overflow-y-auto p-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">오답노트</h1>
 
     <div class="bg-white rounded-lg shadow-md p-6">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-semibold text-gray-800">Review Your Mistakes</h2>
-        <button class="px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition text-sm">
+        <button class="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition text-sm">
           Clear All
         </button>
       </div>

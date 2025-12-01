@@ -1,591 +1,392 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-8">
-    <!-- 좌우 레이아웃 -->
-    <div class="grid grid-cols-12 gap-6">
-      <!-- Left: Upcoming (3 columns) -->
-      <div class="col-span-12 lg:col-span-3">
-        <div class="bg-white rounded-2xl shadow-md h-full">
-          <!-- 헤더 -->
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <svg class="w-6 h-6 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                다가오는 일정
-              </h2>
-              <span v-if="selectedSchedules.length > 0" class="text-sm text-gray-600">
-                {{ selectedSchedules.length }}개 선택됨
-              </span>
-            </div>
-          </div>
+  <div class="h-full flex flex-col relative font-sans">
+    <!-- Header -->
+    <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-8 border-b border-gray-100">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold text-gray-800">시나리오 회화 연습</h2>
+        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ scenarios.length }}</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button 
+          @click="showCreateDialog = true"
+          class="bg-black text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          Create Scenario
+        </button>
+      </div>
+    </div>
 
-          <!-- 로딩 -->
-          <div v-if="schedulesLoading" class="p-6 space-y-4">
-            <div v-for="i in 3" :key="i" class="animate-pulse">
-              <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-              <div class="h-20 bg-gray-200 rounded"></div>
+    <!-- Main Content -->
+    <div class="flex-1 flex pt-20 overflow-hidden">
+      <!-- Left Sidebar (Filters) -->
+      <div class="w-80 flex-shrink-0 border-r border-gray-100 bg-gray-50/50 flex flex-col overflow-hidden">
+        <div class="p-6 flex-1 overflow-y-auto space-y-8">
+          
+          <!-- Upcoming Schedules -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase">Upcoming Schedules</h3>
+              <span v-if="selectedSchedules.length > 0" class="text-xs text-blue-600 font-bold">{{ selectedSchedules.length }} selected</span>
             </div>
-          </div>
+            
+            <div v-if="schedulesLoading" class="space-y-3">
+              <div v-for="i in 3" :key="i" class="h-16 bg-gray-200 rounded-xl animate-pulse"></div>
+            </div>
 
-          <!-- 일정 목록 -->
-          <div v-else-if="filteredSchedules.length > 0" class="overflow-y-auto max-h-[calc(100vh-200px)]">
-            <!-- 날짜별 그룹 -->
-            <div v-for="(group, date) in groupedSchedules" :key="date" class="border-b border-gray-100 last:border-b-0">
-              <div class="px-6 py-3 bg-gray-50 sticky top-0">
-                <p class="text-sm font-semibold text-gray-600">{{ formatGroupDate(date) }}</p>
-              </div>
-              <div class="p-4 space-y-2">
-                <div
-                  v-for="schedule in group"
-                  :key="schedule.id"
-                  @click="toggleScheduleSelection(schedule)"
-                  :class="[
-                    'p-4 rounded-lg cursor-pointer transition-all border-2',
-                    isScheduleSelected(schedule.id)
-                      ? 'bg-orange-50 border-orange-primary shadow-md'
-                      : 'bg-white border-gray-200 hover:border-orange-200 hover:shadow-sm'
-                  ]"
-                >
-                  <div class="flex items-start justify-between mb-2">
-                    <p class="text-sm font-bold text-gray-900">{{ formatTime(schedule.startTime) }}</p>
-                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                      {{ schedule.projectName || '프로젝트' }}
-                    </span>
+            <div v-else-if="filteredSchedules.length > 0" class="space-y-6">
+              <div v-for="(group, date) in groupedSchedules" :key="date">
+                <div class="text-xs font-semibold text-gray-500 mb-3 ml-1">{{ formatGroupDate(date) }}</div>
+                <div class="space-y-2">
+                  <div
+                    v-for="schedule in group"
+                    :key="schedule.id"
+                    @click="toggleScheduleSelection(schedule)"
+                    class="group p-4 rounded-2xl cursor-pointer transition-all duration-200 border relative overflow-hidden"
+                    :class="isScheduleSelected(schedule.id) ? 'bg-white border-blue-500 shadow-md' : 'bg-white border-gray-100 hover:border-blue-200 hover:shadow-sm'"
+                  >
+                    <div class="flex justify-between items-start mb-1">
+                      <span class="text-sm font-bold text-gray-900">{{ formatTime(schedule.startTime) }}</span>
+                      <span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium truncate max-w-[80px]">
+                        {{ schedule.projectName || 'No Project' }}
+                      </span>
+                    </div>
+                    <h4 class="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ schedule.title }}</h4>
+                    <div v-if="isScheduleSelected(schedule.id)" class="absolute top-0 right-0 w-0 h-0 border-t-[12px] border-r-[12px] border-t-blue-500 border-r-blue-500 rounded-bl-md"></div>
                   </div>
-                  <p class="text-sm font-medium text-gray-800 mb-1">{{ schedule.title }}</p>
-                  <p v-if="schedule.description" class="text-xs text-gray-500 line-clamp-2">{{ schedule.description }}</p>
                 </div>
               </div>
             </div>
+
+            <div v-else class="text-center py-8 text-gray-400">
+              <p class="text-sm">No upcoming schedules</p>
+            </div>
           </div>
 
-          <!-- Empty State -->
-          <div v-else class="p-12 text-center">
-            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p v-if="selectedProjects.length > 0" class="text-gray-500 text-sm mb-2">
-              선택한 프로젝트에 다가오는 일정이 없습니다
-            </p>
-            <p v-else class="text-gray-500 text-sm mb-2">다가오는 일정이 없습니다</p>
-            <router-link to="/management/schedule" class="text-orange-primary text-sm hover:underline">
-              일정 추가하기
-            </router-link>
+          <!-- Projects -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase">Projects</h3>
+              <span v-if="selectedProjects.length > 0" class="text-xs text-blue-600 font-bold">{{ selectedProjects.length }} selected</span>
+            </div>
+
+            <div v-if="projectsLoading" class="space-y-2">
+              <div v-for="i in 3" :key="i" class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+            </div>
+
+            <div v-else-if="projects.length > 0" class="space-y-2">
+              <div
+                v-for="(project, index) in projects"
+                :key="project.id"
+                @click="toggleProjectSelection(project)"
+                class="flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white hover:shadow-sm"
+                :class="isProjectSelected(project.id) ? 'bg-white shadow-sm ring-1 ring-blue-500' : ''"
+              >
+                <div :class="getProjectIconClass(index)" class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                  {{ project.name.substring(0, 1) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-bold text-gray-800 truncate">{{ project.name }}</div>
+                  <div class="text-xs text-gray-500">{{ getProjectScenarioCount(project.id) }} scenarios</div>
+                </div>
+                <div v-if="isProjectSelected(project.id)" class="w-2 h-2 bg-blue-500 rounded-full"></div>
+              </div>
+            </div>
+             <div v-else class="text-center py-8 text-gray-400">
+              <p class="text-sm">No projects found</p>
+            </div>
           </div>
+
         </div>
       </div>
 
-      <!-- Right: Project + Scenario (9 columns) -->
-      <div class="col-span-12 lg:col-span-9 space-y-6">
-        <!-- Project Section -->
-        <div class="bg-white rounded-2xl shadow-md p-4">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-bold text-gray-800">내 프로젝트</h2>
-            <span v-if="selectedProjects.length > 0" class="text-sm text-gray-600">
-              {{ selectedProjects.length }}개 선택됨
-            </span>
-          </div>
+      <!-- Right Content (Scenarios Grid) -->
+      <div class="flex-1 overflow-y-auto bg-white p-8">
+        <div v-if="scenariosLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="i in 6" :key="i" class="h-64 bg-gray-50 rounded-3xl animate-pulse"></div>
+        </div>
 
-          <!-- 로딩 -->
-          <div v-if="projectsLoading" class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-5 gap-3">
-            <div v-for="i in 3" :key="i" class="h-24 bg-gray-200 rounded-xl animate-pulse"></div>
-          </div>
-
-          <!-- 프로젝트 카드 -->
-          <div v-else-if="projects.length > 0" class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-5 gap-3">
-            <div
-              v-for="(project, index) in projects"
-              :key="project.id"
-              @click="toggleProjectSelection(project)"
-              :class="[
-                'p-3 rounded-xl cursor-pointer transition-all border-2',
-                isProjectSelected(project.id)
-                  ? 'border-orange-primary shadow-lg scale-105'
-                  : 'border-gray-200 hover:border-orange-200 hover:shadow-md'
-              ]"
-            >
-              <div class="flex items-start justify-between mb-2">
-                <div :class="getProjectIconClass(index)" class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                  {{ project.name.substring(0, 1) }}
-                </div>
-                <span class="text-xs text-gray-500">{{ project.scenarioCount || 0 }}개</span>
+        <div v-else-if="scenarios.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="scenario in scenarios"
+            :key="scenario.id"
+            class="group bg-white border border-gray-100 rounded-3xl p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
+          >
+            <!-- Card Header -->
+            <div class="flex justify-between items-start mb-4">
+              <div class="flex gap-2">
+                <span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold uppercase tracking-wide">
+                  {{ scenario.language }}
+                </span>
+                <span 
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide"
+                  :class="{
+                    'bg-green-100 text-green-700': scenario.difficulty === 'beginner',
+                    'bg-yellow-100 text-yellow-700': scenario.difficulty === 'intermediate',
+                    'bg-red-100 text-red-700': scenario.difficulty === 'advanced'
+                  }"
+                >
+                  {{ scenario.difficulty }}
+                </span>
               </div>
-              <h3 class="font-bold text-gray-800 text-sm mb-1 truncate">{{ project.name }}</h3>
-              <p class="text-xs text-gray-500 line-clamp-1">{{ project.description || '설명 없음' }}</p>
+              
+              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click.stop="openEditDialog(scenario)" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-blue-600 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <button @click.stop="deleteScenario(scenario.id)" class="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-600 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- Empty State -->
-          <div v-else class="text-center py-4">
-            <p class="text-gray-500 text-sm mb-2">프로젝트가 없습니다</p>
-            <router-link to="/management/project" class="text-orange-primary text-sm hover:underline">
-              프로젝트 생성하기
-            </router-link>
+            <!-- Title & Desc -->
+            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ scenario.title }}</h3>
+            <p class="text-sm text-gray-500 mb-6 line-clamp-3 flex-1">{{ scenario.description }}</p>
+
+            <!-- Roles -->
+            <div class="bg-gray-50 rounded-2xl p-4 mb-6 space-y-2">
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-16 text-gray-400 font-medium">You</span>
+                <span class="font-bold text-gray-800">{{ scenario.roles.user }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-16 text-gray-400 font-medium">AI</span>
+                <span class="font-bold text-gray-800">{{ scenario.roles.ai }}</span>
+              </div>
+            </div>
+
+            <!-- Action -->
+            <button 
+              @click="startPractice(scenario.id)"
+              class="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
+            >
+              <span>Start Practice</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Scenario Section -->
-        <div class="bg-white rounded-2xl shadow-md p-6 min-h-[400px]">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-800">시나리오</h2>
-            <button
-              @click="showCreateDialog = true"
-              class="px-4 py-2 bg-orange-primary text-white text-sm font-medium rounded-lg hover:bg-orange-medium transition-colors"
-            >
-              시나리오 생성
-            </button>
+        <!-- Empty State -->
+        <div v-else class="h-full flex flex-col items-center justify-center text-gray-400">
+          <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
-
-          <!-- 시나리오 목록 -->
-          <div v-if="scenarios.length > 0">
-            <!-- 로딩 상태 -->
-            <div v-if="scenariosLoading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div v-for="i in 3" :key="i" class="h-48 bg-gray-200 rounded-xl animate-pulse"></div>
-            </div>
-
-            <!-- 시나리오 목록 -->
-            <div v-else-if="scenarios.length > 0" class="space-y-4">
-              <div class="mb-2">
-                <p class="text-sm text-gray-600">{{ scenarios.length }}개의 시나리오가 생성되었습니다</p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                  v-for="scenario in scenarios"
-                  :key="scenario.id"
-                  class="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-orange-primary hover:shadow-md transition-all"
-                >
-                  <!-- 헤더 -->
-                  <div class="flex items-start justify-between mb-3">
-                    <h4 class="font-bold text-gray-900 text-base flex-1 mr-2">{{ scenario.title }}</h4>
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full whitespace-nowrap">
-                        {{ scenario.language.toUpperCase() }}
-                      </span>
-                      <!-- 수정/삭제 버튼 -->
-                      <button
-                        @click="openEditDialog(scenario)"
-                        class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="수정"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        @click="deleteScenario(scenario.id)"
-                        class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="삭제"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- 설명 -->
-                  <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ scenario.description }}</p>
-
-                  <!-- 역할 -->
-                  <div class="mb-3 space-y-1">
-                    <div class="flex items-center gap-2 text-xs">
-                      <span class="text-gray-500">내 역할:</span>
-                      <span class="font-medium text-gray-700">{{ scenario.roles.user }}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs">
-                      <span class="text-gray-500">상대 역할:</span>
-                      <span class="font-medium text-gray-700">{{ scenario.roles.ai }}</span>
-                    </div>
-                  </div>
-
-                  <!-- 태그들 -->
-                  <div class="flex flex-wrap gap-2 mb-3">
-                    <span class="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
-                      {{ scenario.difficulty === 'beginner' ? '초급' : scenario.difficulty === 'intermediate' ? '중급' : '고급' }}
-                    </span>
-                    <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                      {{ scenario.category }}
-                    </span>
-                  </div>
-
-                  <!-- 필수 용어 -->
-                  <div v-if="scenario.requiredTerminology && scenario.requiredTerminology.length > 0" class="mb-3">
-                    <p class="text-xs text-gray-500 mb-1">핵심 용어:</p>
-                    <div class="flex flex-wrap gap-1">
-                      <span
-                        v-for="term in scenario.requiredTerminology.slice(0, 3)"
-                        :key="term"
-                        class="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded"
-                      >
-                        {{ term }}
-                      </span>
-                      <span
-                        v-if="scenario.requiredTerminology.length > 3"
-                        class="text-xs px-2 py-0.5 text-gray-500"
-                      >
-                        +{{ scenario.requiredTerminology.length - 3 }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- 액션 버튼 -->
-                  <button
-                    @click="startPractice(scenario.id)"
-                    class="w-full py-2 bg-orange-primary text-white text-sm font-medium rounded-lg hover:bg-orange-medium transition-colors"
-                  >
-                    연습 시작하기
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 시나리오 없을 때 -->
-            <div v-else class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-              <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <h4 class="text-lg font-semibold text-gray-700 mb-2">AI 회화 연습</h4>
-              <p class="text-gray-500 text-sm mb-4">
-                프로젝트와 일정을 기반으로 시나리오를 생성할 수 있습니다.
-              </p>
-              <p class="text-gray-400 text-xs">
-                우측 상단의 "시나리오 생성" 버튼을 클릭하여 시작하세요.
-              </p>
-            </div>
-          </div>
-
-          <!-- 시나리오가 없을 때 -->
-          <div v-else class="flex items-center justify-center h-64">
-            <div class="text-center">
-              <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p class="text-gray-500 text-lg mb-2">생성된 시나리오가 없습니다</p>
-              <p class="text-gray-400 text-sm">우측 상단의 "시나리오 생성" 버튼을 클릭하여 시나리오를 생성하세요.</p>
-            </div>
-          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">No Scenarios Found</h3>
+          <p class="text-gray-500 max-w-sm text-center mb-8">Select a schedule or project from the left sidebar, or create a new scenario manually.</p>
+          <button @click="showCreateDialog = true" class="text-blue-600 font-bold hover:underline">Create New Scenario</button>
         </div>
       </div>
     </div>
 
-    <!-- Scenario Generation Dialog -->
-    <div v-if="showCreateDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click="closeCreateDialog">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-        <h3 class="text-xl font-bold text-gray-800 mb-4">시나리오 생성</h3>
-
-        <!-- Tabs -->
-        <div class="flex border-b border-gray-200 mb-6">
-          <button
-            @click="creationMode = 'auto'"
-            :class="[
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-              creationMode === 'auto'
-                ? 'border-orange-primary text-orange-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            ]"
-          >
-            프로젝트 기반 자동 생성
-          </button>
-          <button
-            @click="creationMode = 'manual'"
-            :class="[
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-              creationMode === 'manual'
-                ? 'border-orange-primary text-orange-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            ]"
-          >
-            직접 입력
+    <!-- Create Dialog -->
+    <div v-if="showCreateDialog" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click="closeCreateDialog">
+      <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+        <!-- Header -->
+        <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h3 class="text-2xl font-bold text-gray-900">Create Scenario</h3>
+          <button @click="closeCreateDialog" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <!-- Auto Generation Form -->
-        <div v-if="creationMode === 'auto'" class="space-y-4">
-          <!-- Language selector -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">회화 언어</label>
-            <select v-model="generateOptions.language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option value="en">English</option>
-              <option value="zh">中文</option>
-              <option value="ja">日本語</option>
-              <option value="ko">한국어</option>
-            </select>
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8">
+          <!-- Tabs -->
+          <div class="flex p-1 bg-gray-100 rounded-xl mb-8">
+            <button
+              @click="creationMode = 'auto'"
+              class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all"
+              :class="creationMode === 'auto' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+              Auto Generate
+            </button>
+            <button
+              @click="creationMode = 'manual'"
+              class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all"
+              :class="creationMode === 'manual' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            >
+              Manual Input
+            </button>
           </div>
 
-          <!-- Difficulty selector -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">난이도</label>
-            <select v-model="generateOptions.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option value="beginner">초급</option>
-              <option value="intermediate">중급</option>
-              <option value="advanced">고급</option>
-            </select>
+          <!-- Auto Form -->
+          <div v-if="creationMode === 'auto'" class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
+                <select v-model="generateOptions.language" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                  <option value="en">English</option>
+                  <option value="zh">中文</option>
+                  <option value="ja">日本語</option>
+                  <option value="ko">한국어</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
+                <select v-model="generateOptions.difficulty" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Project (Optional)</label>
+              <select v-model="selectedProjectForGeneration" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                <option :value="null">None</option>
+                <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+              </select>
+            </div>
+
+            <div v-if="selectedProjectForGeneration" class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Schedule (Optional)</label>
+              <select v-model="selectedScheduleId" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                <option :value="null">None (Use entire project)</option>
+                <option v-for="schedule in schedulesForSelectedProject" :key="schedule.id" :value="schedule.id">
+                  {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Count</label>
+              <input v-model.number="generateOptions.count" type="number" min="1" max="10" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+            </div>
           </div>
 
-          <!-- Project Selection -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 선택 (선택사항)</label>
-            <select v-model="selectedProjectForGeneration" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option :value="null">선택 안 함</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }}
-              </option>
-            </select>
-          </div>
+          <!-- Manual Form -->
+          <div v-else class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
+                <select v-model="generateOptions.language" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                  <option value="en">English</option>
+                  <option value="zh">中文</option>
+                  <option value="ja">日本語</option>
+                  <option value="ko">한국어</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
+                <select v-model="generateOptions.difficulty" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+            </div>
 
-          <!-- Schedule Selection (Only shows when project is selected) -->
-          <div v-if="selectedProjectForGeneration">
-            <label class="block text-sm font-medium text-gray-700 mb-2">일정 선택 (선택사항)</label>
-            <select v-model="selectedScheduleId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option :value="null">선택 안 함 (프로젝트 전체)</option>
-              <option v-for="schedule in schedulesForSelectedProject" :key="schedule.id" :value="schedule.id">
-                {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
-              </option>
-            </select>
-            <p class="text-xs text-gray-500 mt-1">일정을 선택하지 않으면 프로젝트 전체 시나리오가 생성됩니다</p>
-          </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+              <input v-model="manualScenario.title" type="text" placeholder="e.g. Product Demo Meeting" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+            </div>
 
-          <!-- Count selector -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">생성 개수</label>
-            <input
-              v-model.number="generateOptions.count"
-              type="number"
-              min="1"
-              max="10"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            />
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
+              <textarea v-model="manualScenario.scenarioText" rows="4" placeholder="Describe the scenario context..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Role</label>
+                <input v-model="manualScenario.userRole" type="text" placeholder="e.g. PM" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Role</label>
+                <input v-model="manualScenario.aiRole" type="text" placeholder="e.g. Developer" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (Comma separated)</label>
+              <input v-model="manualScenario.requiredTerminology" type="text" placeholder="e.g. agile, sprint, backlog" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+            </div>
           </div>
         </div>
 
-        <!-- Manual Creation Form -->
-        <div v-else class="space-y-4">
-          <!-- Common options -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">회화 언어</label>
-              <select v-model="generateOptions.language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
+        <!-- Footer -->
+        <div class="p-8 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
+          <button @click="closeCreateDialog" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors">Cancel</button>
+          <button 
+            @click="handleGenerateScenarios"
+            :disabled="creationMode === 'manual' && !isManualFormValid"
+            class="px-8 py-3 bg-black text-white rounded-xl font-bold shadow-lg shadow-gray-200 hover:bg-gray-800 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ creationMode === 'auto' ? 'Generate' : 'Create' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Dialog -->
+    <div v-if="showEditDialog" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click="showEditDialog = false">
+      <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+        <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h3 class="text-2xl font-bold text-gray-900">Edit Scenario</h3>
+          <button @click="showEditDialog = false" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-6">
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+            <input v-model="editingScenario.title" type="text" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
+            <textarea v-model="editingScenario.scenarioText" rows="6" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Role</label>
+              <input v-model="editingScenario.roles.user" type="text" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Role</label>
+              <input v-model="editingScenario.roles.ai" type="text" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
+              <select v-model="editingScenario.language" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
                 <option value="en">English</option>
                 <option value="zh">中文</option>
                 <option value="ja">日本語</option>
                 <option value="ko">한국어</option>
               </select>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">난이도</label>
-              <select v-model="generateOptions.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-                <option value="beginner">초급</option>
-                <option value="intermediate">중급</option>
-                <option value="advanced">고급</option>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
+              <select v-model="editingScenario.difficulty" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
               </select>
             </div>
           </div>
 
-          <!-- Title -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">시나리오 제목 *</label>
-            <input
-              v-model="manualScenario.title"
-              type="text"
-              placeholder="예: 제품 데모 준비 회의 / Product Demo Preparation Meeting"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            />
-          </div>
-
-          <!-- Scenario Description (Merged) -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">시나리오 설명 *</label>
-            <textarea
-              v-model="manualScenario.scenarioText"
-              rows="4"
-              placeholder="예: You are preparing for an important product demonstration. Discuss with your team about the key features to highlight and the presentation flow."
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            ></textarea>
-            <p class="text-xs text-gray-500 mt-1">선택한 회화 언어로 작성하세요</p>
-          </div>
-
-          <!-- Project Selection -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 선택 (선택사항)</label>
-            <select v-model="selectedProjectForGeneration" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option :value="null">선택 안 함</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Schedule Selection (Only shows when project is selected) -->
-          <div v-if="selectedProjectForGeneration">
-            <label class="block text-sm font-medium text-gray-700 mb-2">일정 선택 (선택사항)</label>
-            <select v-model="selectedScheduleId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-              <option :value="null">선택 안 함 (프로젝트 전체)</option>
-              <option v-for="schedule in schedulesForSelectedProject" :key="schedule.id" :value="schedule.id">
-                {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
-              </option>
-            </select>
-            <p class="text-xs text-gray-500 mt-1">일정을 선택하지 않으면 프로젝트 전체 시나리오가 생성됩니다</p>
-          </div>
-
-          <!-- Roles -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">내 역할 *</label>
-              <input
-                v-model="manualScenario.userRole"
-                type="text"
-                placeholder="예: Product Manager"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">상대 역할 *</label>
-              <input
-                v-model="manualScenario.aiRole"
-                type="text"
-                placeholder="예: Team Lead"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <!-- Required Terminology -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">필수 용어 (쉼표로 구분)</label>
-            <input
-              v-model="manualScenario.requiredTerminology"
-              type="text"
-              placeholder="예: demonstration, feature, presentation, stakeholder"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            />
-            <p class="text-xs text-gray-500 mt-1">쉼표(,)로 구분하여 입력하세요</p>
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords</label>
+            <input v-model="editingScenario.requiredTerminologyText" type="text" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
           </div>
         </div>
 
-        <!-- Buttons -->
-        <div class="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-200">
-          <button
-            @click="closeCreateDialog"
-            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            @click="handleGenerateScenarios"
-            :disabled="creationMode === 'manual' && !isManualFormValid"
-            :class="[
-              'px-4 py-2 rounded-lg transition-colors font-medium',
-              creationMode === 'manual' && !isManualFormValid
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-orange-primary text-white hover:bg-orange-medium'
-            ]"
-          >
-            {{ creationMode === 'auto' ? '생성하기' : '추가하기' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Edit Scenario Dialog -->
-    <div v-if="showEditDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click="showEditDialog = false">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-        <h3 class="text-xl font-bold text-gray-800 mb-4">시나리오 수정</h3>
-
-        <div class="space-y-4">
-          <!-- Title -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">제목 *</label>
-            <input
-              v-model="editingScenario.title"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            />
-          </div>
-
-          <!-- Scenario Text -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">시나리오 설명 *</label>
-            <textarea
-              v-model="editingScenario.scenarioText"
-              rows="6"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            ></textarea>
-          </div>
-
-          <!-- Roles -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">내 역할 *</label>
-              <input
-                v-model="editingScenario.roles.user"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">상대 역할 *</label>
-              <input
-                v-model="editingScenario.roles.ai"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <!-- Language & Difficulty -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">언어</label>
-              <select v-model="editingScenario.language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-                <option value="en">영어 (English)</option>
-                <option value="ko">한국어 (Korean)</option>
-                <option value="zh">중국어 (Chinese)</option>
-                <option value="ja">일본어 (Japanese)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">난이도</label>
-              <select v-model="editingScenario.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent">
-                <option value="beginner">초급 (Beginner)</option>
-                <option value="intermediate">중급 (Intermediate)</option>
-                <option value="advanced">고급 (Advanced)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Required Terminology -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">핵심 용어 (선택사항)</label>
-            <input
-              v-model="editingScenario.requiredTerminologyText"
-              type="text"
-              placeholder="쉼표로 구분하여 입력 (예: project, deadline, budget)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex justify-end gap-3 mt-6">
-          <button
-            @click="showEditDialog = false"
-            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            취소
-          </button>
-          <button
+        <div class="p-8 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
+          <button @click="showEditDialog = false" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors">Cancel</button>
+          <button 
             @click="saveEditedScenario"
             :disabled="!isEditFormValid"
-            :class="[
-              'px-4 py-2 rounded-lg transition-colors font-medium',
-              !isEditFormValid
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-orange-primary text-white hover:bg-orange-medium'
-            ]"
+            class="px-8 py-3 bg-black text-white rounded-xl font-bold shadow-lg shadow-gray-200 hover:bg-gray-800 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            저장
+            Save Changes
           </button>
         </div>
       </div>
@@ -619,7 +420,7 @@ const generateOptions = ref({
 const manualScenario = ref({
   title: '',
   scenarioText: '',
-  category: '일반',
+  category: 'General',
   userRole: '',
   aiRole: '',
   requiredTerminology: ''
@@ -647,12 +448,22 @@ const iconClasses = [
   'bg-gradient-to-br from-blue-500 to-blue-600',
   'bg-gradient-to-br from-purple-500 to-purple-600',
   'bg-gradient-to-br from-green-500 to-green-600',
-  'bg-gradient-to-br from-orange-500 to-orange-600',
+  'bg-gradient-to-br from-violet-500 to-violet-600',
   'bg-gradient-to-br from-indigo-500 to-indigo-600'
 ]
 
 function getProjectIconClass(index) {
   return iconClasses[index % iconClasses.length]
+}
+
+// 프로젝트별 시나리오 개수 계산
+function getProjectScenarioCount(projectId) {
+  // scenarios 배열에서 해당 프로젝트를 포함하는 시나리오 개수 반환
+  return scenarios.value.filter(scenario => {
+    // scenario.projectIds가 없으면 빈 배열로 처리
+    const projectIds = scenario.projectIds || []
+    return projectIds.includes(projectId)
+  }).length
 }
 
 // 수동 생성 폼 유효성 검사
@@ -727,16 +538,16 @@ function formatGroupDate(dateString) {
   const todayOnly = today.toDateString()
   const tomorrowOnly = tomorrow.toDateString()
 
-  if (dateOnly === todayOnly) return '오늘'
-  if (dateOnly === tomorrowOnly) return '내일'
+  if (dateOnly === todayOnly) return 'Today'
+  if (dateOnly === tomorrowOnly) return 'Tomorrow'
 
-  return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })
 }
 
 function formatTime(dateTimeString) {
   if (!dateTimeString) return ''
   const date = new Date(dateTimeString)
-  return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
 function formatScheduleTime(dateTimeString) {
@@ -747,11 +558,11 @@ function formatScheduleTime(dateTimeString) {
   const todayOnly = today.toDateString()
 
   if (dateOnly === todayOnly) {
-    return `오늘 ${date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}`
+    return `Today ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
   }
 
-  return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) + ' ' +
-         date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+         date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
 // 일정이 선택되었는지 확인
@@ -849,7 +660,7 @@ async function handleGenerateScenarios() {
         : selectedProjects.value
 
       if (projectsToUse.length === 0) {
-        alert('프로젝트를 선택해주세요.')
+        alert('Please select a project.')
         scenariosLoading.value = false
         showCreateDialog.value = true
         return
@@ -886,6 +697,8 @@ async function handleGenerateScenarios() {
       await loadScenariosForSchedules()
     } else {
       // 수동 생성 모드
+      console.log('Creating manual scenario:', manualScenario.value)
+
       // Generate brief description from scenarioText (first 2 sentences)
       const sentences = manualScenario.value.scenarioText.split(/[.!?]\s+/).filter(s => s.trim())
       const description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
@@ -908,13 +721,14 @@ async function handleGenerateScenarios() {
       }
 
       // 백엔드 API 호출 시도
-      await scenarioService.create(scenarioData)
+      const response = await scenarioService.create(scenarioData)
+      console.log('Successfully created manual scenario:', response)
 
       // 폼 초기화
       manualScenario.value = {
         title: '',
         scenarioText: '',
-        category: '일반',
+        category: 'General',
         userRole: '',
         aiRole: '',
         requiredTerminology: ''
@@ -962,15 +776,66 @@ async function handleGenerateScenarios() {
       manualScenario.value = {
         title: '',
         scenarioText: '',
-        category: '일반',
+        category: 'General',
         userRole: '',
         aiRole: '',
         requiredTerminology: ''
       }
     } else {
-      // 자동 생성 모드 - 백엔드 API 호출
-      // TODO: 실제 API 연동 필요
-      alert('자동 시나리오 생성 기능은 현재 개발 중입니다.')
+      // 자동 생성 모드 - 더미 데이터 사용
+      const dummyScenarios = [
+      {
+        id: '1',
+        title: 'Product Demo Preparation',
+        description: 'Meeting to prepare demo scenarios for new product launch.',
+        scenarioText: 'You are preparing for an important product demonstration. Discuss with your team about the key features to highlight and the presentation flow.',
+        language: generateOptions.value.language,
+        difficulty: generateOptions.value.difficulty,
+        category: 'Collaboration',
+        roles: {
+          user: 'Product Manager',
+          ai: 'Development Team Lead'
+        },
+        requiredTerminology: ['demonstration', 'feature', 'presentation', 'stakeholder'],
+        createdAt: new Date().toISOString(),
+        autoGenerated: true
+      },
+      {
+        id: '2',
+        title: 'Tech Support Request',
+        description: 'Scenario handling customer technical support request.',
+        scenarioText: 'A customer is experiencing technical issues with the product. Help them troubleshoot and resolve the problem.',
+        language: generateOptions.value.language,
+        difficulty: generateOptions.value.difficulty,
+        category: 'Support',
+        roles: {
+          user: 'Technical Support Engineer',
+          ai: 'Customer'
+        },
+        requiredTerminology: ['troubleshooting', 'configuration', 'error log', 'resolution'],
+        createdAt: new Date().toISOString(),
+        autoGenerated: true
+      },
+      {
+        id: '3',
+        title: 'Project Status Report',
+        description: 'Reporting project status to the team.',
+        scenarioText: 'Present the current project status to your team, including completed tasks, upcoming milestones, and any potential risks.',
+        language: generateOptions.value.language,
+        difficulty: generateOptions.value.difficulty,
+        category: 'Collaboration',
+        roles: {
+          user: 'Project Coordinator',
+          ai: 'Team Member'
+        },
+        requiredTerminology: ['milestone', 'deadline', 'progress', 'deliverable'],
+        createdAt: new Date().toISOString(),
+        autoGenerated: true
+      }
+      ]
+
+      // 선택한 개수만큼만 반환
+      scenarios.value = dummyScenarios.slice(0, generateOptions.value.count)
     }
   } finally {
     scenariosLoading.value = false
@@ -1015,12 +880,13 @@ async function saveEditedScenario() {
 
     // API 호출 (업데이트 엔드포인트가 있다면)
     await scenarioService.update(editingScenario.value.id, updateData)
+    console.log('✅ Scenario updated successfully')
 
     // 시나리오 목록 새로고침
     await loadScenariosForSchedules()
   } catch (error) {
     console.error('❌ Failed to update scenario:', error)
-    alert('시나리오 수정에 실패했습니다.')
+    alert('Failed to update scenario.')
   } finally {
     scenariosLoading.value = false
   }
@@ -1033,19 +899,20 @@ function startPractice(scenarioId) {
 
 // 시나리오 삭제
 async function deleteScenario(scenarioId) {
-  if (!confirm('이 시나리오를 삭제하시겠습니까?')) {
+  if (!confirm('Are you sure you want to delete this scenario?')) {
     return
   }
 
   try {
     scenariosLoading.value = true
     await scenarioService.delete(scenarioId)
+    console.log('🗑️  Scenario deleted successfully')
 
     // 시나리오 목록 새로고침
     await loadScenariosForSchedules()
   } catch (error) {
     console.error('❌ Failed to delete scenario:', error)
-    alert('시나리오 삭제에 실패했습니다.')
+    alert('Failed to delete scenario.')
   } finally {
     scenariosLoading.value = false
   }
@@ -1056,24 +923,7 @@ async function loadProjects() {
   projectsLoading.value = true
   try {
     const response = await projectService.getAll()
-    const allProjects = response.data.data || response.data || []
-
-    // 마감된 프로젝트(ARCHIVED) 제외
-    const activeProjects = allProjects.filter(project => project.status !== 'ARCHIVED')
-
-    // 각 프로젝트의 시나리오 개수 조회
-    for (const project of activeProjects) {
-      try {
-        const scenarioResponse = await scenarioService.getAll({ project_ids: project.id })
-        const scenarioCount = scenarioResponse.data.data?.scenarios?.length || 0
-        project.scenarioCount = scenarioCount
-      } catch (error) {
-        console.error(`Failed to load scenario count for project ${project.id}:`, error)
-        project.scenarioCount = 0
-      }
-    }
-
-    projects.value = activeProjects
+    projects.value = response.data.data || response.data || []
   } catch (error) {
     console.error('Failed to load projects:', error)
     projects.value = []
@@ -1131,10 +981,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.line-clamp-2 {
+.line-clamp-1 {
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 </style>

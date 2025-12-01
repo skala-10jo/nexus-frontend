@@ -1,8 +1,8 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
-    <div v-if="isAuthenticated" class="flex">
+  <div id="app" class="min-h-screen bg-gray-100">
+    <div v-if="isAuthenticated" class="flex h-screen overflow-hidden">
       <Sidebar />
-      <main class="flex-1 overflow-y-auto">
+      <main class="flex-1 m-4 ml-0 bg-white rounded-[2.5rem] shadow-sm overflow-hidden">
         <router-view />
       </main>
     </div>
