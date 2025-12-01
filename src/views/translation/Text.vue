@@ -1,122 +1,208 @@
 <template>
-  <div class="translation-page">
-    <!-- Compact Header with Integrated Controls -->
-    <header class="page-header">
-      <div class="header-row">
-        <div class="header-left">
-          <h1 class="page-title">
-            <svg class="title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-              />
-            </svg>
-            <div class="title-content">
-              <span class="title-text">텍스트 번역</span>
-              <span class="title-subtitle">AI 기반 고품질 다국어 번역</span>
-            </div>
-          </h1>
-        </div>
-
-        <!-- Integrated Control Bar -->
-        <div class="header-controls">
-          <ProjectSelector
-            v-model="selectedProjectId"
-            :projects="projects"
-            :context-info="contextInfo"
-            @change="onProjectChange"
-          />
-
-          <LanguageSwitcher
-            v-model:source-language="sourceLang"
-            v-model:target-language="targetLang"
-            @swap="onLanguageSwap"
-          />
+  <div class="h-full flex flex-col relative bg-white">
+    <!-- Header Section -->
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-100 bg-white z-10">
+      <!-- Row 1: Title -->
+      <div class="flex items-center gap-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">텍스트 번역</h2>
         </div>
       </div>
-    </header>
 
-    <!-- Enhanced Main Workspace -->
-    <div class="translation-workspace">
-      <div class="workspace-grid">
-        <!-- Input Panel -->
-        <div class="workspace-column input-column">
-          <InputPanel
-            v-model="sourceText"
-            :is-translating="isTranslating"
-            :placeholder="inputPlaceholder"
-            @translate="handleTranslate"
-            @clear="handleClear"
-            @paste="handlePaste"
-          />
-        </div>
+      <!-- Row 2: Controls -->
+      <div class="flex items-center gap-4">
+        <LanguageSwitcher
+          v-model:source-language="sourceLang"
+          v-model:target-language="targetLang"
+          @swap="onLanguageSwap"
+        />
 
-        <!-- Output Panel -->
-        <div class="workspace-column output-column">
-          <OutputPanel
-            :translated-text="translatedText"
-            :detected-terms="detectedTerms"
-            :translation-result="translationResult"
-            :is-translating="isTranslating"
-            @copy="handleCopy"
-            @export="handleExport"
-          />
-        </div>
+        <div class="h-10 w-px bg-gray-200 mx-2"></div>
+
+        <ProjectSelector
+          v-model="selectedProjectId"
+          :projects="projects"
+          :context-info="contextInfo"
+          @change="onProjectChange"
+          class="min-w-[240px]"
+        />
       </div>
     </div>
 
-    <!-- Context Panel (Expandable) -->
-    <div
-      v-if="selectedProjectId && translationResult"
-      class="context-panel"
-      :class="{ expanded: contextExpanded }"
-    >
-      <button @click="contextExpanded = !contextExpanded" class="context-toggle">
-        <svg class="toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-        <span>컨텍스트 상세 보기</span>
-      </button>
+    <!-- Workspace Section -->
+    <div class="flex-1 bg-gray-50/50 p-6 overflow-hidden">
+      <div class="h-full grid grid-cols-2 gap-6 max-w-[1920px] mx-auto">
+        
+        <!-- Input Card -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden group transition-all hover:shadow-md">
+          <div class="flex-1 relative p-8">
+            <textarea
+              v-model="sourceText"
+              class="w-full h-full text-lg leading-relaxed resize-none focus:outline-none bg-transparent placeholder-gray-300"
+              :placeholder="inputPlaceholder"
+              spellcheck="false"
+            ></textarea>
+            
+            <button 
+              v-if="sourceText"
+              @click="handleClear"
+              class="absolute top-6 right-6 p-2 text-gray-300 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
 
-      <div v-if="contextExpanded" class="context-content">
-        <div class="context-section">
-          <h4 class="context-title">📄 사용된 컨텍스트</h4>
-          <p class="context-summary">
-            {{ translationResult.contextSummary || '컨텍스트 요약이 없습니다.' }}
+          <!-- Input Action Bar -->
+          <div class="h-20 px-8 border-t border-gray-50 flex justify-between items-center bg-white flex-shrink-0">
+            <div class="text-xs font-bold text-gray-300 tracking-wider">
+              {{ sourceText.length }} / 5000 CHARS
+            </div>
+            <div class="flex gap-3">
+              <button 
+                @click="handlePaste"
+                class="px-4 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all flex items-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                Paste
+              </button>
+              <button 
+                @click="handleTranslate"
+                :disabled="!sourceText || isTranslating"
+                class="px-8 py-2.5 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-105 transition-all shadow-lg shadow-gray-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+              >
+                <span v-if="isTranslating" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span v-else>Translate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Card -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden relative">
+          <!-- Output Header -->
+          <div class="h-16 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-50 bg-white">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Result</span>
+            <div v-if="translationResult" class="flex gap-2">
+              <span v-if="translationResult.contextUsed" class="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                Context
+              </span>
+              <span v-if="translationResult.termsCount > 0" class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold uppercase tracking-wide">
+                {{ translationResult.termsCount }} Terms
+              </span>
+            </div>
+          </div>
+
+          <div class="flex-1 relative overflow-y-auto p-8 bg-gray-50/30">
+            <!-- Loading -->
+            <div v-if="isTranslating" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10 transition-all">
+              <div class="w-12 h-12 border-4 border-gray-100 border-t-black rounded-full animate-spin mb-4"></div>
+              <p class="text-sm font-bold text-gray-500">Translating...</p>
+            </div>
+
+            <!-- Empty -->
+            <div v-if="!translatedText && !isTranslating" class="h-full flex flex-col items-center justify-center text-gray-400">
+              <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4 rotate-12">
+                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+              </div>
+              <p class="text-sm font-medium text-gray-400">Translation will appear here</p>
+            </div>
+
+            <!-- Content -->
+            <TranslatedText
+              v-else
+              :text="translatedText"
+              :detected-terms="detectedTerms"
+              @term-click="handleTermClick"
+              class="text-lg leading-relaxed text-gray-800"
+            />
+          </div>
+
+          <!-- Output Action Bar -->
+          <div class="h-20 px-8 border-t border-gray-50 flex justify-end items-center gap-3 bg-white flex-shrink-0">
+            <button 
+              v-if="translatedText"
+              @click="handleCopy"
+              class="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all flex items-center gap-2 shadow-sm"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              Copy
+            </button>
+            <button 
+              v-if="translatedText"
+              @click="handleExport"
+              class="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all flex items-center gap-2 shadow-sm"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Export
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Context Panel (Floating) -->
+    <div 
+      v-if="selectedProjectId && translationResult"
+      class="absolute bottom-12 left-12 z-30"
+    >
+      <div 
+        class="bg-white rounded-2xl shadow-xl border border-gray-100 transition-all duration-300 overflow-hidden"
+        :class="contextExpanded ? 'w-96' : 'w-auto'"
+      >
+        <button 
+          @click="contextExpanded = !contextExpanded"
+          class="flex items-center gap-3 px-4 py-3 w-full hover:bg-gray-50 transition-colors"
+        >
+          <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <span class="font-bold text-sm text-gray-800 whitespace-nowrap">Context Details</span>
+          <svg 
+            class="w-4 h-4 text-gray-400 ml-auto transition-transform duration-300"
+            :class="contextExpanded ? 'rotate-180' : ''"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div v-if="contextExpanded" class="p-4 border-t border-gray-100 bg-gray-50/50">
+          <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Context Summary</h4>
+          <p class="text-sm text-gray-600 leading-relaxed bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+            {{ translationResult.contextSummary || 'No context summary available.' }}
           </p>
         </div>
       </div>
     </div>
 
+    <!-- Term Detail Modal -->
+    <TermDetailModal
+      v-if="selectedTerm"
+      :term="selectedTerm"
+      @close="selectedTerm = null"
+    />
+
     <!-- Toast Notifications -->
     <Transition name="toast">
-      <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
-        <svg v-if="toast.type === 'success'" class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <svg v-else-if="toast.type === 'error'" class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <span>{{ toast.message }}</span>
+      <div v-if="toast.show" class="fixed bottom-8 right-8 z-50 flex items-center gap-3 px-6 py-4 bg-black text-white rounded-2xl shadow-2xl">
+        <svg v-if="toast.type === 'success'" class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+        <svg v-else class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span class="font-medium text-sm">{{ toast.message }}</span>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ProjectSelector from '@/components/translation/ProjectSelector.vue'
 import LanguageSwitcher from '@/components/translation/LanguageSwitcher.vue'
-import InputPanel from '@/components/translation/InputPanel.vue'
-import OutputPanel from '@/components/translation/OutputPanel.vue'
+import TranslatedText from '@/components/translation/TranslatedText.vue'
+import DetectedTermsBar from '@/components/translation/DetectedTermsBar.vue'
+import TermDetailModal from '@/components/translation/TermDetailModal.vue'
 import { translateText } from '@/services/translationService'
 import { getUserProjects } from '@/services/projectService'
 
@@ -134,6 +220,7 @@ const detectedTerms = ref([])
 const translationResult = ref(null)
 const isTranslating = ref(false)
 const contextExpanded = ref(false)
+const selectedTerm = ref(null)
 
 // Toast
 const toast = ref({
@@ -145,9 +232,9 @@ const toast = ref({
 // Computed
 const inputPlaceholder = computed(() => {
   if (selectedProjectId.value) {
-    return '프로젝트 컨텍스트를 활용하여 번역합니다. 텍스트를 입력하세요...'
+    return 'Translating with project context. Enter text...'
   }
-  return '번역할 텍스트를 입력하세요...'
+  return 'Enter text to translate...'
 })
 
 // Methods
@@ -157,18 +244,18 @@ async function loadProjects() {
     projects.value = response.data.data || []
   } catch (error) {
     console.error('Failed to load projects:', error)
-    showToast('프로젝트 목록을 불러오는데 실패했습니다.', 'error')
+    showToast('Failed to load projects.', 'error')
   }
 }
 
 async function handleTranslate() {
   if (!sourceText.value.trim()) {
-    showToast('번역할 텍스트를 입력해주세요.', 'error')
+    showToast('Please enter text to translate.', 'error')
     return
   }
 
   if (sourceLang.value === targetLang.value) {
-    showToast('원본 언어와 목표 언어가 같습니다.', 'error')
+    showToast('Source and target languages are the same.', 'error')
     return
   }
 
@@ -183,7 +270,7 @@ async function handleTranslate() {
     const userId = user.id
 
     if (!userId) {
-      showToast('로그인이 필요합니다.', 'error')
+      showToast('Login required.', 'error')
       router.push('/login')
       return
     }
@@ -204,20 +291,10 @@ async function handleTranslate() {
       termsCount: result.termsCount || 0
     }
 
-    showToast('번역이 완료되었습니다!', 'success')
-
-    // Scroll to output if on mobile
-    if (window.innerWidth < 768) {
-      setTimeout(() => {
-        document.querySelector('.workspace-column:last-child')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        })
-      }, 300)
-    }
+    showToast('Translation completed!', 'success')
   } catch (error) {
     console.error('Translation error:', error)
-    const errorMessage = error.response?.data?.detail || error.message || '번역 중 오류가 발생했습니다.'
+    const errorMessage = error.response?.data?.detail || error.message || 'An error occurred during translation.'
     showToast(errorMessage, 'error')
   } finally {
     isTranslating.value = false
@@ -231,30 +308,39 @@ function handleClear() {
   translationResult.value = null
 }
 
-function handlePaste(event) {
-  // Auto-translate after paste if option enabled
-  // Can be implemented later
+async function handlePaste() {
+  try {
+    const text = await navigator.clipboard.readText()
+    sourceText.value += text
+  } catch (error) {
+    console.error('Failed to read clipboard:', error)
+    showToast('Could not read clipboard.', 'error')
+  }
 }
 
-function handleCopy() {
-  showToast('번역 결과가 복사되었습니다!', 'success')
+async function handleCopy() {
+  try {
+    await navigator.clipboard.writeText(translatedText.value)
+    showToast('Copied to clipboard!', 'success')
+  } catch (error) {
+    console.error('Failed to copy:', error)
+    showToast('Failed to copy.', 'error')
+  }
 }
 
-function handleExport(data) {
-  // Export translation result
-  const blob = new Blob([data.translatedText], { type: 'text/plain' })
+function handleExport() {
+  const blob = new Blob([translatedText.value], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `translation-${Date.now()}.txt`
   a.click()
   URL.revokeObjectURL(url)
-  showToast('번역 결과가 다운로드되었습니다!', 'success')
+  showToast('Translation exported!', 'success')
 }
 
 function onProjectChange(projectId) {
   if (projectId) {
-    // Load project context info
     const project = projects.value.find(p => p.id === projectId)
     if (project) {
       contextInfo.value = {
@@ -268,13 +354,16 @@ function onProjectChange(projectId) {
 }
 
 function onLanguageSwap() {
-  // Swap source and target text if available
   if (translatedText.value && sourceText.value) {
     const temp = sourceText.value
     sourceText.value = translatedText.value
     translatedText.value = temp
     detectedTerms.value = []
   }
+}
+
+function handleTermClick(term) {
+  selectedTerm.value = term
 }
 
 function showToast(message, type = 'success') {
@@ -289,237 +378,12 @@ function showToast(message, type = 'success') {
   }, 3000)
 }
 
-// Lifecycle
 onMounted(() => {
   loadProjects()
 })
 </script>
 
 <style scoped>
-.translation-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem 2rem;
-  max-width: 1800px;
-  margin: 0 auto;
-  min-height: 100vh;
-}
-
-/* Compact Header */
-.page-header {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.header-left {
-  flex: 1;
-  min-width: 200px;
-}
-
-.page-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 0;
-}
-
-.title-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  color: #2563EB;
-  flex-shrink: 0;
-}
-
-.title-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.title-text {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  line-height: 1.2;
-}
-
-.title-subtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  font-weight: 400;
-}
-
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* Enhanced Workspace */
-.translation-workspace {
-  flex: 1;
-  display: flex;
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  width: 100%;
-  min-height: 650px;
-}
-
-.workspace-column {
-  display: flex;
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.75rem;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.2s ease;
-}
-
-.workspace-column:hover {
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
-}
-
-.input-column {
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.input-column:focus-within {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.output-column {
-  background: linear-gradient(to bottom, #FFFFFF, #F9FAFB);
-}
-
-.context-panel {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.context-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4B5563;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.context-toggle:hover {
-  color: #2563EB;
-  background-color: #F9FAFB;
-}
-
-.toggle-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  transition: transform 0.3s ease;
-}
-
-.context-panel.expanded .toggle-icon {
-  transform: rotate(180deg);
-}
-
-.context-content {
-  padding: 1.5rem;
-  border-top: 1px solid #E5E7EB;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.context-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.context-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.context-summary {
-  font-size: 0.875rem;
-  line-height: 1.75;
-  color: #4B5563;
-  font-style: italic;
-  margin: 0;
-  padding: 1rem;
-  background-color: #F9FAFB;
-  border-left: 4px solid #2563EB;
-  border-radius: 0.5rem;
-}
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background-color: #111827;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-}
-
-.toast-success {
-  background-color: #10B981;
-}
-
-.toast-error {
-  background-color: #EF4444;
-}
-
-.toast-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;
@@ -532,70 +396,6 @@ onMounted(() => {
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(2rem);
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .header-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .header-controls {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 1024px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    min-height: auto;
-  }
-
-  .workspace-column {
-    min-height: 500px;
-  }
-}
-
-@media (max-width: 768px) {
-  .translation-page {
-    padding: 1rem;
-    gap: 1rem;
-  }
-
-  .page-header {
-    padding: 1rem;
-  }
-
-  .title-text {
-    font-size: 1.25rem;
-  }
-
-  .title-subtitle {
-    font-size: 0.75rem;
-  }
-
-  .title-icon {
-    width: 1.75rem;
-    height: 1.75rem;
-  }
-
-  .header-controls {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .workspace-column {
-    padding: 1.25rem;
-  }
-
-  .toast {
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
-  }
+  transform: translateY(1rem);
 }
 </style>

@@ -1,16 +1,27 @@
 <template>
-  <div class="p-8 max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Biz 표현 학습</h1>
+  <div class="h-full flex flex-col bg-gray-50/50">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Biz Expression</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">Learn business expressions with pronunciation practice</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Progress Indicator -->
-    <div v-if="currentView !== 'selection'" class="mb-6">
+    <div v-if="currentView !== 'selection'" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div class="flex items-center gap-2 mb-4">
         <button
           @click="handleBackButton"
           class="flex items-center gap-1 text-gray-600 hover:text-gray-800 transition"
         >
           <ChevronLeftIcon class="w-5 h-5" />
-          <span>{{ backButtonText }}</span>
+          <span class="text-sm font-medium">{{ backButtonText }}</span>
         </button>
       </div>
 
@@ -19,60 +30,60 @@
         <div class="flex items-center gap-2">
           <span
             class="flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm"
-            :class="currentView === 'practice' ? 'bg-orange-primary' : 'bg-green-500'"
+            :class="currentView === 'practice' ? 'bg-blue-600' : 'bg-green-500'"
           >
             <CheckIcon v-if="currentView === 'quiz'" class="w-5 h-5" />
             <span v-else>1</span>
           </span>
-          <span class="font-medium" :class="currentView === 'practice' ? 'text-orange-primary' : 'text-green-600'">발음 연습</span>
+          <span class="font-medium text-sm" :class="currentView === 'practice' ? 'text-blue-600' : 'text-green-600'">Practice</span>
         </div>
         <div class="flex-1 h-1 bg-gray-200 rounded">
           <div
-            class="h-full bg-orange-primary rounded transition-all duration-300"
+            class="h-full bg-blue-600 rounded transition-all duration-300"
             :style="{ width: currentView === 'quiz' ? '100%' : '0%' }"
           ></div>
         </div>
         <div class="flex items-center gap-2">
           <span
             class="flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm"
-            :class="currentView === 'quiz' ? 'bg-orange-primary text-white' : 'bg-gray-200 text-gray-500'"
+            :class="currentView === 'quiz' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'"
           >
             2
           </span>
-          <span class="font-medium" :class="currentView === 'quiz' ? 'text-orange-primary' : 'text-gray-500'">퀴즈</span>
+          <span class="font-medium text-sm" :class="currentView === 'quiz' ? 'text-blue-600' : 'text-gray-500'">Quiz</span>
         </div>
       </div>
       <p class="text-sm text-gray-500 mt-2">
         {{ selectedUnit }} > {{ selectedChapter }}
-        <span v-if="currentView === 'practice' || currentView === 'quiz'"> > 세션 {{ currentSessionIndex + 1 }}</span>
+        <span v-if="currentView === 'practice' || currentView === 'quiz'"> > Session {{ currentSessionIndex + 1 }}</span>
       </p>
     </div>
 
     <!-- View: Unit/Chapter Selection -->
     <div v-if="currentView === 'selection'">
       <!-- Step 1: Unit Selection -->
-      <div class="mb-6 bg-white rounded-lg shadow-md p-6">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center gap-2 mb-4">
-          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">1</span>
-          <h2 class="text-xl font-semibold text-gray-800">Unit 선택</h2>
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-bold text-sm">1</span>
+          <h2 class="text-lg font-semibold text-gray-900">Unit 선택</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             v-for="unit in units"
             :key="unit.unit"
             @click="selectUnit(unit.unit)"
-            class="p-6 rounded-xl border-2 transition-all duration-200 text-left"
+            class="p-5 rounded-xl border-2 transition-all duration-200 text-left"
             :class="selectedUnit === unit.unit
-              ? 'bg-orange-50 border-orange-primary shadow-md'
-              : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-sm'"
+              ? 'bg-gray-50 border-black shadow-sm'
+              : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm'"
           >
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ unit.unit }}</h3>
+                <h3 class="text-base font-semibold text-gray-900 mb-2">{{ unit.unit }}</h3>
                 <div class="flex items-center gap-2">
                   <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      class="h-full bg-orange-primary rounded-full transition-all duration-300"
+                      class="h-full bg-black rounded-full transition-all duration-300"
                       :style="{ width: `${(unit.learnedCount / unit.totalCount) * 100}%` }"
                     ></div>
                   </div>
@@ -81,7 +92,7 @@
               </div>
               <div
                 v-if="selectedUnit === unit.unit"
-                class="w-6 h-6 rounded-full bg-orange-primary flex items-center justify-center"
+                class="w-6 h-6 rounded-full bg-black flex items-center justify-center"
               >
                 <CheckIcon class="w-4 h-4 text-white" />
               </div>
@@ -91,10 +102,10 @@
       </div>
 
       <!-- Step 2: Chapter Selection -->
-      <div v-if="selectedUnit && chapters.length > 0" class="mb-6 bg-white rounded-lg shadow-md p-6">
+      <div v-if="selectedUnit && chapters.length > 0" class="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center gap-2 mb-4">
-          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">2</span>
-          <h2 class="text-xl font-semibold text-gray-800">Chapter 선택</h2>
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-bold text-sm">2</span>
+          <h2 class="text-lg font-semibold text-gray-900">Chapter 선택</h2>
           <span class="text-sm text-gray-500 ml-2">{{ selectedUnit }}</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -102,22 +113,22 @@
             v-for="chapter in chapters"
             :key="chapter.chapter"
             @click="selectChapter(chapter.chapter)"
-            class="p-4 rounded-xl border-2 transition-all duration-200 text-left hover:border-blue-300 hover:shadow-sm bg-white border-gray-200"
+            class="p-4 rounded-xl border-2 transition-all duration-200 text-left hover:border-gray-400 hover:shadow-sm bg-white border-gray-200"
           >
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="font-medium text-gray-800 mb-2">{{ chapter.chapter }}</h3>
+                <h3 class="font-medium text-gray-900 mb-2">{{ chapter.chapter }}</h3>
                 <div class="flex items-center gap-2">
                   <div class="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      class="h-full bg-blue-500 rounded-full transition-all duration-300"
+                      class="h-full bg-black rounded-full transition-all duration-300"
                       :style="{ width: `${(chapter.learnedCount / chapter.totalCount) * 100}%` }"
                     ></div>
                   </div>
                   <span class="text-xs text-gray-500">{{ chapter.learnedCount }}/{{ chapter.totalCount }}</span>
                 </div>
               </div>
-              <PlayIcon class="w-5 h-5 text-blue-500" />
+              <PlayIcon class="w-5 h-5 text-gray-600" />
             </div>
           </button>
         </div>
@@ -125,16 +136,16 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-primary"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     </div>
 
     <!-- View: Session Selection -->
-    <div v-else-if="currentView === 'sessionSelect'" class="space-y-6">
-      <div class="bg-white rounded-lg shadow-md p-6">
+    <div v-else-if="currentView === 'sessionSelect'">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center gap-2 mb-6">
-          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-primary text-white font-bold text-sm">3</span>
-          <h2 class="text-xl font-semibold text-gray-800">학습 세션 선택</h2>
+          <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-bold text-sm">3</span>
+          <h2 class="text-lg font-semibold text-gray-900">학습 세션 선택</h2>
         </div>
 
         <p class="text-gray-600 mb-6">
@@ -147,22 +158,22 @@
             v-for="(session, idx) in sessions"
             :key="idx"
             @click="startSession(idx)"
-            class="p-6 rounded-xl border-2 transition-all duration-200 text-left"
+            class="p-5 rounded-xl border-2 transition-all duration-200 text-left"
             :class="session.completed
               ? 'bg-green-50 border-green-500'
-              : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'"
+              : 'bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm'"
           >
             <div class="flex justify-between items-start mb-3">
               <div class="flex items-center gap-2">
                 <span
                   class="flex items-center justify-center w-10 h-10 rounded-full font-bold"
-                  :class="session.completed ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-primary'"
+                  :class="session.completed ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'"
                 >
                   <CheckIcon v-if="session.completed" class="w-6 h-6" />
                   <span v-else>{{ idx + 1 }}</span>
                 </span>
                 <div>
-                  <h3 class="font-semibold text-gray-800">세션 {{ idx + 1 }}</h3>
+                  <h3 class="font-semibold text-gray-900">세션 {{ idx + 1 }}</h3>
                   <p class="text-sm text-gray-500">{{ session.expressions.length }}개 표현</p>
                 </div>
               </div>
@@ -177,10 +188,10 @@
               </p>
             </div>
 
-            <div class="mt-4 pt-3 border-t">
+            <div class="mt-4 pt-3 border-t border-gray-100">
               <span
                 class="text-sm font-medium"
-                :class="session.completed ? 'text-green-600' : 'text-orange-primary'"
+                :class="session.completed ? 'text-green-600' : 'text-gray-700'"
               >
                 {{ session.completed ? '완료됨' : '학습하기 →' }}
               </span>
@@ -189,7 +200,7 @@
         </div>
 
         <!-- Chapter Complete Check -->
-        <div v-if="allSessionsCompleted" class="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+        <div v-if="allSessionsCompleted" class="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
           <div class="flex items-center gap-3">
             <CheckCircleIcon class="w-8 h-8 text-green-500" />
             <div>
@@ -202,10 +213,10 @@
     </div>
 
     <!-- View: Pronunciation Practice -->
-    <div v-else-if="currentView === 'practice'" class="space-y-6">
-      <div class="bg-white rounded-lg shadow-md p-6">
+    <div v-else-if="currentView === 'practice'">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-800">발음 연습</h2>
+          <h2 class="text-lg font-semibold text-gray-900">발음 연습</h2>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500">{{ currentExpressionIndex + 1 }} / {{ currentSessionExpressions.length }}</span>
           </div>
@@ -226,14 +237,14 @@
             <button
               @click="prevExpression"
               :disabled="currentExpressionIndex === 0"
-              class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeftIcon class="w-5 h-5" />
             </button>
             <button
               @click="nextExpression"
               :disabled="currentExpressionIndex === currentSessionExpressions.length - 1"
-              class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRightIcon class="w-5 h-5" />
             </button>
@@ -241,10 +252,10 @@
         </div>
 
         <!-- Expression Summary -->
-        <div class="bg-gray-50 border-l-4 border-orange-primary rounded-r-lg p-4 mb-6">
+        <div class="bg-gray-50 border-l-4 border-black rounded-r-xl p-4 mb-6">
           <div class="flex items-center justify-between">
             <div>
-              <span class="text-lg font-semibold text-gray-800">{{ currentExpression.expression }}</span>
+              <span class="text-lg font-semibold text-gray-900">{{ currentExpression.expression }}</span>
               <span class="mx-2 text-gray-400">|</span>
               <span class="text-gray-600">{{ formatMeaning(currentExpression.meaning) }}</span>
             </div>
@@ -252,7 +263,7 @@
               <button
                 @click="playTTS(currentExpression.expression)"
                 :disabled="ttsLoading"
-                class="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition"
+                class="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
                 title="표현 발음 듣기"
               >
                 <SpeakerWaveIcon class="w-4 h-4" />
@@ -263,22 +274,22 @@
 
         <!-- Example Sentences -->
         <div v-if="currentExpression.examples && currentExpression.examples.length > 0">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">예문 연습</h3>
+          <h3 class="text-base font-semibold text-gray-900 mb-4">예문 연습</h3>
           <div class="space-y-4">
             <div
               v-for="(example, idx) in currentExpression.examples"
               :key="idx"
-              class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200"
+              class="bg-gray-50 rounded-xl p-5 border border-gray-200"
             >
               <div class="mb-4">
-                <p class="text-xl font-medium text-gray-800 mb-2" v-html="highlightExpression(example.text)"></p>
+                <p class="text-lg font-medium text-gray-900 mb-2" v-html="highlightExpression(example.text)"></p>
                 <p class="text-gray-600">{{ example.translation }}</p>
               </div>
               <div class="flex gap-3">
                 <button
                   @click="playTTS(example.text)"
                   :disabled="ttsLoading"
-                  class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
+                  class="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
                 >
                   <SpeakerWaveIcon class="w-5 h-5" />
                   발음 듣기
@@ -286,7 +297,7 @@
                 <button
                   @click="startPronunciationPractice('example', idx)"
                   :disabled="isRecording"
-                  class="flex items-center gap-2 px-4 py-2 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition disabled:opacity-50"
+                  class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
                 >
                   <MicrophoneIcon class="w-5 h-5" />
                   발음 연습
@@ -297,7 +308,7 @@
         </div>
 
         <!-- Progress Indicator & Next Button -->
-        <div class="mt-6 pt-6 border-t">
+        <div class="mt-6 pt-6 border-t border-gray-100">
           <div class="mb-4">
             <div class="flex justify-between text-sm text-gray-600 mb-2">
               <span>세션 진행률</span>
@@ -305,7 +316,7 @@
             </div>
             <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
-                class="h-full bg-green-500 rounded-full transition-all duration-300"
+                class="h-full bg-black rounded-full transition-all duration-300"
                 :style="{ width: `${(practiceCompletedCount / currentSessionExpressions.length) * 100}%` }"
               ></div>
             </div>
@@ -314,7 +325,7 @@
           <button
             v-if="allPracticeCompleted"
             @click="goToQuiz"
-            class="w-full py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center gap-2"
+            class="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition flex items-center justify-center gap-2"
           >
             <AcademicCapIcon class="w-5 h-5" />
             퀴즈 풀러가기
@@ -327,10 +338,10 @@
     </div>
 
     <!-- View: Quiz -->
-    <div v-else-if="currentView === 'quiz'" class="space-y-6">
-      <div class="bg-white rounded-lg shadow-md p-6">
+    <div v-else-if="currentView === 'quiz'">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-800">빈칸 채우기 퀴즈</h2>
+          <h2 class="text-lg font-semibold text-gray-900">빈칸 채우기 퀴즈</h2>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500">{{ currentQuizIndex + 1 }} / {{ quizQuestions.length }}</span>
           </div>
@@ -338,9 +349,9 @@
 
         <!-- Quiz Question -->
         <div v-if="currentQuizQuestion" class="mb-6">
-          <div class="bg-blue-50 rounded-lg p-6 mb-4">
+          <div class="bg-gray-50 rounded-xl p-6 mb-4">
             <p class="text-sm text-gray-600 mb-2">다음 빈칸에 들어갈 표현을 입력하세요:</p>
-            <p class="text-xl font-medium text-gray-800" v-html="currentQuizQuestion.questionHtml"></p>
+            <p class="text-lg font-medium text-gray-900" v-html="currentQuizQuestion.questionHtml"></p>
             <p class="text-gray-600 mt-2">{{ currentQuizQuestion.translation }}</p>
           </div>
 
@@ -348,12 +359,12 @@
           <div class="mb-4">
             <button
               @click="showHint = !showHint"
-              class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              class="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
               <LightBulbIcon class="w-4 h-4" />
               {{ showHint ? '힌트 숨기기' : '힌트 보기' }}
             </button>
-            <p v-if="showHint" class="mt-2 text-sm text-gray-600 bg-yellow-50 p-2 rounded">
+            <p v-if="showHint" class="mt-2 text-sm text-gray-600 bg-yellow-50 p-2 rounded-lg">
               의미: {{ currentQuizQuestion.meaning }}
             </p>
           </div>
@@ -365,24 +376,24 @@
               @keyup.enter="checkAnswer"
               type="text"
               placeholder="정답을 입력하세요"
-              class="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:border-orange-primary text-lg"
+              class="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:border-black text-lg"
               :class="{
                 'border-green-500 bg-green-50': answerStatus === 'correct',
                 'border-red-500 bg-red-50': answerStatus === 'wrong',
-                'border-gray-300': answerStatus === null
+                'border-gray-200': answerStatus === null
               }"
               :disabled="answerStatus !== null"
             />
           </div>
 
           <!-- Answer Feedback -->
-          <div v-if="answerStatus === 'correct'" class="mb-4 p-4 bg-green-100 rounded-lg">
+          <div v-if="answerStatus === 'correct'" class="mb-4 p-4 bg-green-100 rounded-xl">
             <p class="text-green-700 font-semibold flex items-center gap-2">
               <CheckCircleIcon class="w-5 h-5" />
               정답입니다!
             </p>
           </div>
-          <div v-else-if="answerStatus === 'wrong'" class="mb-4 p-4 bg-red-100 rounded-lg">
+          <div v-else-if="answerStatus === 'wrong'" class="mb-4 p-4 bg-red-100 rounded-xl">
             <p class="text-red-700 font-semibold flex items-center gap-2">
               <XCircleIcon class="w-5 h-5" />
               오답입니다. 정답: {{ currentQuizQuestion.answer }}
@@ -395,21 +406,21 @@
               v-if="answerStatus === null"
               @click="checkAnswer"
               :disabled="!userAnswer.trim()"
-              class="flex-1 py-3 rounded-lg bg-orange-primary text-white hover:bg-orange-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex-1 py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               정답 확인
             </button>
             <button
               v-else-if="currentQuizIndex < quizQuestions.length - 1"
               @click="nextQuiz"
-              class="flex-1 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+              class="flex-1 py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition"
             >
               다음 문제
             </button>
             <button
               v-else
               @click="completeSession"
-              class="flex-1 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition flex items-center justify-center gap-2"
+              class="flex-1 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition flex items-center justify-center gap-2"
             >
               <CheckIcon class="w-5 h-5" />
               세션 완료
@@ -418,14 +429,14 @@
         </div>
 
         <!-- Quiz Progress -->
-        <div class="mt-6 pt-6 border-t">
+        <div class="mt-6 pt-6 border-t border-gray-100">
           <div class="flex justify-between text-sm text-gray-600 mb-2">
             <span>퀴즈 진행률</span>
             <span>{{ quizCorrectCount }} / {{ quizQuestions.length }} 정답</span>
           </div>
           <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              class="h-full bg-green-500 rounded-full transition-all duration-300"
+              class="h-full bg-black rounded-full transition-all duration-300"
               :style="{ width: `${(currentQuizIndex / quizQuestions.length) * 100}%` }"
             ></div>
           </div>
@@ -436,21 +447,21 @@
     <!-- Session Complete Modal -->
     <div
       v-if="showCompletionModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div class="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl text-center">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl text-center">
         <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircleIcon class="w-12 h-12 text-green-500" />
         </div>
-        <h3 class="text-2xl font-bold text-gray-800 mb-2">세션 {{ currentSessionIndex + 1 }} 완료!</h3>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">세션 {{ currentSessionIndex + 1 }} 완료!</h3>
         <p class="text-gray-600 mb-4">
           {{ currentSessionExpressions.length }}개 표현 학습을 완료했습니다.
         </p>
-        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <div class="bg-gray-50 rounded-xl p-4 mb-6">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-sm text-gray-500">퀴즈 점수</p>
-              <p class="text-2xl font-bold text-orange-primary">{{ quizCorrectCount }} / {{ quizQuestions.length }}</p>
+              <p class="text-2xl font-bold text-gray-900">{{ quizCorrectCount }} / {{ quizQuestions.length }}</p>
             </div>
             <div>
               <p class="text-sm text-gray-500">정답률</p>
@@ -464,13 +475,13 @@
           <button
             v-if="hasNextSession"
             @click="goToNextSession"
-            class="w-full py-3 rounded-lg bg-orange-primary text-white hover:bg-orange-medium transition"
+            class="w-full py-3 rounded-lg bg-black text-white hover:bg-gray-800 transition"
           >
             다음 세션으로 (세션 {{ currentSessionIndex + 2 }})
           </button>
           <button
             @click="goBackToSessionSelect"
-            class="w-full py-3 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+            class="w-full py-3 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
           >
             세션 선택으로 돌아가기
           </button>
@@ -481,17 +492,17 @@
     <!-- Recording Modal -->
     <div
       v-if="showRecordingModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div class="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="text-center mb-6">
-          <h3 class="text-xl font-bold text-gray-800 mb-2">발음 연습</h3>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">발음 연습</h3>
           <p class="text-gray-600 text-sm">아래 문장을 따라 읽어보세요</p>
         </div>
 
         <!-- Reference Text -->
-        <div class="bg-orange-50 rounded-lg p-4 mb-6">
-          <p class="text-lg font-medium text-gray-800 text-center">{{ referenceText }}</p>
+        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+          <p class="text-lg font-medium text-gray-900 text-center">{{ referenceText }}</p>
         </div>
 
         <!-- Recording Status -->
@@ -515,7 +526,7 @@
           <button
             v-if="!isRecording"
             @click="startRecording"
-            class="px-6 py-3 bg-orange-primary text-white rounded-lg hover:bg-orange-medium transition flex items-center gap-2"
+            class="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2"
           >
             <MicrophoneIcon class="w-5 h-5" />
             녹음 시작
@@ -531,24 +542,24 @@
         </div>
 
         <!-- Pronunciation Result -->
-        <div v-if="pronunciationResult" class="border-t pt-6">
-          <h4 class="font-semibold text-gray-800 mb-4">평가 결과</h4>
+        <div v-if="pronunciationResult" class="border-t border-gray-100 pt-6">
+          <h4 class="font-semibold text-gray-900 mb-4">평가 결과</h4>
 
           <!-- Overall Scores -->
           <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div class="bg-gray-50 rounded-xl p-3 text-center">
               <p class="text-sm text-gray-600">종합 점수</p>
-              <p class="text-2xl font-bold text-blue-600">{{ Math.round(pronunciationResult.pronunciation_score) }}</p>
+              <p class="text-2xl font-bold text-gray-900">{{ Math.round(pronunciationResult.pronunciation_score) }}</p>
             </div>
-            <div class="bg-green-50 rounded-lg p-3 text-center">
+            <div class="bg-green-50 rounded-xl p-3 text-center">
               <p class="text-sm text-gray-600">정확도</p>
               <p class="text-2xl font-bold text-green-600">{{ Math.round(pronunciationResult.accuracy_score) }}</p>
             </div>
-            <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <div class="bg-purple-50 rounded-xl p-3 text-center">
               <p class="text-sm text-gray-600">유창성</p>
               <p class="text-2xl font-bold text-purple-600">{{ Math.round(pronunciationResult.fluency_score) }}</p>
             </div>
-            <div class="bg-yellow-50 rounded-lg p-3 text-center">
+            <div class="bg-yellow-50 rounded-xl p-3 text-center">
               <p class="text-sm text-gray-600">완성도</p>
               <p class="text-2xl font-bold text-yellow-600">{{ Math.round(pronunciationResult.completeness_score) }}</p>
             </div>
@@ -564,7 +575,7 @@
                 class="relative group"
               >
                 <span
-                  class="px-2 py-1 rounded text-sm cursor-pointer"
+                  class="px-2 py-1 rounded-lg text-sm cursor-pointer"
                   :class="getScoreColorClass(word.accuracy_score)"
                   @click="togglePhonemeView(idx)"
                 >
@@ -598,17 +609,19 @@
           <button
             v-if="pronunciationResult && pronunciationResult.pronunciation_score >= 60"
             @click="markPracticeComplete"
-            class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
           >
             연습 완료
           </button>
           <button
             @click="closeRecordingModal"
-            class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+            class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
           >
             {{ pronunciationResult ? '다시 연습' : '닫기' }}
           </button>
         </div>
+      </div>
+    </div>
       </div>
     </div>
   </div>

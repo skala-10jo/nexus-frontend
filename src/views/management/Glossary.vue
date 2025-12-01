@@ -1,876 +1,527 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900">전문용어사전</h1>
-            <p class="mt-2 text-sm text-gray-600">
-              프로젝트별 전문용어를 관리하고 AI로 자동 추출하세요
-            </p>
-          </div>
-          <div class="flex gap-3 items-center">
-            <div v-if="selectedTermIds.length > 0" class="flex items-center gap-3">
-              <span class="text-sm text-gray-600">
-                {{ selectedTermIds.length }}개 선택됨
-              </span>
-              <button
-                @click="handleBulkDelete"
-                class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition"
-              >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                선택 삭제
-              </button>
-            </div>
+  <div class="h-full flex flex-col bg-gray-50/50">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Glossary</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">
+            Manage project terminology and extract terms automatically
+          </p>
+        </div>
+        <div class="flex gap-3 items-center">
+          <div v-if="selectedTermIds.length > 0" class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+            <span class="text-sm font-bold text-gray-600">
+              {{ selectedTermIds.length }} selected
+            </span>
             <button
-              @click="showDocumentSelectModal = true"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+              @click="handleBulkDelete"
+              class="text-red-600 hover:text-red-700 font-medium text-sm flex items-center gap-1"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              용어 추출
-            </button>
-            <button
-              @click="showAddTermModal = true"
-              class="inline-flex items-center px-4 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              용어 추가
+              <TrashIcon class="w-4 h-4" />
+              Delete
             </button>
           </div>
+          
+          <button
+            @click="showDocumentSelectModal = true"
+            class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+          >
+            <SparklesIcon class="w-5 h-5 text-blue-500" />
+            Extract Terms
+          </button>
+          
+          <button
+            @click="showAddTermModal = true"
+            class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+          >
+            <PlusIcon class="w-5 h-5" />
+            Add Term
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- Project Filter (Optional) -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <label class="text-sm font-medium text-gray-700">프로젝트 필터:</label>
-            <select
-              v-model="selectedProjectId"
-              @change="handleProjectChange"
-              class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-            >
-              <option value="">전체 용어</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }} ({{ project.sourceLanguage }} → {{ project.targetLanguage }})
-              </option>
-            </select>
-          </div>
-          <div class="text-sm text-gray-600">
-            <span class="font-medium">{{ pagination.totalElements }}</span> 개 용어
-          </div>
-        </div>
-      </div>
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-7xl mx-auto space-y-8">
+        
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">전체 용어</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">{{ pagination.totalElements }}</p>
-              </div>
-              <div class="p-3 bg-orange-50 rounded-lg">
-                <svg class="w-6 h-6 text-orange-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <!-- Total Terms -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+            <div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Terms</p>
+              <p class="text-3xl font-bold text-gray-900">{{ pagination.totalElements }}</p>
+            </div>
+            <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-600 group-hover:bg-gray-100 transition-colors">
+              <BookOpenIcon class="w-6 h-6" />
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">검증된 용어</p>
-                <p class="text-2xl font-bold text-green-600 mt-1">{{ verifiedTermsCount }}</p>
-              </div>
-              <div class="p-3 bg-green-50 rounded-lg">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+          <!-- Verified -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+            <div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Verified</p>
+              <p class="text-3xl font-bold text-gray-900">{{ verifiedTermsCount }}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 group-hover:bg-green-100 transition-colors">
+              <CheckBadgeIcon class="w-6 h-6" />
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">검증 필요</p>
-                <p class="text-2xl font-bold text-yellow-600 mt-1">{{ unverifiedTermsCount }}</p>
-              </div>
-              <div class="p-3 bg-yellow-50 rounded-lg">
-                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
+          <!-- Unverified -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+            <div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pending</p>
+              <p class="text-3xl font-bold text-gray-900">{{ unverifiedTermsCount }}</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-100 transition-colors">
+              <ExclamationCircleIcon class="w-6 h-6" />
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">AI 추출</p>
-                <p class="text-2xl font-bold text-blue-600 mt-1">{{ autoExtractedCount }}</p>
-              </div>
-              <div class="p-3 bg-blue-50 rounded-lg">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
+          <!-- AI Extracted -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+            <div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">AI Extracted</p>
+              <p class="text-3xl font-bold text-gray-900">{{ autoExtractedCount }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+              <SparklesIcon class="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        <!-- Toolbar -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4 flex-1">
+        <!-- Main Content Area -->
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+          
+          <!-- Toolbar -->
+          <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between bg-white">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <!-- Project Filter -->
+              <div class="relative w-64 flex-shrink-0">
+                <select
+                  v-model="selectedProjectId"
+                  @change="handleProjectChange"
+                  class="w-full appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:bg-gray-100"
+                >
+                  <option value="">All Projects</option>
+                  <option v-for="project in projects" :key="project.id" :value="project.id">
+                    {{ project.name }}
+                  </option>
+                </select>
+                <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              </div>
+
+              <!-- Search -->
               <div class="relative flex-1 max-w-md">
                 <input
                   v-model="searchQuery"
                   @input="handleSearch"
                   type="text"
-                  placeholder="용어 검색..."
-                  class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
+                  placeholder="Search terms..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
-                <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Filters -->
+              <div class="relative">
+                <select
+                  v-model="filterStatus"
+                  class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
+                >
+                  <option value="">All Status</option>
+                  <option value="AUTO_EXTRACTED">AI Extracted</option>
+                  <option value="USER_ADDED">User Added</option>
+                  <option value="USER_EDITED">User Edited</option>
+                </select>
+                <ChevronDownIcon class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
               </div>
 
-              <select
-                v-model="filterStatus"
-                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-              >
-                <option value="">모든 상태</option>
-                <option value="AUTO_EXTRACTED">AI 추출</option>
-                <option value="USER_ADDED">사용자 추가</option>
-                <option value="USER_EDITED">사용자 편집</option>
-              </select>
+              <div class="relative">
+                <select
+                  v-model="filterVerified"
+                  class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
+                >
+                  <option value="">All Verification</option>
+                  <option value="true">Verified</option>
+                  <option value="false">Unverified</option>
+                </select>
+                <ChevronDownIcon class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+              </div>
 
-              <select
-                v-model="filterVerified"
-                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-              >
-                <option value="">검증 상태</option>
-                <option value="true">검증됨</option>
-                <option value="false">미검증</option>
-              </select>
-
-              <select
-                v-model="filterDocumentId"
-                class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-              >
-                <option value="">모든 문서</option>
-                <option v-for="doc in availableDocuments" :key="doc.id" :value="doc.id">
-                  {{ doc.originalFilename }}
-                </option>
-              </select>
-            </div>
-
-            <button
-              @click="refreshTerms"
-              class="ml-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-            >
-              <svg class="w-5 h-5" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Terms Table -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <!-- Loading State -->
-          <div v-if="loading && terms.length === 0" class="p-8">
-            <div class="animate-pulse space-y-4">
-              <div v-for="i in 5" :key="i" class="h-16 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else-if="terms.length === 0" class="text-center py-12" style="min-height: calc(100vh - 600px);">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">용어가 없습니다</h3>
-            <p class="mt-1 text-sm text-gray-500">
-              용어를 추가하거나 문서에서 AI로 자동 추출하세요
-            </p>
-            <div class="mt-6">
               <button
-                @click="showAddTermModal = true"
-                class="inline-flex items-center px-4 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
+                @click="refreshTerms"
+                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                title="Refresh"
               >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                첫 용어 추가하기
+                <ArrowPathIcon class="w-5 h-5" :class="{ 'animate-spin': loading }" />
               </button>
             </div>
           </div>
 
-          <!-- Terms List -->
-          <div v-else class="overflow-x-auto" style="max-height: calc(100vh - 550px); overflow-y: auto;">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50 sticky top-0 z-10">
-                <tr>
-                  <th class="px-6 py-3 text-left bg-gray-50">
-                    <input
-                      type="checkbox"
-                      :checked="isAllSelected"
-                      @change="toggleSelectAll"
-                      class="w-4 h-4 text-orange-primary bg-gray-100 border-gray-300 rounded focus:ring-orange-primary focus:ring-2"
-                    />
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    한국어
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    영어
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    베트남어
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    약어
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    정의
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    상태
-                  </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    검증
-                  </th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                    작업
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr
-                  v-for="term in terms"
-                  :key="term.id"
-                  class="hover:bg-gray-50 transition"
-                  :class="{ 'bg-orange-50': selectedTermIds.includes(term.id) }"
-                >
-                  <td class="px-6 py-4 whitespace-nowrap" @click.stop>
-                    <input
-                      type="checkbox"
-                      :checked="selectedTermIds.includes(term.id)"
-                      @change="toggleSelectTerm(term.id)"
-                      class="w-4 h-4 text-orange-primary bg-gray-100 border-gray-300 rounded focus:ring-orange-primary focus:ring-2"
-                    />
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap cursor-pointer" @click="openTermDetail(term)">
-                    <div class="text-sm font-medium text-gray-900">{{ term.koreanTerm }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ term.englishTerm || '-' }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">{{ term.vietnameseTerm || '-' }}</div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-500">{{ term.abbreviation || '-' }}</div>
-                  </td>
-                  <td class="px-6 py-4">
-                    <div class="text-sm text-gray-900 max-w-md truncate">
-                      {{ term.definition || '-' }}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="getStatusBadgeClass(term.status)"
-                    >
-                      {{ getStatusLabel(term.status) }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      v-if="term.isVerified"
-                      class="inline-flex items-center text-green-600"
-                    >
-                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                      </svg>
-                    </span>
-                    <span v-else class="text-gray-400">
-                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                      </svg>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex items-center justify-end space-x-2" @click.stop>
-                      <button
-                        v-if="!term.isVerified"
-                        @click="verifyTerm(term)"
-                        class="text-green-600 hover:text-green-900"
-                        title="검증"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      <button
-                        v-else
-                        @click="unverifyTerm(term)"
-                        class="text-orange-600 hover:text-orange-900"
-                        title="검증 해제"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
-                      <button
-                        @click="editTerm(term)"
-                        class="text-blue-600 hover:text-blue-900"
-                        title="편집"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        @click="confirmDeleteTerm(term)"
-                        class="text-red-600 hover:text-red-900"
-                        title="삭제"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination -->
-          <div v-if="pagination.totalPages > 1" class="px-6 py-4 border-t border-gray-200">
-            <div class="flex flex-col items-center space-y-3">
-              <div class="text-sm text-gray-600">
-                <span class="font-medium">{{ pagination.totalElements }}</span>개 중
-                <span class="font-medium">{{ Math.min((pagination.page + 1) * pagination.size, pagination.totalElements) }}</span>개 표시
+          <!-- Table -->
+          <div class="relative">
+            <!-- Loading Overlay -->
+            <div v-if="loading && terms.length === 0" class="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm font-medium text-gray-500">Loading terms...</p>
               </div>
-              <div class="flex items-center space-x-2">
-                <!-- Previous Button -->
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="!loading && terms.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
+              <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <BookOpenIcon class="w-10 h-10 text-gray-300" />
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-1">No terms found</h3>
+              <p class="text-sm text-gray-500 mb-6">Get started by adding a new term or extracting from documents.</p>
+              <button
+                @click="showAddTermModal = true"
+                class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+              >
+                Add First Term
+              </button>
+            </div>
+
+            <!-- Data Table -->
+            <div v-else class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50/50">
+                    <th class="px-6 py-4 text-left w-12">
+                      <input
+                        type="checkbox"
+                        :checked="isAllSelected"
+                        @change="toggleSelectAll"
+                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Korean</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">English</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Vietnamese</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Abbr</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Verified</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  <tr
+                    v-for="term in terms"
+                    :key="term.id"
+                    class="group hover:bg-blue-50/30 transition-colors"
+                    :class="{ 'bg-blue-50/50': selectedTermIds.includes(term.id) }"
+                  >
+                    <td class="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        :checked="selectedTermIds.includes(term.id)"
+                        @change="toggleSelectTerm(term.id)"
+                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </td>
+                    <td class="px-6 py-4">
+                      <button @click="openTermDetail(term)" class="text-sm font-bold text-gray-900 hover:text-blue-600 text-left">
+                        {{ term.koreanTerm }}
+                      </button>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-sm font-medium text-gray-600">{{ term.englishTerm || '-' }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-sm font-medium text-gray-600">{{ term.vietnameseTerm || '-' }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-sm font-medium text-gray-500">{{ term.abbreviation || '-' }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="px-2.5 py-1 inline-flex text-[10px] font-bold rounded-full uppercase tracking-wide"
+                        :class="getStatusBadgeClass(term.status)"
+                      >
+                        {{ getStatusLabel(term.status) }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div v-if="term.isVerified" class="flex items-center gap-1.5 text-green-600">
+                        <CheckCircleIcon class="w-4 h-4" />
+                        <span class="text-xs font-bold">Verified</span>
+                      </div>
+                      <div v-else class="flex items-center gap-1.5 text-gray-400">
+                        <div class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+                        <span class="text-xs font-medium">Pending</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                      <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          v-if="!term.isVerified"
+                          @click="verifyTerm(term)"
+                          class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Verify"
+                        >
+                          <CheckIcon class="w-4 h-4" />
+                        </button>
+                        <button
+                          v-else
+                          @click="unverifyTerm(term)"
+                          class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          title="Unverify"
+                        >
+                          <XMarkIcon class="w-4 h-4" />
+                        </button>
+                        <button
+                          @click="editTerm(term)"
+                          class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <PencilIcon class="w-4 h-4" />
+                        </button>
+                        <button
+                          @click="confirmDeleteTerm(term)"
+                          class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="pagination.totalPages > 1" class="px-6 py-4 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between">
+              <p class="text-xs font-medium text-gray-500">
+                Showing <span class="font-bold text-gray-900">{{ Math.min((pagination.page + 1) * pagination.size, pagination.totalElements) }}</span> of <span class="font-bold text-gray-900">{{ pagination.totalElements }}</span> terms
+              </p>
+              <div class="flex items-center gap-2">
                 <button
                   @click="goToPage(pagination.page - 1)"
                   :disabled="pagination.page === 0"
-                  :class="[
-                    'px-3 py-2 text-sm font-medium rounded-lg transition',
-                    pagination.page === 0
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  ]"
+                  class="p-2 rounded-lg text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeftIcon class="w-4 h-4" />
                 </button>
-
-                <!-- Page Numbers -->
-                <template v-for="page in displayedPages" :key="page">
-                  <button
-                    v-if="page !== '...'"
-                    @click="goToPage(page)"
-                    :class="[
-                      'px-3 py-2 text-sm font-medium rounded-lg transition',
-                      pagination.page === page
-                        ? 'bg-orange-primary text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    ]"
-                  >
-                    {{ page + 1 }}
-                  </button>
-                  <span v-else class="px-2 text-gray-400">...</span>
-                </template>
-
-                <!-- Next Button -->
+                <div class="flex items-center gap-1">
+                  <template v-for="page in displayedPages" :key="page">
+                    <button
+                      v-if="page !== '...'"
+                      @click="goToPage(page)"
+                      class="w-8 h-8 rounded-lg text-xs font-bold transition-all"
+                      :class="pagination.page === page ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-white hover:text-gray-900'"
+                    >
+                      {{ page + 1 }}
+                    </button>
+                    <span v-else class="text-gray-400 text-xs">...</span>
+                  </template>
+                </div>
                 <button
                   @click="goToPage(pagination.page + 1)"
                   :disabled="pagination.page >= pagination.totalPages - 1"
-                  :class="[
-                    'px-3 py-2 text-sm font-medium rounded-lg transition',
-                    pagination.page >= pagination.totalPages - 1
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  ]"
+                  class="p-2 rounded-lg text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRightIcon class="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
 
     <!-- Modals -->
     <Teleport to="body">
-      <!-- Document Select Modal -->
       <DocumentSelectModal
         v-if="showDocumentSelectModal"
         @close="showDocumentSelectModal = false"
         @select="handleDocumentSelect"
       />
 
-      <!-- Extraction Progress Modal -->
       <ExtractionProgressModal
         v-if="extractionJob"
         :job="extractionJob"
         @close="handleExtractionClose"
       />
 
-      <!-- Add Term Modal -->
+      <!-- Add/Edit Term Modal -->
       <div
-        v-if="showAddTermModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        @click.self="closeAddTermModal"
+        v-if="showAddTermModal || showEditDialog"
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        @click.self="closeModal"
       >
-        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">용어 추가</h3>
-            <button
-              @click="closeAddTermModal"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white">
+            <h3 class="text-xl font-bold text-gray-900">
+              {{ showEditDialog ? 'Edit Term' : 'Add New Term' }}
+            </h3>
+            <button @click="closeModal" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+              <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
 
-          <form @submit.prevent="saveNewTerm" class="space-y-4">
-            <!-- Korean Term (Required) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                한국어 용어 <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model="newTermForm.koreanTerm"
-                type="text"
-                required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: 인공지능"
-              />
-            </div>
+          <div class="p-8 overflow-y-auto custom-scrollbar">
+            <form @submit.prevent="handleSave" class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Korean Term <span class="text-red-500">*</span></label>
+                  <input
+                    v-model="activeForm.koreanTerm"
+                    type="text"
+                    required
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="e.g. 인공지능"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">English Term <span class="text-red-500">*</span></label>
+                  <input
+                    v-model="activeForm.englishTerm"
+                    type="text"
+                    required
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="e.g. Artificial Intelligence"
+                  />
+                </div>
+              </div>
 
-            <!-- English Term (Required) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                영어 용어 <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model="newTermForm.englishTerm"
-                type="text"
-                required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: Artificial Intelligence"
-              />
-            </div>
+              <div class="grid grid-cols-3 gap-6">
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Vietnamese</label>
+                  <input
+                    v-model="activeForm.vietnameseTerm"
+                    type="text"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Abbreviation</label>
+                  <input
+                    v-model="activeForm.abbreviation"
+                    type="text"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Domain</label>
+                  <input
+                    v-model="activeForm.domain"
+                    type="text"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              </div>
 
-            <!-- Vietnamese Term (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                베트남어 용어
-              </label>
-              <input
-                v-model="newTermForm.vietnameseTerm"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: Trí tuệ nhân tạo"
-              />
-            </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Definition</label>
+                <textarea
+                  v-model="activeForm.definition"
+                  rows="3"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                  placeholder="Enter definition..."
+                ></textarea>
+              </div>
 
-            <!-- Abbreviation (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                약어
-              </label>
-              <input
-                v-model="newTermForm.abbreviation"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: AI"
-              />
-            </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Context / Usage</label>
+                <textarea
+                  v-model="activeForm.context"
+                  rows="2"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                ></textarea>
+              </div>
+            </form>
+          </div>
 
-            <!-- Domain (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                도메인
-              </label>
-              <input
-                v-model="newTermForm.domain"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: IT, 의료, 법률"
-              />
-            </div>
-
-            <!-- Definition (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                정의
-              </label>
-              <textarea
-                v-model="newTermForm.definition"
-                rows="3"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어의 정의를 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Context (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                문맥
-              </label>
-              <textarea
-                v-model="newTermForm.context"
-                rows="3"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어가 사용되는 문맥을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Example Sentence (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                예문
-              </label>
-              <textarea
-                v-model="newTermForm.exampleSentence"
-                rows="2"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어 사용 예문을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Note (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                참고사항
-              </label>
-              <textarea
-                v-model="newTermForm.note"
-                rows="2"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="추가 설명 및 참고사항을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                @click="closeAddTermModal"
-                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
-              >
-                추가
-              </button>
-            </div>
-          </form>
+          <div class="px-8 py-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3">
+            <button
+              @click="closeModal"
+              class="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              @click="handleSave"
+              class="px-6 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+            >
+              {{ showEditDialog ? 'Save Changes' : 'Create Term' }}
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Term Detail Modal -->
       <div
         v-if="showTermDetail"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         @click.self="closeTermDetail"
       >
-        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">용어 상세정보</h3>
-            <button
-              @click="closeTermDetail"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+          <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+            <div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ selectedTerm?.koreanTerm }}</h3>
+              <p class="text-sm text-gray-500 font-medium mt-1">{{ selectedTerm?.englishTerm }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
+                :class="getStatusBadgeClass(selectedTerm?.status)"
+              >
+                {{ getStatusLabel(selectedTerm?.status) }}
+              </span>
+              <button @click="closeTermDetail" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                <XMarkIcon class="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
-          <div v-if="selectedTerm" class="space-y-4">
-            <!-- Korean Term -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">한국어 용어</label>
-              <p class="text-gray-900">{{ selectedTerm.koreanTerm }}</p>
-            </div>
-
-            <!-- English Term -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">영어 용어</label>
-              <p class="text-gray-900">{{ selectedTerm.englishTerm || '-' }}</p>
-            </div>
-
-            <!-- Vietnamese Term -->
-            <div v-if="selectedTerm.vietnameseTerm">
-              <label class="block text-sm font-medium text-gray-700 mb-1">베트남어 용어</label>
-              <p class="text-gray-900">{{ selectedTerm.vietnameseTerm }}</p>
-            </div>
-
-            <!-- Abbreviation -->
-            <div v-if="selectedTerm.abbreviation">
-              <label class="block text-sm font-medium text-gray-700 mb-1">약어</label>
-              <p class="text-gray-900">{{ selectedTerm.abbreviation }}</p>
-            </div>
-
-            <!-- Domain -->
-            <div v-if="selectedTerm.domain">
-              <label class="block text-sm font-medium text-gray-700 mb-1">도메인</label>
-              <p class="text-gray-900">{{ selectedTerm.domain }}</p>
-            </div>
-
-            <!-- Definition -->
-            <div v-if="selectedTerm.definition">
-              <label class="block text-sm font-medium text-gray-700 mb-1">정의</label>
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.definition }}</p>
-            </div>
-
-            <!-- Context -->
-            <div v-if="selectedTerm.context">
-              <label class="block text-sm font-medium text-gray-700 mb-1">문맥</label>
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.context }}</p>
-            </div>
-
-            <!-- Example Sentence -->
-            <div v-if="selectedTerm.exampleSentence">
-              <label class="block text-sm font-medium text-gray-700 mb-1">예문</label>
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.exampleSentence }}</p>
-            </div>
-
-            <!-- Note -->
-            <div v-if="selectedTerm.note">
-              <label class="block text-sm font-medium text-gray-700 mb-1">참고사항</label>
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedTerm.note }}</p>
-            </div>
-
-            <!-- Status & Verification -->
-            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+          <div class="p-8 space-y-6">
+            <div class="grid grid-cols-2 gap-8">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">상태</label>
-                <span
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="getStatusBadgeClass(selectedTerm.status)"
-                >
-                  {{ getStatusLabel(selectedTerm.status) }}
-                </span>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Vietnamese</p>
+                <p class="text-lg font-medium text-gray-900">{{ selectedTerm?.vietnameseTerm || '-' }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">검증 상태</label>
-                <span
-                  v-if="selectedTerm.isVerified"
-                  class="inline-flex items-center text-green-600"
-                >
-                  <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  검증됨
-                </span>
-                <span v-else class="text-gray-400">미검증</span>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Abbreviation</p>
+                <p class="text-lg font-medium text-gray-900">{{ selectedTerm?.abbreviation || '-' }}</p>
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div v-if="selectedTerm?.definition">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Definition</p>
+              <p class="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
+                {{ selectedTerm.definition }}
+              </p>
+            </div>
+
+            <div v-if="selectedTerm?.context">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Context</p>
+              <p class="text-gray-600 italic">"{{ selectedTerm.context }}"</p>
+            </div>
+
+            <div class="flex items-center justify-between pt-6 border-t border-gray-100">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Verification:</span>
+                <span v-if="selectedTerm?.isVerified" class="text-green-600 font-bold text-sm flex items-center gap-1">
+                  <CheckCircleIcon class="w-4 h-4" /> Verified
+                </span>
+                <span v-else class="text-gray-400 font-bold text-sm">Unverified</span>
+              </div>
+              
               <button
-                type="button"
-                @click="closeTermDetail"
-                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
-              >
-                닫기
-              </button>
-              <button
-                type="button"
                 @click="editTermFromDetail"
-                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
+                class="px-6 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all"
               >
-                수정
+                Edit Term
               </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Edit Term Modal -->
-      <div
-        v-if="showEditDialog"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        @click.self="closeEditDialog"
-      >
-        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">용어 수정</h3>
-            <button
-              @click="closeEditDialog"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <form @submit.prevent="saveEdit" class="space-y-4">
-            <!-- Korean Term (Required) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                한국어 용어 <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model="editForm.koreanTerm"
-                type="text"
-                required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: 인공지능"
-              />
-            </div>
-
-            <!-- English Term (Required) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                영어 용어 <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model="editForm.englishTerm"
-                type="text"
-                required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: Artificial Intelligence"
-              />
-            </div>
-
-            <!-- Vietnamese Term (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                베트남어 용어
-              </label>
-              <input
-                v-model="editForm.vietnameseTerm"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: Trí tuệ nhân tạo"
-              />
-            </div>
-
-            <!-- Abbreviation (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                약어
-              </label>
-              <input
-                v-model="editForm.abbreviation"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: AI"
-              />
-            </div>
-
-            <!-- Domain (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                도메인
-              </label>
-              <input
-                v-model="editForm.domain"
-                type="text"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none"
-                placeholder="예: IT, 의료, 법률"
-              />
-            </div>
-
-            <!-- Definition (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                정의
-              </label>
-              <textarea
-                v-model="editForm.definition"
-                rows="3"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어의 정의를 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Context (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                문맥
-              </label>
-              <textarea
-                v-model="editForm.context"
-                rows="3"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어가 사용되는 문맥을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Example Sentence (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                예문
-              </label>
-              <textarea
-                v-model="editForm.exampleSentence"
-                rows="2"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="용어 사용 예문을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Note (Optional) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                참고사항
-              </label>
-              <textarea
-                v-model="editForm.note"
-                rows="2"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent outline-none resize-none"
-                placeholder="추가 설명 및 참고사항을 입력하세요"
-              ></textarea>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                @click="closeEditDialog"
-                class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                class="px-6 py-2 bg-orange-primary text-white rounded-lg text-sm font-medium hover:bg-orange-medium transition"
-              >
-                저장
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </Teleport>
@@ -883,6 +534,23 @@ import { useGlossaryStore } from '@/stores/glossary';
 import { useProjectStore } from '@/stores/projects';
 import DocumentSelectModal from './components/DocumentSelectModal.vue';
 import ExtractionProgressModal from './components/ExtractionProgressModal.vue';
+import {
+  TrashIcon,
+  SparklesIcon,
+  PlusIcon,
+  BookOpenIcon,
+  CheckBadgeIcon,
+  ExclamationCircleIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  XMarkIcon,
+  PencilIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from '@heroicons/vue/24/solid';
 
 // Stores
 const glossaryStore = useGlossaryStore();
@@ -893,7 +561,6 @@ const selectedProjectId = ref('');
 const searchQuery = ref('');
 const filterStatus = ref('');
 const filterVerified = ref('');
-const filterDocumentId = ref('');
 const showDocumentSelectModal = ref(false);
 const showAddTermModal = ref(false);
 const selectedTermIds = ref([]);
@@ -901,30 +568,7 @@ const selectedTermIds = ref([]);
 // Edit dialog state
 const showEditDialog = ref(false);
 const editingTermId = ref(null);
-const editForm = ref({
-  koreanTerm: '',
-  englishTerm: '',
-  vietnameseTerm: '',
-  abbreviation: '',
-  definition: '',
-  context: '',
-  exampleSentence: '',
-  note: '',
-  domain: ''
-});
-
-// Add term form state
-const newTermForm = ref({
-  koreanTerm: '',
-  englishTerm: '',
-  vietnameseTerm: '',
-  abbreviation: '',
-  definition: '',
-  context: '',
-  exampleSentence: '',
-  note: '',
-  domain: ''
-});
+const activeForm = ref(getEmptyForm());
 
 // Term detail modal state
 const showTermDetail = ref(false);
@@ -935,45 +579,20 @@ const projects = computed(() => projectStore.projects);
 const allTerms = computed(() => glossaryStore.terms);
 const statistics = computed(() => glossaryStore.statistics);
 const loading = computed(() => glossaryStore.loading);
-const hasMore = computed(() => glossaryStore.hasMore);
 const pagination = computed(() => glossaryStore.pagination);
 const extractionJob = computed(() => glossaryStore.extractionJob);
-
-// Get unique documents from all terms
-const availableDocuments = computed(() => {
-  const docMap = new Map();
-  allTerms.value.forEach(term => {
-    if (term.documents && term.documents.length > 0) {
-      term.documents.forEach(doc => {
-        if (!docMap.has(doc.id)) {
-          docMap.set(doc.id, doc);
-        }
-      });
-    }
-  });
-  return Array.from(docMap.values());
-});
 
 // Apply client-side filters
 const terms = computed(() => {
   let filtered = [...allTerms.value];
 
-  // Status filter
   if (filterStatus.value) {
     filtered = filtered.filter(t => t.status === filterStatus.value);
   }
 
-  // Verified filter
   if (filterVerified.value) {
     const isVerified = filterVerified.value === 'true';
     filtered = filtered.filter(t => t.isVerified === isVerified);
-  }
-
-  // Document filter
-  if (filterDocumentId.value) {
-    filtered = filtered.filter(t =>
-      t.documents && t.documents.some(doc => doc.id === filterDocumentId.value)
-    );
   }
 
   return filtered;
@@ -986,56 +605,43 @@ const isAllSelected = computed(() =>
   terms.value.length > 0 && selectedTermIds.value.length === terms.value.length
 );
 
-// Pagination - displayed pages
+// Pagination
 const displayedPages = computed(() => {
   const pages = [];
   const currentPage = pagination.value.page;
   const totalPages = pagination.value.totalPages;
 
   if (totalPages <= 7) {
-    // Show all pages if total is 7 or less
-    for (let i = 0; i < totalPages; i++) {
-      pages.push(i);
-    }
+    for (let i = 0; i < totalPages; i++) pages.push(i);
   } else {
-    // Always show first page
     pages.push(0);
-
-    // Calculate range around current page
     let startPage = Math.max(1, currentPage - 1);
     let endPage = Math.min(totalPages - 2, currentPage + 1);
 
-    // Adjust if near beginning
-    if (currentPage <= 2) {
-      endPage = 3;
-    }
+    if (currentPage <= 2) endPage = 3;
+    if (currentPage >= totalPages - 3) startPage = totalPages - 4;
 
-    // Adjust if near end
-    if (currentPage >= totalPages - 3) {
-      startPage = totalPages - 4;
-    }
-
-    // Add ellipsis before middle pages if needed
-    if (startPage > 1) {
-      pages.push('...');
-    }
-
-    // Add middle pages
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    // Add ellipsis after middle pages if needed
-    if (endPage < totalPages - 2) {
-      pages.push('...');
-    }
-
-    // Always show last page
+    if (startPage > 1) pages.push('...');
+    for (let i = startPage; i <= endPage; i++) pages.push(i);
+    if (endPage < totalPages - 2) pages.push('...');
     pages.push(totalPages - 1);
   }
-
   return pages;
 });
+
+function getEmptyForm() {
+  return {
+    koreanTerm: '',
+    englishTerm: '',
+    vietnameseTerm: '',
+    abbreviation: '',
+    definition: '',
+    context: '',
+    exampleSentence: '',
+    note: '',
+    domain: ''
+  };
+}
 
 // Methods
 const handleProjectChange = async () => {
@@ -1044,26 +650,16 @@ const handleProjectChange = async () => {
 
 const loadTerms = async () => {
   try {
-    selectedTermIds.value = []; // Clear selection when loading
+    selectedTermIds.value = [];
     if (selectedProjectId.value) {
-      // Load terms filtered by project
       await glossaryStore.fetchTerms(selectedProjectId.value);
       await glossaryStore.fetchStatistics(selectedProjectId.value);
     } else {
-      // Load all user terms
       await glossaryStore.fetchAllTerms();
       await glossaryStore.fetchStatistics();
     }
   } catch (error) {
     console.error('Failed to load terms:', error);
-    console.error('Error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-      headers: error.config?.headers
-    });
   }
 };
 
@@ -1085,11 +681,8 @@ const refreshTerms = () => {
 
 const goToPage = async (page) => {
   if (page < 0 || page >= pagination.value.totalPages) return;
-
   try {
-    selectedTermIds.value = []; // Clear selection when changing page
-
-    // Check if in search mode
+    selectedTermIds.value = [];
     if (searchQuery.value) {
       if (selectedProjectId.value) {
         await glossaryStore.searchTerms(selectedProjectId.value, searchQuery.value, { page });
@@ -1097,15 +690,12 @@ const goToPage = async (page) => {
         await glossaryStore.searchAllTerms(searchQuery.value, { page });
       }
     } else {
-      // Normal pagination
       if (selectedProjectId.value) {
         await glossaryStore.fetchTerms(selectedProjectId.value, { page });
       } else {
         await glossaryStore.fetchAllTerms({ page });
       }
     }
-
-    // Scroll to top of table
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
     console.error('Failed to load page:', error);
@@ -1116,16 +706,14 @@ const handleDocumentSelect = async (documentId) => {
   try {
     showDocumentSelectModal.value = false;
     await glossaryStore.startExtraction(documentId);
-    // Modal will show automatically when extractionJob is set
   } catch (error) {
     console.error('Failed to start extraction:', error);
-    alert('용어 추출을 시작하지 못했습니다.');
+    alert('Failed to start term extraction.');
   }
 };
 
 const handleExtractionClose = () => {
   glossaryStore.clearExtractionJob();
-  // Refresh terms list
   loadTerms();
 };
 
@@ -1139,6 +727,19 @@ const closeTermDetail = () => {
   selectedTerm.value = null;
 };
 
+const closeModal = () => {
+  showAddTermModal.value = false;
+  showEditDialog.value = false;
+  editingTermId.value = null;
+  activeForm.value = getEmptyForm();
+};
+
+const editTerm = (term) => {
+  editingTermId.value = term.id;
+  activeForm.value = { ...term };
+  showEditDialog.value = true;
+};
+
 const editTermFromDetail = () => {
   if (selectedTerm.value) {
     closeTermDetail();
@@ -1146,91 +747,23 @@ const editTermFromDetail = () => {
   }
 };
 
-const editTerm = (term) => {
-  editingTermId.value = term.id;
-  editForm.value = {
-    koreanTerm: term.koreanTerm || '',
-    englishTerm: term.englishTerm || '',
-    vietnameseTerm: term.vietnameseTerm || '',
-    abbreviation: term.abbreviation || '',
-    definition: term.definition || '',
-    context: term.context || '',
-    exampleSentence: term.exampleSentence || '',
-    note: term.note || '',
-    domain: term.domain || ''
-  };
-  showEditDialog.value = true;
-};
-
-const closeEditDialog = () => {
-  showEditDialog.value = false;
-  editingTermId.value = null;
-  editForm.value = {
-    koreanTerm: '',
-    englishTerm: '',
-    vietnameseTerm: '',
-    abbreviation: '',
-    definition: '',
-    context: '',
-    exampleSentence: '',
-    note: '',
-    domain: ''
-  };
-};
-
-const saveEdit = async () => {
-  // Validate required fields
-  if (!editForm.value.koreanTerm.trim()) {
-    alert('한국어 용어는 필수입니다.');
-    return;
-  }
-  if (!editForm.value.englishTerm.trim()) {
-    alert('영어 용어는 필수입니다.');
+const handleSave = async () => {
+  if (!activeForm.value.koreanTerm.trim() || !activeForm.value.englishTerm.trim()) {
+    alert('Korean and English terms are required.');
     return;
   }
 
   try {
-    await glossaryStore.updateTerm(editingTermId.value, editForm.value);
-    closeEditDialog();
+    if (showEditDialog.value) {
+      await glossaryStore.updateTerm(editingTermId.value, activeForm.value);
+    } else {
+      await glossaryStore.createTerm(activeForm.value);
+    }
+    closeModal();
+    await loadTerms();
   } catch (error) {
-    console.error('Failed to update term:', error);
-    alert('용어 수정에 실패했습니다.');
-  }
-};
-
-const closeAddTermModal = () => {
-  showAddTermModal.value = false;
-  newTermForm.value = {
-    koreanTerm: '',
-    englishTerm: '',
-    vietnameseTerm: '',
-    abbreviation: '',
-    definition: '',
-    context: '',
-    exampleSentence: '',
-    note: '',
-    domain: ''
-  };
-};
-
-const saveNewTerm = async () => {
-  // Validate required fields
-  if (!newTermForm.value.koreanTerm.trim()) {
-    alert('한국어 용어는 필수입니다.');
-    return;
-  }
-  if (!newTermForm.value.englishTerm.trim()) {
-    alert('영어 용어는 필수입니다.');
-    return;
-  }
-
-  try {
-    await glossaryStore.createTerm(newTermForm.value);
-    closeAddTermModal();
-    await loadTerms(); // Reload terms list
-  } catch (error) {
-    console.error('Failed to create term:', error);
-    alert('용어 추가에 실패했습니다.');
+    console.error('Failed to save term:', error);
+    alert('Failed to save term.');
   }
 };
 
@@ -1244,21 +777,17 @@ const verifyTerm = async (term) => {
 };
 
 const unverifyTerm = async (term) => {
-  if (!confirm(`'${term.koreanTerm}' 용어의 검증을 해제하시겠습니까?`)) {
-    return;
-  }
-
+  if (!confirm(`Unverify term '${term.koreanTerm}'?`)) return;
   try {
     await glossaryStore.unverifyTerm(term.id);
     await glossaryStore.fetchStatistics(selectedProjectId.value);
   } catch (error) {
     console.error('Failed to unverify term:', error);
-    alert('검증 해제에 실패했습니다.');
   }
 };
 
 const confirmDeleteTerm = (term) => {
-  if (confirm(`'${term.koreanTerm}' 용어를 삭제하시겠습니까?`)) {
+  if (confirm(`Delete term '${term.koreanTerm}'?`)) {
     deleteTerm(term);
   }
 };
@@ -1271,31 +800,20 @@ const deleteTerm = async (term) => {
   }
 };
 
-// Selection handlers
 const toggleSelectTerm = (termId) => {
   const index = selectedTermIds.value.indexOf(termId);
-  if (index > -1) {
-    selectedTermIds.value.splice(index, 1);
-  } else {
-    selectedTermIds.value.push(termId);
-  }
+  if (index > -1) selectedTermIds.value.splice(index, 1);
+  else selectedTermIds.value.push(termId);
 };
 
 const toggleSelectAll = () => {
-  if (isAllSelected.value) {
-    selectedTermIds.value = [];
-  } else {
-    selectedTermIds.value = terms.value.map(t => t.id);
-  }
+  if (isAllSelected.value) selectedTermIds.value = [];
+  else selectedTermIds.value = terms.value.map(t => t.id);
 };
 
-// Bulk delete handler
 const handleBulkDelete = async () => {
   if (selectedTermIds.value.length === 0) return;
-
-  if (!confirm(`선택된 ${selectedTermIds.value.length}개의 용어를 삭제하시겠습니까?`)) {
-    return;
-  }
+  if (!confirm(`Delete ${selectedTermIds.value.length} selected terms?`)) return;
 
   try {
     await glossaryStore.deleteTerms(selectedTermIds.value);
@@ -1303,37 +821,52 @@ const handleBulkDelete = async () => {
     await loadTerms();
   } catch (error) {
     console.error('Failed to delete terms:', error);
-    alert('용어 삭제에 실패했습니다.');
+    alert('Failed to delete terms.');
   }
 };
 
 const getStatusLabel = (status) => {
   const labels = {
-    AUTO_EXTRACTED: 'AI 추출',
-    USER_ADDED: '사용자 추가',
-    USER_EDITED: '사용자 편집',
-    USER_VERIFIED: '검증됨'
+    AUTO_EXTRACTED: 'AI Extracted',
+    USER_ADDED: 'User Added',
+    USER_EDITED: 'User Edited',
+    USER_VERIFIED: 'Verified'
   };
   return labels[status] || status;
 };
 
 const getStatusBadgeClass = (status) => {
   const classes = {
-    AUTO_EXTRACTED: 'bg-blue-100 text-blue-800',
-    USER_ADDED: 'bg-green-100 text-green-800',
-    USER_EDITED: 'bg-yellow-100 text-yellow-800',
-    USER_VERIFIED: 'bg-purple-100 text-purple-800'
+    AUTO_EXTRACTED: 'bg-blue-100 text-blue-700',
+    USER_ADDED: 'bg-green-100 text-green-700',
+    USER_EDITED: 'bg-amber-100 text-amber-700',
+    USER_VERIFIED: 'bg-purple-100 text-purple-700'
   };
-  return classes[status] || 'bg-gray-100 text-gray-800';
+  return classes[status] || 'bg-gray-100 text-gray-600';
 };
 
-// Lifecycle
 onMounted(async () => {
   try {
     await projectStore.fetchProjects();
-    await loadTerms(); // Load all terms by default
+    await loadTerms();
   } catch (error) {
     console.error('Failed to initialize:', error);
   }
 });
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+</style>

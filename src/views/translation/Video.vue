@@ -1,351 +1,268 @@
 <template>
-  <div class="video-translation-page">
-    <!-- Compact Header -->
-    <header class="page-header">
-      <div class="header-row">
-        <div class="header-left">
-          <h1 class="page-title">
-            <svg class="title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-            <div class="title-content">
-              <span class="title-text">영상 번역</span>
-              <span class="title-subtitle">전문용어사전 기반 AI 자막 번역</span>
-            </div>
-          </h1>
+  <div class="h-full flex flex-col bg-gray-50/50">
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Video Translation</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">AI-powered subtitle translation with glossary support</p>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- Upload Section -->
-    <section v-if="!uploadedVideo" class="upload-section">
-      <div
-        class="upload-area"
-        :class="{ 'drag-over': isDragOver }"
-        @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false"
-        @drop.prevent="handleDrop"
-      >
-        <input
-          ref="fileInputRef"
-          type="file"
-          accept="video/mp4,video/avi,video/mov,video/mkv"
-          @change="handleFileSelect"
-          class="file-input"
-        />
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-7xl mx-auto space-y-6">
 
-        <div class="upload-content">
-          <div class="upload-icon-wrapper">
-            <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-          </div>
-          <h3 class="upload-title">영상 파일을 드래그하거나 클릭하여 업로드</h3>
-          <p class="upload-subtitle">MP4, AVI, MOV, MKV (최대 500MB)</p>
-          <button @click="triggerFileInput" class="btn btn-primary btn-large">
-            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            파일 선택
-          </button>
-        </div>
-
-        <!-- Upload Progress -->
-        <div v-if="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
-          </div>
-          <p class="progress-text">{{ uploadProgress }}% 업로드 중...</p>
-        </div>
-      </div>
-
-      <!-- Language Selection -->
-      <div class="language-config">
-        <div class="config-row">
-          <div class="config-item">
-            <label class="config-label">원본 언어</label>
-            <select v-model="sourceLang" class="config-select">
-              <option value="ko">한국어</option>
-              <option value="en">영어</option>
-              <option value="ja">일본어</option>
-              <option value="vi">베트남어</option>
-            </select>
-          </div>
-          <div class="arrow-icon">→</div>
-          <div class="config-item">
-            <label class="config-label">목표 언어</label>
-            <select v-model="targetLang" class="config-select">
-              <option value="en">영어</option>
-              <option value="ko">한국어</option>
-              <option value="ja">일본어</option>
-              <option value="vi">베트남어</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Video Info & Glossary Selection -->
-    <section v-if="uploadedVideo" class="video-info-section">
-      <div class="video-info-card">
-        <div class="info-header">
-          <div class="info-title">
-            <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-              />
-            </svg>
-            <span>{{ uploadedVideo.filename }}</span>
-          </div>
-          <button @click="resetVideo" class="btn-reset">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            다시 업로드
-          </button>
-        </div>
-        <div class="info-details">
-          <span class="info-badge">{{ formatFileSize(uploadedVideo.fileSize) }}</span>
-          <span class="info-badge">{{ uploadedVideo.duration || 'N/A' }}</span>
-          <span class="info-badge">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
-        </div>
-      </div>
-
-      <!-- Glossary Selection (Collapsible) -->
-      <div class="glossary-section" :class="{ expanded: glossaryExpanded }">
-        <button @click="glossaryExpanded = !glossaryExpanded" class="glossary-toggle">
-          <svg class="toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-          <span class="toggle-text">전문용어사전 선택 (선택사항)</span>
-          <span v-if="selectedDocuments.length > 0" class="selected-badge">
-            {{ selectedDocuments.length }}개 선택됨
-          </span>
-        </button>
-
-        <div v-if="glossaryExpanded" class="glossary-content">
-          <ProjectSelector
-            v-model="selectedProjectId"
-            :projects="projects"
-            @change="onProjectChange"
-          />
-
-          <div v-if="selectedProjectId && projectDocuments.length > 0" class="documents-list">
-            <h4 class="documents-title">문서 선택</h4>
-            <div class="documents-grid">
-              <label
-                v-for="doc in projectDocuments"
-                :key="doc.id"
-                class="document-item"
-                :class="{ selected: selectedDocuments.includes(doc.id) }"
-              >
-                <input
-                  type="checkbox"
-                  :value="doc.id"
-                  v-model="selectedDocuments"
-                  class="document-checkbox"
-                />
-                <div class="document-info">
-                  <span class="document-name">{{ doc.title }}</span>
-                  <span class="document-terms">{{ doc.termCount || 0 }}개 용어</span>
-                </div>
-              </label>
-            </div>
-
-            <div v-if="selectedDocuments.length > 0" class="selection-summary">
-              총 {{ selectedDocuments.length }}개 문서 · 약 {{ totalTermsCount }}개 용어 사용
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Language Selector -->
-    <LanguageSelector
-      v-if="subtitleData.availableLanguages.length > 0"
-      :available-languages="subtitleData.availableLanguages"
-      :current-language="currentLanguage"
-      @language-change="handleLanguageChange"
-    >
-      <template #add-language>
-        <button
-          @click="showAddTranslationModal = true"
-          class="add-lang-btn"
-        >
-          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <span class="btn-text">새 언어로 번역</span>
-        </button>
-      </template>
-    </LanguageSelector>
-
-    <!-- Video Player & Subtitle Editor -->
-    <section v-if="displaySubtitles.length > 0" class="player-editor-section">
-      <!-- Video Player -->
-      <div class="player-card">
-        <video
-          ref="videoPlayerRef"
-          :src="videoUrl"
-          @timeupdate="handleTimeUpdate"
-          @loadedmetadata="handleVideoLoaded"
-          class="video-player"
-          controls
-        ></video>
-
-        <!-- Current Subtitle Overlay -->
-        <div v-if="currentSubtitle" class="subtitle-overlay">
-          <p class="subtitle-text">{{ currentSubtitle.displayText || currentSubtitle.text }}</p>
-        </div>
-      </div>
-
-      <!-- Subtitle List -->
-      <div class="subtitle-section">
-        <div class="subtitle-header">
-          <h3 class="subtitle-title">자막 목록</h3>
-          <span class="subtitle-count">{{ displaySubtitles.length }}개</span>
-        </div>
-
-        <div class="subtitle-list">
+        <!-- Upload Section -->
+        <div v-if="!uploadedVideo" class="flex flex-col gap-6">
           <div
-            v-for="subtitle in displaySubtitles"
-            :key="subtitle.id"
-            class="subtitle-item"
-            :class="{ active: currentSubtitle?.id === subtitle.id }"
-            @click="seekToSubtitle(subtitle)"
+            class="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group"
+            :class="{ 'border-blue-500 bg-blue-50/50': isDragOver }"
+            @dragover.prevent="isDragOver = true"
+            @dragleave.prevent="isDragOver = false"
+            @drop.prevent="handleDrop"
+            @click="triggerFileInput"
           >
-            <div class="subtitle-time">{{ formatTime(subtitle.startTime) }}</div>
-            <div class="subtitle-content">
-              <p class="subtitle-original">{{ subtitle.originalText }}</p>
-              <p v-if="currentLanguage !== subtitleData.originalLanguage" class="subtitle-translated">
-                {{ subtitle.displayText }}
-              </p>
-              <div v-if="subtitle.detectedTerms?.length > 0" class="subtitle-terms">
-                <span
-                  v-for="(term, idx) in subtitle.detectedTerms"
-                  :key="idx"
-                  class="term-badge"
-                  :title="term.definition"
-                >
-                  {{ term.koreanTerm || term.matchedText }}
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="video/mp4,video/avi,video/mov,video/mkv"
+              @change="handleFileSelect"
+              class="hidden"
+            />
+            
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CloudArrowUpIcon class="w-10 h-10 text-blue-600" />
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Upload Video</h3>
+                <p class="text-gray-500 mt-1">Drag & drop or click to browse</p>
+                <p class="text-xs text-gray-400 mt-2">MP4, AVI, MOV, MKV (Max 500MB)</p>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-8 max-w-md mx-auto">
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-600 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+              </div>
+              <p class="text-sm text-gray-500 mt-2">{{ uploadProgress }}% Uploading...</p>
+            </div>
+          </div>
+
+          <!-- Language Config -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+              <div class="flex-1 w-full max-w-xs space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Source Language</label>
+                <select v-model="sourceLang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                  <option value="ko">Korean</option>
+                  <option value="en">English</option>
+                  <option value="ja">Japanese</option>
+                  <option value="vi">Vietnamese</option>
+                </select>
+              </div>
+              
+              <ArrowRightIcon class="w-6 h-6 text-gray-300 rotate-90 md:rotate-0" />
+
+              <div class="flex-1 w-full max-w-xs space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Target Language</label>
+                <select v-model="targetLang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                  <option value="en">English</option>
+                  <option value="ko">Korean</option>
+                  <option value="ja">Japanese</option>
+                  <option value="vi">Vietnamese</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Info & Controls -->
+        <div v-if="uploadedVideo" class="space-y-6">
+          <!-- Info Card -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <VideoCameraIcon class="w-6 h-6" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">{{ uploadedVideo.filename }}</h3>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ formatFileSize(uploadedVideo.fileSize) }}</span>
+                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ uploadedVideo.duration || 'N/A' }}</span>
+                  <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
+                </div>
+              </div>
+            </div>
+            <button @click="resetVideo" class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl transition-all">
+              <TrashIcon class="w-4 h-4" />
+              Reset
+            </button>
+          </div>
+
+          <!-- Glossary Selection -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <button @click="glossaryExpanded = !glossaryExpanded" class="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
+              <div class="flex items-center gap-3">
+                <BookOpenIcon class="w-5 h-5 text-gray-400" />
+                <span class="font-bold text-gray-700">Glossary Selection</span>
+                <span v-if="selectedDocuments.length > 0" class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                  {{ selectedDocuments.length }} selected
                 </span>
+              </div>
+              <ChevronDownIcon 
+                class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                :class="{ 'rotate-180': glossaryExpanded }"
+              />
+            </button>
+
+            <div v-if="glossaryExpanded" class="p-6 border-t border-gray-100 bg-gray-50/30">
+              <ProjectSelector
+                v-model="selectedProjectId"
+                :projects="projects"
+                @change="onProjectChange"
+                class="mb-6"
+              />
+
+              <div v-if="selectedProjectId && projectDocuments.length > 0">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Select Documents</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <label
+                    v-for="doc in projectDocuments"
+                    :key="doc.id"
+                    class="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all"
+                    :class="{ 'border-blue-500 bg-blue-50/30': selectedDocuments.includes(doc.id) }"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="doc.id"
+                      v-model="selectedDocuments"
+                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <div>
+                      <p class="text-sm font-bold text-gray-900">{{ doc.title }}</p>
+                      <p class="text-xs text-gray-500">{{ doc.termCount || 0 }} terms</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Language Selector -->
+          <LanguageSelector
+            v-if="subtitleData.availableLanguages.length > 0"
+            :available-languages="subtitleData.availableLanguages"
+            :current-language="currentLanguage"
+            @language-change="handleLanguageChange"
+          >
+            <template #add-language>
+              <button
+                @click="showAddTranslationModal = true"
+                class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-200"
+              >
+                <PlusIcon class="w-4 h-4" />
+                Add Language
+              </button>
+            </template>
+          </LanguageSelector>
+
+          <!-- Player & Subtitles -->
+          <div v-if="displaySubtitles.length > 0" class="flex flex-col lg:flex-row gap-6 h-[600px]">
+            <!-- Player -->
+            <div class="flex-1 bg-black rounded-2xl overflow-hidden relative group">
+              <video
+                ref="videoPlayerRef"
+                :src="videoUrl"
+                @timeupdate="handleTimeUpdate"
+                @loadedmetadata="handleVideoLoaded"
+                class="w-full h-full object-contain"
+                controls
+              ></video>
+              
+              <div v-if="currentSubtitle" class="absolute bottom-16 left-1/2 -translate-x-1/2 max-w-[90%] px-6 py-3 bg-black/80 backdrop-blur-sm rounded-xl text-white text-center font-medium text-lg pointer-events-none">
+                {{ currentSubtitle.displayText || currentSubtitle.text }}
+              </div>
+            </div>
+
+            <!-- Subtitle List -->
+            <div class="w-full lg:w-96 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+              <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="font-bold text-gray-900">Subtitles</h3>
+                <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ displaySubtitles.length }}</span>
+              </div>
+              
+              <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                <div
+                  v-for="subtitle in displaySubtitles"
+                  :key="subtitle.id"
+                  class="p-4 rounded-xl border border-gray-200 cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group"
+                  :class="{ 'border-blue-500 bg-blue-50': currentSubtitle?.id === subtitle.id }"
+                  @click="seekToSubtitle(subtitle)"
+                >
+                  <div class="text-xs font-mono text-gray-400 mb-2">{{ formatTime(subtitle.startTime) }}</div>
+                  <p class="text-sm text-gray-500 mb-1">{{ subtitle.originalText }}</p>
+                  <p v-if="currentLanguage !== subtitleData.originalLanguage" class="text-sm font-bold text-gray-900">
+                    {{ subtitle.displayText }}
+                  </p>
+                  
+                  <div v-if="subtitle.detectedTerms?.length > 0" class="flex flex-wrap gap-2 mt-2">
+                    <span
+                      v-for="(term, idx) in subtitle.detectedTerms"
+                      :key="idx"
+                      class="px-2 py-0.5 bg-green-50 text-green-700 rounded text-[10px] font-bold border border-green-100"
+                      :title="term.definition"
+                    >
+                      {{ term.koreanTerm || term.matchedText }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-center gap-4 py-4">
+            <button
+              v-if="!subtitles.length"
+              @click="handleExtractSubtitles"
+              :disabled="isExtracting"
+              class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <ArrowPathIcon v-if="isExtracting" class="w-5 h-5 animate-spin" />
+              <SparklesIcon v-else class="w-5 h-5" />
+              {{ isExtracting ? 'Processing...' : 'Extract Subtitles' }}
+            </button>
+
+            <div v-if="isTranslated" class="relative">
+              <button 
+                @click="downloadDropdownOpen = !downloadDropdownOpen"
+                class="px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5" />
+                Download
+                <ChevronDownIcon class="w-4 h-4 ml-1" />
+              </button>
+
+              <div v-if="downloadDropdownOpen" class="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden z-10">
+                <button @click="downloadSubtitle('original')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
+                  <DocumentTextIcon class="w-4 h-4" />
+                  Original (SRT)
+                </button>
+                <button @click="downloadSubtitle('translated')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
+                  <LanguageIcon class="w-4 h-4" />
+                  Translated (SRT)
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Action Buttons -->
-    <section v-if="uploadedVideo" class="action-section">
-      <div class="action-buttons">
-        <!-- 자막 추출 버튼 (자막이 없을 때만 표시) -->
-        <button
-          v-if="!subtitles.length"
-          @click="handleExtractSubtitles"
-          :disabled="isExtracting"
-          class="btn btn-primary btn-large"
-        >
-          <svg v-if="!isExtracting" class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <svg v-else class="btn-icon animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <span>{{
-            isExtracting
-              ? targetLang !== sourceLang
-                ? '자막 추출 및 번역 중...'
-                : '자막 추출 중...'
-              : '자막 추출'
-          }}</span>
-        </button>
-
-
-        <!-- 자막 다운로드 (자막이 있을 때만 표시) -->
-        <div v-if="isTranslated" class="download-dropdown">
-          <button @click="downloadDropdownOpen = !downloadDropdownOpen" class="btn btn-success">
-            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            자막 다운로드
-            <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          <div v-if="downloadDropdownOpen" class="dropdown-menu">
-            <button @click="downloadSubtitle('original')" class="dropdown-item">
-              <svg class="item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              원본 자막 (SRT)
-            </button>
-            <button @click="downloadSubtitle('translated')" class="dropdown-item">
-              <svg class="item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                />
-              </svg>
-              번역 자막 (SRT)
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Add Translation Modal -->
+    <!-- Modals & Toasts -->
     <AddTranslationModal
       :show="showAddTranslationModal"
       :available-languages="subtitleData.availableLanguages"
@@ -355,16 +272,18 @@
       @translate="handleAddTranslation"
     />
 
-    <!-- Toast Notifications -->
-    <Transition name="toast">
-      <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
-        <svg v-if="toast.type === 'success'" class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <svg v-else-if="toast.type === 'error'" class="toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <span>{{ toast.message }}</span>
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform translate-y-4 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform translate-y-4 opacity-0"
+    >
+      <div v-if="toast.show" class="fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50" :class="toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-red-600 text-white'">
+        <CheckCircleIcon v-if="toast.type === 'success'" class="w-5 h-5 text-green-400" />
+        <ExclamationCircleIcon v-else class="w-5 h-5 text-white" />
+        <span class="font-medium">{{ toast.message }}</span>
       </div>
     </Transition>
   </div>
@@ -384,6 +303,22 @@ import {
   downloadSubtitles
 } from '@/services/videoService'
 import { getUserProjects } from '@/services/projectService'
+import {
+  CloudArrowUpIcon,
+  ArrowRightIcon,
+  VideoCameraIcon,
+  TrashIcon,
+  BookOpenIcon,
+  ChevronDownIcon,
+  PlusIcon,
+  ArrowPathIcon,
+  SparklesIcon,
+  ArrowDownTrayIcon,
+  DocumentTextIcon,
+  LanguageIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon
+} from '@heroicons/vue/24/solid'
 
 const router = useRouter()
 
@@ -744,7 +679,7 @@ onMounted(() => {
 
   // Close dropdown on outside click
   document.addEventListener('click', (event) => {
-    if (!event.target.closest('.download-dropdown')) {
+    if (!event.target.closest('.relative')) {
       downloadDropdownOpen.value = false
     }
   })
@@ -758,860 +693,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.video-translation-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
-  max-width: 1800px;
-  margin: 0 auto;
-  min-height: 100vh;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
-
-/* Header */
-.page-header {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
-
-.header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
 }
-
-.page-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 0;
-}
-
-.title-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  color: #F97316;
-  flex-shrink: 0;
-}
-
-.title-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.title-text {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.title-subtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  font-weight: 400;
-}
-
-/* Upload Section */
-.upload-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.upload-area {
-  position: relative;
-  background-color: #FFFFFF;
-  border: 3px dashed #D1D5DB;
-  border-radius: 1rem;
-  padding: 3rem 2rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.upload-area:hover,
-.upload-area.drag-over {
-  border-color: #F97316;
-  background-color: #FFF7ED;
-}
-
-.file-input {
-  display: none;
-}
-
-.upload-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  text-align: center;
-}
-
-.upload-icon-wrapper {
-  width: 5rem;
-  height: 5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
-  border-radius: 50%;
-}
-
-.upload-icon {
-  width: 3rem;
-  height: 3rem;
-  color: #F97316;
-}
-
-.upload-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.upload-subtitle {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin: 0;
-}
-
-.upload-progress {
-  margin-top: 2rem;
-  width: 100%;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: #E5E7EB;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #F97316 0%, #FB923C 100%);
-  border-radius: 9999px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
-  color: #6B7280;
-  text-align: center;
-}
-
-/* Language Config */
-.language-config {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.config-row {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  justify-content: center;
-}
-
-.config-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  max-width: 250px;
-}
-
-.config-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.config-select {
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  color: #111827;
-  background-color: #F9FAFB;
-  border: 2px solid #E5E7EB;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.config-select:hover {
-  border-color: #9CA3AF;
-}
-
-.config-select:focus {
-  outline: none;
-  border-color: #F97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
-}
-
-.arrow-icon {
-  font-size: 1.5rem;
-  color: #9CA3AF;
-  margin-top: 1.75rem;
-}
-
-/* Video Info Section */
-.video-info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.video-info-card {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.info-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.info-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.info-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #F97316;
-}
-
-.btn-reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #DC2626;
-  background-color: #FEE2E2;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-reset:hover {
-  background-color: #FCA5A5;
-}
-
-.btn-reset svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.info-details {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.info-badge {
-  padding: 0.375rem 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6B7280;
-  background-color: #F3F4F6;
-  border-radius: 9999px;
-}
-
-/* Glossary Section */
-.glossary-section {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.glossary-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4B5563;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.glossary-toggle:hover {
-  color: #2563EB;
-  background-color: #F9FAFB;
-}
-
-.toggle-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  transition: transform 0.3s ease;
-}
-
-.glossary-section.expanded .toggle-icon {
-  transform: rotate(180deg);
-}
-
-.toggle-text {
-  flex: 1;
-  text-align: left;
-}
-
-.selected-badge {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  color: #065F46;
-  background-color: #D1FAE5;
-  border-radius: 9999px;
-}
-
-.glossary-content {
-  padding: 1.5rem;
-  border-top: 1px solid #E5E7EB;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.documents-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.documents-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-}
-
-.documents-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.75rem;
-}
-
-.document-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background-color: #F9FAFB;
-  border: 2px solid #E5E7EB;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.document-item:hover {
-  border-color: #2563EB;
-  background-color: #EFF6FF;
-}
-
-.document-item.selected {
-  border-color: #2563EB;
-  background-color: #EFF6FF;
-}
-
-.document-checkbox {
-  width: 1.25rem;
-  height: 1.25rem;
-  cursor: pointer;
-}
-
-.document-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.document-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.document-terms {
-  font-size: 0.75rem;
-  color: #6B7280;
-}
-
-.selection-summary {
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  color: #065F46;
-  background-color: #D1FAE5;
-  border-radius: 0.5rem;
-  text-align: center;
-}
-
-/* Player & Editor Section */
-.player-editor-section {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.player-card {
-  position: relative;
-  background-color: #000000;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.video-player {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.subtitle-overlay {
-  position: absolute;
-  bottom: 4rem;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 90%;
-  padding: 0.75rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0.85);
-  border-radius: 0.5rem;
-  pointer-events: none;
-}
-
-.subtitle-text {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #FFFFFF;
-  text-align: center;
-  line-height: 1.6;
-}
-
-/* Subtitle Section */
-.subtitle-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.subtitle-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.subtitle-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.subtitle-count {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6B7280;
-  background-color: #F3F4F6;
-  border-radius: 9999px;
-}
-
-.subtitle-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-height: 600px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.subtitle-item {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background-color: #F9FAFB;
-  border: 2px solid #E5E7EB;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.subtitle-item:hover {
-  border-color: #2563EB;
-  background-color: #EFF6FF;
-}
-
-.subtitle-item.active {
-  border-color: #F97316;
-  background-color: #FFF7ED;
-}
-
-.subtitle-time {
-  flex-shrink: 0;
-  width: 5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6B7280;
-  font-family: monospace;
-}
-
-.subtitle-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.subtitle-original {
-  margin: 0;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: #4B5563;
-}
-
-.subtitle-translated {
-  margin: 0;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: #111827;
-  font-weight: 500;
-}
-
-.subtitle-terms {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.25rem;
-}
-
-.term-badge {
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #065F46;
-  background-color: #D1FAE5;
-  border-radius: 0.25rem;
-  cursor: help;
-}
-
-/* Action Section */
-.action-section {
-  background-color: #FFFFFF;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* Download Dropdown */
-.download-dropdown {
-  position: relative;
-}
-
-.dropdown-icon {
-  width: 1rem;
-  height: 1rem;
-  margin-left: 0.25rem;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 200px;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  overflow: hidden;
-}
-
-.dropdown-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.dropdown-item:hover {
-  background-color: #F3F4F6;
-  color: #2563EB;
-}
-
-.item-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  min-width: 120px;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.btn-primary {
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
-}
-
-.btn-success {
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-}
-
-.btn-success:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.35);
-}
-
-.btn-secondary {
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
-  box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4B5563 0%, #374151 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(107, 114, 128, 0.35);
-}
-
-.btn-large {
-  padding: 0.875rem 2rem;
-  font-size: 0.9375rem;
-  min-width: 150px;
-}
-
-.btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background-color: #111827;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-}
-
-.toast-success {
-  background-color: #10B981;
-}
-
-.toast-error {
-  background-color: #EF4444;
-}
-
-.toast-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateY(1rem);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(2rem);
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .subtitle-list {
-    max-height: 400px;
-  }
-}
-
-@media (max-width: 768px) {
-  .video-translation-page {
-    padding: 1rem;
-    gap: 1rem;
-  }
-
-  .page-header {
-    padding: 1rem;
-  }
-
-  .title-text {
-    font-size: 1.25rem;
-  }
-
-  .config-row {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .config-item {
-    max-width: 100%;
-  }
-
-  .arrow-icon {
-    transform: rotate(90deg);
-    margin-top: 0;
-  }
-
-  .documents-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-  }
-
-  .toast {
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
-  }
-
-  .add-lang-btn {
-    width: 100%;
-  }
-}
-
-/* Add Language Button (in LanguageSelector) */
-.add-lang-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  border: 2px solid transparent;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 160px;
-}
-
-.add-lang-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.35);
-}
-
-.add-lang-btn .btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.add-lang-btn .btn-text {
-  flex: 1;
-  text-align: left;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>
