@@ -21,9 +21,16 @@
 
     <div class="flex-1 flex min-h-0 px-6 pt-4 pb-12 overflow-hidden gap-6">
       <!-- Left Sidebar: Project List -->
-      <div class="w-72 flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div class="p-5">
+      <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="p-5 flex items-center justify-between">
           <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
+          <button
+            @click="openCreateProject"
+            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+            title="새 프로젝트 생성"
+          >
+            <PlusIcon class="w-5 h-5" />
+          </button>
         </div>
         
         <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
@@ -95,6 +102,15 @@
             class="h-full"
             @save="saveProject"
             @cancel="cancelEdit"
+          />
+
+          <!-- Project Create View -->
+          <ProjectCreate
+            v-else-if="isProjectCreating"
+            :allDocuments="allDocuments"
+            class="h-full"
+            @save="saveNewProject"
+            @cancel="cancelCreate"
           />
 
           <!-- Project Detail View -->
@@ -280,6 +296,7 @@ import { useScheduleCategoryStore } from '@/stores/scheduleCategory';
 import { useProjectStore } from '@/stores/projects';
 import ProjectDetail from '@/components/ProjectDetail.vue';
 import ProjectEdit from '@/components/ProjectEdit.vue';
+import ProjectCreate from '@/components/ProjectCreate.vue';
 import { documentService } from '@/services/documentService';
 
 const fullCalendar = ref(null);
@@ -296,6 +313,7 @@ const allDocuments = ref([]);
 
 // Project Edit State
 const isProjectEditing = ref(false);
+const isProjectCreating = ref(false);
 const currentProjectId = ref(null);
 
 const selectedProject = computed(() => {
@@ -703,9 +721,41 @@ async function loadDocuments() {
 
 function selectProject(projectId) {
   selectedProjectId.value = projectId;
+  isProjectCreating.value = false;
+  isProjectEditing.value = false;
   // Calendar refresh is not needed if we are hiding it, but good to keep if we switch back
   if (!projectId) {
     refreshCalendar();
+  }
+}
+
+function openCreateProject() {
+  selectedProjectId.value = null;
+  isProjectEditing.value = false;
+  isProjectCreating.value = true;
+}
+
+function cancelCreate() {
+  isProjectCreating.value = false;
+}
+
+async function saveNewProject(formData) {
+  try {
+    const response = await projectStore.createProject(formData);
+    const newProject = response.data?.data || response.data || response;
+    
+    await loadProjects(); // Refresh list
+    
+    // Select the new project
+    if (newProject && newProject.id) {
+      selectProject(newProject.id);
+    } else {
+      // Fallback if ID not immediately available (though it should be)
+      cancelCreate();
+    }
+  } catch (error) {
+    console.error('Failed to create project:', error);
+    alert('프로젝트 생성에 실패했습니다.');
   }
 }
 
