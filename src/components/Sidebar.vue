@@ -254,6 +254,10 @@ const isActive = (path) => {
 };
 
 const isSubActive = (path) => {
+  // /conversation/practice는 /conversation/scenario의 하위 페이지로 처리
+  if (path === '/conversation/scenario' && route.path.startsWith('/conversation/practice')) {
+    return true;
+  }
   return route.path === path || route.path.startsWith(path + '/');
 };
 
