@@ -23,7 +23,7 @@
       <!-- Left Sidebar: Project List -->
       <div class="w-72 flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div class="p-5">
-          <h2 class="text-base font-bold text-gray-900">프로젝트</h2>
+          <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
         </div>
         
         <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
@@ -31,15 +31,15 @@
           <button
             @click="selectProject(null)"
             class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
-            :class="!selectedProjectId ? 'bg-gray-100 text-gray-900 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
+            :class="!selectedProjectId ? 'bg-gray-100 text-gray-900 font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
           >
             <div class="w-6 h-6 rounded flex items-center justify-center transition-colors"
-              :class="!selectedProjectId ? 'text-gray-700' : 'text-gray-400 group-hover:text-gray-600'">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              :class="!selectedProjectId ? 'text-gray-800' : 'text-gray-500 group-hover:text-gray-700'">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
             </div>
-            <span class="text-sm">전체 프로젝트</span>
+            <span class="text-base font-semibold">전체 프로젝트</span>
           </button>
 
           <!-- Project List -->
@@ -47,35 +47,35 @@
             <button
               @click="selectProject(project.id)"
               class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
-              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
+              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-800 font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
             >
               <div class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
-                :class="selectedProjectId === project.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                :class="selectedProjectId === project.id ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
               </div>
-              <span class="text-sm truncate flex-1">{{ project.name }}</span>
+              <span class="text-base font-medium truncate flex-1">{{ project.name }}</span>
               <span v-if="getProjectEvents(project.id).length > 0" 
-                class="text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-colors"
-                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:text-gray-500'">
+                class="text-xs font-semibold px-1.5 py-0.5 rounded-full transition-colors"
+                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500 group-hover:text-gray-700'">
                 {{ getProjectEvents(project.id).length }}
               </span>
             </button>
 
             <!-- Project Events List (Sidebar) -->
-            <div v-if="getProjectEvents(project.id).length > 0" class="ml-6 pl-3 border-l border-gray-100 my-1 space-y-0.5">
+            <div v-if="getProjectEvents(project.id).length > 0" class="ml-6 pl-3 border-l border-gray-200 my-1 space-y-0.5">
               <div 
                 v-for="event in getProjectEvents(project.id).slice(0, 3)" 
                 :key="event.id"
-                class="text-[11px] py-1 px-2 rounded hover:bg-gray-50 text-gray-500 cursor-pointer flex items-center gap-2 transition-colors group/event"
-                @click.stop="handleEventClick({ event: { id: event.id, extendedProps: event } })"
+                class="text-xs py-1.5 px-2 rounded hover:bg-gray-50 text-gray-600 cursor-pointer flex items-center gap-2 transition-colors group/event"
+                @click.stop="handleEventClick({ event })"
               >
-                <div class="w-1 h-1 rounded-full flex-shrink-0 transition-transform group-hover/event:scale-125" :style="{ backgroundColor: event.backgroundColor }"></div>
-                <span class="font-medium text-gray-400 w-14 flex-shrink-0 tabular-nums tracking-tight">{{ formatEventTime(event) }}</span>
-                <span class="truncate text-gray-600 group-hover/event:text-gray-900">{{ event.title }}</span>
+                <div class="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-transform group-hover/event:scale-125" :style="{ backgroundColor: event.backgroundColor }"></div>
+                <span class="font-medium text-gray-500 w-14 flex-shrink-0 tabular-nums tracking-tight">{{ formatEventTime(event) }}</span>
+                <span class="truncate text-gray-700 font-medium group-hover/event:text-gray-900">{{ event.title }}</span>
               </div>
-              <div v-if="getProjectEvents(project.id).length > 3" class="pl-2 py-0.5 text-[10px] text-gray-300 font-medium hover:text-gray-500 cursor-pointer transition-colors">
+              <div v-if="getProjectEvents(project.id).length > 3" class="pl-2 py-0.5 text-[11px] text-gray-400 font-medium hover:text-gray-600 cursor-pointer transition-colors">
                 + {{ getProjectEvents(project.id).length - 3 }}개 더보기
               </div>
             </div>
