@@ -28,44 +28,56 @@
         </div>
         
         <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          <!-- All Projects Option -->
+          <!-- All Projects Button -->
           <button
             @click="selectProject(null)"
             class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-            :class="selectedProjectId === null ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'hover:bg-gray-50 text-gray-600'"
+            :class="!selectedProjectId ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
           >
-            <div class="w-2 h-2 rounded-full" :class="selectedProjectId === null ? 'bg-white' : 'bg-gray-300 group-hover:bg-gray-400'"></div>
-            <span class="font-bold text-sm">전체 프로젝트</span>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+              :class="!selectedProjectId ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <span class="font-semibold">전체 프로젝트</span>
           </button>
 
-          <!-- Project Items -->
+          <!-- Project List -->
           <div v-for="project in projects" :key="project.id" class="space-y-1">
             <button
               @click="selectProject(project.id)"
               class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'hover:bg-gray-50 text-gray-600'"
+              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
             >
-              <div 
-                class="w-2 h-2 rounded-full transition-colors" 
-                :class="selectedProjectId === project.id ? 'bg-blue-500' : 'bg-gray-300 group-hover:bg-gray-400'"
-              ></div>
-              <div class="flex-1 min-w-0">
-                <div class="font-bold text-sm truncate">{{ project.name }}</div>
-                <div class="text-xs text-gray-400 truncate mt-0.5">{{ project.description || '설명 없음' }}</div>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
+                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
               </div>
+              <span class="font-medium truncate">{{ project.name }}</span>
+              <span v-if="getProjectEvents(project.id).length > 0" 
+                class="ml-auto text-xs font-medium px-2 py-0.5 rounded-full"
+                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'">
+                {{ getProjectEvents(project.id).length }}
+              </span>
             </button>
 
-            <!-- Project Events List -->
-            <div v-if="getProjectEvents(project.id).length > 0" class="pl-9 pr-2 space-y-1">
+            <!-- Project Events List (Sidebar) -->
+            <div v-if="getProjectEvents(project.id).length > 0" class="pl-12 pr-2 pb-2 space-y-1">
               <div 
-                v-for="event in getProjectEvents(project.id)" 
+                v-for="event in getProjectEvents(project.id).slice(0, 3)" 
                 :key="event.id"
-                @click="handleEventClick({ event: event })"
-                class="text-xs py-1.5 px-2 rounded-lg cursor-pointer hover:bg-gray-50 text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-2"
+                class="text-xs py-1.5 px-2 rounded-lg hover:bg-gray-50 text-gray-500 cursor-pointer flex items-center gap-2 transition-colors"
+                @click.stop="handleEventClick({ event: { id: event.id, extendedProps: event } })"
               >
-                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
-                <span class="truncate">{{ event.title }}</span>
-                <span class="text-[10px] text-gray-400 ml-auto whitespace-nowrap">{{ formatEventMeta(event) }}</span>
+                <div class="w-1.5 h-1.5 rounded-full flex-shrink-0" :style="{ backgroundColor: event.backgroundColor }"></div>
+                <span class="font-medium text-gray-400 w-16 flex-shrink-0">{{ formatEventTime(event) }}</span>
+                <span class="truncate text-gray-600">{{ event.title }}</span>
+              </div>
+              <div v-if="getProjectEvents(project.id).length > 3" class="pl-3 text-[10px] text-gray-400 font-medium">
+                + {{ getProjectEvents(project.id).length - 3 }}개 더보기
               </div>
             </div>
           </div>
@@ -637,11 +649,11 @@ function formatShortDate(date) {
   return `${month}/${day}`;
 }
 
-function formatEventMeta(event) {
+function formatEventTime(event) {
   if (!event.start) return '';
   const d = new Date(event.start);
-  const month = String(d.getMonth() + 1);
-  const day = String(d.getDate());
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   const dateStr = `${month}/${day}`;
 
   if (event.allDay) {
