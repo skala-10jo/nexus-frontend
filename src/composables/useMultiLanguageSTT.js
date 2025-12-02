@@ -77,7 +77,7 @@ export function useMultiLanguageSTT() {
           recognizingText.value = ''
 
           if (message.text && message.text.trim()) {
-            translationCards.value.unshift({
+            translationCards.value.push({
               id: Date.now(),
               original: message.text,
               detectedLang: message.detected_language || 'ko-KR',
@@ -85,9 +85,9 @@ export function useMultiLanguageSTT() {
               timestamp: new Date().toISOString()
             })
 
-            // 최대 50개
+            // 최대 50개 (오래된 것부터 제거)
             if (translationCards.value.length > 50) {
-              translationCards.value.length = 50
+              translationCards.value.shift()
             }
           }
         },
