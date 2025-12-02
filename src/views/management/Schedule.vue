@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50/30">
+  <div class="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 via-white to-blue-50">
     <!-- Header -->
     <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
       <div class="flex items-center justify-between">
@@ -21,7 +21,7 @@
 
     <div class="flex-1 flex min-h-0 px-6 pt-4 pb-12 overflow-hidden gap-6">
       <!-- Left Sidebar: Project List -->
-      <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
         <div class="p-5 flex items-center justify-between">
           <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
           <div class="flex items-center gap-1">
@@ -45,40 +45,40 @@
         </div>
         
         <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
-          <!-- Calendar View Button -->
-          <button
-            @click="selectProject(null)"
-            class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
-            :class="!selectedProjectId ? 'bg-gray-100 text-gray-900 font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
-          >
-            <div class="w-6 h-6 rounded flex items-center justify-center transition-colors"
-              :class="!selectedProjectId ? 'text-gray-800' : 'text-gray-500 group-hover:text-gray-700'">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <span class="text-base font-semibold">일정 캘린더</span>
-          </button>
-
           <!-- Project List -->
-          <div v-for="project in projects" :key="project.id" class="space-y-0.5">
+          <div v-for="project in projects" :key="project.id" class="space-y-2">
             <button
               @click="selectProject(project.id)"
-              class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
-              :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-800 font-bold' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              class="w-full text-left px-4 py-3.5 rounded-xl transition-all duration-300 flex items-center gap-3 group relative overflow-hidden"
+              :class="selectedProjectId === project.id 
+                ? 'bg-white shadow-md shadow-blue-900/5 ring-1 ring-black/5' 
+                : 'bg-white/50 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'"
             >
-              <div class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
-                :class="selectedProjectId === project.id ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'">
+              <!-- Active Indicator -->
+              <div 
+                v-if="selectedProjectId === project.id" 
+                class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-l-xl"
+              ></div>
+
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
+                :class="selectedProjectId === project.id ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:text-gray-600 group-hover:bg-gray-50'">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
               </div>
-              <span class="text-base font-medium truncate flex-1">{{ project.name }}</span>
-              <span v-if="getProjectEvents(project.id).length > 0" 
-                class="text-xs font-semibold px-1.5 py-0.5 rounded-full transition-colors"
-                :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500 group-hover:text-gray-700'">
-                {{ getProjectEvents(project.id).length }}
-              </span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-sm font-bold truncate" :class="selectedProjectId === project.id ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'">{{ project.name }}</span>
+                  <span v-if="getProjectEvents(project.id).length > 0" 
+                    class="text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors"
+                    :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
+                    {{ getProjectEvents(project.id).length }}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-400 truncate group-hover:text-gray-500 transition-colors">
+                  {{ project.description || '설명 없음' }}
+                </p>
+              </div>
             </button>
 
             <!-- Project Events List (Sidebar) -->
@@ -103,7 +103,7 @@
 
       <!-- Right Content: Calendar, Project Detail, or Project Edit -->
       <div class="flex-1 flex flex-col min-w-0">
-        <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-2xl shadow-blue-900/5 flex-1 flex flex-col relative overflow-hidden">
+        <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/60 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 flex flex-col relative overflow-hidden">
           
           <!-- Project Edit View -->
           <ProjectEdit
@@ -129,10 +129,11 @@
             v-else-if="selectedProjectId"
             :project="selectedProject"
             :allDocuments="allDocuments"
-            :showCloseButton="false"
+            :showCloseButton="true"
             class="h-full"
             @edit="openEditProjectModal"
             @delete="deleteProject"
+            @close="selectedProjectId = null"
           />
 
           <!-- Calendar View -->
@@ -853,7 +854,7 @@ watch(showModal, async (newVal) => {
   --fc-button-active-border-color: #d1d5db;
   --fc-event-bg-color: #3b82f6;
   --fc-event-border-color: transparent;
-  --fc-today-bg-color: #eff6ff;
+  --fc-today-bg-color: #f0f9ff; /* Softer blue for today */
   --fc-neutral-bg-color: #f9fafb;
   --fc-list-event-hover-bg-color: #f3f4f6;
   font-family: inherit;
@@ -866,40 +867,43 @@ watch(showModal, async (newVal) => {
 }
 
 :deep(.fc-toolbar-title) {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #111827;
   letter-spacing: -0.025em;
 }
 
 :deep(.fc-button) {
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   font-weight: 600;
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1rem;
   text-transform: capitalize;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
   border: 1px solid #f3f4f6;
+  font-size: 0.875rem;
 }
 
 :deep(.fc-button:hover) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.05), 0 3px 6px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background-color: white;
+  border-color: #e5e7eb;
 }
 
 :deep(.fc-button-active) {
-  background-color: #111827 !important;
-  border-color: #111827 !important;
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
   color: white !important;
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
 }
 
 :deep(.fc-button-group) {
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 :deep(.fc-button-group > .fc-button) {
-  border-radius: 1rem !important;
+  border-radius: 0.75rem !important;
   margin-left: 0 !important;
 }
 
@@ -910,21 +914,21 @@ watch(showModal, async (newVal) => {
 }
 
 :deep(.fc-col-header-cell-cushion) {
-  padding: 16px 0;
+  padding: 12px 0;
   font-weight: 700;
-  color: #9ca3af;
+  color: #6b7280;
   text-transform: uppercase;
   font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 
 :deep(.fc-daygrid-day-number) {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #6b7280;
-  padding: 12px;
-  width: 36px;
-  height: 36px;
+  padding: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -934,28 +938,29 @@ watch(showModal, async (newVal) => {
 }
 
 :deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
-  background-color: #111827;
+  background-color: #3b82f6;
   color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 /* Weekend Background */
 :deep(.fc-day-sat),
 :deep(.fc-day-sun) {
-  background-color: #f9fafb;
+  background-color: #fafafa;
 }
 
 /* Events */
 :deep(.fc-event) {
-  border-radius: 0.5rem;
-  padding: 1px 4px;
-  font-size: 0.8rem;
+  border-radius: 0.375rem;
+  padding: 2px 4px;
+  font-size: 0.75rem;
   font-weight: 600;
   border: none;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 1px;
+  margin-bottom: 2px;
   cursor: pointer;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 :deep(.fc-event:hover) {
@@ -970,7 +975,7 @@ watch(showModal, async (newVal) => {
 }
 
 :deep(.fc-daygrid-day-frame) {
-  padding: 8px;
+  padding: 4px;
 }
 
 :deep(.fc-scrollgrid) {
@@ -983,7 +988,7 @@ watch(showModal, async (newVal) => {
 
 /* TimeGrid View */
 :deep(.fc-timegrid-slot) {
-  height: 0.5rem;
+  height: 3rem; /* Taller slots */
   border-bottom: 1px dashed #f3f4f6;
 }
 
@@ -994,8 +999,8 @@ watch(showModal, async (newVal) => {
 }
 
 :deep(.fc-v-event) {
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* List View */

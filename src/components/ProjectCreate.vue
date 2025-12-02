@@ -10,6 +10,15 @@
           새로운 프로젝트를 생성하고 문서를 연결하세요.
         </p>
       </div>
+      <button
+        @click="$emit('cancel')"
+        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        aria-label="닫기"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <!-- Content -->
