@@ -214,6 +214,12 @@
       >
         편집
       </button>
+      <button
+        @click="confirmDelete"
+        class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+      >
+        삭제
+      </button>
     </div>
   </div>
 </template>
@@ -237,7 +243,13 @@ const props = defineProps({
   }
 });
 
-defineEmits(['close', 'edit']);
+const emit = defineEmits(['close', 'edit', 'delete']);
+
+const confirmDelete = () => {
+  if (confirm(`"${props.project.name}" 프로젝트를 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) {
+    emit('delete', props.project);
+  }
+};
 
 // Related schedules
 const relatedSchedules = ref([]);

@@ -4,7 +4,7 @@
     <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">일정 관리</h1>
+          <h1 class="text-2xl font-bold text-gray-900">프로젝트•일정 관리</h1>
           <p class="text-sm text-gray-500 mt-1 font-medium">
             프로젝트 타임라인을 관리하고 추적하세요
           </p>
@@ -24,17 +24,28 @@
       <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div class="p-5 flex items-center justify-between">
           <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
-          <button
-            @click="openCreateProject"
-            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-            title="새 프로젝트 생성"
-          >
-            <PlusIcon class="w-5 h-5" />
-          </button>
+          <div class="flex items-center gap-1">
+            <router-link
+              to="/management/project"
+              class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all"
+              title="프로젝트 페이지로 이동"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </router-link>
+            <button
+              @click="openCreateProject"
+              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              title="새 프로젝트 생성"
+            >
+              <PlusIcon class="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
-          <!-- All Projects Button -->
+          <!-- Calendar View Button -->
           <button
             @click="selectProject(null)"
             class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
@@ -43,10 +54,10 @@
             <div class="w-6 h-6 rounded flex items-center justify-center transition-colors"
               :class="!selectedProjectId ? 'text-gray-800' : 'text-gray-500 group-hover:text-gray-700'">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <span class="text-base font-semibold">전체 프로젝트</span>
+            <span class="text-base font-semibold">일정 캘린더</span>
           </button>
 
           <!-- Project List -->
@@ -121,6 +132,7 @@
             :showCloseButton="false"
             class="h-full"
             @edit="openEditProjectModal"
+            @delete="deleteProject"
           />
 
           <!-- Calendar View -->
@@ -508,7 +520,9 @@ async function handleEventDrop(dropInfo) {
       endTime: event.end ? event.end.toISOString() : null,
       allDay: event.allDay,
       color: event.backgroundColor,
-      location: event.extendedProps.location || ''
+      location: event.extendedProps.location || '',
+      projectId: event.extendedProps.project?.id || null,
+      categoryIds: event.extendedProps.categories?.map(c => c.id) || []
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
@@ -527,7 +541,9 @@ async function handleEventResize(resizeInfo) {
       endTime: event.end ? event.end.toISOString() : null,
       allDay: event.allDay,
       color: event.backgroundColor,
-      location: event.extendedProps.location || ''
+      location: event.extendedProps.location || '',
+      projectId: event.extendedProps.project?.id || null,
+      categoryIds: event.extendedProps.categories?.map(c => c.id) || []
     });
   } catch (error) {
     console.error('Failed to update schedule:', error);
@@ -782,6 +798,18 @@ async function saveProject(formData) {
   } catch (error) {
     console.error('Failed to save project:', error);
     alert('프로젝트 저장에 실패했습니다.');
+  }
+}
+
+async function deleteProject(project) {
+  try {
+    await projectStore.deleteProject(project.id);
+    selectedProjectId.value = null; // Deselect and go back to calendar
+    await loadProjects(); // Refresh list
+    refreshCalendar(); // Refresh calendar to update project-related events
+  } catch (error) {
+    console.error('Failed to delete project:', error);
+    alert('프로젝트 삭제에 실패했습니다.');
   }
 }
 
