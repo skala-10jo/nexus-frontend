@@ -503,29 +503,7 @@ const editingScenario = ref({
   scheduleId: null
 })
 
-// 프로젝트 아이콘 색상
-const iconClasses = [
-  'bg-gradient-to-br from-pink-400 to-pink-500',
-  'bg-gradient-to-br from-blue-500 to-blue-600',
-  'bg-gradient-to-br from-purple-500 to-purple-600',
-  'bg-gradient-to-br from-green-500 to-green-600',
-  'bg-gradient-to-br from-violet-500 to-violet-600',
-  'bg-gradient-to-br from-indigo-500 to-indigo-600'
-]
-
-function getProjectIconClass(index) {
-  return iconClasses[index % iconClasses.length]
-}
-
-// 프로젝트별 시나리오 개수 계산
-function getProjectScenarioCount(projectId) {
-  // scenarios 배열에서 해당 프로젝트를 포함하는 시나리오 개수 반환
-  return scenarios.value.filter(scenario => {
-    // scenario.projectIds가 없으면 빈 배열로 처리
-    const projectIds = scenario.projectIds || []
-    return projectIds.includes(projectId)
-  }).length
-}
+// NOTE: 프로젝트별 시나리오 개수 계산은 ScenarioProjectSidebar.vue에서 처리
 
 // 수동 생성 폼 유효성 검사
 const isManualFormValid = computed(() => {
@@ -741,7 +719,8 @@ async function generateAllFields() {
       documentIds: [],
       language: generateOptions.value.language,
       difficulty: generateOptions.value.difficulty,
-      count: 1  // 1개만 생성
+      count: 1,  // 1개만 생성
+      saveToDb: false  // 프리뷰 모드 - DB에 저장하지 않음
     }
 
     console.log('🎯 Generating all fields with:', requestData)
