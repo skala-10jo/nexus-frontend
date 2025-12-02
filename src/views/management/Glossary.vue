@@ -1,25 +1,25 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50/50">
+  <div class="h-screen flex flex-col overflow-hidden bg-gray-50/50">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Glossary</h1>
+          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">전문용어사전</h1>
           <p class="text-sm text-gray-500 mt-1 font-medium">
-            Manage project terminology and extract terms automatically
+            프로젝트 용어를 관리하고 자동으로 추출하세요
           </p>
         </div>
         <div class="flex gap-3 items-center">
           <div v-if="selectedTermIds.length > 0" class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
             <span class="text-sm font-bold text-gray-600">
-              {{ selectedTermIds.length }} selected
+              {{ selectedTermIds.length }} 선택됨
             </span>
             <button
               @click="handleBulkDelete"
               class="text-red-600 hover:text-red-700 font-medium text-sm flex items-center gap-1"
             >
               <TrashIcon class="w-4 h-4" />
-              Delete
+              삭제
             </button>
           </div>
           
@@ -28,7 +28,7 @@
             class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
           >
             <SparklesIcon class="w-5 h-5 text-blue-500" />
-            Extract Terms
+            용어 추출
           </button>
           
           <button
@@ -36,64 +36,19 @@
             class="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
           >
             <PlusIcon class="w-5 h-5" />
-            Add Term
+            용어 추가
           </button>
         </div>
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-8">
-      <div class="max-w-7xl mx-auto space-y-8">
+    <div class="flex-1 flex flex-col min-h-0 px-6 pt-4 pb-12 overflow-hidden">
+      <div class="w-full max-w-[98%] mx-auto flex flex-col h-full space-y-6">
         
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <!-- Total Terms -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-            <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Terms</p>
-              <p class="text-3xl font-bold text-gray-900">{{ pagination.totalElements }}</p>
-            </div>
-            <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-600 group-hover:bg-gray-100 transition-colors">
-              <BookOpenIcon class="w-6 h-6" />
-            </div>
-          </div>
 
-          <!-- Verified -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-            <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Verified</p>
-              <p class="text-3xl font-bold text-gray-900">{{ verifiedTermsCount }}</p>
-            </div>
-            <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 group-hover:bg-green-100 transition-colors">
-              <CheckBadgeIcon class="w-6 h-6" />
-            </div>
-          </div>
-
-          <!-- Unverified -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-            <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pending</p>
-              <p class="text-3xl font-bold text-gray-900">{{ unverifiedTermsCount }}</p>
-            </div>
-            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-100 transition-colors">
-              <ExclamationCircleIcon class="w-6 h-6" />
-            </div>
-          </div>
-
-          <!-- AI Extracted -->
-          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-            <div>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">AI Extracted</p>
-              <p class="text-3xl font-bold text-gray-900">{{ autoExtractedCount }}</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
-              <SparklesIcon class="w-6 h-6" />
-            </div>
-          </div>
-        </div>
 
         <!-- Main Content Area -->
-        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
           
           <!-- Toolbar -->
           <div class="p-6 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between bg-white">
@@ -105,7 +60,7 @@
                   @change="handleProjectChange"
                   class="w-full appearance-none pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:bg-gray-100"
                 >
-                  <option value="">All Projects</option>
+                  <option value="">전체 프로젝트</option>
                   <option v-for="project in projects" :key="project.id" :value="project.id">
                     {{ project.name }}
                   </option>
@@ -119,7 +74,7 @@
                   v-model="searchQuery"
                   @input="handleSearch"
                   type="text"
-                  placeholder="Search terms..."
+                  placeholder="용어 검색..."
                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
                 <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -133,10 +88,10 @@
                   v-model="filterStatus"
                   class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
                 >
-                  <option value="">All Status</option>
-                  <option value="AUTO_EXTRACTED">AI Extracted</option>
-                  <option value="USER_ADDED">User Added</option>
-                  <option value="USER_EDITED">User Edited</option>
+                  <option value="">전체 상태</option>
+                  <option value="AUTO_EXTRACTED">AI 추출</option>
+                  <option value="USER_ADDED">사용자 추가</option>
+                  <option value="USER_EDITED">사용자 수정</option>
                 </select>
                 <ChevronDownIcon class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
               </div>
@@ -146,9 +101,9 @@
                   v-model="filterVerified"
                   class="appearance-none pl-4 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none hover:border-gray-300 transition-all"
                 >
-                  <option value="">All Verification</option>
-                  <option value="true">Verified</option>
-                  <option value="false">Unverified</option>
+                  <option value="">전체 검증</option>
+                  <option value="true">검증됨</option>
+                  <option value="false">미검증</option>
                 </select>
                 <ChevronDownIcon class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
               </div>
@@ -164,12 +119,12 @@
           </div>
 
           <!-- Table -->
-          <div class="relative">
+          <div class="relative flex-1 overflow-y-auto custom-scrollbar">
             <!-- Loading Overlay -->
             <div v-if="loading && terms.length === 0" class="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-sm font-medium text-gray-500">Loading terms...</p>
+                <p class="text-sm font-medium text-gray-500">용어 불러오는 중...</p>
               </div>
             </div>
 
@@ -178,20 +133,20 @@
               <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                 <BookOpenIcon class="w-10 h-10 text-gray-300" />
               </div>
-              <h3 class="text-lg font-bold text-gray-900 mb-1">No terms found</h3>
-              <p class="text-sm text-gray-500 mb-6">Get started by adding a new term or extracting from documents.</p>
+              <h3 class="text-lg font-bold text-gray-900 mb-1">용어가 없습니다</h3>
+              <p class="text-sm text-gray-500 mb-6">새 용어를 추가하거나 문서에서 추출하여 시작하세요.</p>
               <button
                 @click="showAddTermModal = true"
                 class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
               >
-                Add First Term
+                첫 번째 용어 추가
               </button>
             </div>
 
             <!-- Data Table -->
-            <div v-else class="overflow-x-auto">
+            <div v-else class="h-full">
               <table class="w-full">
-                <thead>
+                <thead class="sticky top-0 z-10 bg-gray-50 shadow-sm">
                   <tr class="border-b border-gray-100 bg-gray-50/50">
                     <th class="px-6 py-4 text-left w-12">
                       <input
@@ -201,13 +156,13 @@
                         class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Korean</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">English</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Vietnamese</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Abbr</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Verified</th>
-                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">한국어</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">영어</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">베트남어</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">약어</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">상태</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">검증 여부</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">작업</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -250,11 +205,11 @@
                     <td class="px-6 py-4">
                       <div v-if="term.isVerified" class="flex items-center gap-1.5 text-green-600">
                         <CheckCircleIcon class="w-4 h-4" />
-                        <span class="text-xs font-bold">Verified</span>
+                        <span class="text-xs font-bold">검증됨</span>
                       </div>
                       <div v-else class="flex items-center gap-1.5 text-gray-400">
                         <div class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
-                        <span class="text-xs font-medium">Pending</span>
+                        <span class="text-xs font-bold">미검증</span>
                       </div>
                     </td>
                     <td class="px-6 py-4 text-right">
@@ -296,40 +251,41 @@
               </table>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="pagination.totalPages > 1" class="px-6 py-4 border-t border-gray-100 bg-gray-50/30 flex items-center justify-between">
-              <p class="text-xs font-medium text-gray-500">
-                Showing <span class="font-bold text-gray-900">{{ Math.min((pagination.page + 1) * pagination.size, pagination.totalElements) }}</span> of <span class="font-bold text-gray-900">{{ pagination.totalElements }}</span> terms
-              </p>
-              <div class="flex items-center gap-2">
-                <button
-                  @click="goToPage(pagination.page - 1)"
-                  :disabled="pagination.page === 0"
-                  class="p-2 rounded-lg text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                >
-                  <ChevronLeftIcon class="w-4 h-4" />
-                </button>
-                <div class="flex items-center gap-1">
-                  <template v-for="page in displayedPages" :key="page">
-                    <button
-                      v-if="page !== '...'"
-                      @click="goToPage(page)"
-                      class="w-8 h-8 rounded-lg text-xs font-bold transition-all"
-                      :class="pagination.page === page ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-white hover:text-gray-900'"
-                    >
-                      {{ page + 1 }}
-                    </button>
-                    <span v-else class="text-gray-400 text-xs">...</span>
-                  </template>
-                </div>
-                <button
-                  @click="goToPage(pagination.page + 1)"
-                  :disabled="pagination.page >= pagination.totalPages - 1"
-                  class="p-2 rounded-lg text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                >
-                  <ChevronRightIcon class="w-4 h-4" />
-                </button>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="pagination.totalPages > 1" class="px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 flex items-center justify-between z-10">
+            <p class="text-xs font-medium text-gray-500">
+              전체 <span class="font-bold text-gray-900">{{ pagination.totalElements }}</span>개 중 <span class="font-bold text-gray-900">{{ Math.min((pagination.page + 1) * pagination.size, pagination.totalElements) }}</span>개 표시
+            </p>
+            <div class="flex items-center gap-2">
+              <button
+                @click="goToPage(pagination.page - 1)"
+                :disabled="pagination.page === 0"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              >
+                <ChevronLeftIcon class="w-4 h-4" />
+              </button>
+              <div class="flex items-center gap-1">
+                <template v-for="page in displayedPages" :key="page">
+                  <button
+                    v-if="page !== '...'"
+                    @click="goToPage(page)"
+                    class="w-8 h-8 rounded-lg text-xs font-bold transition-all"
+                    :class="pagination.page === page ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
+                  >
+                    {{ page + 1 }}
+                  </button>
+                  <span v-else class="text-gray-400 text-xs">...</span>
+                </template>
               </div>
+              <button
+                @click="goToPage(pagination.page + 1)"
+                :disabled="pagination.page >= pagination.totalPages - 1"
+                class="p-2 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              >
+                <ChevronRightIcon class="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -359,7 +315,7 @@
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white">
             <h3 class="text-xl font-bold text-gray-900">
-              {{ showEditDialog ? 'Edit Term' : 'Add New Term' }}
+              {{ showEditDialog ? '용어 수정' : '새 용어 추가' }}
             </h3>
             <button @click="closeModal" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
               <XMarkIcon class="w-6 h-6" />
@@ -370,7 +326,7 @@
             <form @submit.prevent="handleSave" class="space-y-6">
               <div class="grid grid-cols-2 gap-6">
                 <div class="space-y-2">
-                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Korean Term <span class="text-red-500">*</span></label>
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">한국어 용어 <span class="text-red-500">*</span></label>
                   <input
                     v-model="activeForm.koreanTerm"
                     type="text"
@@ -380,7 +336,7 @@
                   />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">English Term <span class="text-red-500">*</span></label>
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">영어 용어 <span class="text-red-500">*</span></label>
                   <input
                     v-model="activeForm.englishTerm"
                     type="text"
@@ -393,7 +349,7 @@
 
               <div class="grid grid-cols-3 gap-6">
                 <div class="space-y-2">
-                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Vietnamese</label>
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">베트남어</label>
                   <input
                     v-model="activeForm.vietnameseTerm"
                     type="text"
@@ -401,7 +357,7 @@
                   />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Abbreviation</label>
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">약어</label>
                   <input
                     v-model="activeForm.abbreviation"
                     type="text"
@@ -409,7 +365,7 @@
                   />
                 </div>
                 <div class="space-y-2">
-                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Domain</label>
+                  <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">도메인</label>
                   <input
                     v-model="activeForm.domain"
                     type="text"
@@ -419,7 +375,7 @@
               </div>
 
               <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Definition</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">정의</label>
                 <textarea
                   v-model="activeForm.definition"
                   rows="3"
@@ -429,7 +385,7 @@
               </div>
 
               <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Context / Usage</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">문맥 / 용례</label>
                 <textarea
                   v-model="activeForm.context"
                   rows="2"
@@ -444,13 +400,13 @@
               @click="closeModal"
               class="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all"
             >
-              Cancel
+              취소
             </button>
             <button
               @click="handleSave"
               class="px-6 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
             >
-              {{ showEditDialog ? 'Save Changes' : 'Create Term' }}
+              {{ showEditDialog ? '변경사항 저장' : '용어 생성' }}
             </button>
           </div>
         </div>
@@ -484,41 +440,41 @@
           <div class="p-8 space-y-6">
             <div class="grid grid-cols-2 gap-8">
               <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Vietnamese</p>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">베트남어</p>
                 <p class="text-lg font-medium text-gray-900">{{ selectedTerm?.vietnameseTerm || '-' }}</p>
               </div>
               <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Abbreviation</p>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">약어</p>
                 <p class="text-lg font-medium text-gray-900">{{ selectedTerm?.abbreviation || '-' }}</p>
               </div>
             </div>
 
             <div v-if="selectedTerm?.definition">
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Definition</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">정의</p>
               <p class="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
                 {{ selectedTerm.definition }}
               </p>
             </div>
 
             <div v-if="selectedTerm?.context">
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Context</p>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">문맥</p>
               <p class="text-gray-600 italic">"{{ selectedTerm.context }}"</p>
             </div>
 
             <div class="flex items-center justify-between pt-6 border-t border-gray-100">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Verification:</span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">검증 여부:</span>
                 <span v-if="selectedTerm?.isVerified" class="text-green-600 font-bold text-sm flex items-center gap-1">
-                  <CheckCircleIcon class="w-4 h-4" /> Verified
+                  <CheckCircleIcon class="w-4 h-4" /> 검증됨
                 </span>
-                <span v-else class="text-gray-400 font-bold text-sm">Unverified</span>
+                <span v-else class="text-gray-400 font-bold text-sm">미검증</span>
               </div>
               
               <button
                 @click="editTermFromDetail"
                 class="px-6 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all"
               >
-                Edit Term
+                용어 수정
               </button>
             </div>
           </div>
