@@ -4,7 +4,7 @@
     <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 px-8 py-6 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">Dashboard</h1>
           <p class="text-sm text-gray-500 mt-1">Welcome back, {{ user?.fullName }}!</p>
         </div>
         <div class="flex items-center gap-3">

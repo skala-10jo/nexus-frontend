@@ -2,8 +2,8 @@
   <div class="h-full w-full flex flex-col bg-gray-50">
     <!-- Error Display (Debug) -->
     <div v-if="error" class="bg-red-50 p-4 border-b border-red-200 text-red-700 flex items-center justify-between">
-      <span>Error: {{ error }}</span>
-      <button @click="error = null" class="text-red-500 hover:text-red-700">Dismiss</button>
+      <span>오류: {{ error }}</span>
+      <button @click="error = null" class="text-red-500 hover:text-red-700">닫기</button>
     </div>
 
     <!-- Header -->
@@ -11,7 +11,7 @@
       <div class="flex items-center gap-4">
         <div>
           <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-            {{ scenario?.title || 'Conversation Practice' }}
+            {{ scenario?.title || '회화 연습' }}
             <span v-if="scenario?.category" class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
               {{ scenario.category }}
             </span>
@@ -22,12 +22,12 @@
       <div class="flex items-center gap-3">
         <div v-if="scenario" class="hidden md:flex items-center gap-4 text-sm text-gray-600 mr-4 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
           <div class="flex items-center gap-2">
-            <span class="font-semibold text-gray-900">My Role:</span>
+            <span class="font-semibold text-gray-900">나의 역할:</span>
             <span>{{ scenario.roles?.user || 'User' }}</span>
           </div>
           <div class="w-px h-4 bg-gray-300"></div>
           <div class="flex items-center gap-2">
-            <span class="font-semibold text-gray-900">AI Role:</span>
+            <span class="font-semibold text-gray-900">상대 역할:</span>
             <span>{{ scenario.roles?.ai || 'AI' }}</span>
           </div>
         </div>
@@ -35,7 +35,7 @@
           @click="resetConversation" 
           :disabled="isLoading"
           class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          title="Reset Conversation"
+          title="대화 초기화"
         >
           <ArrowPathIcon class="w-5 h-5" />
         </button>
@@ -43,7 +43,7 @@
           @click="endConversation" 
           class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
-          End Session
+          종료
         </button>
       </div>
     </header>
@@ -67,7 +67,7 @@
             <div class="absolute top-4 right-4">
               <div class="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 text-green-400 text-xs font-bold border border-white/10">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Avatar Active
+                아바타 활성
               </div>
             </div>
 
@@ -78,7 +78,7 @@
                   <span class="w-3 h-3 bg-red-500 rounded-full"></span>
                   Recording... {{ recordingTime }}s
                 </div>
-                <p class="text-white text-lg font-medium">{{ interimText || 'Listening...' }}</p>
+                <p class="text-white text-lg font-medium">{{ interimText || '듣는 중...' }}</p>
               </div>
               <div v-else-if="isProcessingVoice" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
                 <ArrowPathIcon class="w-6 h-6 animate-spin" />
@@ -92,11 +92,36 @@
           </div>
         </div>
 
-        <!-- Messages List (shown when avatar is disabled) -->
-        <div v-else class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" ref="conversationArea">
+        <!-- Chat Mode View -->
+        <div v-else class="flex-1 flex flex-col min-h-0 bg-gray-50">
+          <!-- Required Terms Section -->
+          <div class="bg-white border-b border-gray-200 px-6 py-4 shadow-sm z-10 shrink-0">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <CheckCircleIcon class="w-4 h-4 text-blue-500" />
+              필수 용어
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <span 
+                v-for="term in requiredTerms" 
+                :key="term"
+                class="px-3 py-1.5 rounded-lg text-sm font-bold border transition-all duration-300 flex items-center gap-1.5"
+                :class="[
+                  detectedTerms.includes(term) 
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' 
+                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                ]"
+              >
+                {{ term }}
+                <CheckCircleIcon v-if="detectedTerms.includes(term)" class="w-4 h-4 text-white" />
+              </span>
+            </div>
+          </div>
+
+          <!-- Messages List -->
+          <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" ref="conversationArea">
           <div v-if="!isLoading && messages.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
             <ChatBubbleLeftRightIcon class="w-16 h-16 opacity-20" />
-            <p>Start the conversation by saying hello!</p>
+            <p>대화를 시작해보세요!</p>
           </div>
 
           <div
@@ -132,7 +157,7 @@
                 class="absolute -bottom-9 left-0 text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md transition-colors shadow-sm border border-blue-100 z-10"
               >
                 <LanguageIcon class="w-3.5 h-3.5" />
-                {{ translationLoading[index] ? 'Translating...' : (message.showTranslation ? 'Show Original' : 'Translate') }}
+                {{ translationLoading[index] ? '번역 중...' : (message.showTranslation ? '원문 보기' : '번역') }}
               </button>
 
               <!-- Feedback Indicator (User only) -->
@@ -159,9 +184,10 @@
                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
              </div>
           </div>
+          </div>
         </div>
 
-        <!-- Input Area -->
+        <!-- Input Area (Always visible) -->
         <div class="p-6 bg-white border-t border-gray-200 z-20 shrink-0">
           <div class="max-w-4xl mx-auto flex flex-col gap-4">
             
@@ -233,7 +259,7 @@
                 <textarea
                   v-model="userInput"
                   @keydown.enter.prevent="sendMessage"
-                  placeholder="Type your message... (Enter to send)"
+                  placeholder="메시지를 입력하세요... (Enter로 전송)"
                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-gray-900 placeholder-gray-400 transition-all"
                   rows="1"
                   style="min-height: 50px; max-height: 150px;"
@@ -280,11 +306,11 @@
       </main>
 
       <!-- Feedback Sidebar -->
-      <aside class="w-[600px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
+      <aside class="w-[700px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
         <div class="p-5 border-b border-gray-100 bg-white">
           <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-            <ChartBarIcon class="w-5 h-5 text-blue-600" />
-            Feedback & Analysis
+            <ChartBarIcon class="w-5 h-5 text-blue-700" />
+            피드백
           </h2>
           
           <!-- Tabs -->
@@ -300,7 +326,7 @@
                   : 'text-gray-500 hover:text-gray-700'
               ]"
             >
-              {{ tab === 'messages' ? 'Message Analysis' : 'Overall Report' }}
+              {{ tab === 'messages' ? '대화별 피드백' : '종합 피드백' }}
             </button>
           </div>
         </div>
@@ -311,7 +337,7 @@
           <div v-if="activeTab === 'messages'">
             <div v-if="userMessages.length === 0" class="text-center py-12 text-gray-400">
               <ChatBubbleLeftRightIcon class="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p class="text-sm">Send a message to get real-time feedback</p>
+              <p class="text-sm">메시지를 보내면 실시간 피드백을 받을 수 있어요</p>
             </div>
 
             <div v-else class="space-y-6">
@@ -321,7 +347,7 @@
                   <ChevronLeftIcon class="w-5 h-5 text-gray-600" />
                 </button>
                 <span class="text-sm font-bold text-gray-700">
-                  Message {{ selectedMessageIndex + 1 }} / {{ userMessages.length }}
+                  메시지 {{ selectedMessageIndex + 1 }} / {{ userMessages.length }}
                 </span>
                 <button @click="selectMessage(Math.min(userMessages.length - 1, selectedMessageIndex + 1))" :disabled="selectedMessageIndex >= userMessages.length - 1" class="p-2 hover:bg-white rounded-lg disabled:opacity-30 transition-colors">
                   <ChevronRightIcon class="w-5 h-5 text-gray-600" />
@@ -333,7 +359,7 @@
                 
                 <!-- Original Message -->
                 <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Your Message</p>
+                  <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">나의 메시지</p>
                   <p class="text-gray-900 font-medium">{{ userMessages[selectedMessageIndex].message }}</p>
                 </div>
 
@@ -341,20 +367,49 @@
                 <div v-if="selectedMessageFeedback.score !== undefined" class="grid grid-cols-2 gap-3">
                   <div class="bg-white border border-gray-100 rounded-xl p-4 text-center shadow-sm">
                     <div class="text-3xl font-black text-blue-600 mb-1">{{ selectedMessageFeedback.score }}</div>
-                    <div class="text-xs font-bold text-gray-400 uppercase">Overall</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase">종합</div>
                   </div>
                   <div class="bg-white border border-gray-100 rounded-xl p-4 space-y-2 shadow-sm">
                     <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-500 font-medium">Grammar</span>
+                      <span class="text-gray-500 font-medium">문법</span>
                       <span class="font-bold text-gray-900">{{ selectedMessageFeedback.score_breakdown?.grammar }}/10</span>
                     </div>
                     <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-500 font-medium">Vocab</span>
+                      <span class="text-gray-500 font-medium">어휘</span>
                       <span class="font-bold text-gray-900">{{ selectedMessageFeedback.score_breakdown?.vocabulary }}/10</span>
                     </div>
                     <div class="flex justify-between items-center text-xs">
-                      <span class="text-gray-500 font-medium">Fluency</span>
+                      <span class="text-gray-500 font-medium">유창성</span>
                       <span class="font-bold text-gray-900">{{ selectedMessageFeedback.score_breakdown?.fluency }}/10</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Terminology Usage -->
+                <div v-if="selectedMessageFeedback.terminology_usage" class="space-y-3">
+                  <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <CheckCircleIcon class="w-4 h-4 text-emerald-500" />
+                    용어 사용
+                  </h3>
+                  <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 space-y-3">
+                    <div v-if="selectedMessageFeedback.terminology_usage.used?.length" class="space-y-2">
+                      <p class="text-xs font-bold text-emerald-600 uppercase">사용한 용어</p>
+                      <div class="flex flex-wrap gap-2">
+                        <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.used" :key="idx" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium">
+                          {{ term }}
+                        </span>
+                      </div>
+                    </div>
+                    <div v-if="selectedMessageFeedback.terminology_usage.missed?.length" class="space-y-2">
+                      <p class="text-xs font-bold text-gray-500 uppercase">미사용 용어</p>
+                      <div class="flex flex-wrap gap-2">
+                        <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.missed" :key="idx" class="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                          {{ term }}
+                        </span>
+                      </div>
+                    </div>
+                    <div v-if="selectedMessageFeedback.terminology_usage.feedback" class="text-sm text-gray-700 mt-2">
+                      {{ selectedMessageFeedback.terminology_usage.feedback }}
                     </div>
                   </div>
                 </div>
@@ -363,7 +418,7 @@
                 <div v-if="selectedMessageFeedback.grammar_corrections?.length" class="space-y-3">
                   <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <ExclamationCircleIcon class="w-4 h-4 text-amber-500" />
-                    Grammar Corrections
+                    문법 교정
                   </h3>
                   <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
                     <div v-for="(correction, idx) in selectedMessageFeedback.grammar_corrections" :key="idx" class="flex gap-2 text-sm text-gray-700">
@@ -377,7 +432,7 @@
                 <div v-if="selectedMessageFeedback.suggestions?.length" class="space-y-3">
                   <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <LightBulbIcon class="w-4 h-4 text-blue-500" />
-                    Better Expressions
+                    개선 제안
                   </h3>
                   <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
                     <div v-for="(suggestion, idx) in selectedMessageFeedback.suggestions" :key="idx" class="flex gap-2 text-sm text-gray-700">
@@ -391,12 +446,12 @@
                 <div v-if="selectedMessageFeedback.pronunciation_details" class="space-y-3">
                   <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <MicrophoneIcon class="w-4 h-4 text-purple-500" />
-                    Pronunciation
+                    발음
                   </h3>
                   
                   <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                     <div class="flex items-center justify-between mb-4">
-                      <span class="text-sm font-medium text-gray-600">Accuracy Score</span>
+                      <span class="text-sm font-medium text-gray-600">정확도</span>
                       <span class="text-lg font-bold text-purple-600">{{ selectedMessageFeedback.pronunciation_details.pronunciation_score.toFixed(1) }}</span>
                     </div>
                     
@@ -426,19 +481,19 @@
           <div v-else>
             <div v-if="!comprehensiveFeedback" class="text-center py-12 text-gray-400">
               <ChartBarIcon class="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p class="text-sm">Complete the conversation to generate a report</p>
+              <p class="text-sm">대화를 완료하면 종합 리포트가 생성됩니다</p>
             </div>
             
             <div v-else class="space-y-6 animate-fadeIn">
               <!-- Overall Score Card -->
               <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
                 <div class="text-center">
-                  <div class="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">Overall Performance</div>
+                  <div class="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">종합 점수</div>
                   <div class="text-5xl font-black mb-2">{{ comprehensiveFeedback.overall_score?.toFixed(1) || 0 }}</div>
                   <div class="flex justify-center gap-4 text-xs font-medium text-blue-100">
-                    <span>Fluency: {{ comprehensiveFeedback.fluency_score?.toFixed(1) }}</span>
+                    <span>유창성: {{ comprehensiveFeedback.fluency_score?.toFixed(1) }}</span>
                     <span>•</span>
-                    <span>Accuracy: {{ comprehensiveFeedback.accuracy_score?.toFixed(1) }}</span>
+                    <span>정확도: {{ comprehensiveFeedback.accuracy_score?.toFixed(1) }}</span>
                   </div>
                 </div>
               </div>
@@ -447,7 +502,7 @@
               <div v-if="comprehensiveFeedback.strengths?.length" class="space-y-3">
                 <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                   <CheckCircleIcon class="w-4 h-4 text-green-500" />
-                  Strengths
+                  잘한 점
                 </h3>
                 <ul class="space-y-2">
                   <li v-for="(strength, idx) in comprehensiveFeedback.strengths" :key="idx" class="flex gap-3 text-sm text-gray-600 bg-green-50/50 p-3 rounded-xl border border-green-100">
@@ -461,7 +516,7 @@
               <div v-if="comprehensiveFeedback.areas_for_improvement?.length" class="space-y-3">
                 <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                   <ArrowPathIcon class="w-4 h-4 text-amber-500" />
-                  Areas for Improvement
+                  개선할 점
                 </h3>
                 <ul class="space-y-2">
                   <li v-for="(area, idx) in comprehensiveFeedback.areas_for_improvement" :key="idx" class="flex gap-3 text-sm text-gray-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100">
@@ -480,9 +535,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import conversationService from '@/services/conversationService'
+import { speechToText } from '@/services/voiceService'
+import { useVoiceRecorder } from '@/composables/useVoiceRecorder'
 import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
@@ -502,6 +559,15 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+
+// Voice Recorder Composable
+const {
+  isRecording: voiceRecorderIsRecording,
+  audioLevel,
+  error: voiceRecorderError,
+  startRecording: startVoiceRecording,
+  stopRecording: stopVoiceRecording
+} = useVoiceRecorder()
 
 // State
 const scenario = ref(null)
@@ -626,6 +692,11 @@ const sendMessage = async () => {
     const history = messages.value.slice(0, -1).map(msg => ({ speaker: msg.speaker, message: msg.message }))
     const response = await conversationService.sendMessage(scenarioId, message, history)
 
+    // Update detected terms
+    if (response.detectedTerms?.length) {
+      detectedTerms.value = [...new Set([...detectedTerms.value, ...response.detectedTerms])]
+    }
+
     messages.value.push({ speaker: 'ai', message: response.aiMessage, timestamp: new Date() })
     isLoading.value = false
     await nextTick()
@@ -653,6 +724,11 @@ const sendMessage = async () => {
   }
 }
 
+const requiredTerms = computed(() => {
+  // Return scenario required terms or a default mock list for demonstration if missing
+  return scenario.value?.requiredTerms || ['deliverables', 'timelines', 'roles', 'budget', 'stakeholders']
+})
+
 const handleMessageClick = (message) => {
   const index = userMessages.value.findIndex(m => m === message)
   if (index !== -1) {
@@ -671,22 +747,68 @@ const toggleInputMode = () => {
   inputMode.value = inputMode.value === 'text' ? 'voice' : 'text'
 }
 
-const startRecording = () => {
-  isRecording.value = true
-  recordingTime.value = 0
-  recordingInterval = setInterval(() => recordingTime.value++, 1000)
-  // Mock recording logic
+const startRecording = async () => {
+  try {
+    recognizedText.value = ''
+    interimText.value = ''
+    finalTexts.value = []
+    recordingTime.value = 0
+
+    // 녹음 시작 타이머
+    recordingInterval = setInterval(() => recordingTime.value++, 1000)
+
+    // 실제 마이크 녹음 시작
+    await startVoiceRecording({
+      onDataAvailable: async (audioBlob, audioEnergy, audioFormat) => {
+        // 녹음된 오디오 청크 처리
+        console.log('Audio chunk received:', audioBlob.size, 'bytes')
+        lastAudioBlob.value = audioBlob
+
+        // STT API 호출
+        try {
+          const response = await speechToText(audioBlob, 'en-US')
+          if (response?.text) {
+            finalTexts.value.push(response.text)
+            interimText.value = response.text
+          }
+        } catch (err) {
+          console.error('STT failed:', err)
+        }
+      },
+      timeslice: 2000  // 2초 간격으로 오디오 청크 생성
+    })
+
+    isRecording.value = true
+  } catch (err) {
+    console.error('녹음 시작 실패:', err)
+    clearInterval(recordingInterval)
+    error.value = voiceRecorderError.value || '마이크 권한을 허용해주세요.'
+  }
 }
 
-const stopRecording = () => {
-  isRecording.value = false
+const stopRecording = async () => {
   clearInterval(recordingInterval)
-  isProcessingVoice.value = true
-  setTimeout(() => {
-    isProcessingVoice.value = false
-    userInput.value = "This is a simulated voice input."
-    sendMessage()
-  }, 1500)
+
+  // 실제 녹음 중지
+  await stopVoiceRecording()
+  isRecording.value = false
+
+  // 최종 텍스트 조합
+  const fullText = [...finalTexts.value, interimText.value].filter(Boolean).join(' ')
+
+  if (fullText.trim()) {
+    recognizedText.value = fullText
+    userInput.value = fullText
+
+    // 자동 전송
+    isProcessingVoice.value = true
+    setTimeout(() => {
+      isProcessingVoice.value = false
+      sendMessage()
+    }, 500)
+  } else {
+    recognizedText.value = ''
+  }
 }
 
 const toggleAvatar = () => {
