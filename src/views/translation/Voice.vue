@@ -11,7 +11,7 @@ import MultiLanguageTranslator from '@/components/voice/MultiLanguageTranslator.
 <style scoped>
 .voice-translation-page {
   height: 100vh;
-  background: #F3F4F6;
+  background: white;
   display: flex;
   flex-direction: column;
   overflow: hidden;

@@ -1,7 +1,7 @@
 <template>
-  <div class="h-full flex flex-col bg-[#F3F4F6] relative">
+  <div class="h-full flex flex-col bg-white relative">
     <!-- Header -->
-    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-[#F3F4F6] z-10">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <div class="flex items-center gap-4 mb-2">
         <div class="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white shadow-lg shadow-gray-300">
           <MicrophoneIcon class="w-6 h-6" />
@@ -15,7 +15,7 @@
 
     <div class="flex-1 flex overflow-hidden">
       <!-- Left Panel: Controls (Fixed) -->
-      <div class="w-80 border-r border-gray-200 bg-[#F3F4F6] flex flex-col">
+      <div class="w-80 border-r border-gray-200 bg-white flex flex-col">
 
         <!-- Fixed Language Settings Area -->
         <div class="flex-shrink-0 p-6 pb-0">
@@ -113,9 +113,9 @@
       </div>
 
       <!-- Right Panel: Results -->
-      <div class="flex-1 flex flex-col bg-[#F3F4F6] relative overflow-hidden">
+      <div class="flex-1 flex flex-col bg-white relative overflow-hidden">
         <!-- Results Header -->
-        <div class="h-14 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-200 bg-[#F3F4F6]">
+        <div class="h-14 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-200 bg-white">
           <div class="flex items-center gap-4">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Transcript</span>
             <div v-if="translationCards.length > 0" class="flex items-center gap-2">
