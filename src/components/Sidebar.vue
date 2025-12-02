@@ -77,8 +77,7 @@
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트•일정</router-link>
-          <router-link to="/management/documents" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/documents') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">전문용어사전</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서•전문용어사전</router-link>
         </div>
       </div>
 
@@ -96,7 +95,7 @@
           <div v-if="isActive('/conversation')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
             <ChatBubbleLeftRightIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/conversation') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
-            <span v-if="!isCollapsed" class="font-medium text-[15px]">대화</span>
+            <span v-if="!isCollapsed" class="font-medium text-[15px]">회화</span>
           </div>
           <ChevronDownIcon
             v-if="!isCollapsed"
@@ -238,6 +237,13 @@ watch(() => route.path, updateOpenMenus);
 onMounted(updateOpenMenus);
 
 const toggleMenu = (menuName) => {
+  // 축소된 상태에서 클릭 시 사이드바 확장 후 메뉴 열기
+  if (isCollapsed.value) {
+    isCollapsed.value = false;
+    openMenus.value.add(menuName);
+    return;
+  }
+
   if (openMenus.value.has(menuName)) {
     openMenus.value.delete(menuName);
   } else {

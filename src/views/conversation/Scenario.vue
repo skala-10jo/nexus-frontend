@@ -21,85 +21,17 @@
     <!-- Main Content -->
     <div class="flex-1 flex pt-20 overflow-hidden">
       <!-- Left Sidebar (Filters) -->
-      <div class="w-80 flex-shrink-0 border-r border-gray-100 bg-gray-50/50 flex flex-col overflow-hidden">
-        <div class="p-6 flex-1 overflow-y-auto space-y-8">
-          
-          <!-- Upcoming Schedules -->
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase">Upcoming Schedules</h3>
-              <span v-if="selectedSchedules.length > 0" class="text-xs text-blue-600 font-bold">{{ selectedSchedules.length }} selected</span>
-            </div>
-            
-            <div v-if="schedulesLoading" class="space-y-3">
-              <div v-for="i in 3" :key="i" class="h-16 bg-gray-200 rounded-xl animate-pulse"></div>
-            </div>
-
-            <div v-else-if="filteredSchedules.length > 0" class="space-y-6">
-              <div v-for="(group, date) in groupedSchedules" :key="date">
-                <div class="text-xs font-semibold text-gray-500 mb-3 ml-1">{{ formatGroupDate(date) }}</div>
-                <div class="space-y-2">
-                  <div
-                    v-for="schedule in group"
-                    :key="schedule.id"
-                    @click="toggleScheduleSelection(schedule)"
-                    class="group p-4 rounded-2xl cursor-pointer transition-all duration-200 border relative overflow-hidden"
-                    :class="isScheduleSelected(schedule.id) ? 'bg-white border-blue-500 shadow-md' : 'bg-white border-gray-100 hover:border-blue-200 hover:shadow-sm'"
-                  >
-                    <div class="flex justify-between items-start mb-1">
-                      <span class="text-sm font-bold text-gray-900">{{ formatTime(schedule.startTime) }}</span>
-                      <span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium truncate max-w-[80px]">
-                        {{ schedule.projectName || 'No Project' }}
-                      </span>
-                    </div>
-                    <h4 class="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ schedule.title }}</h4>
-                    <div v-if="isScheduleSelected(schedule.id)" class="absolute top-0 right-0 w-0 h-0 border-t-[12px] border-r-[12px] border-t-blue-500 border-r-blue-500 rounded-bl-md"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-else class="text-center py-8 text-gray-400">
-              <p class="text-sm">No upcoming schedules</p>
-            </div>
-          </div>
-
-          <!-- Projects -->
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase">Projects</h3>
-              <span v-if="selectedProjects.length > 0" class="text-xs text-blue-600 font-bold">{{ selectedProjects.length }} selected</span>
-            </div>
-
-            <div v-if="projectsLoading" class="space-y-2">
-              <div v-for="i in 3" :key="i" class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-            </div>
-
-            <div v-else-if="projects.length > 0" class="space-y-2">
-              <div
-                v-for="(project, index) in projects"
-                :key="project.id"
-                @click="toggleProjectSelection(project)"
-                class="flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white hover:shadow-sm"
-                :class="isProjectSelected(project.id) ? 'bg-white shadow-sm ring-1 ring-blue-500' : ''"
-              >
-                <div :class="getProjectIconClass(index)" class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                  {{ project.name.substring(0, 1) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-sm font-bold text-gray-800 truncate">{{ project.name }}</div>
-                  <div class="text-xs text-gray-500">{{ getProjectScenarioCount(project.id) }} scenarios</div>
-                </div>
-                <div v-if="isProjectSelected(project.id)" class="w-2 h-2 bg-blue-500 rounded-full"></div>
-              </div>
-            </div>
-             <div v-else class="text-center py-8 text-gray-400">
-              <p class="text-sm">No projects found</p>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <ScenarioProjectSidebar
+        :projects="projects"
+        :selected-projects="selectedProjects"
+        :selected-schedules="selectedSchedules"
+        :upcoming-schedules="upcomingSchedules"
+        :projects-loading="projectsLoading"
+        :schedules-loading="schedulesLoading"
+        :scenarios="allScenarios"
+        @toggle-project="toggleProjectSelection"
+        @toggle-schedule="toggleScheduleSelection"
+      />
 
       <!-- Right Content (Scenarios Grid) -->
       <div class="flex-1 overflow-y-auto bg-white p-8">
@@ -501,6 +433,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
+import ScenarioProjectSidebar from '@/components/conversation/ScenarioProjectSidebar.vue'
 
 const router = useRouter()
 
@@ -550,6 +483,7 @@ const manualScenario = ref({
   requiredTerminology: ''
 })
 const scenarios = ref([])
+const allScenarios = ref([]) // 전체 시나리오 (사이드바 개수 표시용)
 const scenariosLoading = ref(false)
 const selectedScheduleId = ref(null)
 const selectedProjectForGeneration = ref(null)
@@ -951,6 +885,7 @@ async function handleCreateScenario() {
 
     // 생성 후 DB에서 다시 로드
     await loadScenariosForSchedules()
+    await loadAllScenarios() // 전체 시나리오 개수 업데이트
   } catch (error) {
     console.error('❌ Failed to create scenario:', error)
     alert('Failed to create scenario. Please try again.')
@@ -1009,6 +944,7 @@ async function saveEditedScenario() {
 
     // 시나리오 목록 새로고침
     await loadScenariosForSchedules()
+    await loadAllScenarios() // 전체 시나리오 개수 업데이트
   } catch (error) {
     console.error('❌ Failed to update scenario:', error)
     alert('Failed to update scenario.')
@@ -1035,6 +971,7 @@ async function deleteScenario(scenarioId) {
 
     // 시나리오 목록 새로고침
     await loadScenariosForSchedules()
+    await loadAllScenarios() // 전체 시나리오 개수 업데이트
   } catch (error) {
     console.error('❌ Failed to delete scenario:', error)
     alert('Failed to delete scenario.')
@@ -1099,9 +1036,22 @@ async function loadAllUpcomingSchedules() {
   }
 }
 
+// 전체 시나리오 로드 (사이드바 개수 표시용)
+async function loadAllScenarios() {
+  try {
+    const response = await scenarioService.getAll({})
+    allScenarios.value = response.data.data?.scenarios || []
+  } catch (error) {
+    console.error('Failed to load all scenarios:', error)
+    allScenarios.value = []
+  }
+}
+
 onMounted(async () => {
   await loadProjects()
   await loadAllUpcomingSchedules()
+  await loadAllScenarios() // 전체 시나리오 로드 (사이드바 개수용)
+  await loadScenariosForSchedules() // 메인 그리드에 표시할 시나리오 로드
 })
 </script>
 

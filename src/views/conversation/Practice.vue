@@ -849,7 +849,7 @@ const resetConversation = async () => {
 }
 
 const endConversation = () => {
-  router.push('/conversation')
+  router.push('/conversation/scenario')
 }
 
 const selectMessage = (index) => {
