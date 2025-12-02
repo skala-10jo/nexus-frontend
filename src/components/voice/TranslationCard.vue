@@ -61,11 +61,12 @@ function getLangLabel(lang) {
 .translation-card {
   background: white;
   border: 1px solid #E5E5E5;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 24px 32px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.3s ease;
+  width: 100%;
 }
 
 .translation-card:hover {
@@ -98,16 +99,17 @@ function getLangLabel(lang) {
 .card-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
 .flag {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #6B7280;
   text-transform: uppercase;
@@ -115,13 +117,14 @@ function getLangLabel(lang) {
 }
 
 .text {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   margin: 0;
-  padding: 12px;
+  padding: 16px 24px;
   background: #F9FAFB;
-  border-radius: 8px;
+  border-radius: 12px;
   word-wrap: break-word;
+  text-align: center;
 }
 
 .original .label {

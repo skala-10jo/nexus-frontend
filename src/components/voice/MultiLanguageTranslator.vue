@@ -1,117 +1,210 @@
 <template>
-  <div class="multi-language-translator">
+  <div class="h-full flex flex-col bg-[#F3F4F6] relative">
     <!-- Header -->
-    <div class="header">
-      <h2 class="title">다국어 실시간 음성 번역</h2>
-      <p class="subtitle">
-        여러 언어를 선택하고 말하면 자동으로 감지하여 다른 언어로 번역합니다
-      </p>
-    </div>
-
-    <!-- Language Multi-Select -->
-    <div class="language-selector-container">
-      <label class="selector-label">
-        번역 언어 선택 (2개 이상 선택 필수)
-      </label>
-      <select
-        v-model="selectedLanguages"
-        multiple
-        size="4"
-        class="language-selector"
-        :disabled="isRecording"
-      >
-        <option value="ko-KR">🇰🇷 한국어 (Korean)</option>
-        <option value="en-US">🇺🇸 영어 (English)</option>
-        <option value="ja-JP">🇯🇵 일본어 (Japanese)</option>
-        <option value="vi-VN">🇻🇳 베트남어 (Vietnamese)</option>
-      </select>
-      <p class="hint">
-        💡 <kbd>Ctrl</kbd> (Windows) 또는 <kbd>Cmd</kbd> (Mac) + 클릭으로 여러 언어 선택
-      </p>
-    </div>
-
-    <!-- Recording Controls -->
-    <div class="controls">
-      <button
-        @click="toggleRecording"
-        :disabled="selectedLanguages.length < 2"
-        :class="['record-btn', { recording: isRecording, disabled: selectedLanguages.length < 2 }]"
-      >
-        <span class="btn-icon">{{ isRecording ? '⏹️' : '🎤' }}</span>
-        <span class="btn-text">{{ isRecording ? '녹음 중지' : '녹음 시작' }}</span>
-      </button>
-
-      <button
-        v-if="translationCards.length > 0"
-        @click="clearCards"
-        class="clear-btn"
-        :disabled="isRecording"
-      >
-        <span class="btn-icon">🗑️</span>
-        <span class="btn-text">카드 초기화</span>
-      </button>
-    </div>
-
-    <!-- Recognizing Text (중간 인식 결과) -->
-    <div v-if="recognizingText" class="recognizing-text">
-      <div class="recognizing-label">인식 중...</div>
-      <div class="recognizing-content">{{ recognizingText }}</div>
-    </div>
-
-    <!-- Error Message -->
-    <div v-if="error" class="error-message">
-      <span class="error-icon">⚠️</span>
-      <span>{{ error }}</span>
-    </div>
-
-    <!-- Status Info -->
-    <div class="status-info">
-      <div class="status-item">
-        <span class="status-label">상태:</span>
-        <span :class="['status-badge', { active: isRecording }]">
-          {{ isRecording ? '🔴 녹음 중' : '⚪ 대기 중' }}
-        </span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">선택된 언어:</span>
-        <span class="status-value">{{ selectedLanguages.length }}개</span>
-      </div>
-      <div class="status-item">
-        <span class="status-label">번역 카드:</span>
-        <span class="status-value">{{ translationCards.length }}개</span>
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-[#F3F4F6] z-10">
+      <div class="flex items-center gap-4 mb-2">
+        <div class="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white shadow-lg shadow-gray-300">
+          <MicrophoneIcon class="w-6 h-6" />
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Voice Translation</h2>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">Real-time multi-language translation with auto-detection</p>
+        </div>
       </div>
     </div>
 
-    <!-- Translation Cards (최신순) -->
-    <div class="translation-cards-container">
-      <div v-if="translationCards.length === 0 && !isRecording" class="empty-state">
-        <div class="empty-icon">🎙️</div>
-        <div class="empty-text">녹음 버튼을 눌러 시작하세요</div>
-        <div class="empty-subtext">
-          음성이 감지되면 자동으로 언어를 인식하고 번역합니다
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Left Panel: Controls (Fixed) -->
+      <div class="w-80 border-r border-gray-200 bg-[#F3F4F6] flex flex-col">
+
+        <!-- Fixed Language Settings Area -->
+        <div class="flex-shrink-0 p-6 pb-0">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Language Settings</h3>
+
+            <!-- Multi-Select Languages -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Select Languages (2-4)</label>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="lang in languageOptions"
+                  :key="lang.value"
+                  @click="toggleLanguage(lang.value)"
+                  :disabled="isRecording"
+                  class="px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 border flex items-center gap-2"
+                  :class="[
+                    selectedLanguages.includes(lang.value)
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+                    isRecording ? 'opacity-40 cursor-not-allowed' : ''
+                  ]"
+                >
+                  <span>{{ lang.flag }}</span>
+                  <span>{{ lang.label }}</span>
+                </button>
+              </div>
+              <p v-if="selectedLanguages.length < 2" class="mt-3 text-xs text-amber-600 font-medium flex items-center gap-1">
+                <ExclamationCircleIcon class="w-4 h-4" />
+                Select at least 2 languages to enable recording
+              </p>
+              <p v-else-if="selectedLanguages.length > 4" class="mt-3 text-xs text-amber-600 font-medium flex items-center gap-1">
+                <ExclamationCircleIcon class="w-4 h-4" />
+                Maximum 4 languages supported (Azure limit)
+              </p>
+              <p v-else class="mt-3 text-xs text-green-600 font-medium flex items-center gap-1">
+                <CheckCircleIcon class="w-4 h-4" />
+                {{ selectedLanguages.length }} languages selected - Auto-detect enabled
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fixed Recording Control (directly below language settings) -->
+        <div class="flex-shrink-0 p-6">
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col items-center">
+          <!-- Status Indicator -->
+          <div class="mb-4 flex flex-col items-center gap-2">
+            <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wide">
+              <div
+                class="w-2 h-2 rounded-full transition-colors duration-300"
+                :class="isConnected ? 'bg-green-500' : 'bg-gray-400'"
+              ></div>
+              {{ isConnected ? 'Connected' : 'Ready' }}
+            </div>
+          </div>
+
+          <!-- Main Record Button -->
+          <button
+            @click="toggleRecording"
+            :disabled="selectedLanguages.length < 2 || selectedLanguages.length > 4"
+            class="relative group transition-all duration-300"
+          >
+            <!-- Ripple Effect -->
+            <div
+              v-if="isRecording"
+              class="absolute inset-0 bg-red-500 rounded-full opacity-20 animate-ping"
+            ></div>
+
+            <div
+              class="w-20 h-20 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform group-hover:scale-105 group-active:scale-95"
+              :class="[
+                isRecording
+                  ? 'bg-white border-4 border-red-500 text-red-500'
+                  : 'bg-black text-white hover:bg-gray-900',
+                (selectedLanguages.length < 2 || selectedLanguages.length > 4) ? 'opacity-50 cursor-not-allowed' : ''
+              ]"
+            >
+              <StopIcon v-if="isRecording" class="w-8 h-8" />
+              <MicrophoneIcon v-else class="w-8 h-8" />
+            </div>
+          </button>
+
+          <p class="mt-4 text-xs font-medium text-gray-400 text-center">
+            {{ isRecording ? 'Recording...' : 'Click to start recording' }}
+          </p>
+
+          <!-- Error Message -->
+          <div v-if="error" class="mt-3 px-3 py-2 bg-red-50 text-red-600 text-xs rounded-lg text-center flex items-center gap-2">
+            <ExclamationCircleIcon class="w-4 h-4" />
+            {{ error }}
+          </div>
+          </div>
         </div>
       </div>
 
-      <TransitionGroup name="card-list" tag="div" class="cards-list">
-        <TranslationCard
-          v-for="card in translationCards"
-          :key="card.id"
-          :original="card.original"
-          :detected-lang="card.detectedLang"
-          :translations="card.translations"
-        />
-      </TransitionGroup>
+      <!-- Right Panel: Results -->
+      <div class="flex-1 flex flex-col bg-[#F3F4F6] relative overflow-hidden">
+        <!-- Results Header -->
+        <div class="h-14 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-200 bg-[#F3F4F6]">
+          <div class="flex items-center gap-4">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Transcript</span>
+            <div v-if="translationCards.length > 0" class="flex items-center gap-2">
+              <span class="px-2 py-1 bg-white text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wide border border-gray-200">
+                {{ translationCards.length }} Segments
+              </span>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              v-if="translationCards.length > 0"
+              @click="clearCards"
+              :disabled="isRecording"
+              class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              title="Clear All"
+            >
+              <TrashIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Recognizing Text (실시간 인식 중) - 상단 고정 -->
+        <div v-if="recognizingText" class="flex-shrink-0 mx-8 mt-4 px-6 py-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span class="text-xs font-bold text-blue-600 uppercase">Recognizing...</span>
+          </div>
+          <p class="text-base text-blue-800 font-medium text-center">{{ recognizingText }}</p>
+        </div>
+
+        <!-- Results List (스크롤 영역) -->
+        <div
+          ref="resultsContainer"
+          class="flex-1 overflow-y-auto px-8 py-6 scroll-smooth"
+        >
+          <div v-if="translationCards.length > 0" class="space-y-4">
+            <TransitionGroup name="card-list">
+              <TranslationCard
+                v-for="card in translationCards"
+                :key="card.id"
+                :original="card.original"
+                :detected-lang="card.detectedLang"
+                :translations="card.translations"
+              />
+            </TransitionGroup>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="h-full flex flex-col items-center justify-center text-gray-300">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 border border-gray-200">
+              <MicrophoneIcon class="w-10 h-10 text-gray-300" />
+            </div>
+            <p class="text-lg font-bold text-gray-400">No translations yet</p>
+            <p class="text-sm text-gray-400 mt-1">Start recording to see live translations</p>
+            <p class="text-xs text-gray-300 mt-4">Your speech will be auto-detected and translated</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useAzureSTT } from '@/composables/useAzureSTT'
 import TranslationCard from './TranslationCard.vue'
+import {
+  MicrophoneIcon,
+  StopIcon,
+  TrashIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon
+} from '@heroicons/vue/24/solid'
 
-// 언어 선택
+// 언어 옵션 (BCP-47 코드 + 플래그)
+const languageOptions = [
+  { value: 'ko-KR', label: 'Korean', flag: '🇰🇷' },
+  { value: 'en-US', label: 'English', flag: '🇺🇸' },
+  { value: 'ja-JP', label: 'Japanese', flag: '🇯🇵' },
+  { value: 'vi-VN', label: 'Vietnamese', flag: '🇻🇳' },
+  { value: 'zh-CN', label: 'Chinese', flag: '🇨🇳' }
+]
+
+// 선택된 언어 (기본: 한국어, 영어)
 const selectedLanguages = ref(['ko-KR', 'en-US'])
+
+// 결과 컨테이너 참조
+const resultsContainer = ref(null)
 
 // Azure STT Composable (백엔드 Agent 기반)
 const {
@@ -125,11 +218,31 @@ const {
   clearCards
 } = useAzureSTT()
 
+// 언어 토글 (최대 4개 제한 - Azure 자동 언어 감지 제한)
+function toggleLanguage(value) {
+  if (isRecording.value) return
+
+  const index = selectedLanguages.value.indexOf(value)
+  if (index === -1) {
+    // 최대 4개까지만 선택 가능
+    if (selectedLanguages.value.length < 4) {
+      selectedLanguages.value.push(value)
+    }
+  } else {
+    // 최소 1개는 유지
+    if (selectedLanguages.value.length > 1) {
+      selectedLanguages.value.splice(index, 1)
+    }
+  }
+}
+
 // 녹음 토글
 async function toggleRecording() {
   if (isRecording.value) {
     stopRecording()
   } else {
+    if (selectedLanguages.value.length < 2) return
+
     try {
       await startRecording(selectedLanguages.value)
     } catch (err) {
@@ -137,294 +250,18 @@ async function toggleRecording() {
     }
   }
 }
+
+// 카드 추가 시 자동 스크롤
+function scrollToBottom() {
+  nextTick(() => {
+    if (resultsContainer.value) {
+      resultsContainer.value.scrollTop = resultsContainer.value.scrollHeight
+    }
+  })
+}
 </script>
 
 <style scoped>
-.multi-language-translator {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-/* Header */
-.header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1F2937;
-  margin: 0 0 8px 0;
-}
-
-.subtitle {
-  font-size: 15px;
-  color: #6B7280;
-  margin: 0;
-}
-
-/* Language Selector */
-.language-selector-container {
-  background: #F9FAFB;
-  border: 2px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.selector-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-}
-
-.language-selector {
-  width: 100%;
-  padding: 12px;
-  font-size: 15px;
-  border: 2px solid #D1D5DB;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-}
-
-.language-selector:focus {
-  outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.language-selector:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.language-selector option {
-  padding: 10px;
-  cursor: pointer;
-}
-
-.language-selector option:checked {
-  background: #3B82F6;
-  color: white;
-}
-
-.hint {
-  font-size: 13px;
-  color: #6B7280;
-  margin: 12px 0 0 0;
-  text-align: center;
-}
-
-.hint kbd {
-  background: #E5E7EB;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-/* Controls */
-.controls {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
-.record-btn, .clear-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.record-btn {
-  background: #3B82F6;
-  color: white;
-}
-
-.record-btn:hover:not(:disabled) {
-  background: #2563EB;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.record-btn.recording {
-  background: #EF4444;
-  animation: pulse 2s infinite;
-}
-
-.record-btn.recording:hover {
-  background: #DC2626;
-}
-
-.record-btn:disabled {
-  background: #D1D5DB;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.clear-btn {
-  background: #6B7280;
-  color: white;
-}
-
-.clear-btn:hover:not(:disabled) {
-  background: #4B5563;
-}
-
-.clear-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-.btn-icon {
-  font-size: 20px;
-}
-
-.btn-text {
-  font-size: 15px;
-}
-
-/* Recognizing Text */
-.recognizing-text {
-  background: #EFF6FF;
-  border: 2px solid #93C5FD;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 24px;
-}
-
-.recognizing-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #3B82F6;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.recognizing-content {
-  font-size: 16px;
-  color: #1E40AF;
-  font-weight: 500;
-}
-
-/* Error Message */
-.error-message {
-  background: #FEE2E2;
-  border: 2px solid #FCA5A5;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #DC2626;
-  font-weight: 500;
-}
-
-.error-icon {
-  font-size: 20px;
-}
-
-/* Status Info */
-.status-info {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  padding: 16px;
-  background: #F9FAFB;
-  border-radius: 10px;
-  margin-bottom: 24px;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #6B7280;
-}
-
-.status-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1F2937;
-}
-
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #E5E7EB;
-  color: #6B7280;
-}
-
-.status-badge.active {
-  background: #FEE2E2;
-  color: #DC2626;
-}
-
-/* Translation Cards Container */
-.translation-cards-container {
-  min-height: 200px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
-}
-
-.empty-subtext {
-  font-size: 14px;
-  color: #6B7280;
-}
-
-.cards-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 /* Card Transition */
 .card-list-enter-active {
   transition: all 0.3s ease;
@@ -442,29 +279,5 @@ async function toggleRecording() {
 .card-list-leave-to {
   opacity: 0;
   transform: translateX(30px);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .multi-language-translator {
-    padding: 16px;
-  }
-
-  .title {
-    font-size: 24px;
-  }
-
-  .controls {
-    flex-direction: column;
-  }
-
-  .record-btn, .clear-btn {
-    width: 100%;
-  }
-
-  .status-info {
-    flex-direction: column;
-    gap: 12px;
-  }
 }
 </style>
