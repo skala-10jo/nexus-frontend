@@ -168,6 +168,37 @@ export const useGlossaryStore = defineStore('glossary', {
       }
     },
 
+    async fetchTermsByDocument(documentId, filters = {}) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const params = {
+          page: 0,
+          size: this.pagination.size,
+          sort: 'createdAt,desc',
+          ...filters,
+        };
+
+        const response = await glossaryService.getTermsByDocument(documentId, params);
+        const data = response.data.data || response.data;
+
+        this.terms = data.content || data;
+        this.pagination = {
+          page: data.number || 0,
+          size: data.size || params.size,
+          totalElements: data.totalElements || data.length || 0,
+          totalPages: data.totalPages || 1,
+        };
+        this.hasMore = this.pagination.page < this.pagination.totalPages - 1;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async searchAllTerms(query, filters = {}) {
       this.loading = true;
       this.error = null;
@@ -212,6 +243,37 @@ export const useGlossaryStore = defineStore('glossary', {
         };
 
         const response = await glossaryService.searchTerms(projectId, query, params);
+        const data = response.data.data;
+
+        this.terms = data.content || data;
+        this.pagination = {
+          page: data.number || 0,
+          size: data.size || params.size,
+          totalElements: data.totalElements || data.length || 0,
+          totalPages: data.totalPages || 1,
+        };
+        this.hasMore = this.pagination.page < this.pagination.totalPages - 1;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async searchTermsByDocument(documentId, query, filters = {}) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const params = {
+          page: 0,
+          size: this.pagination.size,
+          sort: 'createdAt,desc',
+          ...filters,
+        };
+
+        const response = await glossaryService.searchTermsByDocument(documentId, query, params);
         const data = response.data.data;
 
         this.terms = data.content || data;

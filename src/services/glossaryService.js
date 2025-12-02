@@ -32,6 +32,15 @@ export const glossaryService = {
   },
 
   /**
+   * Get glossary terms by document with pagination
+   */
+  async getTermsByDocument(documentId, params = {}) {
+    return api.get('/glossary', {
+      params: { documentId, ...params }
+    });
+  },
+
+  /**
    * Search all glossary terms for the current user (no project filter)
    */
   async searchAllTerms(query, params = {}) {
@@ -46,6 +55,15 @@ export const glossaryService = {
   async searchTerms(projectId, query, params = {}) {
     return api.get('/glossary/search', {
       params: { projectId, query, ...params }
+    });
+  },
+
+  /**
+   * Search glossary terms within a specific document
+   */
+  async searchTermsByDocument(documentId, query, params = {}) {
+    return api.get('/glossary/search', {
+      params: { documentId, query, ...params }
     });
   },
 
