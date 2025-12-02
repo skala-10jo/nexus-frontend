@@ -49,8 +49,10 @@ const form = ref({ ...props.modelValue })
 // Watch for external changes
 watch(
   () => props.modelValue,
-  (newVal) => {
+  async (newVal) => {
     form.value = { ...newVal }
+    await nextTick()
+    autoResize()
   },
   { deep: true }
 )
