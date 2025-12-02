@@ -5,9 +5,9 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-orange-primary to-orange-medium text-white px-6 py-4 flex justify-between items-center">
-        <h2 class="text-xl font-semibold">카테고리 관리</h2>
-        <button @click="close" class="text-white hover:text-gray-200 focus:outline-none">
+      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+        <h2 class="text-xl font-bold text-gray-900">카테고리 관리</h2>
+        <button @click="close" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -35,7 +35,7 @@
           <div class="flex space-x-2">
             <button
               @click="editCategory(category)"
-              class="p-2 text-gray-600 hover:text-orange-primary hover:bg-orange-50 rounded transition"
+              class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
               title="수정"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
             <button
               v-if="!category.isDefault"
               @click="confirmDelete(category)"
-              class="p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded transition"
+              class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
               title="삭제"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@
         <!-- Add New Category Button -->
         <button
           @click="createNewCategory"
-          class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-primary hover:text-orange-primary transition flex items-center justify-center"
+          class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition flex items-center justify-center font-medium"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -71,7 +71,7 @@
       <div class="border-t px-6 py-4 flex justify-end bg-gray-50">
         <button
           @click="close"
-          class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+          class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium shadow-sm"
         >
           닫기
         </button>

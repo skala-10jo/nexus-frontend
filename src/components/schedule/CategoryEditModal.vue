@@ -2,8 +2,9 @@
   <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]" @click.self="close">
     <div class="bg-white rounded-lg shadow-2xl max-w-md w-full">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-orange-primary to-orange-medium text-white px-6 py-4">
-        <h3 class="text-lg font-semibold">
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+        <h3 class="text-lg font-bold text-gray-900">
           {{ isNew ? '새 카테고리 추가' : '카테고리 수정' }}
         </h3>
       </div>
@@ -18,7 +19,7 @@
             type="text"
             required
             maxlength="50"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="예: 프로젝트, 미팅"
           />
         </div>
@@ -56,7 +57,7 @@
             v-model="formData.description"
             rows="3"
             maxlength="500"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-primary focus:border-transparent"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="카테고리에 대한 설명을 입력하세요"
           ></textarea>
         </div>
@@ -72,7 +73,7 @@
           </button>
           <button
             type="submit"
-            class="px-4 py-2 bg-gradient-to-r from-orange-primary to-orange-medium text-white rounded-lg hover:from-orange-medium hover:to-orange-dark transition"
+            class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold shadow-lg shadow-gray-900/20"
           >
             {{ isNew ? '추가' : '수정' }}
           </button>
@@ -99,14 +100,16 @@ const props = defineProps({
 const emit = defineEmits(['save', 'close'])
 
 const colorOptions = [
-  '#3B82F6', // blue
-  '#10B981', // green
-  '#F59E0B', // amber
-  '#EF4444', // red
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#06B6D4', // cyan
-  '#6B7280'  // gray
+  '#3B82F6', // Blue
+  '#6366F1', // Indigo
+  '#8B5CF6', // Violet
+  '#EC4899', // Pink
+  '#F43F5E', // Rose
+  '#F59E0B', // Amber
+  '#10B981', // Emerald
+  '#06B6D4', // Cyan
+  '#64748B', // Slate
+  '#111827'  // Gray-900
 ]
 
 const formData = ref({
