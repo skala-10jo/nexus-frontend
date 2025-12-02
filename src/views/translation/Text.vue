@@ -5,7 +5,7 @@
       <!-- Row 1: Title -->
       <div class="flex items-center gap-4 mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">텍스트 번역</h2>
+          <h2 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">텍스트 번역</h2>
         </div>
       </div>
 

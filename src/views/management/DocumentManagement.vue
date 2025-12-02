@@ -4,7 +4,7 @@
     <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">문서 관리</h1>
+          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">문서 관리</h1>
           <p class="text-sm text-gray-500 mt-1 font-medium">
             파일을 관리하고 정리하세요
           </p>

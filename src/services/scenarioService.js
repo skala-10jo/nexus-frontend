@@ -90,6 +90,19 @@ export const scenarioService = {
    */
   async delete(scenarioId) {
     return pythonAPI.delete(`/scenarios/${scenarioId}`)
+  },
+
+  /**
+   * 채팅을 통한 시나리오 수정
+   * @param {Object} data - 수정 요청 데이터
+   * @param {Object} data.currentScenario - 현재 시나리오 상태
+   * @param {string} data.userMessage - 사용자 수정 요청 메시지
+   * @param {string} data.language - 목표 언어
+   * @param {string} data.difficulty - 난이도
+   * @returns {Promise} 수정된 시나리오 필드와 AI 응답 메시지
+   */
+  async modifyWithChat(data) {
+    return pythonAPI.post('/scenarios/modify-with-chat', data)
   }
 }
 

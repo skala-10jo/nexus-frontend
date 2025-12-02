@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="bg-gray-100 min-h-screen flex flex-col flex-shrink-0 font-sans transition-all duration-300 ease-in-out"
+    class="bg-gray-100 min-h-screen flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out"
     :class="isCollapsed ? 'w-[80px]' : 'w-80'"
   >
     <!-- Brand Logo -->
@@ -64,9 +64,9 @@
           ]"
           :title="isCollapsed ? 'Management' : ''"
         >
-          <div v-if="isActive('/management')" class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
+          <div v-if="isActive('/management')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
-            <DocumentTextIcon class="w-5 h-5 flex-shrink-0 text-emerald-500" />
+            <DocumentTextIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/management') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
             <span v-if="!isCollapsed" class="font-medium text-[15px]">관리</span>
           </div>
           <ChevronDownIcon
@@ -93,9 +93,9 @@
           ]"
           :title="isCollapsed ? 'Conversation' : ''"
         >
-          <div v-if="isActive('/conversation')" class="absolute left-0 top-0 bottom-0 w-1 bg-violet-500"></div>
+          <div v-if="isActive('/conversation')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
-            <ChatBubbleLeftRightIcon class="w-5 h-5 flex-shrink-0 text-violet-500" />
+            <ChatBubbleLeftRightIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/conversation') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
             <span v-if="!isCollapsed" class="font-medium text-[15px]">대화</span>
           </div>
           <ChevronDownIcon
@@ -105,7 +105,7 @@
           />
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오</router-link>
+          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
           <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
           <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
         </div>
@@ -122,9 +122,9 @@
           ]"
           :title="isCollapsed ? 'Translation' : ''"
         >
-          <div v-if="isActive('/translation')" class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+          <div v-if="isActive('/translation')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
-            <GlobeAltIcon class="w-5 h-5 flex-shrink-0 text-amber-500" />
+            <GlobeAltIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/translation') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
             <span v-if="!isCollapsed" class="font-medium text-[15px]">번역</span>
           </div>
           <ChevronDownIcon
@@ -151,9 +151,9 @@
           ]"
           :title="isCollapsed ? 'Collaboration' : ''"
         >
-          <div v-if="isActive('/collaboration')" class="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
+          <div v-if="isActive('/collaboration')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
-            <EnvelopeIcon class="w-5 h-5 flex-shrink-0 text-rose-500" />
+            <EnvelopeIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/collaboration') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
             <span v-if="!isCollapsed" class="font-medium text-[15px]">협업</span>
           </div>
           <ChevronDownIcon
@@ -253,6 +253,10 @@ const isActive = (path) => {
 };
 
 const isSubActive = (path) => {
+  // /conversation/practice는 /conversation/scenario의 하위 페이지로 처리
+  if (path === '/conversation/scenario' && route.path.startsWith('/conversation/practice')) {
+    return true;
+  }
   return route.path === path || route.path.startsWith(path + '/');
 };
 

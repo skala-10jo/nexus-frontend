@@ -4,8 +4,8 @@
     <div class="flex-shrink-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-3 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-gray-900">전문용어사전</h1>
-          <p class="text-xs text-gray-500 mt-0.5 font-medium">
+          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">전문용어사전</h1>
+          <p class="text-sm text-gray-500 mt-1 font-medium">
             프로젝트 용어를 관리하고 자동으로 추출하세요
           </p>
         </div>

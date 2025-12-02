@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'nanum': ['"NanumSquare"', 'sans-serif'],
+        'nanum-round': ['"NanumSquareRound"', 'sans-serif'],
+        'nanum-round-eb': ['"NanumSquareRoundEB"', 'sans-serif'],
+        'nanum-neo': ['"NanumSquareNeo"', 'sans-serif'],
+      },
       colors: {
         orange: {
           primary: '#FF6B3D',
