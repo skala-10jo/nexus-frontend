@@ -182,7 +182,7 @@
 
     <!-- Create Dialog -->
     <div v-if="showCreateDialog" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click="closeCreateDialog">
-      <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+      <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
         <!-- Header -->
         <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
           <h3 class="text-2xl font-bold text-gray-900">Create Scenario</h3>
@@ -191,48 +191,55 @@
           </button>
         </div>
 
-        <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-8">
-          <!-- Tabs -->
-          <div class="flex p-1 bg-gray-100 rounded-xl mb-8">
-            <button
-              @click="creationMode = 'auto'"
-              class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all"
-              :class="creationMode === 'auto' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-            >
-              Auto Generate
-            </button>
-            <button
-              @click="creationMode = 'manual'"
-              class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all"
-              :class="creationMode === 'manual' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-            >
-              Manual Input
-            </button>
-          </div>
-
-          <!-- Auto Form -->
-          <div v-if="creationMode === 'auto'" class="space-y-6">
-            <div class="grid grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
-                <select v-model="generateOptions.language" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
-                  <option value="en">English</option>
-                  <option value="zh">中文</option>
-                  <option value="ja">日本語</option>
-                  <option value="ko">한국어</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
-                <select v-model="generateOptions.difficulty" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
+        <!-- Content: Two Column Layout -->
+        <div class="flex-1 flex overflow-hidden">
+          <!-- Left Column: Scenario Form -->
+          <div class="flex-1 overflow-y-auto p-8 border-r border-gray-100">
+          <!-- Settings with Toggle Buttons -->
+          <div class="space-y-6 mb-8">
+            <!-- Language Toggle -->
+            <div class="space-y-3">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
+              <div class="flex gap-3">
+                <button
+                  v-for="lang in languageOptions"
+                  :key="lang.value"
+                  @click="generateOptions.language = lang.value"
+                  :class="[
+                    'flex-1 px-4 py-3 rounded-xl font-bold transition-all',
+                    generateOptions.language === lang.value
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ]"
+                >
+                  {{ lang.label }}
+                </button>
               </div>
             </div>
 
+            <!-- Difficulty Toggle -->
+            <div class="space-y-3">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
+              <div class="flex gap-3">
+                <button
+                  v-for="diff in difficultyOptions"
+                  :key="diff.value"
+                  @click="generateOptions.difficulty = diff.value"
+                  :class="[
+                    'flex-1 px-4 py-3 rounded-xl font-bold transition-all',
+                    generateOptions.difficulty === diff.value
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ]"
+                >
+                  {{ diff.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project/Schedule Selection -->
+          <div class="space-y-4 mb-8">
             <div class="space-y-2">
               <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Project (Optional)</label>
               <select v-model="selectedProjectForGeneration" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
@@ -250,72 +257,144 @@
                 </option>
               </select>
             </div>
-
-            <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Count</label>
-              <input v-model.number="generateOptions.count" type="number" min="1" max="10" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
-            </div>
           </div>
 
-          <!-- Manual Form -->
-          <div v-else class="space-y-6">
-            <div class="grid grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
-                <select v-model="generateOptions.language" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
-                  <option value="en">English</option>
-                  <option value="zh">中文</option>
-                  <option value="ja">日本語</option>
-                  <option value="ko">한국어</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
-                <select v-model="generateOptions.difficulty" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
-              </div>
-            </div>
-
+          <!-- Scenario Form -->
+          <div class="space-y-6">
+            <!-- Title with Unified AI Generate Button -->
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+                <button
+                  @click="generateAllFields"
+                  :disabled="isGenerating"
+                  class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                >
+                  <svg class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {{ isGenerating ? 'Generating...' : 'AI Generate' }}
+                </button>
+              </div>
               <input v-model="manualScenario.title" type="text" placeholder="e.g. Product Demo Meeting" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
             </div>
 
+            <!-- Description -->
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
-              <textarea v-model="manualScenario.scenarioText" rows="4" placeholder="Describe the scenario context..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description (Brief summary)</label>
+              <textarea v-model="manualScenario.description" rows="2" placeholder="Brief description shown on card..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
             </div>
 
+            <!-- Scenario Text -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Scenario Text (Full content)</label>
+              <textarea v-model="manualScenario.scenarioText" rows="6" placeholder="Full scenario content for practice..." class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
+            </div>
+
+            <!-- Roles -->
             <div class="grid grid-cols-2 gap-6">
               <div class="space-y-2">
                 <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Role</label>
                 <input v-model="manualScenario.userRole" type="text" placeholder="e.g. PM" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
               </div>
               <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Role</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Partner Role</label>
                 <input v-model="manualScenario.aiRole" type="text" placeholder="e.g. Developer" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
               </div>
             </div>
-            
+
             <div class="space-y-2">
               <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (Comma separated)</label>
               <input v-model="manualScenario.requiredTerminology" type="text" placeholder="e.g. agile, sprint, backlog" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
             </div>
           </div>
+          </div>
+
+          <!-- Right Column: AI Chatbot -->
+          <div class="w-96 flex flex-col bg-gray-50">
+            <!-- Chat Header -->
+            <div class="p-4 border-b border-gray-200 flex items-start justify-between">
+              <div>
+                <h4 class="font-bold text-gray-900">AI Assistant</h4>
+                <p class="text-xs text-gray-500 mt-1">프롬프트로 시나리오를 수정하세요</p>
+              </div>
+              <button
+                @click="resetChat"
+                class="p-2 hover:bg-gray-200 rounded-lg transition-colors group"
+                title="대화 초기화"
+              >
+                <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+              <div v-if="chatMessages.length === 0" class="text-center text-gray-400 text-sm mt-8">
+                시나리오에 대해 질문하거나<br>수정 요청을 해보세요
+              </div>
+
+              <div
+                v-for="(msg, index) in chatMessages"
+                :key="index"
+                class="flex"
+                :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+              >
+                <div
+                  :class="[
+                    'p-3 rounded-lg max-w-[80%]',
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-800 border border-gray-200'
+                  ]"
+                >
+                  <p class="text-sm whitespace-pre-wrap">{{ msg.content }}</p>
+                </div>
+              </div>
+
+              <div v-if="isChatLoading" class="flex justify-start">
+                <div class="bg-white text-gray-800 border border-gray-200 p-3 rounded-lg max-w-[80%]">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="p-4 border-t border-gray-200">
+              <div class="flex gap-2">
+                <input
+                  v-model="chatInput"
+                  @keyup.enter="sendChatMessage"
+                  type="text"
+                  placeholder="예: 역할을 더 구체적으로 바꿔줘"
+                  class="flex-1 px-3 py-2 text-sm bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                />
+                <button
+                  @click="sendChatMessage"
+                  :disabled="!chatInput.trim() || isChatLoading"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  전송
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Footer -->
-        <div class="p-8 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
+        <div class="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
           <button @click="closeCreateDialog" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors">Cancel</button>
-          <button 
-            @click="handleGenerateScenarios"
-            :disabled="creationMode === 'manual' && !isManualFormValid"
+          <button
+            @click="handleCreateScenario"
+            :disabled="!isManualFormValid"
             class="px-8 py-3 bg-black text-white rounded-xl font-bold shadow-lg shadow-gray-200 hover:bg-gray-800 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ creationMode === 'auto' ? 'Generate' : 'Create' }}
+            Create Scenario
           </button>
         </div>
       </div>
@@ -338,8 +417,13 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
-            <textarea v-model="editingScenario.scenarioText" rows="6" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"></textarea>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description (Brief summary)</label>
+            <textarea v-model="editingScenario.description" rows="2" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none" placeholder="Brief description shown on card..."></textarea>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Scenario Text (Full content)</label>
+            <textarea v-model="editingScenario.scenarioText" rows="6" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none" placeholder="Full scenario content for practice..."></textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-6">
@@ -371,6 +455,24 @@
                 <option value="advanced">Advanced</option>
               </select>
             </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Project (Optional)</label>
+            <select v-model="editingScenario.projectId" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+              <option :value="null">None</option>
+              <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+            </select>
+          </div>
+
+          <div v-if="editingScenario.projectId" class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Schedule (Optional)</label>
+            <select v-model="editingScenario.scheduleId" class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800">
+              <option :value="null">None (Use entire project)</option>
+              <option v-for="schedule in schedulesForEditingProject" :key="schedule.id" :value="schedule.id">
+                {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
+              </option>
+            </select>
           </div>
 
           <div class="space-y-2">
@@ -411,14 +513,36 @@ const schedulesLoading = ref(false)
 
 // Scenario generation state
 const showCreateDialog = ref(false)
-const creationMode = ref('auto') // 'auto' or 'manual'
+const isGenerating = ref(false) // AI 생성 중인지 여부
+
+// Language and Difficulty options for toggle buttons
+const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'ko', label: '한국어' }
+]
+
+const difficultyOptions = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' }
+]
+
 const generateOptions = ref({
   language: 'en',
-  difficulty: 'intermediate',
-  count: 5
+  difficulty: 'intermediate'
 })
+
+// Chatbot state for scenario modification
+const chatMessages = ref([])
+const chatInput = ref('')
+const isChatLoading = ref(false)
+
 const manualScenario = ref({
   title: '',
+  description: '',
   scenarioText: '',
   category: 'General',
   userRole: '',
@@ -435,11 +559,14 @@ const showEditDialog = ref(false)
 const editingScenario = ref({
   id: '',
   title: '',
+  description: '',
   scenarioText: '',
   roles: { user: '', ai: '' },
   language: 'en',
   difficulty: 'intermediate',
-  requiredTerminologyText: ''
+  requiredTerminologyText: '',
+  projectId: null,
+  scheduleId: null
 })
 
 // 프로젝트 아이콘 색상
@@ -495,6 +622,18 @@ const schedulesForSelectedProject = computed(() => {
   // 선택된 프로젝트의 일정만 필터링
   return upcomingSchedules.value.filter(schedule =>
     schedule.projectId === selectedProjectForGeneration.value
+  )
+})
+
+// 시나리오 수정용: 선택된 프로젝트의 일정만 표시
+const schedulesForEditingProject = computed(() => {
+  if (!editingScenario.value.projectId) {
+    return []
+  }
+
+  // 선택된 프로젝트의 일정만 필터링
+  return upcomingSchedules.value.filter(schedule =>
+    schedule.projectId === editingScenario.value.projectId
   )
 })
 
@@ -638,203 +777,183 @@ function closeCreateDialog() {
   showCreateDialog.value = false
   selectedProjectForGeneration.value = null
   selectedScheduleId.value = null
+  // 챗봇 상태 초기화
+  chatMessages.value = []
+  chatInput.value = ''
+  isChatLoading.value = false
 }
 
-// 시나리오 생성 핸들러 (Phase 4: 문서 ID 포함)
-async function handleGenerateScenarios() {
+// 챗봇 초기화 함수
+function resetChat() {
+  chatMessages.value = []
+  chatInput.value = ''
+  isChatLoading.value = false
+  console.log('🔄 Chat history reset')
+}
+
+// AI로 모든 필드 자동 생성 (통합)
+async function generateAllFields() {
+  if (isGenerating.value) return
+
+  isGenerating.value = true
+  try {
+    // 프로젝트/일정 선택 여부에 따라 다른 처리
+    const projectIds = selectedProjectForGeneration.value ? [selectedProjectForGeneration.value] : []
+    const scheduleIds = selectedScheduleId.value ? [selectedScheduleId.value] : []
+
+    const requestData = {
+      projectIds,
+      scheduleIds,
+      documentIds: [],
+      language: generateOptions.value.language,
+      difficulty: generateOptions.value.difficulty,
+      count: 1  // 1개만 생성
+    }
+
+    console.log('🎯 Generating all fields with:', requestData)
+
+    const response = await scenarioService.generateFromProjects(requestData)
+
+    if (response.data.data && response.data.data.length > 0) {
+      const generated = response.data.data[0]
+
+      // 모든 필드 자동 채우기
+      manualScenario.value.title = generated.title
+      manualScenario.value.description = generated.description
+      manualScenario.value.scenarioText = generated.scenarioText
+      manualScenario.value.userRole = generated.roles.user
+      manualScenario.value.aiRole = generated.roles.ai
+      manualScenario.value.requiredTerminology = generated.requiredTerminology.join(', ')
+      manualScenario.value.category = generated.category || 'General'
+
+      console.log('✅ All fields generated successfully')
+    }
+  } catch (error) {
+    console.error('❌ Failed to generate scenario:', error)
+    alert('Failed to generate scenario. Please try again.')
+  } finally {
+    isGenerating.value = false
+  }
+}
+
+// AI 챗봇 메시지 전송 (시나리오 수정용)
+async function sendChatMessage() {
+  if (!chatInput.value.trim() || isChatLoading.value) return
+
+  // 사용자 메시지 추가
+  chatMessages.value.push({
+    role: 'user',
+    content: chatInput.value
+  })
+
+  const userMessage = chatInput.value
+  chatInput.value = ''
+  isChatLoading.value = true
+
+  try {
+    // 현재 시나리오 상태를 컨텍스트로 포함
+    const currentScenario = {
+      title: manualScenario.value.title,
+      description: manualScenario.value.description,
+      scenarioText: manualScenario.value.scenarioText,
+      userRole: manualScenario.value.userRole,
+      aiRole: manualScenario.value.aiRole,
+      category: manualScenario.value.category,
+      requiredTerminology: manualScenario.value.requiredTerminology
+    }
+
+    // Backend API 호출 (GPT-4o 시나리오 수정)
+    const response = await scenarioService.modifyWithChat({
+      currentScenario,
+      userMessage,
+      language: generateOptions.value.language,
+      difficulty: generateOptions.value.difficulty
+    })
+
+    // 수정된 필드를 현재 시나리오에 병합
+    const modifiedFields = response.data.data.modifiedScenario
+    if (modifiedFields.title) manualScenario.value.title = modifiedFields.title
+    if (modifiedFields.description) manualScenario.value.description = modifiedFields.description
+    if (modifiedFields.scenarioText) manualScenario.value.scenarioText = modifiedFields.scenarioText
+    if (modifiedFields.userRole) manualScenario.value.userRole = modifiedFields.userRole
+    if (modifiedFields.aiRole) manualScenario.value.aiRole = modifiedFields.aiRole
+    if (modifiedFields.category) manualScenario.value.category = modifiedFields.category
+    if (modifiedFields.requiredTerminology) manualScenario.value.requiredTerminology = modifiedFields.requiredTerminology
+
+    // AI 응답 메시지 추가
+    chatMessages.value.push({
+      role: 'assistant',
+      content: response.data.data.message
+    })
+
+    console.log('✅ Scenario modified successfully:', modifiedFields)
+
+  } catch (error) {
+    console.error('Failed to send chat message:', error)
+    chatMessages.value.push({
+      role: 'assistant',
+      content: '죄송합니다. 메시지 처리 중 오류가 발생했습니다. 다시 시도해주세요.'
+    })
+  } finally {
+    isChatLoading.value = false
+  }
+}
+
+// 시나리오 생성 핸들러 (단일 생성)
+async function handleCreateScenario() {
   scenariosLoading.value = true
   showCreateDialog.value = false
 
   try {
-    if (creationMode.value === 'auto') {
-      // 자동 생성 모드
+    console.log('Creating scenario:', manualScenario.value)
 
-      // 다이얼로그에서 선택한 프로젝트 사용 (없으면 사이드바에서 선택한 프로젝트들 사용)
-      const projectsToUse = selectedProjectForGeneration.value
-        ? [{ id: selectedProjectForGeneration.value }]
-        : selectedProjects.value
-
-      if (projectsToUse.length === 0) {
-        alert('Please select a project.')
-        scenariosLoading.value = false
-        showCreateDialog.value = true
-        return
-      }
-
-      // 선택된 프로젝트의 모든 문서 ID 수집
-      let documentIds = []
-      for (const project of projectsToUse) {
-        try {
-          const response = await projectService.getProjectDocuments(project.id)
-          const documents = response.data.data || response.data || []
-          documentIds.push(...documents.map(d => d.id))
-        } catch (error) {
-          console.warn(`Failed to fetch documents for project ${project.id}:`, error)
-        }
-      }
-
-      // 다이얼로그에서 선택한 일정 사용
-      const currentScheduleIds = selectedScheduleId.value ? [selectedScheduleId.value] : []
-
-      const params = {
-        projectIds: projectsToUse.map(p => p.id),
-        scheduleIds: currentScheduleIds,
-        documentIds: documentIds,
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        count: generateOptions.value.count
-      }
-
-      // 백엔드 API 호출
-      await scenarioService.generateFromProjects(params)
-
-      // 생성 후 DB에서 다시 로드
-      await loadScenariosForSchedules()
-    } else {
-      // 수동 생성 모드
-      console.log('Creating manual scenario:', manualScenario.value)
-
-      // Generate brief description from scenarioText (first 2 sentences)
+    // Use user's description if provided, otherwise auto-generate from scenarioText
+    let description = manualScenario.value.description.trim()
+    if (!description) {
       const sentences = manualScenario.value.scenarioText.split(/[.!?]\s+/).filter(s => s.trim())
-      const description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
-
-      const scenarioData = {
-        title: manualScenario.value.title,
-        description: description || manualScenario.value.scenarioText.substring(0, 100),
-        scenarioText: manualScenario.value.scenarioText,
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        category: manualScenario.value.category,
-        roles: {
-          user: manualScenario.value.userRole,
-          ai: manualScenario.value.aiRole
-        },
-        requiredTerminology: manualScenario.value.requiredTerminology
-          ? manualScenario.value.requiredTerminology.split(',').map(t => t.trim()).filter(t => t)
-          : [],
-        autoGenerated: false,
-        // 프로젝트/일정 연결 (선택사항)
-        projectId: selectedProjectForGeneration.value,
-        scheduleId: selectedScheduleId.value
-      }
-
-      // 백엔드 API 호출 시도
-      const response = await scenarioService.create(scenarioData)
-      console.log('Successfully created manual scenario:', response)
-
-      // 폼 초기화
-      manualScenario.value = {
-        title: '',
-        scenarioText: '',
-        category: 'General',
-        userRole: '',
-        aiRole: '',
-        requiredTerminology: ''
-      }
-
-      // 생성 후 DB에서 다시 로드
-      await loadScenariosForSchedules()
+      description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
     }
+
+    const scenarioData = {
+      title: manualScenario.value.title,
+      description: description || manualScenario.value.scenarioText.substring(0, 100),
+      scenarioText: manualScenario.value.scenarioText,
+      language: generateOptions.value.language,
+      difficulty: generateOptions.value.difficulty,
+      category: manualScenario.value.category,
+      roles: {
+        user: manualScenario.value.userRole,
+        ai: manualScenario.value.aiRole
+      },
+      requiredTerminology: manualScenario.value.requiredTerminology
+        ? manualScenario.value.requiredTerminology.split(',').map(t => t.trim()).filter(t => t)
+        : [],
+      autoGenerated: false,
+      // 프로젝트/일정 연결 (선택사항)
+      projectId: selectedProjectForGeneration.value,
+      scheduleId: selectedScheduleId.value
+    }
+
+    // 백엔드 API 호출
+    const response = await scenarioService.create(scenarioData)
+    console.log('Successfully created scenario:', response)
+
+    // 폼 초기화
+    manualScenario.value = {
+      title: '',
+      description: '',
+      scenarioText: '',
+      category: 'General',
+      userRole: '',
+      aiRole: '',
+      requiredTerminology: ''
+    }
+
+    // 생성 후 DB에서 다시 로드
+    await loadScenariosForSchedules()
   } catch (error) {
-    console.error('❌ API Error Details:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      url: error.config?.url
-    })
-    console.warn('Backend not available yet, using dummy data:', error.message)
-
-    if (creationMode.value === 'manual') {
-      // 수동 생성 모드 - 입력된 데이터로 시나리오 생성
-      const sentences = manualScenario.value.scenarioText.split(/[.!?]\s+/).filter(s => s.trim())
-      const description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
-
-      const newScenario = {
-        id: Date.now().toString(),
-        title: manualScenario.value.title,
-        description: description || manualScenario.value.scenarioText.substring(0, 100),
-        scenarioText: manualScenario.value.scenarioText,
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        category: manualScenario.value.category,
-        roles: {
-          user: manualScenario.value.userRole,
-          ai: manualScenario.value.aiRole
-        },
-        requiredTerminology: manualScenario.value.requiredTerminology
-          ? manualScenario.value.requiredTerminology.split(',').map(t => t.trim()).filter(t => t)
-          : [],
-        createdAt: new Date().toISOString(),
-        autoGenerated: false
-      }
-
-      scenarios.value = [...scenarios.value, newScenario]
-
-      // 폼 초기화
-      manualScenario.value = {
-        title: '',
-        scenarioText: '',
-        category: 'General',
-        userRole: '',
-        aiRole: '',
-        requiredTerminology: ''
-      }
-    } else {
-      // 자동 생성 모드 - 더미 데이터 사용
-      const dummyScenarios = [
-      {
-        id: '1',
-        title: 'Product Demo Preparation',
-        description: 'Meeting to prepare demo scenarios for new product launch.',
-        scenarioText: 'You are preparing for an important product demonstration. Discuss with your team about the key features to highlight and the presentation flow.',
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        category: 'Collaboration',
-        roles: {
-          user: 'Product Manager',
-          ai: 'Development Team Lead'
-        },
-        requiredTerminology: ['demonstration', 'feature', 'presentation', 'stakeholder'],
-        createdAt: new Date().toISOString(),
-        autoGenerated: true
-      },
-      {
-        id: '2',
-        title: 'Tech Support Request',
-        description: 'Scenario handling customer technical support request.',
-        scenarioText: 'A customer is experiencing technical issues with the product. Help them troubleshoot and resolve the problem.',
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        category: 'Support',
-        roles: {
-          user: 'Technical Support Engineer',
-          ai: 'Customer'
-        },
-        requiredTerminology: ['troubleshooting', 'configuration', 'error log', 'resolution'],
-        createdAt: new Date().toISOString(),
-        autoGenerated: true
-      },
-      {
-        id: '3',
-        title: 'Project Status Report',
-        description: 'Reporting project status to the team.',
-        scenarioText: 'Present the current project status to your team, including completed tasks, upcoming milestones, and any potential risks.',
-        language: generateOptions.value.language,
-        difficulty: generateOptions.value.difficulty,
-        category: 'Collaboration',
-        roles: {
-          user: 'Project Coordinator',
-          ai: 'Team Member'
-        },
-        requiredTerminology: ['milestone', 'deadline', 'progress', 'deliverable'],
-        createdAt: new Date().toISOString(),
-        autoGenerated: true
-      }
-      ]
-
-      // 선택한 개수만큼만 반환
-      scenarios.value = dummyScenarios.slice(0, generateOptions.value.count)
-    }
+    console.error('❌ Failed to create scenario:', error)
+    alert('Failed to create scenario. Please try again.')
   } finally {
     scenariosLoading.value = false
   }
@@ -845,11 +964,14 @@ function openEditDialog(scenario) {
   editingScenario.value = {
     id: scenario.id,
     title: scenario.title,
-    scenarioText: scenario.scenarioText,
+    description: scenario.description || '',
+    scenarioText: scenario.scenarioText || scenario.description || '', // Use scenarioText, fallback to description
     roles: { ...scenario.roles },
     language: scenario.language,
     difficulty: scenario.difficulty,
-    requiredTerminologyText: scenario.requiredTerminology ? scenario.requiredTerminology.join(', ') : ''
+    requiredTerminologyText: scenario.requiredTerminology ? scenario.requiredTerminology.join(', ') : '',
+    projectId: scenario.projectIds && scenario.projectIds.length > 0 ? scenario.projectIds[0] : null,
+    scheduleId: scenario.scheduleIds && scenario.scheduleIds.length > 0 ? scenario.scheduleIds[0] : null
   }
   showEditDialog.value = true
 }
@@ -860,9 +982,12 @@ async function saveEditedScenario() {
     scenariosLoading.value = true
     showEditDialog.value = false
 
-    // Generate brief description from scenarioText
-    const sentences = editingScenario.value.scenarioText.split(/[.!?]\s+/).filter(s => s.trim())
-    const description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
+    // Use user's description if provided, otherwise generate from scenarioText
+    let description = editingScenario.value.description.trim()
+    if (!description) {
+      const sentences = editingScenario.value.scenarioText.split(/[.!?]\s+/).filter(s => s.trim())
+      description = sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '')
+    }
 
     const updateData = {
       title: editingScenario.value.title,
@@ -873,7 +998,9 @@ async function saveEditedScenario() {
       roles: editingScenario.value.roles,
       requiredTerminology: editingScenario.value.requiredTerminologyText
         ? editingScenario.value.requiredTerminologyText.split(',').map(t => t.trim()).filter(t => t)
-        : []
+        : [],
+      projectId: editingScenario.value.projectId,
+      scheduleId: editingScenario.value.scheduleId
     }
 
     // API 호출 (업데이트 엔드포인트가 있다면)
