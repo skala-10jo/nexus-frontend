@@ -1,0 +1,361 @@
+<template>
+  <div class="h-full flex flex-col bg-white">
+    <!-- Header -->
+    <div class="flex-shrink-0 border-b px-6 py-4 flex justify-between items-start bg-white sticky top-0 z-10">
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+          {{ project.name }}
+        </h2>
+        <span
+          :class="[
+            'inline-block px-3 py-1 text-xs font-medium rounded-full',
+            getStatusClass(project.status)
+          ]"
+        >
+          {{ getStatusText(project.status) }}
+        </span>
+      </div>
+      <div class="flex gap-2">
+        <button
+          v-if="showCloseButton"
+          @click="$emit('close')"
+          class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="닫기"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+      <!-- Basic Info -->
+      <section class="mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          기본 정보
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div class="flex items-start">
+            <span class="text-sm font-medium text-gray-500 w-24">설명</span>
+            <p class="text-sm text-gray-800 flex-1">
+              {{ project.description || '설명 없음' }}
+            </p>
+          </div>
+          <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-500 w-24">상태</span>
+            <span class="text-sm text-gray-800">
+              {{ getStatusText(project.status) }}
+            </span>
+          </div>
+          <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-500 w-24">생성일</span>
+            <span class="text-sm text-gray-800">
+              {{ formatDate(project.createdAt) }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Statistics -->
+      <section class="mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          통계
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Document Count -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span class="text-sm font-medium text-blue-800">문서</span>
+            </div>
+            <p class="text-2xl font-bold text-blue-900">{{ project.documentCount || 0 }}</p>
+          </div>
+
+          <!-- Schedule Count -->
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-1">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span class="text-sm font-medium text-green-800">일정</span>
+            </div>
+            <p class="text-2xl font-bold text-green-900">{{ relatedSchedules.length || 0 }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Linked Documents -->
+      <section v-if="project.documentCount > 0" class="mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          연결된 문서 ({{ project.documentCount }})
+        </h3>
+        <div v-if="linkedDocuments.length > 0" class="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-64 overflow-y-auto custom-scrollbar">
+          <div
+            v-for="doc in linkedDocuments"
+            :key="doc.id"
+            class="p-3 hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ doc.originalFilename }}</p>
+                <p class="text-xs text-gray-500">
+                  {{ doc.fileType }} · {{ formatFileSize(doc.fileSize) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="bg-gray-50 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">문서 정보를 불러오는 중...</p>
+        </div>
+      </section>
+
+      <!-- Empty State -->
+      <section v-else class="mb-6">
+        <div class="bg-gray-50 rounded-lg p-8 text-center">
+          <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p class="text-sm text-gray-500">아직 연결된 문서가 없습니다</p>
+        </div>
+      </section>
+
+      <!-- Related Schedules -->
+      <section class="mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          관련 일정 ({{ relatedSchedules.length }})
+        </h3>
+
+        <!-- Loading State -->
+        <div v-if="loadingSchedules" class="bg-gray-50 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">일정 정보를 불러오는 중...</p>
+        </div>
+
+        <!-- Schedules List -->
+        <div v-else-if="relatedSchedules.length > 0" class="border border-gray-200 rounded-lg divide-y divide-gray-200 max-h-64 overflow-y-auto custom-scrollbar">
+          <div
+            v-for="schedule in relatedSchedules"
+            :key="schedule.id"
+            class="p-3 hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="w-1 h-full rounded-full flex-shrink-0 mt-1"
+                :style="{ backgroundColor: schedule.color || '#fb923c' }"
+              ></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ schedule.title }}</p>
+                <p v-if="schedule.description" class="text-xs text-gray-500 mt-1 line-clamp-2">
+                  {{ schedule.description }}
+                </p>
+                <div class="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{{ formatDateTime(schedule.startTime) }}</span>
+                  <span v-if="!schedule.allDay">~ {{ formatDateTime(schedule.endTime) }}</span>
+                  <span v-if="schedule.allDay" class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    종일
+                  </span>
+                </div>
+                <div v-if="schedule.location" class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{{ schedule.location }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else class="bg-gray-50 rounded-lg p-8 text-center">
+          <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="text-sm text-gray-500">아직 관련된 일정이 없습니다</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex-shrink-0 border-t px-6 py-4 flex justify-end gap-3 bg-white sticky bottom-0 z-10">
+      <button
+        v-if="showCloseButton"
+        @click="$emit('close')"
+        class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+      >
+        닫기
+      </button>
+      <button
+        @click="$emit('edit', project)"
+        class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm shadow-blue-200"
+      >
+        편집
+      </button>
+      <button
+        @click="confirmDelete"
+        class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+      >
+        삭제
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed, ref, watch } from 'vue';
+import { projectService } from '@/services/projectService';
+
+const props = defineProps({
+  project: {
+    type: Object,
+    required: true
+  },
+  allDocuments: {
+    type: Array,
+    default: () => []
+  },
+  showCloseButton: {
+    type: Boolean,
+    default: true
+  }
+});
+
+const emit = defineEmits(['close', 'edit', 'delete']);
+
+const confirmDelete = () => {
+  if (confirm(`"${props.project.name}" 프로젝트를 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) {
+    emit('delete', props.project);
+  }
+};
+
+// Related schedules
+const relatedSchedules = ref([]);
+const loadingSchedules = ref(false);
+
+const loadRelatedSchedules = async () => {
+  if (!props.project?.id) {
+    return;
+  }
+
+  try {
+    loadingSchedules.value = true;
+    const response = await projectService.getProjectSchedules(props.project.id);
+    // API returns { success: true, data: [...] } so we need response.data.data
+    relatedSchedules.value = response.data.data || response.data || [];
+  } catch (error) {
+    console.error('Failed to load project schedules:', error);
+    relatedSchedules.value = [];
+  } finally {
+    loadingSchedules.value = false;
+  }
+};
+
+// Load schedules when project changes
+watch(() => props.project?.id, async (newId) => {
+  if (newId) {
+    await loadRelatedSchedules();
+  }
+}, { immediate: true });
+
+// Compute linked documents from project's documentIds
+const linkedDocuments = computed(() => {
+  if (!props.project.documentIds || props.project.documentIds.length === 0) {
+    return [];
+  }
+  return props.allDocuments.filter(doc =>
+    props.project.documentIds.includes(doc.id)
+  );
+});
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'ACTIVE':
+      return 'bg-green-100 text-green-800';
+    case 'ARCHIVED':
+      return 'bg-gray-100 text-gray-800';
+    case 'DELETED':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusText = (status) => {
+  switch (status) {
+    case 'ACTIVE':
+      return '활성';
+    case 'ARCHIVED':
+      return '보관됨';
+    case 'DELETED':
+      return '삭제됨';
+    default:
+      return status;
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+</script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
+</style>

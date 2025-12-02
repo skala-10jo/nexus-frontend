@@ -7,7 +7,7 @@
           <MicrophoneIcon class="w-6 h-6" />
         </div>
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Voice Translation</h2>
+          <h2 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">Voice Translation</h2>
           <p class="text-sm text-gray-500 font-medium mt-0.5">Real-time multi-speaker translation</p>
         </div>
       </div>
