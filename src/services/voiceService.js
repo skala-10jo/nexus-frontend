@@ -9,9 +9,9 @@
  * - REST API 기반 번역
  * - REST API 기반 TTS (음성 합성)
  */
-import api from './api'
+import { pythonAPI } from './api'
 
-const BASE_URL = '/api/ai/voice'
+const BASE_URL = '/voice'
 
 /**
  * STT: 음성 파일을 텍스트로 변환 (POST 업로드)
@@ -25,7 +25,7 @@ export async function speechToText(audioFile, language = 'ko-KR') {
   formData.append('file', audioFile)
   formData.append('language', language)
 
-  const response = await api.post(`${BASE_URL}/stt`, formData, {
+  const response = await pythonAPI.post(`${BASE_URL}/stt`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -305,7 +305,7 @@ export function createSTTStream(language = 'ko-KR', callbacks = {}) {
  * @returns {Promise<Object>} 번역 결과 { original_text, translated_text, source_lang, target_lang }
  */
 export async function translateText(text, sourceLang = 'ko', targetLang = 'en') {
-  const response = await api.post(`${BASE_URL}/translate`, {
+  const response = await pythonAPI.post(`${BASE_URL}/translate`, {
     text,
     source_lang: sourceLang,
     target_lang: targetLang
@@ -323,7 +323,7 @@ export async function translateText(text, sourceLang = 'ko', targetLang = 'en') 
  * @returns {Promise<Object>} 번역 결과 { translations[], total_count }
  */
 export async function translateBatch(texts, sourceLang = 'ko', targetLang = 'en') {
-  const response = await api.post(`${BASE_URL}/translate/batch`, {
+  const response = await pythonAPI.post(`${BASE_URL}/translate/batch`, {
     texts,
     source_lang: sourceLang,
     target_lang: targetLang
@@ -338,7 +338,7 @@ export async function translateBatch(texts, sourceLang = 'ko', targetLang = 'en'
  * @returns {Promise<Object>} 지원 언어 목록 { languages: {}, total_count }
  */
 export async function getSupportedLanguages() {
-  const response = await api.get(`${BASE_URL}/translate/languages`)
+  const response = await pythonAPI.get(`${BASE_URL}/translate/languages`)
   return response.data.data
 }
 
@@ -359,7 +359,7 @@ export async function textToSpeech(
   pitch = 0,
   volume = 100
 ) {
-  const response = await api.post(
+  const response = await pythonAPI.post(
     `${BASE_URL}/tts`,
     {
       text,
@@ -383,6 +383,6 @@ export async function textToSpeech(
  * @returns {Promise<Object>} 음성 목록 { voices: {}, total_languages, total_voices }
  */
 export async function getAvailableVoices() {
-  const response = await api.get(`${BASE_URL}/tts/voices`)
+  const response = await pythonAPI.get(`${BASE_URL}/tts/voices`)
   return response.data.data
 }
