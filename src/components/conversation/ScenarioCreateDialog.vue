@@ -7,7 +7,7 @@
     <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
       <!-- Header -->
       <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
-        <h3 class="text-2xl font-bold text-gray-900">Create Scenario</h3>
+        <h3 class="text-2xl font-bold text-gray-900">시나리오 생성</h3>
         <button @click="handleClose" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -23,17 +23,17 @@
           <div class="space-y-6 mb-8">
             <!-- Language Toggle -->
             <div class="space-y-3">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
-              <div class="flex gap-3">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">언어</label>
+              <div class="bg-gray-100 p-1 rounded-xl flex">
                 <button
                   v-for="lang in languageOptions"
                   :key="lang.value"
                   @click="generateOptions.language = lang.value"
                   :class="[
-                    'flex-1 px-4 py-3 rounded-xl font-bold transition-all',
+                    'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all',
                     generateOptions.language === lang.value
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
                   ]"
                 >
                   {{ lang.label }}
@@ -43,17 +43,17 @@
 
             <!-- Difficulty Toggle -->
             <div class="space-y-3">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
-              <div class="flex gap-3">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">난이도</label>
+              <div class="bg-gray-100 p-1 rounded-xl flex">
                 <button
                   v-for="diff in difficultyOptions"
                   :key="diff.value"
                   @click="generateOptions.difficulty = diff.value"
                   :class="[
-                    'flex-1 px-4 py-3 rounded-xl font-bold transition-all',
+                    'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all',
                     generateOptions.difficulty === diff.value
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
                   ]"
                 >
                   {{ diff.label }}
@@ -65,12 +65,12 @@
           <!-- Project/Schedule Selection -->
           <div class="space-y-4 mb-8">
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Project (Optional)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">프로젝트 (선택)</label>
               <select
                 v-model="selectedProjectId"
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
               >
-                <option :value="null">None</option>
+                <option :value="null">선택 안함</option>
                 <option v-for="project in projects" :key="project.id" :value="project.id">
                   {{ project.name }}
                 </option>
@@ -78,12 +78,12 @@
             </div>
 
             <div v-if="selectedProjectId" class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Schedule (Optional)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">일정 (선택)</label>
               <select
                 v-model="selectedScheduleId"
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
               >
-                <option :value="null">None (Use entire project)</option>
+                <option :value="null">선택 안함 (프로젝트 전체)</option>
                 <option v-for="schedule in filteredSchedules" :key="schedule.id" :value="schedule.id">
                   {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
                 </option>
@@ -96,78 +96,78 @@
             <!-- Title with Unified AI Generate Button -->
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">제목</label>
                 <button
                   @click="generateAllFields"
                   :disabled="isGenerating"
-                  class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-black hover:bg-gray-800 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
                   <svg class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  {{ isGenerating ? 'Generating...' : 'AI Generate' }}
+                  {{ isGenerating ? '생성 중...' : 'AI 자동 생성' }}
                 </button>
               </div>
               <input
                 v-model="formData.title"
                 type="text"
-                placeholder="e.g. Product Demo Meeting"
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                placeholder="예: 제품 데모 미팅"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
               >
             </div>
 
             <!-- Description -->
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description (Brief summary)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">설명 (요약)</label>
               <textarea
                 v-model="formData.description"
                 rows="2"
-                placeholder="Brief description shown on card..."
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"
+                placeholder="카드에 표시될 간단한 설명을 입력하세요..."
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all resize-none"
               ></textarea>
             </div>
 
             <!-- Scenario Text -->
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Scenario Text (Full content)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">시나리오 내용 (전체)</label>
               <textarea
                 v-model="formData.scenarioText"
                 rows="6"
-                placeholder="Full scenario content for practice..."
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"
+                placeholder="연습할 전체 시나리오 내용을 입력하세요..."
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all resize-none"
               ></textarea>
             </div>
 
             <!-- Roles -->
             <div class="grid grid-cols-2 gap-6">
               <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Role</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">나의 역할</label>
                 <input
                   v-model="formData.userRole"
                   type="text"
-                  placeholder="e.g. PM"
-                  class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                  placeholder="예: PM"
+                  class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
                 >
               </div>
               <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Partner Role</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">상대방(AI) 역할</label>
                 <input
                   v-model="formData.aiRole"
                   type="text"
-                  placeholder="e.g. Developer"
-                  class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                  placeholder="예: 개발자"
+                  class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
                 >
               </div>
             </div>
 
             <!-- Keywords -->
             <div class="space-y-2">
-              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (Comma separated)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">키워드 (쉼표로 구분)</label>
               <input
                 v-model="formData.requiredTerminology"
                 type="text"
-                placeholder="e.g. agile, sprint, backlog"
-                class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
+                placeholder="예: 애자일, 스프린트, 백로그"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
               >
             </div>
           </div>
@@ -208,7 +208,7 @@
                 :class="[
                   'p-3 rounded-lg max-w-[80%]',
                   msg.role === 'user'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-800 border border-gray-200'
                 ]"
               >
@@ -235,12 +235,12 @@
                 @keyup.enter="sendChatMessage"
                 type="text"
                 placeholder="예: 역할을 더 구체적으로 바꿔줘"
-                class="flex-1 px-3 py-2 text-sm bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                class="flex-1 px-3 py-2 text-sm bg-white rounded-lg border border-gray-300 focus:ring-2 focus:ring-gray-100 focus:border-gray-900"
               />
               <button
                 @click="sendChatMessage"
                 :disabled="!chatInput.trim() || isChatLoading"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                class="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 전송
               </button>
@@ -252,14 +252,14 @@
       <!-- Footer -->
       <div class="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
         <button @click="handleClose" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors">
-          Cancel
+          취소
         </button>
         <button
           @click="handleCreate"
           :disabled="!isFormValid"
           class="px-8 py-3 bg-black text-white rounded-xl font-bold shadow-lg shadow-gray-200 hover:bg-gray-800 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Create Scenario
+          시나리오 생성
         </button>
       </div>
     </div>
@@ -297,9 +297,9 @@ const languageOptions = [
 ]
 
 const difficultyOptions = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' }
+  { value: 'beginner', label: '초급' },
+  { value: 'intermediate', label: '중급' },
+  { value: 'advanced', label: '고급' }
 ]
 
 // Form State
@@ -422,7 +422,7 @@ async function generateAllFields() {
     }
   } catch (error) {
     console.error('Failed to generate scenario:', error)
-    alert('Failed to generate scenario. Please try again.')
+    alert('시나리오 생성에 실패했습니다. 다시 시도해주세요.')
   } finally {
     isGenerating.value = false
   }

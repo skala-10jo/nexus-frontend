@@ -31,6 +31,7 @@
           :scenario="scenario"
           :is-loading="conversation.isLoading.value"
           :translation-loading="conversation.translationLoading.value"
+          :hint-loading="conversation.hintLoading.value"
           :selected-message-index="feedback.selectedMessageIndex.value"
           :user-messages="conversation.userMessages.value"
           :avatar-enabled="voice.avatarEnabled.value"
@@ -42,13 +43,14 @@
           :final-texts="voice.finalTexts.value"
           :interim-text="voice.interimText.value"
           @toggle-translation="conversation.toggleTranslation"
+          @toggle-hint="handleToggleHint"
           @message-click="handleMessageClick"
         />
 
         <!-- Input Area -->
         <PracticeInput
           :input-mode="voice.inputMode.value"
-          :user-input="conversation.userInput.value"
+          :user-input="sharedUserInput"
           :is-loading="conversation.isLoading.value"
           :is-recording="voice.isRecording.value"
           :stt-is-connecting="voice.isConnecting.value"
@@ -59,7 +61,7 @@
           :interim-text="voice.interimText.value"
           :avatar-enabled="voice.avatarEnabled.value"
           :is-avatar-initializing="voice.isAvatarInitializing.value"
-          @update:user-input="conversation.userInput.value = $event"
+          @update:user-input="updateUserInput"
           @toggle-input-mode="voice.toggleInputMode"
           @toggle-avatar="voice.toggleAvatar"
           @start-recording="handleStartRecording"
@@ -126,24 +128,47 @@ const {
   clearError
 } = usePractice()
 
-// Feedback (needs userMessages ref, initialized first)
+// 임시 userInput ref (voice와 conversation 연결용)
+const sharedUserInput = ref('')
+
+// Voice (초기화를 먼저 해야 getAudioBlob 사용 가능)
+const voice = usePracticeVoice({
+  userInput: sharedUserInput,
+  onSendMessage: () => handleSendMessage()
+})
+
+// Feedback placeholder (conversation 초기화 후 업데이트)
+let feedbackAddFn = null
+
+// Conversation (voice.lastAudioBlob 참조, sharedUserInput 공유)
+const conversation = usePracticeConversation({
+  scenario,
+  userInput: sharedUserInput,  // 외부 userInput 전달
+  onFeedbackReceived: (feedbackData) => {
+    if (feedbackAddFn) {
+      feedbackAddFn(feedbackData)
+      // 피드백 수신 시 '대화별 피드백' 탭으로 자동 전환
+      feedback.activeTab.value = 'messages'
+    }
+  },
+  // 음성 모드에서 발음 평가를 위한 오디오 blob 가져오기
+  getAudioBlob: () => {
+    const blob = voice.lastAudioBlob.value
+    // 사용 후 초기화 (한 번만 사용)
+    if (blob) {
+      voice.lastAudioBlob.value = null
+    }
+    return blob
+  }
+})
+
+// Feedback (conversation 초기화 후)
 const feedback = usePracticeFeedback({
   userMessages: computed(() => conversation.userMessages.value)
 })
 
-// Conversation
-const conversation = usePracticeConversation({
-  scenario,
-  onFeedbackReceived: (feedbackData) => {
-    feedback.addFeedback(feedbackData)
-  }
-})
-
-// Voice
-const voice = usePracticeVoice({
-  userInput: conversation.userInput,
-  onSendMessage: () => handleSendMessage()
-})
+// feedbackAddFn 연결
+feedbackAddFn = feedback.addFeedback
 
 // Refs
 const conversationAreaRef = ref(null)
@@ -151,6 +176,13 @@ const conversationAreaRef = ref(null)
 // ============================================
 // Event Handlers
 // ============================================
+
+/**
+ * 사용자 입력 업데이트
+ */
+const updateUserInput = (value) => {
+  sharedUserInput.value = value
+}
 
 /**
  * 메시지 전송 처리
@@ -202,12 +234,19 @@ const handleReset = async () => {
 }
 
 /**
+ * 힌트 토글 처리
+ * @param {number} index - 메시지 인덱스
+ */
+const handleToggleHint = async (index) => {
+  await conversation.toggleHint(index, scenarioId)
+}
+
+/**
  * 스크롤을 맨 아래로 이동
  */
 const scrollToBottom = () => {
-  if (conversationAreaRef.value?.$el) {
-    const el = conversationAreaRef.value.$el
-    el.scrollTop = el.scrollHeight
+  if (conversationAreaRef.value?.scrollToBottom) {
+    conversationAreaRef.value.scrollToBottom()
   }
 }
 
