@@ -1,36 +1,25 @@
 <template>
   <div class="w-full py-4 md:py-8 h-full flex flex-col justify-center items-center">
-    <swiper
-      :effect="'coverflow'"
-      :grabCursor="true"
-      :centeredSlides="true"
-      :slidesPerView="'auto'"
-      :coverflowEffect="{
-        rotate: 50,
-        stretch: 0,
-        depth: 100,
-        modifier: 1,
-        slideShadows: true,
-      }"
-      :pagination="{ clickable: true }"
-      :mousewheel="true"
-      :modules="modules"
-      :breakpoints="{
+    <swiper :effect="'coverflow'" :grabCursor="true" :centeredSlides="true" :slidesPerView="'auto'" :coverflowEffect="{
+      rotate: 50,
+      stretch: 0,
+      depth: 100,
+      modifier: 1,
+      slideShadows: true,
+    }" :pagination="{ clickable: true }" :mousewheel="true" :modules="modules" :breakpoints="{
         320: {
           slidesPerView: 1,
-          spaceBetween: 20,
+          spaceBetween: 0,
           effect: 'slide'
         },
         768: {
           slidesPerView: 'auto',
+          spaceBetween: 0,
           effect: 'coverflow'
         }
-      }"
-      class="mySwiper w-full h-full py-4 md:py-12"
-    >
-      <swiper-slide v-for="unit in units" :key="unit.unit"
-        class="rounded-3xl border-2 border-blue-200 overflow-hidden relative group transition-all duration-300
-               w-[85%] h-[60vh] mx-auto md:mx-0">
+      }" class="mySwiper w-full h-full py-4 md:py-12">
+      <swiper-slide v-for="unit in units" :key="unit.unit" class="rounded-3xl border-2 border-blue-200 overflow-hidden relative group transition-all duration-300
+               w-full md:w-[85%] h-[60vh] mx-auto md:mx-0">
         <!-- Background Image -->
         <div class="absolute inset-0 z-0">
           <img :src="getUnitImage(unit.unit)"
@@ -70,12 +59,13 @@
               <div class="space-y-3">
                 <button v-for="chapter in unitChapters[unit.unit]" :key="chapter.chapter"
                   @click="$emit('select-chapter', unit.unit, chapter.chapter)"
-                  class="w-full p-4 rounded-xl border border-white/20 transition-all duration-200 text-left hover:bg-white/10 hover:border-white/40 bg-black/20 backdrop-blur-md group/chapter flex items-center justify-between">
+                  class="w-full p-4 rounded-xl border border-white/20 transition-all duration-200 hover:bg-white/10 hover:border-white/40 bg-black/20 backdrop-blur-md group/chapter flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 md:gap-0 text-center md:text-left">
                   <span
-                    class="font-semibold text-white text-sm truncate flex-1 mr-2 group-hover/chapter:text-blue-200">{{
+                    class="font-semibold text-white text-sm truncate w-full md:w-auto md:flex-1 md:mr-2 group-hover/chapter:text-blue-200">{{
                       chapter.chapter }}</span>
-                  <div class="flex items-center gap-2 w-16 flex-shrink-0">
-                    <div class="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <div class="flex items-center gap-2 w-full md:w-16 flex-shrink-0 justify-center">
+                    <div
+                      class="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden max-w-[100px] md:max-w-none mx-auto md:mx-0">
                       <div class="h-full rounded-full transition-all duration-300 bg-blue-400"
                         :style="{ width: `${chapter.accuracyRate || 0}%` }"></div>
                     </div>
