@@ -1,17 +1,16 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50/50">
+  <div class="h-full flex flex-col relative">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">Biz Expression</h1>
-          <p class="text-sm text-gray-500 mt-1 font-medium">Learn business expressions with pronunciation practice</p>
-        </div>
+    <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-8 border-b border-gray-100">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold text-gray-800 font-nanum-round-eb">Biz 표현 학습</h2>
+        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">Biz</span>
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-4 pt-4 pb-12">
-      <div class="w-full max-w-[1920px] mx-auto">
+    <div class="flex-1 flex pt-20 overflow-hidden bg-gray-50/50">
+      <div class="w-full h-full overflow-y-auto px-8 py-8">
+        <div class="max-w-[1920px] mx-auto">
 
         <!-- Progress Indicator -->
         <div v-if="currentView !== 'selection'" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
@@ -157,6 +156,7 @@
           @toggle-phoneme="togglePhonemeView"
           @mark-complete="handleMarkPracticeComplete"
         />
+        </div>
       </div>
     </div>
   </div>

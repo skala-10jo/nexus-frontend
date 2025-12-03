@@ -1,78 +1,87 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div
-      v-for="unit in units"
-      :key="unit.unit"
-      class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-    >
-      <!-- Unit Header -->
-      <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ unit.unit }}</h2>
-            <div class="flex items-center gap-3">
-              <div class="w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-300"
-                  :class="getProgressBarColor(unit.accuracyRate)"
-                  :style="{ width: `${unit.accuracyRate || 0}%` }"
-                ></div>
+  <div class="w-full py-8">
+    <swiper :effect="'coverflow'" :grabCursor="true" :centeredSlides="true" :slidesPerView="'auto'" :coverflowEffect="{
+      rotate: 50,
+      stretch: 0,
+      depth: 100,
+      modifier: 1,
+      slideShadows: true,
+    }" :pagination="true" :mousewheel="true" :modules="modules" class="mySwiper w-full py-12">
+      <swiper-slide v-for="unit in units" :key="unit.unit"
+        class="rounded-3xl border-2 border-blue-200 overflow-hidden !w-[500px] !h-[600px] relative group">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+          <img :src="getUnitImage(unit.unit)"
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            alt="Unit Background" />
+          <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80"></div>
+        </div>
+
+        <div class="relative z-10 h-full flex flex-col">
+          <!-- Unit Header -->
+          <div class="p-8 border-b border-white/10">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h2 class="text-2xl font-bold text-white mb-3 drop-shadow-md">{{ unit.unit }}</h2>
+                <div class="flex items-center gap-3">
+                  <div class="w-full h-2.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
+                    <div
+                      class="h-full rounded-full transition-all duration-300 bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.6)]"
+                      :style="{ width: `${unit.accuracyRate || 0}%` }"></div>
+                  </div>
+                  <span class="text-sm font-medium text-white/90 whitespace-nowrap drop-shadow-md">
+                    <template v-if="unit.quizAttemptedCount > 0">
+                      {{ Math.round(unit.accuracyRate || 0) }}%
+                    </template>
+                    <template v-else>
+                      0%
+                    </template>
+                  </span>
+                </div>
               </div>
-              <span class="text-sm font-medium text-gray-600">
-                <template v-if="unit.quizAttemptedCount > 0">
-                  {{ Math.round(unit.accuracyRate || 0) }}% ({{ unit.correctCount }}/{{ unit.correctCount + unit.incorrectCount }})
-                </template>
-                <template v-else>
-                  미학습
-                </template>
-              </span>
+            </div>
+          </div>
+
+          <!-- Chapters Grid -->
+          <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
+            <div v-if="unitChapters[unit.unit]?.length > 0">
+              <div class="space-y-3">
+                <button v-for="chapter in unitChapters[unit.unit]" :key="chapter.chapter"
+                  @click="$emit('select-chapter', unit.unit, chapter.chapter)"
+                  class="w-full p-4 rounded-xl border border-white/20 transition-all duration-200 text-left hover:bg-white/10 hover:border-white/40 bg-black/20 backdrop-blur-md group/chapter flex items-center justify-between">
+                  <span
+                    class="font-semibold text-white text-sm truncate flex-1 mr-2 group-hover/chapter:text-blue-200">{{
+                      chapter.chapter }}</span>
+                  <div class="flex items-center gap-2 w-16 flex-shrink-0">
+                    <div class="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-300 bg-blue-400"
+                        :style="{ width: `${chapter.accuracyRate || 0}%` }"></div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-white/60">
+              챕터를 불러오는 중...
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Chapters Grid -->
-      <div class="p-8">
-        <div v-if="unitChapters[unit.unit]?.length > 0">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <button
-              v-for="chapter in unitChapters[unit.unit]"
-              :key="chapter.chapter"
-              @click="$emit('select-chapter', unit.unit, chapter.chapter)"
-              class="p-4 rounded-xl border-2 transition-all duration-200 text-center hover:border-gray-900 hover:shadow-md bg-white border-gray-200 group flex flex-col justify-between h-full"
-            >
-              <div class="flex flex-col items-center mb-3 flex-1 justify-center">
-                <h3 class="font-semibold text-gray-900 group-hover:text-gray-900 break-keep leading-snug">{{ chapter.chapter }}</h3>
-              </div>
-              <div class="flex items-center gap-2 w-full">
-                <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    class="h-full rounded-full transition-all duration-300"
-                    :class="getProgressBarColor(chapter.accuracyRate)"
-                    :style="{ width: `${chapter.accuracyRate || 0}%` }"
-                  ></div>
-                </div>
-                <span class="text-xs font-medium text-gray-500">
-                  <template v-if="chapter.quizAttemptedCount > 0">
-                    {{ Math.round(chapter.accuracyRate || 0) }}%
-                  </template>
-                  <template v-else>
-                    -
-                  </template>
-                </span>
-              </div>
-            </button>
-          </div>
-        </div>
-        <div v-else class="text-center py-8 text-gray-500">
-          챕터를 불러오는 중...
-        </div>
-      </div>
-    </div>
+      </swiper-slide>
+    </swiper>
   </div>
 </template>
 
 <script setup>
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { EffectCoverflow, Pagination, Mousewheel } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/pagination';
+
+const modules = [EffectCoverflow, Pagination, Mousewheel];
+
 defineProps({
   units: {
     type: Array,
@@ -89,4 +98,49 @@ defineProps({
 })
 
 defineEmits(['select-chapter'])
+
+const getUnitImage = (unitName) => {
+  if (unitName.includes('미팅')) return '/images/expression/meeting.png';
+  if (unitName.includes('요청')) return '/images/expression/request.png';
+  if (unitName.includes('피드백')) return '/images/expression/feedback.png';
+  if (unitName.includes('이메일')) return '/images/expression/email.png';
+  return '/images/expression/meeting.png'; // Fallback
+}
 </script>
+
+<style scoped>
+.swiper {
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+.swiper-slide {
+  background-position: center;
+  background-size: cover;
+  width: 500px;
+  height: 600px;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+</style>
