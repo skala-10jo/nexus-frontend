@@ -75,7 +75,7 @@
           </div>
 
           <!-- Mobile Swiper View -->
-          <div class="md:hidden h-full flex flex-col">
+          <div class="md:hidden h-full flex flex-col justify-center pb-10">
 
 
             <!-- Carousel -->
