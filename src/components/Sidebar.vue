@@ -40,15 +40,15 @@
 
       <!-- Dashboard -->
       <router-link
-        to="/"
+        to="/dashboard"
         class="flex items-center gap-4 rounded-2xl transition-all duration-200 group relative overflow-hidden"
         :class="[
-          isActive('/') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+          isActive('/dashboard') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
           isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
         ]"
         :title="isCollapsed ? 'Dashboard' : ''"
       >
-        <div v-if="isActive('/')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
+        <div v-if="isActive('/dashboard')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
         <HomeIcon class="w-5 h-5 flex-shrink-0" />
         <span v-if="!isCollapsed" class="font-medium text-[15px]">대시보드</span>
       </router-link>
@@ -169,7 +169,7 @@
 
     </nav>
 
-    <!-- User Profile (Mail.vue style) -->
+    <!-- User Profile & Logout -->
     <div class="mt-auto pt-4 border-t border-gray-200/50" :class="isCollapsed ? 'px-3 pb-4' : 'px-6 pb-6'">
       <div
         class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
@@ -181,18 +181,35 @@
           class="w-10 h-10 rounded-full object-cover flex-shrink-0"
           alt=""
         />
-        <div v-if="!isCollapsed">
+        <div v-if="!isCollapsed" class="flex-1">
           <div class="text-sm font-bold text-gray-900">{{ user?.fullName || 'User' }}</div>
           <div class="text-xs text-gray-500">Product Designer</div>
         </div>
+        <button
+          v-if="!isCollapsed"
+          @click="handleLogout"
+          class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          title="로그아웃"
+        >
+          <ArrowRightOnRectangleIcon class="w-5 h-5" />
+        </button>
       </div>
+      <!-- Collapsed logout button -->
+      <button
+        v-if="isCollapsed"
+        @click="handleLogout"
+        class="w-full mt-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex justify-center"
+        title="로그아웃"
+      >
+        <ArrowRightOnRectangleIcon class="w-5 h-5" />
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
   HomeIcon,
@@ -200,13 +217,21 @@ import {
   ChatBubbleLeftRightIcon,
   GlobeAltIcon,
   EnvelopeIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline';
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 
 const user = computed(() => authStore.user);
+
+// Logout handler
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/');
+};
 
 // Sidebar collapse state
 const isCollapsed = ref(false);
