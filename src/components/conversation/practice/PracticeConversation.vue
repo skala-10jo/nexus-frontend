@@ -4,12 +4,24 @@
  *
  * 메시지 목록, 아바타 뷰, 로딩 상태를 표시합니다.
  */
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   LanguageIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  UserCircleIcon
 } from '@heroicons/vue/24/outline'
+import AvatarPanel from './AvatarPanel.vue'
+import { useAvatarStore } from '@/stores/avatar'
+import voiceAvatarService from '@/services/voiceAvatarService'
+
+const avatarStore = useAvatarStore()
+
+// WebRTC Avatar video ref
+const webrtcVideoRef = ref(null)
+const isWebRTCReady = ref(false)
+const avatarError = ref(null)
 
 const props = defineProps({
   /** 메시지 목록 */
@@ -81,6 +93,11 @@ const props = defineProps({
   interimText: {
     type: String,
     default: ''
+  },
+  /** 마지막 AI 메시지 (아바타용) */
+  lastAiMessage: {
+    type: String,
+    default: ''
   }
 })
 
@@ -107,23 +124,162 @@ const formatTime = (date) => {
     minute: '2-digit'
   })
 }
+
+/**
+ * 아바타 패널 토글
+ */
+const toggleAvatarPanel = () => {
+  avatarStore.togglePanel()
+}
+
+/**
+ * 마지막 AI 메시지의 언어 추정
+ */
+const estimatedLanguage = computed(() => {
+  return props.scenario?.language || 'en-US'
+})
+
+/**
+ * avatarEnabled 모드에서 WebRTC Avatar 초기화
+ */
+watch(
+  () => props.avatarEnabled,
+  async (enabled) => {
+    if (enabled) {
+      // 다음 틱에서 video element가 DOM에 있을 때 초기화
+      await nextTick()
+      await initializeWebRTCAvatar()
+    } else {
+      // Avatar 모드 해제 시 정리
+      await cleanupWebRTCAvatar()
+    }
+  }
+)
+
+/**
+ * lastAiMessage가 변경되면 Avatar로 발화
+ */
+watch(
+  () => props.lastAiMessage,
+  async (newMessage) => {
+    if (!newMessage || !props.avatarEnabled || !isWebRTCReady.value) return
+    try {
+      await voiceAvatarService.speakWithAvatar(newMessage, estimatedLanguage.value)
+    } catch (err) {
+      console.error('[PracticeConversation] Avatar speak error:', err)
+    }
+  }
+)
+
+/**
+ * WebRTC Avatar 초기화
+ */
+async function initializeWebRTCAvatar() {
+  if (isWebRTCReady.value) return
+
+  try {
+    avatarError.value = null
+    console.log('[PracticeConversation] WebRTC Avatar 초기화 시작...')
+
+    // video element가 준비될 때까지 대기
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    if (!webrtcVideoRef.value) {
+      console.error('[PracticeConversation] Video element not found')
+      return
+    }
+
+    await voiceAvatarService.initializeAvatar(webrtcVideoRef.value, {
+      character: 'lisa',
+      style: 'casual-sitting',
+      language: estimatedLanguage.value
+    })
+
+    isWebRTCReady.value = true
+    console.log('[PracticeConversation] ✅ WebRTC Avatar 초기화 완료')
+  } catch (err) {
+    console.error('[PracticeConversation] ❌ WebRTC Avatar 초기화 실패:', err)
+    avatarError.value = err.message || 'Avatar 초기화 실패'
+  }
+}
+
+/**
+ * WebRTC Avatar 정리
+ */
+async function cleanupWebRTCAvatar() {
+  if (!isWebRTCReady.value) return
+
+  try {
+    await voiceAvatarService.disconnectAvatar()
+    isWebRTCReady.value = false
+    console.log('[PracticeConversation] Avatar 연결 해제 완료')
+  } catch (err) {
+    console.error('[PracticeConversation] Avatar cleanup error:', err)
+  }
+}
+
+// 컴포넌트 언마운트 시 정리
+onUnmounted(async () => {
+  await cleanupWebRTCAvatar()
+})
 </script>
 
 <template>
+  <!-- Avatar Panel (독립 모듈 - TTS 결과 구독) -->
+  <AvatarPanel
+    :tts-text="lastAiMessage"
+    :language="estimatedLanguage"
+  />
+
+  <!-- Avatar Toggle Button (Chat Mode에서만 표시) -->
+  <button
+    v-if="!avatarEnabled"
+    @click="toggleAvatarPanel"
+    class="absolute top-4 left-4 z-40 p-2.5 bg-white/90 hover:bg-white shadow-lg rounded-xl border border-gray-200 transition-all hover:scale-105"
+    title="AI 아바타 열기"
+  >
+    <UserCircleIcon class="w-5 h-5 text-gray-600" />
+  </button>
+
   <!-- Avatar View -->
-  <div v-if="avatarEnabled" class="flex-1 bg-black flex flex-col">
+  <div v-if="avatarEnabled" class="flex-1 bg-gradient-to-b from-gray-900 to-black flex flex-col">
     <div class="flex-1 relative flex items-center justify-center">
-      <video
-        class="w-full h-full object-contain"
-        autoplay
-        playsinline
-      ></video>
+      <!-- WebRTC Avatar Video -->
+      <div class="flex flex-col items-center justify-center">
+        <video
+          ref="webrtcVideoRef"
+          autoplay
+          playsinline
+          class="rounded-2xl shadow-2xl border-4 border-white/20 bg-gray-800"
+          style="width: 640px; height: 360px; object-fit: contain;"
+        />
+        <p class="mt-4 text-white/60 text-sm">AI Assistant</p>
+
+        <!-- Error State -->
+        <div v-if="avatarError" class="mt-2 px-3 py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg">
+          {{ avatarError }}
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="!isWebRTCReady && !avatarError" class="absolute inset-0 flex items-center justify-center">
+          <div class="flex flex-col items-center gap-3">
+            <ArrowPathIcon class="w-8 h-8 text-white animate-spin" />
+            <span class="text-white/60 text-sm">Avatar 연결 중...</span>
+          </div>
+        </div>
+      </div>
 
       <!-- Avatar Status Badge -->
       <div class="absolute top-4 right-4">
-        <div class="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 text-green-400 text-xs font-bold border border-white/10">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          아바타 활성
+        <div
+          class="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 text-xs font-bold border border-white/10"
+          :class="isWebRTCReady ? 'text-green-400' : 'text-yellow-400'"
+        >
+          <span
+            class="w-2 h-2 rounded-full"
+            :class="isWebRTCReady ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'"
+          ></span>
+          {{ isWebRTCReady ? 'Avatar 연결됨' : '연결 중...' }}
         </div>
       </div>
 
