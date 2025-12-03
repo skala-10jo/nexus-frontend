@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
     <div class="flex items-center gap-2 mb-6">
-      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-bold text-sm">3</span>
+      <!-- <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-bold text-sm">3</span> -->
       <h2 class="text-lg font-semibold text-gray-900">학습 세션 선택</h2>
     </div>
 
