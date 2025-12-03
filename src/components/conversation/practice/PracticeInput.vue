@@ -97,7 +97,7 @@ const userInputValue = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-white border-t border-gray-200 z-20 shrink-0">
+  <div class="p-4 pb-20 md:pb-6 bg-white border-t border-gray-200 z-20 shrink-0">
     <div class="max-w-4xl mx-auto flex flex-col gap-4">
 
       <!-- Voice Input Status (Chat Mode only) -->

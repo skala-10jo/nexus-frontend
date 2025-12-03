@@ -41,23 +41,47 @@ defineProps({
   comprehensiveFeedback: {
     type: Object,
     default: null
+  },
+  /** 모바일에서 열림 상태 */
+  isMobileOpen: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits([
   'update:activeTab',
-  'selectMessage'
+  'selectMessage',
+  'close'
 ])
 </script>
 
 <template>
-  <aside class="w-[45%] min-w-[450px] max-w-[1400px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
+  <aside
+    class="bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 transition-all duration-300
+           md:w-[45%] md:min-w-[450px] md:max-w-[1400px] md:static md:h-auto md:border-l
+           fixed inset-x-0 bottom-0 h-[85vh] rounded-t-2xl md:rounded-none w-full"
+    :class="[
+      isMobileOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+    ]"
+  >
     <!-- Header -->
-    <div class="p-5 border-b border-gray-100 bg-white">
-      <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-        <ChartBarIcon class="w-5 h-5 text-blue-700" />
-        피드백
-      </h2>
+    <div class="p-5 border-b border-gray-100 bg-white rounded-t-2xl md:rounded-none">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <ChartBarIcon class="w-5 h-5 text-blue-700" />
+          피드백
+        </h2>
+        <!-- Mobile Close Button -->
+        <button 
+          @click="emit('close')" 
+          class="md:hidden p-2 -mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
       <!-- Tabs -->
       <div class="flex p-1 bg-gray-100 rounded-xl">

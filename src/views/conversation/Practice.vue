@@ -70,6 +70,13 @@
         />
       </main>
 
+      <!-- Mobile Backdrop -->
+      <div 
+        v-if="showMobileFeedback" 
+        class="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"
+        @click="showMobileFeedback = false"
+      ></div>
+
       <!-- Feedback Sidebar -->
       <FeedbackSidebar
         :active-tab="feedback.activeTab.value"
@@ -77,8 +84,10 @@
         :selected-message-index="feedback.selectedMessageIndex.value"
         :selected-message-feedback="feedback.selectedMessageFeedback.value"
         :comprehensive-feedback="feedback.comprehensiveFeedback.value"
+        :is-mobile-open="showMobileFeedback"
         @update:active-tab="feedback.activeTab.value = $event"
         @select-message="feedback.selectMessage"
+        @close="showMobileFeedback = false"
       />
     </div>
   </div>
@@ -197,6 +206,9 @@ const handleSendMessage = async () => {
   }
 }
 
+// Mobile Feedback State
+const showMobileFeedback = ref(false)
+
 /**
  * 메시지 클릭 처리
  */
@@ -204,6 +216,7 @@ const handleMessageClick = (message) => {
   const index = conversation.userMessages.value.findIndex(m => m === message)
   if (index !== -1) {
     feedback.selectMessage(index)
+    showMobileFeedback.value = true // 모바일에서 피드백 창 열기
   }
 }
 
