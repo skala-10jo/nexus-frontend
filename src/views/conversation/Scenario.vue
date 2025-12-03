@@ -32,7 +32,7 @@
       </div>
 
       <!-- Right Content -->
-      <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full relative">
+      <div class="flex-1 md:overflow-y-auto overflow-hidden p-4 md:p-8 w-full relative">
         <!-- Mobile Project Selector -->
         <div class="mb-6 relative z-30 md:hidden">
           <button @click="mobileShowProjects = !mobileShowProjects"
@@ -82,7 +82,7 @@
             <div class="flex-1 flex flex-col justify-center">
               <swiper :effect="'cards'" :grabCursor="true" :modules="modules" class="w-full max-w-sm mx-auto"
                 :cardsEffect="{
-                  perSlideOffset: 8,
+                  perSlideOffset: 1,
                   perSlideRotate: 2,
                   rotate: true,
                   slideShadows: true,
