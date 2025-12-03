@@ -42,6 +42,11 @@ defineProps({
   getStatusBadgeClass: {
     type: Function,
     required: true
+  },
+  /** 표시할 언어 목록 */
+  visibleLanguages: {
+    type: Array,
+    default: () => ['korean', 'english', 'vietnamese']
   }
 })
 
@@ -106,9 +111,11 @@ const emit = defineEmits([
               class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
           </th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-36">한국어</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">영어</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">베트남어</th>
+          <th v-if="visibleLanguages.includes('korean')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-36">한국어</th>
+          <th v-if="visibleLanguages.includes('english')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">영어</th>
+          <th v-if="visibleLanguages.includes('vietnamese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">베트남어</th>
+          <th v-if="visibleLanguages.includes('japanese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">일본어</th>
+          <th v-if="visibleLanguages.includes('chinese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">중국어</th>
           <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">약어</th>
           <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">상태</th>
           <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">검증</th>
@@ -130,7 +137,7 @@ const emit = defineEmits([
               class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
           </td>
-          <td class="px-4 py-2">
+          <td v-if="visibleLanguages.includes('korean')" class="px-4 py-2">
             <button
               @click="emit('click-term', term)"
               class="text-xs font-bold text-gray-900 hover:text-blue-600 text-left"
@@ -138,11 +145,17 @@ const emit = defineEmits([
               {{ term.koreanTerm }}
             </button>
           </td>
-          <td class="px-4 py-2">
+          <td v-if="visibleLanguages.includes('english')" class="px-4 py-2">
             <span class="text-xs text-gray-600">{{ term.englishTerm || '-' }}</span>
           </td>
-          <td class="px-4 py-2">
+          <td v-if="visibleLanguages.includes('vietnamese')" class="px-4 py-2">
             <span class="text-xs text-gray-600">{{ term.vietnameseTerm || '-' }}</span>
+          </td>
+          <td v-if="visibleLanguages.includes('japanese')" class="px-4 py-2">
+            <span class="text-xs text-gray-600">{{ term.japaneseTerm || '-' }}</span>
+          </td>
+          <td v-if="visibleLanguages.includes('chinese')" class="px-4 py-2">
+            <span class="text-xs text-gray-600">{{ term.chineseTerm || '-' }}</span>
           </td>
           <td class="px-4 py-2">
             <span class="text-xs text-gray-500">{{ term.abbreviation || '-' }}</span>

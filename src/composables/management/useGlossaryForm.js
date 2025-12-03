@@ -27,6 +27,12 @@ export function useGlossaryForm() {
   // Helpers
   // ============================================
 
+  const isEditingFromDetail = ref(false)
+
+  // ============================================
+  // Helpers
+  // ============================================
+
   /**
    * 빈 폼 데이터 생성
    */
@@ -35,6 +41,8 @@ export function useGlossaryForm() {
       koreanTerm: '',
       englishTerm: '',
       vietnameseTerm: '',
+      japaneseTerm: '',
+      chineseTerm: '',
       abbreviation: '',
       definition: '',
       context: '',
@@ -54,6 +62,7 @@ export function useGlossaryForm() {
   const openAddModal = () => {
     activeForm.value = getEmptyForm()
     showAddTermModal.value = true
+    isEditingFromDetail.value = false
   }
 
   /**
@@ -73,6 +82,7 @@ export function useGlossaryForm() {
     showEditDialog.value = false
     editingTermId.value = null
     activeForm.value = getEmptyForm()
+    // Note: isEditingFromDetail is NOT reset here to allow handleSave to use it
   }
 
   /**
@@ -96,8 +106,10 @@ export function useGlossaryForm() {
    */
   const editTermFromDetail = () => {
     if (selectedTerm.value) {
+      const termToEdit = { ...selectedTerm.value }
       closeTermDetail()
-      editTerm(selectedTerm.value)
+      editTerm(termToEdit)
+      isEditingFromDetail.value = true
     }
   }
 
@@ -116,13 +128,22 @@ export function useGlossaryForm() {
     }
 
     try {
+      let savedTerm
       if (showEditDialog.value) {
-        await glossaryStore.updateTerm(editingTermId.value, activeForm.value)
+        savedTerm = await glossaryStore.updateTerm(editingTermId.value, activeForm.value)
       } else {
-        await glossaryStore.createTerm(activeForm.value)
+        savedTerm = await glossaryStore.createTerm(activeForm.value)
       }
+
       closeModal()
       if (onSuccess) onSuccess()
+
+      // 상세에서 수정으로 진입했던 경우, 상세 모달 다시 열기
+      if (isEditingFromDetail.value && savedTerm) {
+        openTermDetail(savedTerm)
+        isEditingFromDetail.value = false
+      }
+
       return true
     } catch (error) {
       console.error('Failed to save term:', error)
