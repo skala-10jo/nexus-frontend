@@ -98,6 +98,25 @@ const conversationService = {
   async getHistory(scenarioId) {
     const response = await pythonAPI.get(`/conversations/history/${scenarioId}`)
     return response.data
+  },
+
+  /**
+   * 대화 힌트 생성
+   * 시나리오 맥락과 대화 히스토리를 기반으로 응답 힌트 생성
+   * @param {string} scenarioId - 시나리오 ID
+   * @param {Array} history - 대화 히스토리
+   * @param {string} lastAiMessage - 마지막 AI 메시지
+   * @param {number} hintCount - 생성할 힌트 개수 (기본값: 3)
+   * @returns {Promise} 힌트 목록 및 설명
+   */
+  async getHint(scenarioId, history = [], lastAiMessage = '', hintCount = 3) {
+    const response = await pythonAPI.post('/conversations/hint', {
+      scenarioId,
+      history,
+      lastAiMessage,
+      hintCount
+    })
+    return response.data
   }
 }
 
