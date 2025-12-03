@@ -7,7 +7,7 @@
     <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
       <!-- Header -->
       <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
-        <h3 class="text-2xl font-bold text-gray-900">Edit Scenario</h3>
+        <h3 class="text-2xl font-bold text-gray-900">시나리오 수정</h3>
         <button @click="$emit('close')" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -19,7 +19,7 @@
       <div class="flex-1 overflow-y-auto p-8 space-y-6">
         <!-- Title -->
         <div class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">제목</label>
           <input
             v-model="localScenario.title"
             type="text"
@@ -29,30 +29,30 @@
 
         <!-- Description -->
         <div class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Description (Brief summary)</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">설명 (요약)</label>
           <textarea
             v-model="localScenario.description"
             rows="2"
             class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"
-            placeholder="Brief description shown on card..."
+            placeholder="카드에 표시될 간단한 설명을 입력하세요..."
           ></textarea>
         </div>
 
         <!-- Scenario Text -->
         <div class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Scenario Text (Full content)</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">시나리오 내용 (전체)</label>
           <textarea
             v-model="localScenario.scenarioText"
             rows="6"
             class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 resize-none"
-            placeholder="Full scenario content for practice..."
+            placeholder="연습할 전체 시나리오 내용을 입력하세요..."
           ></textarea>
         </div>
 
         <!-- Roles -->
         <div class="grid grid-cols-2 gap-6">
           <div class="space-y-2">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Role</label>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">나의 역할</label>
             <input
               v-model="localScenario.roles.user"
               type="text"
@@ -60,7 +60,7 @@
             >
           </div>
           <div class="space-y-2">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">AI Role</label>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">상대방(AI) 역할</label>
             <input
               v-model="localScenario.roles.ai"
               type="text"
@@ -72,7 +72,7 @@
         <!-- Language & Difficulty -->
         <div class="grid grid-cols-2 gap-6">
           <div class="space-y-2">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Language</label>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">언어</label>
             <select
               v-model="localScenario.language"
               class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
@@ -83,7 +83,7 @@
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Difficulty</label>
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">난이도</label>
             <select
               v-model="localScenario.difficulty"
               class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
@@ -97,12 +97,12 @@
 
         <!-- Project Selection -->
         <div class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Project (Optional)</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">프로젝트 (선택)</label>
           <select
             v-model="localScenario.projectId"
             class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
           >
-            <option :value="null">None</option>
+            <option :value="null">선택 안함</option>
             <option v-for="project in projects" :key="project.id" :value="project.id">
               {{ project.name }}
             </option>
@@ -111,12 +111,12 @@
 
         <!-- Schedule Selection -->
         <div v-if="localScenario.projectId" class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Schedule (Optional)</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">일정 (선택)</label>
           <select
             v-model="localScenario.scheduleId"
             class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800"
           >
-            <option :value="null">None (Use entire project)</option>
+            <option :value="null">선택 안함 (프로젝트 전체)</option>
             <option v-for="schedule in filteredSchedules" :key="schedule.id" :value="schedule.id">
               {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
             </option>
@@ -125,7 +125,7 @@
 
         <!-- Keywords -->
         <div class="space-y-2">
-          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords</label>
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">키워드</label>
           <input
             v-model="localScenario.requiredTerminologyText"
             type="text"
@@ -140,14 +140,14 @@
           @click="$emit('close')"
           class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors"
         >
-          Cancel
+          취소
         </button>
         <button
           @click="handleSave"
           :disabled="!isFormValid"
           class="px-8 py-3 bg-black text-white rounded-xl font-bold shadow-lg shadow-gray-200 hover:bg-gray-800 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save Changes
+          변경사항 저장
         </button>
       </div>
     </div>
@@ -187,9 +187,9 @@ const languageOptions = [
 ]
 
 const difficultyOptions = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' }
+  { value: 'beginner', label: '초급' },
+  { value: 'intermediate', label: '중급' },
+  { value: 'advanced', label: '고급' }
 ]
 
 const localScenario = ref({

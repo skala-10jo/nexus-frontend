@@ -28,6 +28,9 @@ export function useRealtimeSTT() {
   const finalTexts = ref([])        // 최종 인식 결과 배열 (recognized)
   const recordingTime = ref(0)      // 녹음 시간 (초)
 
+  // 오디오 녹음 (발음 평가용)
+  const audioBlob = ref(null)       // 녹음된 오디오 Blob
+
   // 내부 리소스
   let wsConnection = null
   let audioContext = null
@@ -35,6 +38,8 @@ export function useRealtimeSTT() {
   let sourceNode = null
   let audioStream = null
   let recordingInterval = null
+  let mediaRecorder = null          // MediaRecorder for audio capture
+  let audioChunks = []              // 녹음된 오디오 청크
 
   /**
    * 전체 인식된 텍스트 (최종 텍스트 + 중간 텍스트)
@@ -63,6 +68,8 @@ export function useRealtimeSTT() {
       interimText.value = ''
       finalTexts.value = []
       recordingTime.value = 0
+      audioBlob.value = null
+      audioChunks = []
 
       // 1. 마이크 권한 요청
       audioStream = await navigator.mediaDevices.getUserMedia({
@@ -73,6 +80,34 @@ export function useRealtimeSTT() {
           noiseSuppression: true
         }
       })
+
+      // 1.5 MediaRecorder 설정 (발음 평가용 오디오 캡처)
+      try {
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm'
+
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType })
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data)
+          }
+        }
+
+        mediaRecorder.onstop = () => {
+          if (audioChunks.length > 0) {
+            audioBlob.value = new Blob(audioChunks, { type: 'audio/webm' })
+            console.log('🎤 Audio captured:', audioBlob.value.size, 'bytes')
+          }
+        }
+
+        mediaRecorder.start(100) // 100ms 간격으로 데이터 수집
+        console.log('🎙️ MediaRecorder started for pronunciation assessment')
+      } catch (recorderErr) {
+        console.warn('⚠️ MediaRecorder not available:', recorderErr)
+        // MediaRecorder 실패해도 STT는 계속 진행
+      }
 
       // 2. AudioContext 생성
       audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -155,9 +190,9 @@ export function useRealtimeSTT() {
   }
 
   /**
-   * 녹음 중지 및 최종 텍스트 반환
+   * 녹음 중지 및 결과 반환
    *
-   * @returns {string} 전체 인식된 텍스트
+   * @returns {Object} { text: string, audioBlob: Blob|null }
    */
   function stopRecording() {
     // 타이머 중지
@@ -167,13 +202,28 @@ export function useRealtimeSTT() {
     }
 
     // 최종 텍스트 캡처 (중지 전에)
-    const result = fullText.value
+    const resultText = fullText.value
+
+    // MediaRecorder 중지 (오디오 캡처 완료)
+    let capturedAudioBlob = null
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+      // 동기적으로 Blob 생성 (onstop 대기하지 않음)
+      if (audioChunks.length > 0) {
+        capturedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+        audioBlob.value = capturedAudioBlob
+        console.log('🎤 Audio captured immediately:', capturedAudioBlob.size, 'bytes')
+      }
+    }
 
     // 리소스 정리
     cleanup()
 
-    console.log('⏹️ Recording stopped, text:', result)
-    return result
+    console.log('⏹️ Recording stopped, text:', resultText)
+    return {
+      text: resultText,
+      audioBlob: capturedAudioBlob
+    }
   }
 
   /**
@@ -181,6 +231,16 @@ export function useRealtimeSTT() {
    */
   function cleanup() {
     try {
+      // MediaRecorder 정리
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.stop()
+        } catch (e) {
+          // 이미 중지됨
+        }
+      }
+      mediaRecorder = null
+
       // Audio 노드 정리
       if (sourceNode) {
         sourceNode.disconnect()
@@ -227,6 +287,8 @@ export function useRealtimeSTT() {
     finalTexts.value = []
     recordingTime.value = 0
     error.value = null
+    audioBlob.value = null
+    audioChunks = []
   }
 
   // 컴포넌트 언마운트 시 정리
@@ -249,6 +311,7 @@ export function useRealtimeSTT() {
     finalTexts,
     fullText,
     recordingTime,
+    audioBlob,  // 녹음된 오디오 Blob (발음 평가용)
 
     // 메서드
     startRecording,

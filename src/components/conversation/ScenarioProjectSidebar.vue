@@ -92,13 +92,13 @@ const formatTime = (dateTimeString) => {
 </script>
 
 <template>
-  <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
+  <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden">
     <!-- Header -->
     <div class="p-5 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
       <div class="flex items-center gap-2">
         <span v-if="selectedProjects.length > 0" class="text-xs text-blue-600 font-bold">
-          {{ selectedProjects.length }} selected
+          {{ selectedProjects.length }}개 선택됨
         </span>
         <router-link
           to="/management/project"
@@ -121,47 +121,36 @@ const formatTime = (dateTimeString) => {
     <div v-else-if="projects.length > 0" class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
       <div v-for="project in projects" :key="project.id" class="space-y-2">
         <button
-          class="w-full text-left px-4 py-3.5 rounded-xl transition-all duration-300 flex items-center gap-3 group relative overflow-hidden"
+          class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group relative overflow-hidden"
           :class="isProjectSelected(project.id, selectedProjects)
-            ? 'bg-white shadow-md shadow-blue-900/5 ring-1 ring-blue-500'
-            : 'bg-white/50 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'"
+            ? 'bg-blue-50 text-blue-800 font-bold'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
           @click="emit('toggle-project', project)"
         >
-          <!-- Active Indicator -->
           <div
-            v-if="isProjectSelected(project.id, selectedProjects)"
-            class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-l-xl"
-          ></div>
-
-          <div
-            class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
-            :class="isProjectSelected(project.id, selectedProjects) ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400 group-hover:text-gray-600 group-hover:bg-gray-50'"
+            class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
+            :class="isProjectSelected(project.id, selectedProjects) ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between mb-0.5">
+            <div class="flex items-center justify-between">
               <span
-                class="text-sm font-bold truncate"
+                class="text-base font-medium truncate"
                 :class="isProjectSelected(project.id, selectedProjects) ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'"
               >
                 {{ project.name }}
               </span>
               <span
-                class="text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors"
-                :class="isProjectSelected(project.id, selectedProjects) ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'"
+                class="text-xs font-semibold px-1.5 py-0.5 rounded-full transition-colors"
+                :class="isProjectSelected(project.id, selectedProjects) ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500 group-hover:text-gray-700'"
               >
-                {{ getProjectScenarioCount(project.id, scenarios) }} scenarios
+                {{ getProjectScenarioCount(project.id, scenarios) }}
               </span>
             </div>
-            <p class="text-xs text-gray-400 truncate group-hover:text-gray-500 transition-colors">
-              {{ project.description || '설명 없음' }}
-            </p>
           </div>
-          <!-- Selected Indicator -->
-          <div v-if="isProjectSelected(project.id, selectedProjects)" class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
         </button>
 
         <!-- Project Schedules List -->

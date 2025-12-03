@@ -13,22 +13,44 @@ import { ref, computed, nextTick } from 'vue'
 import conversationService from '@/services/conversationService'
 
 /**
+ * Blob을 Base64 문자열로 변환
+ *
+ * @param {Blob} blob - 변환할 Blob
+ * @returns {Promise<string>} Base64 문자열
+ */
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
  * Practice 대화 로직
  *
  * @param {Object} options - 옵션
  * @param {Ref<Object>} options.scenario - 시나리오 ref
  * @param {Function} options.onFeedbackReceived - 피드백 수신 콜백
+ * @param {Function} options.getAudioBlob - 오디오 blob 가져오기 콜백 (음성 모드에서 발음 평가용)
+ * @param {Ref<string>} options.userInput - 외부에서 전달받은 userInput ref (선택)
  * @returns {Object} 대화 상태 및 메서드
  */
-export function usePracticeConversation({ scenario, onFeedbackReceived }) {
+export function usePracticeConversation({ scenario, onFeedbackReceived, getAudioBlob, userInput: externalUserInput }) {
   // ============================================
   // State
   // ============================================
   const messages = ref([])
   const detectedTerms = ref([])
-  const userInput = ref('')
+  // 외부에서 userInput이 전달되면 그것을 사용, 아니면 내부에서 생성
+  const userInput = externalUserInput || ref('')
   const isLoading = ref(false)
   const translationLoading = ref({})
+  const hintLoading = ref({}) // Added
   const conversationArea = ref(null)
 
   // ============================================
@@ -103,26 +125,43 @@ export function usePracticeConversation({ scenario, onFeedbackReceived }) {
       await nextTick()
       scrollToBottom()
 
-      // 피드백 요청
+      // 피드백 요청 (음성 모드일 경우 오디오 데이터 포함)
       try {
+        let audioData = null
+
+        // 오디오 blob이 있으면 Base64로 변환
+        if (getAudioBlob) {
+          const audioBlob = getAudioBlob()
+          if (audioBlob) {
+            try {
+              audioData = await blobToBase64(audioBlob)
+              console.log('🎤 Audio data prepared for pronunciation assessment:', audioData.length, 'chars')
+            } catch (audioErr) {
+              console.warn('Failed to convert audio to Base64:', audioErr)
+            }
+          }
+        }
+
         const feedbackResponse = await conversationService.getFeedback(
           scenarioId,
           message,
           response.detectedTerms || [],
-          null
+          audioData
         )
 
         if (onFeedbackReceived) {
           onFeedbackReceived(feedbackResponse.feedback)
         }
       } catch (e) {
+        console.error('Feedback request failed:', e)
         // 피드백 실패 시 기본 피드백
         if (onFeedbackReceived) {
           onFeedbackReceived({
-            score: 8,
+            score: 7,
             grammar_corrections: [],
-            suggestions: ['Try using more formal language.'],
-            score_breakdown: { grammar: 8, vocabulary: 7, fluency: 9 }
+            terminology_usage: { used: [], missed: [], feedback: '피드백을 생성하지 못했습니다.' },
+            suggestions: ['다시 시도해주세요.'],
+            score_breakdown: { grammar: 7, vocabulary: 7, fluency: 7 }
           })
         }
       }
@@ -164,6 +203,68 @@ export function usePracticeConversation({ scenario, onFeedbackReceived }) {
       msg.showTranslation = true
     } finally {
       translationLoading.value[index] = false
+    }
+  }
+
+  /**
+   * 힌트 토글
+   * 시나리오 맥락과 대화 히스토리를 기반으로 맥락에 맞는 힌트를 생성합니다.
+   *
+   * @param {number} index - 메시지 인덱스
+   * @param {string} scenarioId - 시나리오 ID
+   */
+  const toggleHint = async (index, scenarioId) => {
+    const msg = messages.value[index]
+
+    if (msg.showHint) {
+      msg.showHint = false
+      return
+    }
+
+    // 이미 생성된 힌트가 있으면 재사용
+    if (msg.hints && msg.hints.length > 0) {
+      msg.showHint = true
+      return
+    }
+
+    hintLoading.value[index] = true
+
+    try {
+      // 대화 히스토리 구성 (현재 메시지까지)
+      const history = messages.value.slice(0, index + 1).map(m => ({
+        speaker: m.speaker,
+        message: m.message
+      }))
+
+      // 마지막 AI 메시지 찾기
+      const lastAiMessage = msg.speaker === 'ai' ? msg.message : ''
+
+      // API 호출
+      const response = await conversationService.getHint(
+        scenarioId,
+        history,
+        lastAiMessage,
+        3  // 힌트 3개 생성
+      )
+
+      if (response.success) {
+        // 힌트 정보 저장
+        msg.hints = response.hints || []
+        msg.hintExplanations = response.hint_explanations || []
+        msg.terminologySuggestions = response.terminology_suggestions || []
+        msg.showHint = true
+      } else {
+        console.error('Hint generation failed:', response)
+        msg.hints = ['I see what you mean.', 'Could you tell me more?', 'That\'s interesting.']
+        msg.showHint = true
+      }
+    } catch (err) {
+      console.error('Hint generation failed:', err)
+      // 에러 시 기본 힌트 제공
+      msg.hints = ['I understand.', 'Please continue.', 'That makes sense.']
+      msg.showHint = true
+    } finally {
+      hintLoading.value[index] = false
     }
   }
 
@@ -247,6 +348,7 @@ export function usePracticeConversation({ scenario, onFeedbackReceived }) {
     userInput,
     isLoading,
     translationLoading,
+    hintLoading, // Added
     conversationArea,
 
     // Computed
@@ -256,6 +358,7 @@ export function usePracticeConversation({ scenario, onFeedbackReceived }) {
     // Actions
     sendMessage,
     toggleTranslation,
+    toggleHint, // Added
     resetConversation,
     loadHistory,
     addInitialMessage,

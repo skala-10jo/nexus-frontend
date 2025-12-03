@@ -43,6 +43,7 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
   const inputMode = ref('text') // 'text' | 'voice'
   const isProcessingVoice = ref(false)
   const recognizedText = ref('')
+  const lastAudioBlob = ref(null)  // 마지막 녹음된 오디오 (발음 평가용)
 
   // Avatar
   const avatarEnabled = ref(false)
@@ -90,10 +91,27 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
    * 녹음 중지 및 메시지 전송
    */
   const stopRecording = async () => {
-    // 최종 텍스트 가져오기
-    const fullText = stopRealtimeSTT()
+    // 최종 텍스트와 오디오 가져오기
+    const result = stopRealtimeSTT()
 
-    if (fullText?.trim()) {
+    // result가 객체인 경우와 문자열인 경우 모두 처리
+    let fullText = ''
+    let audioBlob = null
+
+    if (result && typeof result === 'object') {
+      fullText = result.text || ''
+      audioBlob = result.audioBlob || null
+    } else if (typeof result === 'string') {
+      fullText = result
+    }
+
+    // 오디오 저장 (발음 평가용)
+    if (audioBlob) {
+      lastAudioBlob.value = audioBlob
+      console.log('🎙️ Audio blob saved for pronunciation assessment:', audioBlob.size, 'bytes')
+    }
+
+    if (fullText && fullText.trim()) {
       recognizedText.value = fullText
       userInput.value = fullText
 
@@ -109,6 +127,7 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
       }, 500)
     } else {
       recognizedText.value = ''
+      lastAudioBlob.value = null  // 텍스트 없으면 오디오도 버림
     }
   }
 
@@ -127,6 +146,7 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
     inputMode,
     isProcessingVoice,
     recognizedText,
+    lastAudioBlob,  // 마지막 녹음된 오디오 (발음 평가용)
     avatarEnabled,
     isAvatarInitializing,
     avatarVideoElement,
