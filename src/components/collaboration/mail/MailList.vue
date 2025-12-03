@@ -64,7 +64,7 @@ const emit = defineEmits([
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       </div>
-      <p>{{ isConnected ? 'No emails found' : 'Connect Outlook to view emails' }}</p>
+      <p>{{ isConnected ? 'No emails found' : 'Outlook을 연동하세요' }}</p>
     </div>
 
     <!-- Grouped by Project -->
@@ -111,7 +111,7 @@ const emit = defineEmits([
         :disabled="pagination.page === 0"
         class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-gray-600"
       >
-        Previous
+        이전
       </button>
       <span class="px-4 py-2 text-gray-700 font-medium text-sm flex items-center">
         {{ pagination.page + 1 }} / {{ pagination.totalPages }}
@@ -121,7 +121,7 @@ const emit = defineEmits([
         :disabled="pagination.page >= pagination.totalPages - 1"
         class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-gray-600"
       >
-        Next
+        다음
       </button>
     </div>
   </div>
