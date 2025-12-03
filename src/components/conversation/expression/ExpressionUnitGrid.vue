@@ -1,14 +1,36 @@
 <template>
-  <div class="w-full py-8">
-    <swiper :effect="'coverflow'" :grabCursor="true" :centeredSlides="true" :slidesPerView="'auto'" :coverflowEffect="{
-      rotate: 50,
-      stretch: 0,
-      depth: 100,
-      modifier: 1,
-      slideShadows: true,
-    }" :pagination="true" :mousewheel="true" :modules="modules" class="mySwiper w-full py-12">
+  <div class="w-full py-4 md:py-8 h-full flex flex-col justify-center items-center">
+    <swiper
+      :effect="'coverflow'"
+      :grabCursor="true"
+      :centeredSlides="true"
+      :slidesPerView="'auto'"
+      :coverflowEffect="{
+        rotate: 50,
+        stretch: 0,
+        depth: 100,
+        modifier: 1,
+        slideShadows: true,
+      }"
+      :pagination="{ clickable: true }"
+      :mousewheel="true"
+      :modules="modules"
+      :breakpoints="{
+        320: {
+          slidesPerView: 1,
+          spaceBetween: 20,
+          effect: 'slide'
+        },
+        768: {
+          slidesPerView: 'auto',
+          effect: 'coverflow'
+        }
+      }"
+      class="mySwiper w-full h-full py-4 md:py-12"
+    >
       <swiper-slide v-for="unit in units" :key="unit.unit"
-        class="rounded-3xl border-2 border-blue-200 overflow-hidden !w-[500px] !h-[600px] relative group">
+        class="rounded-3xl border-2 border-blue-200 overflow-hidden relative group transition-all duration-300
+               w-[85%] h-[60vh] mx-auto md:mx-0">
         <!-- Background Image -->
         <div class="absolute inset-0 z-0">
           <img :src="getUnitImage(unit.unit)"
@@ -19,10 +41,10 @@
 
         <div class="relative z-10 h-full flex flex-col">
           <!-- Unit Header -->
-          <div class="p-8 border-b border-white/10">
+          <div class="p-6 md:p-8 border-b border-white/10">
             <div class="flex items-center justify-between">
               <div class="flex-1">
-                <h2 class="text-2xl font-bold text-white mb-3 drop-shadow-md">{{ unit.unit }}</h2>
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-2 md:mb-3 drop-shadow-md">{{ unit.unit }}</h2>
                 <div class="flex items-center gap-3">
                   <div class="w-full h-2.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
                     <div
@@ -43,7 +65,7 @@
           </div>
 
           <!-- Chapters Grid -->
-          <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
+          <div class="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar">
             <div v-if="unitChapters[unit.unit]?.length > 0">
               <div class="space-y-3">
                 <button v-for="chapter in unitChapters[unit.unit]" :key="chapter.chapter"
@@ -118,8 +140,14 @@ const getUnitImage = (unitName) => {
 .swiper-slide {
   background-position: center;
   background-size: cover;
-  width: 500px;
-  height: 600px;
+  /* Mobile default */
+}
+
+@media (min-width: 768px) {
+  .swiper-slide {
+    width: 500px;
+    height: 600px;
+  }
 }
 
 .swiper-slide img {

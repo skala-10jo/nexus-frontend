@@ -1,15 +1,15 @@
 <template>
   <div class="h-full flex flex-col relative">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-8 border-b border-gray-100">
+    <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-100">
       <div class="flex items-center gap-4">
-        <h2 class="text-2xl font-bold text-gray-800 font-nanum-round-eb">Biz 표현 학습</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 font-nanum-round-eb">Biz 표현 학습</h2>
         <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">Biz</span>
       </div>
     </div>
 
     <div class="flex-1 flex pt-20 overflow-hidden bg-gray-50/50">
-      <div class="w-full h-full overflow-y-auto px-8 py-8">
+      <div class="w-full h-full overflow-y-auto px-4 py-4 md:px-8 md:py-8 pb-24 md:pb-8">
         <div class="max-w-[1920px] mx-auto">
 
         <!-- Progress Indicator -->

@@ -1,6 +1,7 @@
 <template>
+  <!-- Desktop Sidebar -->
   <aside
-    class="bg-gray-100 min-h-screen flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out"
+    class="bg-gray-100 min-h-screen flex-col flex-shrink-0 transition-all duration-300 ease-in-out hidden md:flex"
     :class="isCollapsed ? 'w-[80px]' : 'w-80'"
   >
     <!-- Brand Logo -->
@@ -30,9 +31,6 @@
         </svg>
       </button>
     </div>
-
-    <!-- User Profile Section (Moved to bottom in original design, but kept here if preferred, or can move) -->
-    <!-- Let's keep the menu structure but add Messages below it -->
 
     <!-- Navigation Menu -->
     <nav class="flex-1 overflow-y-auto space-y-1 no-scrollbar" :class="isCollapsed ? 'px-3' : 'px-6'">
@@ -169,7 +167,7 @@
 
     </nav>
 
-    <!-- User Profile (Mail.vue style) -->
+    <!-- User Profile (Desktop) -->
     <div class="mt-auto pt-4 border-t border-gray-200/50" :class="isCollapsed ? 'px-3 pb-4' : 'px-6 pb-6'">
       <div
         class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
@@ -188,6 +186,94 @@
       </div>
     </div>
   </aside>
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
+    
+    <!-- Horizontal Submenu Bar -->
+    <div v-if="mobileOpenMenu" class="absolute bottom-[calc(100%-1px)] left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div class="flex items-center gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
+        
+        <!-- Management Submenu -->
+        <template v-if="mobileOpenMenu === 'management'">
+          <router-link to="/management/schedule" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/management/schedule') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            프로젝트•일정
+          </router-link>
+          <router-link to="/management/glossary" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/management/glossary') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            문서•전문용어사전
+          </router-link>
+        </template>
+
+        <!-- Conversation Submenu -->
+        <template v-if="mobileOpenMenu === 'conversation'">
+          <router-link to="/conversation/scenario" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/conversation/scenario') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            시나리오 회화
+          </router-link>
+          <router-link to="/conversation/expression" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/conversation/expression') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            Biz 표현
+          </router-link>
+          <router-link to="/conversation/mistakes" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/conversation/mistakes') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            오답노트
+          </router-link>
+        </template>
+
+        <!-- Translation Submenu -->
+        <template v-if="mobileOpenMenu === 'translation'">
+          <router-link to="/translation/text" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/translation/text') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            텍스트
+          </router-link>
+          <router-link to="/translation/voice" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/translation/voice') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            음성
+          </router-link>
+          <router-link to="/translation/video" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/translation/video') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            영상
+          </router-link>
+        </template>
+
+        <!-- Collaboration Submenu -->
+        <template v-if="mobileOpenMenu === 'collaboration'">
+          <router-link to="/collaboration/mail" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/collaboration/mail') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            메일
+          </router-link>
+          <router-link to="/collaboration/messenger" class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors" :class="isSubActive('/collaboration/messenger') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'" @click="mobileOpenMenu = null">
+            메신저
+          </router-link>
+        </template>
+      </div>
+    </div>
+
+    <div class="flex justify-around items-center h-16 bg-white relative z-20">
+      <!-- Dashboard -->
+      <router-link to="/" class="flex flex-col items-center justify-center w-full h-full space-y-1" :class="isActive('/') ? 'text-blue-600' : 'text-gray-500'" @click="mobileOpenMenu = null">
+        <HomeIcon class="w-6 h-6" />
+        <span class="text-[10px] font-medium">홈</span>
+      </router-link>
+
+      <!-- Management -->
+      <button @click="toggleMobileMenu('management')" class="flex flex-col items-center justify-center w-full h-full space-y-1" :class="isActive('/management') ? 'text-blue-600' : 'text-gray-500'">
+        <DocumentTextIcon class="w-6 h-6" />
+        <span class="text-[10px] font-medium">관리</span>
+      </button>
+
+      <!-- Conversation -->
+      <button @click="toggleMobileMenu('conversation')" class="flex flex-col items-center justify-center w-full h-full space-y-1" :class="isActive('/conversation') ? 'text-blue-600' : 'text-gray-500'">
+        <ChatBubbleLeftRightIcon class="w-6 h-6" />
+        <span class="text-[10px] font-medium">회화</span>
+      </button>
+
+      <!-- Translation -->
+      <button @click="toggleMobileMenu('translation')" class="flex flex-col items-center justify-center w-full h-full space-y-1" :class="isActive('/translation') ? 'text-blue-600' : 'text-gray-500'">
+        <GlobeAltIcon class="w-6 h-6" />
+        <span class="text-[10px] font-medium">번역</span>
+      </button>
+
+      <!-- Collaboration -->
+      <button @click="toggleMobileMenu('collaboration')" class="flex flex-col items-center justify-center w-full h-full space-y-1" :class="isActive('/collaboration') ? 'text-blue-600' : 'text-gray-500'">
+        <EnvelopeIcon class="w-6 h-6" />
+        <span class="text-[10px] font-medium">협업</span>
+      </button>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -248,6 +334,16 @@ const toggleMenu = (menuName) => {
     openMenus.value.delete(menuName);
   } else {
     openMenus.value.add(menuName);
+  }
+};
+
+const mobileOpenMenu = ref(null);
+
+const toggleMobileMenu = (menuName) => {
+  if (mobileOpenMenu.value === menuName) {
+    mobileOpenMenu.value = null;
+  } else {
+    mobileOpenMenu.value = menuName;
   }
 };
 
