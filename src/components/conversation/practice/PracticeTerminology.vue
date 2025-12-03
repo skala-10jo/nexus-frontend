@@ -21,8 +21,8 @@ defineProps({
 </script>
 
 <template>
-  <div class="bg-white border-b border-gray-200 px-6 py-4 shadow-sm z-10 shrink-0">
-    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+  <div class="bg-white border-b border-gray-200 px-4 py-3 shadow-sm z-10 shrink-0">
+    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
       <CheckCircleIcon class="w-4 h-4 text-blue-500" />
       필수 용어
     </h3>
@@ -30,17 +30,17 @@ defineProps({
       <span
         v-for="term in requiredTerms"
         :key="term"
-        class="px-3 py-1.5 rounded-lg text-sm font-bold border transition-all duration-300 flex items-center gap-1.5"
+        class="px-2 py-1 rounded-md text-xs font-bold border transition-all duration-300 flex items-center gap-1"
         :class="[
           detectedTerms.includes(term)
-            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+            ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200'
             : 'bg-gray-50 text-gray-500 border-gray-200'
         ]"
       >
         {{ term }}
         <CheckCircleIcon
           v-if="detectedTerms.includes(term)"
-          class="w-4 h-4 text-white"
+          class="w-3 h-3 text-white"
         />
       </span>
     </div>

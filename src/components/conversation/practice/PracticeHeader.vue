@@ -28,12 +28,7 @@ const emit = defineEmits(['reset', 'end'])
       <div class="min-w-0">
         <h1 class="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 truncate">
           <span class="truncate">{{ scenario?.title || '회화 연습' }}</span>
-          <span
-            v-if="scenario?.category"
-            class="shrink-0 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100"
-          >
-            {{ scenario.category }}
-          </span>
+
         </h1>
         <p class="text-sm text-gray-500 mt-0.5 hidden md:block truncate">
           {{ scenario?.description }}

@@ -189,7 +189,7 @@ const userInputValue = computed(() => {
             :value="userInputValue"
             @input="emit('update:userInput', $event.target.value)"
             @keydown.enter.prevent="emit('sendMessage')"
-            placeholder="메시지를 입력하세요... (Enter로 전송)"
+            placeholder="메시지를 입력하세요"
             class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-gray-900 placeholder-gray-400 transition-all"
             rows="1"
             style="min-height: 50px; max-height: 150px;"
