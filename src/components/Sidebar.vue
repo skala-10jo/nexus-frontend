@@ -105,6 +105,7 @@
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
+          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/speaking-tutor') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
           <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
           <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
         </div>
