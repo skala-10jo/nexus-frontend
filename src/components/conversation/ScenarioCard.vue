@@ -12,7 +12,7 @@
           class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide"
           :class="difficultyClass"
         >
-          {{ scenario.difficulty }}
+          {{ difficultyLabel }}
         </span>
       </div>
 
@@ -61,7 +61,7 @@
       @click="$emit('start', scenario.id)"
       class="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
     >
-      <span>Start Practice</span>
+      <span>연습 시작</span>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
       </svg>
@@ -88,6 +88,15 @@ const difficultyClass = computed(() => {
     advanced: 'bg-red-100 text-red-700'
   }
   return classes[props.scenario.difficulty] || 'bg-gray-100 text-gray-700'
+})
+
+const difficultyLabel = computed(() => {
+  const labels = {
+    beginner: '초급',
+    intermediate: '중급',
+    advanced: '고급'
+  }
+  return labels[props.scenario.difficulty] || props.scenario.difficulty
 })
 </script>
 

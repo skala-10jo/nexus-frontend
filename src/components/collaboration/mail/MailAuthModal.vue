@@ -41,8 +41,8 @@ const emit = defineEmits([
         </svg>
       </div>
 
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">Connect Outlook</h2>
-      <p class="text-gray-500 mb-8">Enter the code below to verify your account</p>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Outlook 연동</h2>
+      <p class="text-gray-500 mb-8">코드를 입력하여 계정을 인증하세요</p>
 
       <!-- Device Code Display -->
       <div v-if="deviceCode" class="space-y-6">
@@ -53,17 +53,17 @@ const emit = defineEmits([
           @click="emit('open-auth-page')"
           class="w-full px-6 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium shadow-sm shadow-blue-200"
         >
-          Open Verification Page
+          인증 페이지 열기
         </button>
         <p class="text-sm text-gray-400">
-          Expires in {{ Math.floor(authTimeout / 60) }}:{{ (authTimeout % 60).toString().padStart(2, '0') }}
+          {{ Math.floor(authTimeout / 60) }}:{{ (authTimeout % 60).toString().padStart(2, '0') }} 후 만료
         </p>
       </div>
 
       <!-- Loading -->
       <div v-else class="py-8">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-        <p class="text-gray-500 mt-4">Initializing...</p>
+        <p class="text-gray-500 mt-4">초기화...</p>
       </div>
 
       <!-- Cancel -->
@@ -71,7 +71,7 @@ const emit = defineEmits([
         @click="emit('close')"
         class="mt-6 text-gray-500 hover:text-gray-700 font-medium text-sm"
       >
-        Cancel
+        취소
       </button>
     </div>
   </div>
