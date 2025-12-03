@@ -15,7 +15,7 @@
             <h1 class="text-3xl md:text-4xl font-bold font-nanum-round-eb">Welcome back, {{ user?.fullName || 'User' }}!</h1>
             <div class="space-y-1 opacity-90">
               <p class="text-lg font-medium">
-                📅 <span class="font-bold">{{ upcomingEvents.length }}</span> schedules remaining today!
+                📅 <span class="font-bold">{{ upcomingEvents.length }}</span> schedules remaining {{ selectedDate ? 'on selected date' : 'today' }}!
               </p>
               <p class="text-lg font-medium">
                 💬 Today's Expression: <span class="font-bold underline decoration-2 underline-offset-4">"Let's touch base later."</span>
@@ -210,14 +210,27 @@
               <span v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="day" class="text-xs font-bold text-gray-400 py-2">{{ day }}</span>
             </div>
             <div class="grid grid-cols-7 gap-2 text-center">
-              <div v-for="{ date, isCurrentMonth, isToday, hasEvent } in calendarDays" :key="date.toISOString()" 
-                class="aspect-square flex flex-col items-center justify-center relative rounded-full text-sm font-medium transition-colors cursor-pointer hover:bg-gray-50"
+              <div v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays" :key="date.toISOString()" 
+                @click="selectDate(date)"
+                class="aspect-square flex flex-col items-center justify-center relative rounded-full text-sm font-medium transition-all cursor-pointer"
                 :class="[
-                  !isCurrentMonth ? 'text-gray-300' : isToday ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200' : 'text-gray-700'
+                  // Base text color
+                  !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
+                  
+                  // Hover state (only if not an event start)
+                  !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
+
+                  // Event Styling (Start Date - Solid Color)
+                  eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md transform scale-105` : '',
+
+                  // Event Styling (Continued - Light Color)
+                  eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
+
+                  // Selected State (if no event)
+                  isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
                 ]"
               >
                 {{ date.getDate() }}
-                <div v-if="hasEvent && !isToday" class="absolute bottom-1 w-1 h-1 rounded-full bg-blue-500"></div>
               </div>
             </div>
           </div>
@@ -225,8 +238,11 @@
           <!-- 4. Upcoming Tasks -->
           <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between mb-6">
-              <h3 class="font-bold text-gray-900">Upcoming Tasks</h3>
-              <router-link to="/management/schedule" class="text-xs font-bold text-blue-600 hover:text-blue-700">See all</router-link>
+              <h3 class="font-bold text-gray-900">
+                {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
+              </h3>
+              <button v-if="selectedDate" @click="selectedDate = null" class="text-xs font-bold text-gray-400 hover:text-gray-600">Show All</button>
+              <router-link v-else to="/management/schedule" class="text-xs font-bold text-blue-600 hover:text-blue-700">See all</router-link>
             </div>
 
             <div class="space-y-4">
@@ -235,31 +251,36 @@
               </div>
               
               <div v-else-if="upcomingEvents.length === 0" class="text-center py-8 text-gray-400">
-                <p class="text-sm">No upcoming tasks</p>
+                <p class="text-sm">No tasks {{ selectedDate ? 'on this day' : 'upcoming' }}</p>
               </div>
 
-              <div v-else v-for="event in upcomingEvents" :key="event.id" class="group flex items-center gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-gray-100">
+              <div v-else v-for="event in upcomingEvents" :key="event.id" 
+                class="group flex items-center gap-4 p-4 rounded-2xl transition-all border border-transparent hover:shadow-md"
+                :class="[event.colorClass ? event.lightColorClass : 'bg-gray-50 hover:bg-white hover:border-gray-100']"
+              >
                 <!-- Date Badge -->
-                <div class="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-white shadow-sm shrink-0 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors"
-                  :class="{'bg-blue-600 text-white': isToday(event.start)}"
+                <div class="flex flex-col items-center justify-center w-12 h-12 rounded-xl shadow-sm shrink-0 transition-colors"
+                  :class="[event.colorClass || 'bg-white group-hover:bg-blue-50 text-gray-900']"
                 >
-                  <span class="text-xs font-bold uppercase" :class="{'text-blue-100': isToday(event.start), 'text-gray-400': !isToday(event.start)}">{{ formatMonth(event.start) }}</span>
-                  <span class="text-lg font-bold">{{ formatDay(event.start) }}</span>
+                  <span class="text-xs font-bold uppercase" :class="event.colorClass ? 'text-white/80' : 'text-gray-500'">{{ formatMonth(event.start) }}</span>
+                  <span class="text-lg font-bold" :class="event.colorClass ? 'text-white' : ''">{{ formatDay(event.start) }}</span>
                 </div>
 
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
                   <h4 class="font-bold text-gray-900 truncate">{{ event.title }}</h4>
                   <div class="flex items-center gap-2 mt-1">
-                    <span class="text-xs text-gray-500">{{ formatTime(event.start) }}</span>
-                    <span v-if="event.extendedProps?.project" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold truncate max-w-[100px]">
+                    <span class="text-xs" :class="event.colorClass ? 'text-gray-600' : 'text-gray-500'">{{ formatTime(event.start) }}</span>
+                    <span v-if="event.extendedProps?.project" class="text-[10px] px-2 py-0.5 rounded-full font-bold truncate max-w-[100px]"
+                      :class="event.colorClass ? 'bg-white/50 text-gray-800' : 'bg-blue-100 text-blue-700'"
+                    >
                       {{ event.extendedProps.project.name }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Action Button -->
-                <button @click="goToPractice(event)" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">
+                <button @click="goToPractice(event)" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:scale-110 transition-all shadow-sm">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
@@ -286,13 +307,64 @@ const user = computed(() => authStore.user);
 
 // Schedule Logic
 const { allEvents, fetchAllEvents, loading: loadingEvents } = useScheduleEvents();
+const selectedDate = ref(null);
+
+// Color Palette for Events
+const eventColors = [
+  { bg: 'bg-blue-500', light: 'bg-blue-50' },
+  { bg: 'bg-pink-500', light: 'bg-pink-50' },
+  { bg: 'bg-green-500', light: 'bg-green-50' },
+  { bg: 'bg-orange-500', light: 'bg-orange-50' },
+  { bg: 'bg-purple-500', light: 'bg-purple-50' },
+  { bg: 'bg-teal-500', light: 'bg-teal-50' },
+];
+
+const getEventColor = (eventId) => {
+  // Simple hash to assign consistent color
+  const index = eventId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % eventColors.length;
+  return eventColors[index];
+};
 
 const upcomingEvents = computed(() => {
-  const now = new Date();
-  return allEvents.value
-    .filter(event => new Date(event.start) >= now)
-    .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .slice(0, 4); // Take top 4
+  let events = allEvents.value;
+
+  // Filter by selected date if set
+  if (selectedDate.value) {
+    events = events.filter(event => {
+      const eStart = new Date(event.start);
+      const eEnd = event.end ? new Date(event.end) : new Date(eStart);
+      const sel = selectedDate.value;
+      
+      // Check if selected date is within event range
+      // Normalize to YYYY-MM-DD for comparison
+      const checkDate = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
+      const startDate = new Date(eStart.getFullYear(), eStart.getMonth(), eStart.getDate());
+      const endDate = new Date(eEnd.getFullYear(), eEnd.getMonth(), eEnd.getDate());
+
+      return checkDate >= startDate && checkDate <= endDate;
+    });
+  } else {
+    // Default: Future events
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Include today's events
+    events = events.filter(event => {
+       const eEnd = event.end ? new Date(event.end) : new Date(event.start);
+       return eEnd >= now;
+    });
+  }
+
+  // Sort by start date
+  const sorted = events.sort((a, b) => new Date(a.start) - new Date(b.start));
+  
+  // Assign colors to events for display
+  return sorted.slice(0, 5).map(event => {
+    const colors = getEventColor(event.id);
+    return {
+      ...event,
+      colorClass: colors.bg,
+      lightColorClass: colors.light
+    };
+  });
 });
 
 // Calendar Logic
@@ -322,7 +394,7 @@ const calendarDays = computed(() => {
   
   for (let i = 0; i < startPadding; i++) {
     const d = new Date(year, month, 0 - i);
-    days.unshift({ date: d, isCurrentMonth: false, isToday: false, hasEvent: false });
+    days.unshift({ date: d, isCurrentMonth: false, isToday: false, eventInfo: null });
   }
   
   // Current month
@@ -331,20 +403,49 @@ const calendarDays = computed(() => {
     const d = new Date(year, month, i);
     const isToday = d.toDateString() === today.toDateString();
     
-    // Check for events
-    const hasEvent = allEvents.value.some(e => {
-      const eDate = new Date(e.start);
-      return eDate.toDateString() === d.toDateString();
+    // Find events covering this day
+    const dayEvents = allEvents.value.filter(e => {
+      const start = new Date(e.start);
+      const end = e.end ? new Date(e.end) : new Date(start);
+      // Normalize to start of day
+      const check = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const e_ = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      
+      return check >= s && check <= e_;
     });
 
-    days.push({ date: d, isCurrentMonth: true, isToday, hasEvent });
+    let eventInfo = null;
+    if (dayEvents.length > 0) {
+      // Priority: Earliest End Date
+      dayEvents.sort((a, b) => {
+        const endA = a.end ? new Date(a.end) : new Date(a.start);
+        const endB = b.end ? new Date(b.end) : new Date(b.start);
+        return endA - endB;
+      });
+      
+      const topEvent = dayEvents[0];
+      const colors = getEventColor(topEvent.id);
+      const start = new Date(topEvent.start);
+      const isStart = start.toDateString() === d.toDateString();
+
+      eventInfo = {
+        id: topEvent.id,
+        color: colors.bg,
+        lightColor: colors.light,
+        isStart,
+        isContinued: !isStart
+      };
+    }
+
+    days.push({ date: d, isCurrentMonth: true, isToday, eventInfo });
   }
   
   // Next month padding (to fill 6 rows = 42 cells)
   const remaining = 42 - days.length;
   for (let i = 1; i <= remaining; i++) {
     const d = new Date(year, month + 1, i);
-    days.push({ date: d, isCurrentMonth: false, isToday: false, hasEvent: false });
+    days.push({ date: d, isCurrentMonth: false, isToday: false, eventInfo: null });
   }
   
   return days;
@@ -358,11 +459,22 @@ function nextMonth() {
   currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1);
 }
 
+function selectDate(date) {
+  if (selectedDate.value && selectedDate.value.toDateString() === date.toDateString()) {
+    selectedDate.value = null; // Deselect
+  } else {
+    selectedDate.value = date;
+  }
+}
+
+const isSelected = (date) => {
+  return selectedDate.value && selectedDate.value.toDateString() === date.toDateString();
+};
+
 // Helpers
 const formatMonth = (date) => new Date(date).toLocaleString('en-US', { month: 'short' });
 const formatDay = (date) => new Date(date).getDate();
 const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-const isToday = (date) => new Date(date).toDateString() === new Date().toDateString();
 
 function goToPractice(event) {
   // Navigate to scenario practice
