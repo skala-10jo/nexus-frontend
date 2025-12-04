@@ -115,7 +115,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
@@ -134,6 +134,7 @@ import ScenarioCreateDialog from '@/components/conversation/ScenarioCreateDialog
 import ScenarioEditDialog from '@/components/conversation/ScenarioEditDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
 const modules = [EffectCards]
 
 // State
@@ -333,6 +334,16 @@ onMounted(async () => {
   await loadProjects()
   await loadAllUpcomingSchedules()
   await loadAllScenarios()
+
+  // 쿼리 파라미터로 scheduleId가 전달된 경우 해당 일정 자동 선택
+  const scheduleId = route.query.scheduleId
+  if (scheduleId) {
+    const targetSchedule = upcomingSchedules.value.find(s => String(s.id) === String(scheduleId))
+    if (targetSchedule) {
+      selectedSchedules.value = [targetSchedule]
+    }
+  }
+
   await loadScenariosForFilters()
 })
 </script>

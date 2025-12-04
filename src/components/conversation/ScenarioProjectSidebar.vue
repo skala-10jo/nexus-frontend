@@ -82,12 +82,12 @@ const getProjectScenarioCount = (projectId, scenarios) => {
 }
 
 /**
- * 시간 포맷팅
+ * 날짜 포맷팅 (M/D 형식)
  */
-const formatTime = (dateTimeString) => {
+const formatDate = (dateTimeString) => {
   if (!dateTimeString) return ''
   const date = new Date(dateTimeString)
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+  return `${date.getMonth() + 1}/${date.getDate()}`
 }
 </script>
 
@@ -158,7 +158,7 @@ const formatTime = (dateTimeString) => {
               :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'bg-blue-500' : 'bg-gray-400'"></div>
             <span class="font-medium w-16 flex-shrink-0 tabular-nums tracking-tight"
               :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'text-blue-600' : 'text-gray-500'">
-              {{ formatTime(schedule.startTime) }}
+              {{ formatDate(schedule.startTime) }}
             </span>
             <span class="truncate font-medium group-hover/schedule:text-gray-900"
               :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'text-blue-700' : 'text-gray-700'">

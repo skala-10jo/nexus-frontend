@@ -5,6 +5,19 @@
  */
 import { PlusIcon } from '@heroicons/vue/24/outline'
 import { formatEventTime } from '@/composables/management/useScheduleDateFormat'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+/**
+ * 시나리오 회화 연습 페이지로 이동
+ */
+const goToScenarioPractice = (event) => {
+  router.push({
+    path: '/conversation/scenario',
+    query: { scheduleId: event.id }
+  })
+}
 
 defineProps({
   /** 프로젝트 목록 */
@@ -134,9 +147,16 @@ const getProjectEvents = (projectId, allEvents) => {
             <span class="font-medium text-gray-500 w-14 flex-shrink-0 tabular-nums tracking-tight">
               {{ formatEventTime(event) }}
             </span>
-            <span class="truncate text-gray-700 font-medium group-hover/event:text-gray-900">
+            <span class="truncate text-gray-700 font-medium group-hover/event:text-gray-900 flex-1">
               {{ event.title }}
             </span>
+            <!-- 시나리오 회화 연습 버튼 -->
+            <button
+              class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-semibold transition-colors flex-shrink-0"
+              @click.stop="goToScenarioPractice(event)"
+            >
+              회화 연습
+            </button>
           </div>
           <div
             v-if="getProjectEvents(project.id, allEvents).length > 3"
