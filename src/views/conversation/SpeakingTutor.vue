@@ -388,8 +388,8 @@
                     </div>
                     <!-- 교정 사항이 없는 경우 -->
                     <div v-else class="bg-amber-50/50 rounded-2xl border border-amber-100 p-4 flex items-center gap-3">
-                      <span class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
-                      <p class="text-sm text-amber-700 font-medium">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
+                      <span class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
+                      <p class="text-sm text-gray-900 font-medium">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
                     </div>
                   </div>
 
