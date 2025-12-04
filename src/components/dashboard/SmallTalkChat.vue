@@ -5,7 +5,7 @@
  * Dashboard.vue의 Small Talk 섹션에서 사용되는 채팅 인터페이스.
  * 대시보드 진입 시 자동으로 대화가 시작됨.
  */
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import {
   MicrophoneIcon,
   PaperAirplaneIcon,
@@ -15,6 +15,7 @@ import {
   StopIcon
 } from '@heroicons/vue/24/outline'
 import { useSmallTalk } from '@/composables/dashboard/useSmallTalk'
+import { useRealtimeSTT } from '@/composables/useRealtimeSTT'
 import SmallTalkFeedbackPopup from './SmallTalkFeedbackPopup.vue'
 
 // Composable
@@ -35,6 +36,19 @@ const {
   clearError
 } = useSmallTalk()
 
+// Realtime STT
+const {
+  isRecording: sttIsRecording,
+  isConnecting: sttIsConnecting,
+  interimText: sttInterimText,
+  finalTexts: sttFinalTexts,
+  fullText: sttFullText,
+  recordingTime: sttRecordingTime,
+  startRecording: startRealtimeSTT,
+  stopRecording: stopRealtimeSTT,
+  clearResults: clearSTTResults
+} = useRealtimeSTT()
+
 // Local state
 const inputText = ref('')
 const chatContainer = ref(null)
@@ -44,9 +58,9 @@ const hintLoading = ref(false)
 const showFeedbackPopup = ref(false)
 
 // Voice recording state
-const isRecording = ref(false)
-const mediaRecorder = ref(null)
-const audioChunks = ref([])
+const isRecording = computed(() => sttIsRecording.value)
+const isConnecting = computed(() => sttIsConnecting.value)
+const isProcessingVoice = ref(false)
 
 // Computed
 const canSend = computed(() => {
@@ -149,32 +163,36 @@ async function scrollToBottom() {
 // Voice recording methods
 async function startRecording() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    mediaRecorder.value = new MediaRecorder(stream)
-    audioChunks.value = []
-
-    mediaRecorder.value.ondataavailable = (e) => {
-      audioChunks.value.push(e.data)
-    }
-
-    mediaRecorder.value.onstop = async () => {
-      const audioBlob = new Blob(audioChunks.value, { type: 'audio/webm' })
-      // TODO: STT 연동 시 여기서 처리
-      console.log('Recording stopped, blob size:', audioBlob.size)
-    }
-
-    mediaRecorder.value.start()
-    isRecording.value = true
+    clearSTTResults()
+    // 영어 기본, 한국어 보조
+    await startRealtimeSTT('en-US', 'ko-KR')
+    console.log('Recording started')
   } catch (err) {
     console.error('Failed to start recording:', err)
   }
 }
 
-function stopRecording() {
-  if (mediaRecorder.value && isRecording.value) {
-    mediaRecorder.value.stop()
-    mediaRecorder.value.stream.getTracks().forEach(track => track.stop())
-    isRecording.value = false
+async function stopRecording() {
+  // STT 결과 가져오기
+  const result = stopRealtimeSTT()
+
+  let fullText = ''
+  if (result && typeof result === 'object') {
+    fullText = result.text || ''
+  } else if (typeof result === 'string') {
+    fullText = result
+  }
+
+  if (fullText && fullText.trim()) {
+    inputText.value = fullText
+
+    // 자동 전송
+    isProcessingVoice.value = true
+
+    setTimeout(async () => {
+      isProcessingVoice.value = false
+      await handleSend()
+    }, 500)
   }
 }
 
@@ -347,6 +365,35 @@ onMounted(async () => {
         </button>
       </div>
 
+      <!-- Voice Recording Status -->
+      <div
+        v-if="isRecording || isConnecting || isProcessingVoice"
+        class="mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200"
+      >
+        <!-- Connecting -->
+        <div v-if="isConnecting" class="flex items-center justify-center gap-2 text-blue-500 text-sm">
+          <ArrowPathIcon class="w-4 h-4 animate-spin" />
+          <span>마이크 연결 중...</span>
+        </div>
+        <!-- Recording -->
+        <div v-else-if="isRecording" class="flex flex-col items-center gap-1">
+          <div class="flex items-center gap-2 text-red-500 font-medium text-sm animate-pulse">
+            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+            <span>녹음 중... {{ sttRecordingTime }}s</span>
+          </div>
+          <div class="text-center text-sm">
+            <p v-if="sttFinalTexts.length" class="text-gray-800">{{ sttFinalTexts[sttFinalTexts.length - 1] }}</p>
+            <p v-if="sttInterimText" class="text-blue-600 italic">{{ sttInterimText }}</p>
+            <p v-else-if="!sttFinalTexts.length" class="text-gray-400 italic">Listening...</p>
+          </div>
+        </div>
+        <!-- Processing -->
+        <div v-else-if="isProcessingVoice" class="flex items-center justify-center gap-2 text-blue-500 text-sm">
+          <ArrowPathIcon class="w-4 h-4 animate-spin" />
+          <span>메시지 전송 중...</span>
+        </div>
+      </div>
+
       <div class="flex items-end gap-2">
         <!-- Hint Button -->
         <button
@@ -367,22 +414,26 @@ onMounted(async () => {
             placeholder="메시지를 입력하세요..."
             rows="1"
             class="w-full px-4 py-3 bg-gray-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
-            :disabled="isLoading"
+            :disabled="isLoading || isRecording"
           ></textarea>
         </div>
 
         <!-- Voice Button -->
         <button
           @click="toggleRecording"
+          :disabled="isConnecting || isProcessingVoice"
           :class="[
             'p-3 rounded-xl transition-colors',
             isRecording
               ? 'bg-red-500 text-white animate-pulse'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              : isConnecting
+                ? 'bg-blue-400 text-white'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
           ]"
           title="음성 입력"
         >
-          <StopIcon v-if="isRecording" class="w-6 h-6" />
+          <ArrowPathIcon v-if="isConnecting" class="w-6 h-6 animate-spin" />
+          <StopIcon v-else-if="isRecording" class="w-6 h-6" />
           <MicrophoneIcon v-else class="w-6 h-6" />
         </button>
 

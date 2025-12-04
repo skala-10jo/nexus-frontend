@@ -317,41 +317,36 @@
                           <span class="text-lg text-gray-400 font-medium">/ 10</span>
                         </div>
                       </div>
-                      <div class="w-16 h-16 rounded-full flex items-center justify-center p-1"
+                      <div class="w-16 h-16 rounded-full flex items-center justify-center"
                            :class="getScoreBgColor(selectedUtterance.feedback.score)">
-                        <!-- Excellent (9-10) -->
-                        <svg v-if="selectedUtterance.feedback.score >= 9" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
-                          <circle cx="50" cy="50" r="45" fill="#FCD34D" />
-                          <circle cx="32" cy="40" r="5" fill="#374151" />
-                          <circle cx="68" cy="40" r="5" fill="#374151" />
-                          <path d="M30 60 Q50 80 70 60" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
-                          <circle cx="25" cy="55" r="5" fill="#F87171" opacity="0.6" />
-                          <circle cx="75" cy="55" r="5" fill="#F87171" opacity="0.6" />
-                          <path d="M45 25 L50 15 L55 25 Z" fill="#F59E0B" /> <!-- Crown/Star hint -->
-                        </svg>
-                        <!-- Good (7-8) -->
-                        <svg v-else-if="selectedUtterance.feedback.score >= 7" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
-                          <circle cx="50" cy="50" r="45" fill="#FDE047" />
-                          <circle cx="35" cy="40" r="5" fill="#374151" />
-                          <circle cx="65" cy="40" r="5" fill="#374151" />
-                          <path d="M35 65 Q50 75 65 65" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
-                        </svg>
-                        <!-- Average (5-6) -->
-                        <svg v-else-if="selectedUtterance.feedback.score >= 5" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
-                          <circle cx="50" cy="50" r="45" fill="#FDBA74" />
-                          <circle cx="35" cy="40" r="5" fill="#374151" />
-                          <circle cx="65" cy="40" r="5" fill="#374151" />
-                          <line x1="35" y1="65" x2="65" y2="65" stroke="#374151" stroke-width="5" stroke-linecap="round" />
-                          <path d="M60 30 Q70 25 80 30" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round" />
-                        </svg>
-                        <!-- Poor (0-4) -->
-                        <svg v-else viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
-                          <circle cx="50" cy="50" r="45" fill="#93C5FD" />
-                          <circle cx="35" cy="45" r="5" fill="#374151" />
-                          <circle cx="65" cy="45" r="5" fill="#374151" />
-                          <path d="M35 70 Q50 60 65 70" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
-                          <path d="M75 40 Q80 50 75 60" fill="#60A5FA" opacity="0.6" /> <!-- Sweat drop -->
-                        </svg>
+                        <!-- Excellent (9-10): Beaming Face -->
+                        <img
+                          v-if="selectedUtterance.feedback.score >= 9"
+                          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Beaming%20Face%20with%20Smiling%20Eyes.png"
+                          alt="Excellent"
+                          class="w-12 h-12 object-contain drop-shadow-sm"
+                        />
+                        <!-- Good (7-8): Nerd Face -->
+                        <img
+                          v-else-if="selectedUtterance.feedback.score >= 7"
+                          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Nerd%20Face.png"
+                          alt="Good"
+                          class="w-12 h-12 object-contain drop-shadow-sm"
+                        />
+                        <!-- Average (5-6): Crying Face -->
+                        <img
+                          v-else-if="selectedUtterance.feedback.score >= 5"
+                          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Crying%20Face.png"
+                          alt="Average"
+                          class="w-12 h-12 object-contain drop-shadow-sm"
+                        />
+                        <!-- Poor (0-4): Nauseated Face -->
+                        <img
+                          v-else
+                          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Nauseated%20Face.png"
+                          alt="Poor"
+                          class="w-12 h-12 object-contain drop-shadow-sm"
+                        />
                       </div>
                     </div>
                     

@@ -15,7 +15,21 @@
             <h1 class="text-2xl md:text-3xl font-bold font-nanum-round-eb">Welcome back, {{ user?.fullName || 'User' }}!</h1>
             <div class="space-y-0.5 opacity-90">
               <p class="text-base font-medium">
-                📅 <span class="font-bold">{{ upcomingEvents.length }}</span> schedules remaining {{ selectedDate ? 'on selected date' : 'today' }}!
+                🗓️ {{ scheduleMessage.text }}
+                <router-link
+                  v-if="scheduleMessage.hasSchedule"
+                  :to="scheduleMessage.link"
+                  class="font-bold underline decoration-2 underline-offset-4 hover:text-blue-200 cursor-pointer transition-colors"
+                >
+                  {{ scheduleMessage.eventTitle }}에 대한 회화 연습 하러 갈까요?
+                </router-link>
+                <router-link
+                  v-else
+                  to="/management/schedule"
+                  class="font-bold underline decoration-2 underline-offset-4 hover:text-blue-200 cursor-pointer transition-colors"
+                >
+                  일정 등록하러 가기
+                </router-link>
               </p>
               <p class="text-base font-medium">
                 💬 오늘의 Biz 표현:
@@ -31,13 +45,38 @@
             </div>
           </div>
           
-          <!-- 3D Avatar Placeholder -->
-          <div class="hidden md:block w-32 h-32 -my-6 relative">
-            <img 
-              src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
-              alt="User Avatar"
-              class="w-full h-full object-contain drop-shadow-2xl transform hover:scale-110 transition-transform duration-300"
-            />
+          <!-- Attendance Bubble & Avatar Wrapper -->
+          <!-- Attendance Bubble & Avatar Wrapper -->
+          <div class="hidden md:flex items-center gap-6 relative">
+            <!-- Attendance Speech Bubble -->
+            <div class="relative z-20 group">
+              <div class="bg-white text-gray-800 px-6 py-4 rounded-2xl rounded-tr-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 border-b-4 border-b-gray-200 flex flex-col items-center gap-3 min-w-[140px] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]">
+                <p class="text-sm font-bold whitespace-nowrap flex items-center gap-1.5 text-gray-700">
+                  {{ isCheckedIn ? '출석 완료! 🎉' : '출석하세용 👋' }}
+                </p>
+                
+                <button 
+                  v-if="!isCheckedIn"
+                  @click="handleCheckIn"
+                  class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-100 hover:scale-105 active:scale-95 transition-all w-full flex items-center justify-center gap-1"
+                >
+                  <span>출check</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+
+                <!-- Tail -->
+                <div class="absolute -right-3 top-0 w-0 h-0 border-t-[12px] border-t-white border-r-[12px] border-r-transparent drop-shadow-sm"></div>
+              </div>
+            </div>
+
+            <!-- 3D Avatar Placeholder -->
+            <div class="w-32 h-32 -my-6 relative filter drop-shadow-2xl">
+              <img
+                src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
+                alt="User Avatar"
+                class="w-full h-full object-contain transform hover:scale-110 transition-transform duration-300"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -182,8 +221,8 @@
                       // Base text color
                       !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
 
-                      // Hover state (only if not an event start)
-                      !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
+                      // Hover state (only if not an event start and not today)
+                      !eventInfo?.isStart && isCurrentMonth && !isToday ? 'hover:bg-gray-100' : '',
 
                       // Event Styling (Start Date - Solid Color)
                       eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md` : '',
@@ -192,10 +231,23 @@
                       eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
 
                       // Selected State (if no event)
-                      isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+                      isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : '',
+
+                      // Today's Date Styling
+                      // Always use Thick Black Border (Ring)
+                      isToday ? 'ring-[3px] ring-inset ring-gray-900 font-extrabold z-10 overflow-hidden' : ''
                     ]"
                   >
-                    {{ date.getDate() }}
+                    <!-- Date Number (On Top) -->
+                    <span class="relative z-10">{{ date.getDate() }}</span>
+
+                    <!-- Attendance Fire Emoji (출석한 날짜에 표시) -->
+                    <img
+                      v-if="hasAttendance(date)"
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png"
+                      alt="Fire"
+                      class="absolute inset-0 w-full h-full object-contain p-1 opacity-90 z-0 pointer-events-none"
+                    />
                   </button>
                 </div>
               </div>
@@ -273,6 +325,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 
 import SmallTalkChat from '@/components/dashboard/SmallTalkChat.vue';
+import { useAttendance } from '@/composables/useAttendance';
 
 import {
   DocumentTextIcon,
@@ -282,7 +335,8 @@ import {
   CalendarIcon,
   ChatBubbleLeftRightIcon,
   BookOpenIcon,
-  VideoCameraIcon
+  VideoCameraIcon,
+  CheckCircleIcon
 } from '@heroicons/vue/24/outline';
 
 const router = useRouter();
@@ -305,6 +359,20 @@ const quickActions = [
 // Schedule Logic
 const { allEvents, fetchAllEvents, loading: loadingEvents } = useScheduleEvents();
 const selectedDate = ref(null);
+
+// Attendance Logic
+const { isCheckedIn, checkTodayStatus, submitCheckIn, fetchAttendanceRecords, hasAttendance } = useAttendance();
+const showSuccessPopup = ref(false);
+
+const handleCheckIn = async () => {
+  const success = await submitCheckIn();
+  if (success) {
+    showSuccessPopup.value = true;
+    setTimeout(() => {
+      showSuccessPopup.value = false;
+    }, 3000);
+  }
+};
 
 // Today's Expression
 const todayExpression = ref(null);
@@ -416,6 +484,62 @@ const upcomingEvents = computed(() => {
       lightColorClass: colors.light
     };
   });
+});
+
+// Schedule Message for Banner
+const scheduleMessage = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(today);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // 오늘 일정 찾기
+  const todayEvents = allEvents.value.filter(event => {
+    const eStart = new Date(event.start);
+    const eEnd = event.end ? new Date(event.end) : new Date(eStart);
+    // 오늘이 일정 범위 안에 있는지 확인
+    const startDate = new Date(eStart.getFullYear(), eStart.getMonth(), eStart.getDate());
+    const endDate = new Date(eEnd.getFullYear(), eEnd.getMonth(), eEnd.getDate());
+    return today >= startDate && today <= endDate;
+  });
+
+  if (todayEvents.length > 0) {
+    // 오늘 일정이 있음
+    const event = todayEvents[0];
+    return {
+      text: `오늘은 "${event.title}" 일정이 있어요! `,
+      hasSchedule: true,
+      eventTitle: event.title,
+      link: { path: '/conversation/scenario', query: { scheduleId: event.id } }
+    };
+  }
+
+  // 다가올 일정 찾기 (오늘 이후)
+  const futureEvents = allEvents.value
+    .filter(event => {
+      const eStart = new Date(event.start);
+      eStart.setHours(0, 0, 0, 0);
+      return eStart > today;
+    })
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  if (futureEvents.length > 0) {
+    const event = futureEvents[0];
+    return {
+      text: `곧 "${event.title}" 일정이 있어요! `,
+      hasSchedule: true,
+      eventTitle: event.title,
+      link: { path: '/conversation/scenario', query: { scheduleId: event.id } }
+    };
+  }
+
+  // 일정이 아예 없음
+  return {
+    text: '일정을 등록하고 시나리오 회화 연습해보는건 어때요? ',
+    hasSchedule: false,
+    eventTitle: '',
+    link: '/management/schedule'
+  };
 });
 
 // Calendar Logic
@@ -546,7 +670,32 @@ function goToPractice(event) {
 onMounted(async () => {
   await Promise.all([
     fetchAllEvents(),
-    fetchRandomExpression()
+    fetchRandomExpression(),
+    checkTodayStatus(),
+    fetchAttendanceRecords()
   ]);
 });
 </script>
+
+<style scoped>
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
+/* Custom Scrollbar for Tasks */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
+</style>
