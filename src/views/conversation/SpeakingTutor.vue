@@ -957,10 +957,10 @@ async function startLearningMode() {
   if (!currentSessionId.value) return
 
   try {
-    // Get learning data from API
+    // Get learning data from API - use selected speakers filter
     const result = await speakingTutorService.getLearningData(
       currentSessionId.value,
-      selectedUtterance.value?.speakerId
+      selectedSpeakers.value
     )
 
     learningItems.value = result.learningItems || []
