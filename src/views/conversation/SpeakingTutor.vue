@@ -126,21 +126,69 @@
               </button>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button
+              <div
                 v-for="speaker in speakers"
                 :key="speaker.id"
-                @click="toggleSpeakerFilter(speaker.id)"
-                class="px-3 py-1.5 rounded-full text-sm font-medium transition"
-                :class="selectedSpeakers.includes(speaker.id)
-                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'"
+                class="flex items-center gap-1"
               >
-                <span
-                  class="inline-block w-2 h-2 rounded-full mr-1.5"
-                  :class="getSpeakerColor(speaker.id)"
-                ></span>
-                {{ speaker.label }} ({{ speaker.utteranceCount }})
-              </button>
+                <!-- 편집 모드 -->
+                <div
+                  v-if="editingSpeakerId === speaker.id"
+                  class="flex items-center gap-1 bg-white border-2 border-blue-400 rounded-full px-2 py-1"
+                >
+                  <span
+                    class="inline-block w-2 h-2 rounded-full"
+                    :class="getSpeakerColor(speaker.id)"
+                  ></span>
+                  <input
+                    v-model="editingSpeakerLabel"
+                    type="text"
+                    class="w-24 text-sm border-none outline-none bg-transparent"
+                    placeholder="이름 입력"
+                    @keyup.enter="saveSpeakerLabel(speaker.id)"
+                    @keyup.esc="cancelEditSpeaker"
+                    autofocus
+                  />
+                  <button
+                    @click="saveSpeakerLabel(speaker.id)"
+                    :disabled="isSavingSpeakerLabel"
+                    class="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition"
+                    title="저장"
+                  >
+                    <CheckIcon class="w-4 h-4" />
+                  </button>
+                  <button
+                    @click="cancelEditSpeaker"
+                    class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
+                    title="취소"
+                  >
+                    <XMarkIcon class="w-4 h-4" />
+                  </button>
+                </div>
+                <!-- 일반 모드 -->
+                <template v-else>
+                  <button
+                    @click="toggleSpeakerFilter(speaker.id)"
+                    class="px-3 py-1.5 rounded-full text-sm font-medium transition"
+                    :class="selectedSpeakers.includes(speaker.id)
+                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                      : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'"
+                  >
+                    <span
+                      class="inline-block w-2 h-2 rounded-full mr-1.5"
+                      :class="getSpeakerColor(speaker.id)"
+                    ></span>
+                    {{ speaker.label }} ({{ speaker.utteranceCount }})
+                  </button>
+                  <button
+                    @click.stop="startEditSpeaker(speaker)"
+                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
+                    title="이름 변경"
+                  >
+                    <PencilIcon class="w-3.5 h-3.5" />
+                  </button>
+                </template>
+              </div>
             </div>
           </div>
 
@@ -184,114 +232,171 @@
         </div>
 
         <!-- Right Panel: Feedback -->
-        <div class="w-[45%] flex-shrink-0 overflow-hidden">
-          <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 h-full overflow-y-auto flex flex-col">
+        <div class="w-[45%] flex-shrink-0 overflow-hidden flex flex-col h-full">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-lg h-full overflow-hidden flex flex-col relative">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full blur-3xl opacity-50 -mr-32 -mt-32 pointer-events-none"></div>
+
             <template v-if="selectedUtterance">
-              <div class="flex items-center justify-between mb-5">
-                <h4 class="text-base font-bold text-gray-900">피드백</h4>
+              <!-- Header -->
+              <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-white/50 backdrop-blur-sm z-10">
+                <div class="flex items-center gap-2">
+                  <div class="p-2 bg-indigo-50 rounded-lg">
+                    <SparklesIcon class="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold text-gray-900">AI 코칭 피드백</h4>
+                    <p class="text-xs text-gray-500">선택한 발화에 대한 상세 분석입니다</p>
+                  </div>
+                </div>
+                
                 <button
                   v-if="!selectedUtterance.hasFeedback"
                   @click="requestFeedback"
                   :disabled="isLoadingFeedback"
-                  class="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                  class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95"
                 >
-                  <SparklesIcon class="w-4 h-4" />
+                  <SparklesIcon class="w-4 h-4" :class="{ 'animate-spin': isLoadingFeedback }" />
                   {{ isLoadingFeedback ? '분석 중...' : '피드백 받기' }}
                 </button>
               </div>
 
-              <!-- Feedback Content -->
-              <template v-if="selectedUtterance.feedback">
-                <!-- Score -->
-                <div class="mb-4">
-                  <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-sm font-medium text-gray-700">종합 점수</span>
-                    <span class="text-xl font-bold" :class="getScoreColor(selectedUtterance.feedback.score)">
-                      {{ selectedUtterance.feedback.score }}/10
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-4 gap-1.5">
-                    <div
-                      v-for="(value, key) in selectedUtterance.feedback.scoreBreakdown"
-                      :key="key"
-                      class="text-center p-1.5 bg-gray-50 rounded-lg"
-                    >
-                      <p class="text-xs text-gray-500">{{ getScoreLabel(key) }}</p>
-                      <p class="text-sm font-bold text-gray-900">{{ value }}</p>
+              <!-- Content -->
+              <div class="flex-1 overflow-y-auto p-6 space-y-6 z-10 scrollbar-hide">
+                <template v-if="selectedUtterance.feedback">
+                  <!-- Score Section -->
+                  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                      <div>
+                        <h5 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">종합 점수</h5>
+                        <div class="flex items-baseline gap-2">
+                          <span class="text-4xl font-black text-gray-900">{{ selectedUtterance.feedback.score }}</span>
+                          <span class="text-lg text-gray-400 font-medium">/ 10</span>
+                        </div>
+                      </div>
+                      <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
+                           :class="getScoreBgColor(selectedUtterance.feedback.score)">
+                        {{ getScoreEmoji(selectedUtterance.feedback.score) }}
+                      </div>
+                    </div>
+                    
+                    <!-- Score Breakdown Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                      <div
+                        v-for="(value, key) in selectedUtterance.feedback.scoreBreakdown"
+                        :key="key"
+                        class="bg-gray-50 rounded-xl p-3 flex items-center justify-between group hover:bg-gray-100 transition-colors"
+                      >
+                        <span class="text-xs font-medium text-gray-500 group-hover:text-gray-700">{{ getScoreLabel(key) }}</span>
+                        <span class="text-sm font-bold text-gray-900">{{ value }}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Grammar Corrections -->
-                <div v-if="selectedUtterance.feedback.grammarCorrections?.length" class="mb-4">
-                  <h5 class="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
-                    <ExclamationTriangleIcon class="w-4 h-4 text-yellow-500" />
-                    문법 교정
-                  </h5>
-                  <ul class="space-y-1.5">
-                    <li
-                      v-for="(correction, idx) in selectedUtterance.feedback.grammarCorrections"
-                      :key="idx"
-                      class="text-sm text-gray-600 pl-3 border-l-2 border-yellow-300"
-                    >
-                      {{ correction }}
-                    </li>
-                  </ul>
-                </div>
-
-                <!-- Suggestions -->
-                <div v-if="selectedUtterance.feedback.suggestions?.length" class="mb-4">
-                  <h5 class="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
-                    <LightBulbIcon class="w-4 h-4 text-blue-500" />
-                    제안
-                  </h5>
-                  <ul class="space-y-1.5">
-                    <li
-                      v-for="(suggestion, idx) in selectedUtterance.feedback.suggestions"
-                      :key="idx"
-                      class="text-sm text-gray-600 pl-3 border-l-2 border-blue-300"
-                    >
-                      {{ suggestion }}
-                    </li>
-                  </ul>
-                </div>
-
-                <!-- Improved Sentence -->
-                <div v-if="selectedUtterance.feedback.improvedSentence" class="mb-5">
-                  <h5 class="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
-                    <CheckBadgeIcon class="w-4 h-4 text-green-500" />
-                    개선된 문장
-                  </h5>
-                  <div class="p-3 bg-green-50 rounded-lg border border-green-100">
-                    <p class="text-sm text-green-800">{{ selectedUtterance.feedback.improvedSentence }}</p>
+                  <!-- Grammar Corrections -->
+                  <div v-if="selectedUtterance.feedback.grammarCorrections?.length" class="space-y-3">
+                    <h5 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <ExclamationTriangleIcon class="w-4 h-4 text-amber-500" />
+                      문법 교정
+                    </h5>
+                    <div class="bg-amber-50/50 rounded-2xl border border-amber-100 overflow-hidden">
+                      <div
+                        v-for="(correction, idx) in selectedUtterance.feedback.grammarCorrections"
+                        :key="idx"
+                        class="p-4 border-b border-amber-100 last:border-0 flex gap-3"
+                      >
+                        <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{{ idx + 1 }}</span>
+                        <p class="text-sm text-gray-700 leading-relaxed">{{ correction }}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <!-- Go to Learning Button -->
-                <div class="mt-auto pt-4 border-t border-gray-100">
-                  <button
-                    @click="goToLearningWithUtterance"
-                    class="w-full py-3 bg-black text-white font-medium rounded-xl hover:bg-gray-800 transition-all shadow-lg shadow-gray-300 flex items-center justify-center gap-2"
-                  >
-                    <AcademicCapIcon class="w-5 h-5" />
-                    이 문장 학습하러 가기
-                  </button>
-                </div>
-              </template>
+                  <!-- Suggestions -->
+                  <div v-if="selectedUtterance.feedback.suggestions?.length" class="space-y-3">
+                    <h5 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <LightBulbIcon class="w-4 h-4 text-blue-500" />
+                      더 나은 표현 제안
+                    </h5>
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100 overflow-hidden">
+                      <div
+                        v-for="(suggestion, idx) in selectedUtterance.feedback.suggestions"
+                        :key="idx"
+                        class="p-4 border-b border-blue-100 last:border-0 flex gap-3"
+                      >
+                        <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{{ idx + 1 }}</span>
+                        <p class="text-sm text-gray-700 leading-relaxed">{{ suggestion }}</p>
+                      </div>
+                    </div>
+                  </div>
 
-              <template v-else>
-                <div class="text-center py-6 text-gray-400">
-                  <SparklesIcon class="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p class="text-sm">"피드백 받기"를 클릭하여 이 발화를 분석하세요</p>
-                </div>
-              </template>
+                  <!-- Improved Sentence -->
+                  <div v-if="selectedUtterance.feedback.improvedSentence" class="space-y-3">
+                    <h5 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <CheckBadgeIcon class="w-4 h-4 text-emerald-500" />
+                      추천 문장
+                    </h5>
+                    <div class="bg-emerald-50 rounded-2xl border border-emerald-100 p-5 relative overflow-hidden group">
+                      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <CheckBadgeIcon class="w-16 h-16 text-emerald-600" />
+                      </div>
+                      <p class="text-base text-emerald-900 font-medium relative z-10 leading-relaxed">
+                        "{{ selectedUtterance.feedback.improvedSentence }}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Action Button -->
+                  <div class="pt-4 pb-2">
+                    <button
+                      @click="goToLearningWithUtterance"
+                      class="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2 group"
+                    >
+                      <AcademicCapIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                      이 문장으로 학습하기
+                    </button>
+                  </div>
+                </template>
+
+                <!-- Loading State -->
+                <template v-else-if="isLoadingFeedback">
+                  <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">AI가 분석 중입니다</h4>
+                    <p class="text-sm text-gray-500">문법, 표현, 뉘앙스를 꼼꼼히 체크하고 있어요</p>
+                  </div>
+                </template>
+
+                <!-- Empty Feedback State -->
+                <template v-else>
+                  <div class="flex flex-col items-center justify-center py-20 text-center px-6">
+                    <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                      <SparklesIcon class="w-10 h-10 text-indigo-400" />
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">피드백을 받아보세요</h4>
+                    <p class="text-sm text-gray-500 mb-8 max-w-xs mx-auto">
+                      AI가 문법 오류를 교정하고 더 자연스러운 표현을 제안해드립니다.
+                    </p>
+                    <button
+                      @click="requestFeedback"
+                      class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                    >
+                      피드백 생성하기
+                    </button>
+                  </div>
+                </template>
+              </div>
             </template>
 
+            <!-- No Utterance Selected State -->
             <template v-else>
-              <div class="text-center py-8 text-gray-400">
-                <ChatBubbleLeftRightIcon class="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p class="font-medium text-sm">발화를 선택하세요</p>
-                <p class="text-xs mt-1">메시지를 클릭하면 피드백 옵션을 볼 수 있습니다</p>
+              <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
+                <div class="w-24 h-24 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
+                  <ChatBubbleLeftRightIcon class="w-12 h-12 text-gray-300" />
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">대화를 선택해주세요</h4>
+                <p class="text-sm text-gray-500 max-w-xs mx-auto">
+                  왼쪽 타임라인에서 분석하고 싶은 발화를 클릭하면 상세한 AI 피드백을 확인할 수 있습니다.
+                </p>
               </div>
             </template>
           </div>
@@ -487,7 +592,9 @@ import {
   ChevronRightIcon,
   SpeakerWaveIcon,
   ChatBubbleLeftRightIcon,
-  UserIcon
+  UserIcon,
+  PencilIcon,
+  CheckIcon
 } from '@heroicons/vue/24/outline'
 import { speakingTutorService } from '@/services/speakingTutorService'
 
@@ -514,6 +621,11 @@ const utterances = ref([])
 const selectedSpeakers = ref([])
 const selectedUtterance = ref(null)
 const isLoadingFeedback = ref(false)
+
+// Speaker Edit State
+const editingSpeakerId = ref(null)
+const editingSpeakerLabel = ref('')
+const isSavingSpeakerLabel = ref(false)
 
 // History State
 const sessions = ref([])
@@ -678,6 +790,55 @@ function showAllSpeakers() {
   selectedSpeakers.value = speakers.value.map(s => s.id)
 }
 
+// Speaker Edit Functions
+function startEditSpeaker(speaker) {
+  editingSpeakerId.value = speaker.id
+  editingSpeakerLabel.value = speaker.label
+}
+
+function cancelEditSpeaker() {
+  editingSpeakerId.value = null
+  editingSpeakerLabel.value = ''
+}
+
+async function saveSpeakerLabel(speakerId) {
+  if (!editingSpeakerLabel.value.trim()) {
+    errorMessage.value = '화자 이름을 입력해주세요'
+    return
+  }
+
+  isSavingSpeakerLabel.value = true
+  try {
+    await speakingTutorService.updateSpeakerLabel(
+      currentSessionId.value,
+      speakerId,
+      editingSpeakerLabel.value.trim()
+    )
+
+    // Update local state
+    const speakerIdx = speakers.value.findIndex(s => s.id === speakerId)
+    if (speakerIdx >= 0) {
+      speakers.value[speakerIdx].label = editingSpeakerLabel.value.trim()
+    }
+
+    // Update utterances speakerLabel
+    utterances.value.forEach(u => {
+      if (u.speakerId === speakerId) {
+        u.speakerLabel = editingSpeakerLabel.value.trim()
+      }
+    })
+
+    // Reset edit state
+    editingSpeakerId.value = null
+    editingSpeakerLabel.value = ''
+  } catch (error) {
+    console.error('Failed to update speaker label:', error)
+    errorMessage.value = '화자 이름 변경에 실패했습니다'
+  } finally {
+    isSavingSpeakerLabel.value = false
+  }
+}
+
 function selectUtterance(utterance) {
   selectedUtterance.value = utterance
 }
@@ -791,6 +952,20 @@ function nextLearningItem() {
     currentLearningIndex.value++
     recordedText.value = ''
   }
+}
+
+function getScoreBgColor(score) {
+  if (score >= 9) return 'bg-green-100 text-green-600'
+  if (score >= 7) return 'bg-blue-100 text-blue-600'
+  if (score >= 5) return 'bg-yellow-100 text-yellow-600'
+  return 'bg-red-100 text-red-600'
+}
+
+function getScoreEmoji(score) {
+  if (score >= 9) return '🤩'
+  if (score >= 7) return '😊'
+  if (score >= 5) return '🤔'
+  return '😅'
 }
 
 function speakText(text) {
