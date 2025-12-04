@@ -135,39 +135,39 @@ const pronunciationService = {
     // 전체 평가
     let overallFeedback = ''
     if (pronunciation_score >= 90) {
-      overallFeedback = '🎉 훌륭한 발음입니다! 원어민 수준에 가깝습니다.'
+      overallFeedback = '훌륭한 발음입니다! 원어민 수준에 가깝습니다.'
     } else if (pronunciation_score >= 80) {
-      overallFeedback = '👍 좋은 발음입니다! 약간의 연습으로 더 개선할 수 있어요.'
+      overallFeedback = '좋은 발음입니다! 약간의 연습으로 더 개선할 수 있어요.'
     } else if (pronunciation_score >= 70) {
-      overallFeedback = '🙂 괜찮은 발음입니다. 몇 가지 개선이 필요합니다.'
+      overallFeedback = '괜찮은 발음입니다. 몇 가지 개선이 필요합니다.'
     } else if (pronunciation_score >= 60) {
-      overallFeedback = '🤔 발음 개선이 필요합니다. 특정 소리에 집중해보세요.'
+      overallFeedback = '발음 개선이 필요합니다. 특정 소리에 집중해보세요.'
     } else {
-      overallFeedback = '💪 계속 연습하세요! 발음은 연습으로 개선됩니다.'
+      overallFeedback = '계속 연습하세요! 발음은 연습으로 개선됩니다.'
     }
 
     // 구체적 피드백
     const detailedFeedback = []
 
     if (accuracy_score < 70) {
-      detailedFeedback.push('🎯 정확도: 개별 소리를 정확하게 발음하는 연습이 필요합니다.')
+      detailedFeedback.push('정확도: 개별 소리를 정확하게 발음하는 연습이 필요합니다.')
     }
 
     if (fluency_score < 70) {
-      detailedFeedback.push('🌊 유창성: 더 자연스럽고 부드럽게 말하는 연습을 해보세요.')
+      detailedFeedback.push('유창성: 더 자연스럽고 부드럽게 말하는 연습을 해보세요.')
     }
 
     if (prosody_score < 70) {
-      detailedFeedback.push('🎵 운율: 강세와 억양 패턴에 주의를 기울여보세요.')
+      detailedFeedback.push('운율: 강세와 억양 패턴에 주의를 기울여보세요.')
     }
 
     if (problemWords.length > 0) {
-      detailedFeedback.push(`📝 연습이 필요한 단어: ${problemWords.slice(0, 3).join(', ')}`)
+      detailedFeedback.push(`연습이 필요한 단어: ${problemWords.slice(0, 3).join(', ')}`)
     }
 
     if (problemPhonemes.length > 0) {
       const uniquePhonemes = [...new Set(problemPhonemes.map(p => p.phoneme))].slice(0, 3)
-      detailedFeedback.push(`🔤 개선이 필요한 소리: ${uniquePhonemes.join(', ')}`)
+      detailedFeedback.push(`개선이 필요한 소리: ${uniquePhonemes.join(', ')}`)
     }
 
     return {

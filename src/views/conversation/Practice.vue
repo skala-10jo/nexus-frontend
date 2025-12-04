@@ -113,6 +113,9 @@ import { usePracticeConversation } from '@/composables/conversation/usePracticeC
 import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
 
+// Services
+import conversationService from '@/services/conversationService'
+
 // ============================================
 // Composables Initialization
 // ============================================
@@ -227,10 +230,27 @@ const handleStopRecording = async () => {
 
 /**
  * 대화 초기화 처리
+ * 백엔드 세션을 삭제하고 새 대화를 시작하여 AI 초기 발화를 받아옵니다.
  */
 const handleReset = async () => {
-  await conversation.resetConversation()
-  feedback.resetFeedbacks()
+  if (!confirm('Reset conversation?')) return
+
+  try {
+    // 1. 백엔드 세션 삭제 (필수! - 이것이 없으면 start가 initialMessage를 반환하지 않음)
+    await conversationService.reset(scenarioId)
+
+    // 2. 프론트엔드 상태 초기화
+    conversation.resetConversation()
+    feedback.resetFeedbacks()
+
+    // 3. 새 대화 시작하여 AI 초기 발화 받아오기
+    const response = await conversationService.start(scenarioId)
+    conversation.addInitialMessage(response.initialMessage)
+    await nextTick()
+    scrollToBottom()
+  } catch (err) {
+    console.error('Failed to reset conversation:', err)
+  }
 }
 
 /**

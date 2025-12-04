@@ -297,7 +297,7 @@
                   v-if="!selectedUtterance.hasFeedback"
                   @click="requestFeedback"
                   :disabled="isLoadingFeedback"
-                  class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95"
+                  class="px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black hover:shadow-lg hover:shadow-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95"
                 >
                   <SparklesIcon class="w-4 h-4" :class="{ 'animate-spin': isLoadingFeedback }" />
                   {{ isLoadingFeedback ? '분석 중...' : '피드백 받기' }}
@@ -460,7 +460,7 @@
                     </p>
                     <button
                       @click="requestFeedback"
-                      class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                      class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors shadow-lg shadow-gray-300"
                     >
                       피드백 생성하기
                     </button>
@@ -485,152 +485,350 @@
         </div>
       </div>
 
-      <!-- Learning Mode -->
-      <div v-else-if="currentView === 'learning'" class="flex-1 overflow-y-auto p-8">
-        <div class="max-w-4xl mx-auto">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <!-- Learning Mode Header -->
-            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 class="text-xl font-bold text-gray-900">학습 모드</h3>
-                <p class="text-sm text-gray-500 mt-1">교정된 문장을 연습해보세요</p>
+      <!-- Learning Mode - Full Height Flex Layout -->
+      <div v-else-if="currentView === 'learning'" class="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-slate-50 to-gray-100">
+        <div class="flex-1 flex flex-col min-h-0 p-4">
+          <div class="flex-1 flex flex-col min-h-0 bg-white rounded-2xl border border-gray-200/60 shadow-lg overflow-hidden">
+
+            <!-- Learning Mode Header (Fixed) -->
+            <div class="flex-shrink-0 px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <AcademicCapIcon class="w-5 h-5 text-gray-700" />
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900">학습 모드</h3>
+                  <p class="text-xs text-gray-500">교정된 문장을 따라 연습해보세요</p>
+                </div>
               </div>
               <button
                 @click="exitLearningMode"
-                class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition flex items-center gap-2"
+                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 flex items-center gap-2"
               >
                 <ArrowLeftIcon class="w-4 h-4" />
-                대화 기록으로 돌아가기
+                나가기
               </button>
             </div>
 
-            <!-- Progress -->
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <!-- Progress Header (Fixed) -->
+            <div class="flex-shrink-0 px-6 py-3 bg-gray-50 border-b border-gray-200">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">
-                  진행률: {{ currentLearningIndex + 1 }} / {{ learningItems.length }}
-                </span>
-                <span class="text-sm text-gray-500">
-                  {{ Math.round((currentLearningIndex / learningItems.length) * 100) }}%
-                </span>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ currentLearningIndex + 1 }} / {{ learningItems.length }}
+                  </span>
+                  <span class="text-xs text-gray-500">학습 진행률</span>
+                </div>
+                <!-- Score Badge -->
+                <div v-if="currentLearningItem?.score" class="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-gray-200">
+                  <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                       :class="getScoreBgColor(currentLearningItem.score)">
+                    {{ currentLearningItem.score }}
+                  </div>
+                  <span class="text-xs font-medium text-gray-600">점</span>
+                </div>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  class="bg-green-600 h-2 rounded-full transition-all duration-300"
+                  class="bg-gray-900 h-2 rounded-full transition-all duration-500 ease-out"
                   :style="{ width: `${((currentLearningIndex + 1) / learningItems.length) * 100}%` }"
                 ></div>
               </div>
             </div>
 
-            <!-- Current Learning Item -->
-            <div v-if="currentLearningItem" class="p-8">
-              <!-- Original Text -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
-                  <ExclamationCircleIcon class="w-4 h-4 text-red-500" />
-                  원래 문장
-                </h4>
-                <div class="p-4 bg-red-50 border border-red-100 rounded-xl">
-                  <p class="text-lg text-red-800">{{ currentLearningItem.originalText }}</p>
-                </div>
-              </div>
-
-              <!-- Grammar Points -->
-              <div v-if="currentLearningItem.grammarPoints?.length" class="mb-8">
-                <h4 class="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
-                  <LightBulbIcon class="w-4 h-4 text-yellow-500" />
-                  문법 포인트
-                </h4>
-                <ul class="space-y-2">
-                  <li
-                    v-for="(point, idx) in currentLearningItem.grammarPoints"
-                    :key="idx"
-                    class="text-sm text-gray-700 pl-4 border-l-2 border-yellow-300 py-1"
-                  >
-                    {{ point }}
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Improved Text -->
-              <div class="mb-8">
-                <h4 class="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
-                  <CheckBadgeIcon class="w-4 h-4 text-green-500" />
-                  교정된 문장
-                </h4>
-                <div class="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center justify-between">
-                  <p class="text-lg text-green-800 font-medium">{{ currentLearningItem.improvedText }}</p>
-                  <button
-                    @click="speakText(currentLearningItem.improvedText)"
-                    class="ml-4 p-2 text-green-600 hover:text-green-700 hover:bg-green-100 rounded-full transition"
-                    title="듣기"
-                  >
-                    <SpeakerWaveIcon class="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Practice Section -->
-              <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
-                <h4 class="text-sm font-semibold text-blue-800 mb-4 flex items-center gap-2">
-                  <MicrophoneIcon class="w-4 h-4" />
-                  따라하기 연습
-                </h4>
-                <div class="flex items-center justify-center gap-4">
-                  <button
-                    @click="toggleRecording"
-                    class="w-16 h-16 rounded-full flex items-center justify-center transition transform hover:scale-105"
-                    :class="isRecording
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'"
-                  >
-                    <MicrophoneIcon class="w-8 h-8" />
-                  </button>
-                  <div class="text-sm text-blue-700">
-                    {{ isRecording ? '녹음 중... 클릭하여 중지' : '버튼을 클릭하여 녹음 시작' }}
+            <!-- Scrollable Content Area -->
+            <div v-if="currentLearningItem" ref="learningScrollContainer" class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+              <!-- Original vs Improved Comparison -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <!-- Original Text -->
+                <div class="bg-white rounded-xl border border-red-200 overflow-hidden">
+                  <div class="px-3 py-2 bg-red-50 border-b border-red-200 flex items-center gap-2">
+                    <ExclamationCircleIcon class="w-4 h-4 text-red-500" />
+                    <span class="text-sm font-bold text-red-700">원래 문장</span>
+                  </div>
+                  <div class="p-3">
+                    <p class="text-sm text-gray-700 leading-relaxed">{{ currentLearningItem.originalText }}</p>
                   </div>
                 </div>
-                <p v-if="recordedText" class="mt-4 text-center text-gray-700">
-                  <span class="text-sm text-gray-500">인식된 문장:</span><br />
-                  <span class="font-medium">{{ recordedText }}</span>
-                </p>
+
+                <!-- Improved Text -->
+                <div class="bg-white rounded-xl border border-emerald-200 overflow-hidden">
+                  <div class="px-3 py-2 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <CheckBadgeIcon class="w-4 h-4 text-emerald-500" />
+                      <span class="text-sm font-bold text-emerald-700">교정된 문장</span>
+                    </div>
+                    <button
+                      @click="speakText(currentLearningItem.improvedText)"
+                      class="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded transition"
+                      title="듣기"
+                    >
+                      <SpeakerWaveIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div class="p-3">
+                    <p class="text-sm text-gray-700 font-medium leading-relaxed">{{ currentLearningItem.improvedText }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Grammar Corrections -->
+              <div v-if="currentLearningItem.grammarCorrections?.length" class="bg-white rounded-xl border border-amber-200 overflow-hidden">
+                <div class="px-3 py-2 bg-amber-50 border-b border-amber-200 flex items-center gap-2">
+                  <ExclamationTriangleIcon class="w-4 h-4 text-amber-600" />
+                  <span class="text-sm font-bold text-amber-700">문법 교정</span>
+                  <span class="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+                    {{ currentLearningItem.grammarCorrections.length }}
+                  </span>
+                </div>
+                <div class="p-3 space-y-2">
+                  <div
+                    v-for="(correction, idx) in currentLearningItem.grammarCorrections"
+                    :key="idx"
+                    class="flex gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <span class="w-5 h-5 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {{ idx + 1 }}
+                    </span>
+                    <p class="text-sm text-gray-700 leading-relaxed">{{ correction }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Expression Suggestions -->
+              <div v-if="currentLearningItem.suggestions?.length" class="bg-white rounded-xl border border-blue-200 overflow-hidden">
+                <div class="px-3 py-2 bg-blue-50 border-b border-blue-200 flex items-center gap-2">
+                  <LightBulbIcon class="w-4 h-4 text-blue-600" />
+                  <span class="text-sm font-bold text-blue-700">더 나은 표현 제안</span>
+                  <span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+                    {{ currentLearningItem.suggestions.length }}
+                  </span>
+                </div>
+                <div class="p-3 space-y-2">
+                  <div
+                    v-for="(suggestion, idx) in currentLearningItem.suggestions"
+                    :key="idx"
+                    class="flex gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <span class="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs flex-shrink-0">
+                      <LightBulbIcon class="w-3 h-3" />
+                    </span>
+                    <p class="text-sm text-gray-700 leading-relaxed">{{ suggestion }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty state when no corrections or suggestions -->
+              <div v-if="!currentLearningItem.grammarCorrections?.length && !currentLearningItem.suggestions?.length"
+                   class="bg-white rounded-xl border border-green-200 p-4 text-center">
+                <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <CheckBadgeIcon class="w-5 h-5 text-green-600" />
+                </div>
+                <p class="text-sm text-green-700 font-medium">문법적으로 훌륭한 문장입니다!</p>
+              </div>
+
+              <!-- Practice Section (Azure Speech 발음 평가) -->
+              <div class="bg-white rounded-xl border border-violet-200 overflow-hidden">
+                <div class="px-3 py-2 bg-violet-50 border-b border-violet-200 flex items-center gap-2">
+                  <MicrophoneIcon class="w-4 h-4 text-violet-600" />
+                  <span class="text-sm font-bold text-violet-700">따라하기 연습</span>
+                  <span class="text-xs text-violet-500 ml-auto">Azure Speech</span>
+                </div>
+                <div class="p-4">
+                  <!-- Recording Controls -->
+                  <div class="flex flex-col items-center gap-3">
+                    <button
+                      @click="toggleRecording"
+                      :disabled="isConnecting || isAssessing"
+                      class="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      :class="isRecording
+                        ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white animate-pulse shadow-red-200'
+                        : isConnecting
+                          ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-yellow-200'
+                          : isAssessing
+                            ? 'bg-gradient-to-br from-blue-400 to-cyan-500 text-white animate-pulse shadow-blue-200'
+                            : 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white hover:from-violet-600 hover:to-indigo-700 shadow-violet-200'"
+                    >
+                      <MicrophoneIcon v-if="!isConnecting && !isAssessing" class="w-8 h-8" />
+                      <svg v-else class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </button>
+                    <div class="text-center">
+                      <p class="text-xs font-medium flex items-center justify-center gap-1" :class="isRecording ? 'text-red-600' : isConnecting ? 'text-yellow-600' : isAssessing ? 'text-blue-600' : 'text-violet-700'">
+                        <span v-if="isConnecting" class="w-3 h-3 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></span>
+                        <span v-else-if="isRecording" class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span v-else-if="isAssessing" class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+                        {{ isConnecting ? '연결 중...' : isRecording ? `녹음 중 (${recordingTime}초)` : isAssessing ? '발음 평가 중...' : '버튼을 클릭하여 녹음 시작' }}
+                      </p>
+                      <!-- Interim Text (실시간 인식 중) -->
+                      <p v-if="interimText && isRecording" class="text-xs text-gray-400 mt-1 italic">{{ interimText }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Recognized Text -->
+                  <div v-if="recognizedText && !isRecording" class="mt-4 p-3 bg-white rounded-lg border border-violet-100">
+                    <p class="text-xs text-gray-500 mb-1 text-center">인식된 문장</p>
+                    <p class="text-sm text-gray-900 font-medium text-center leading-relaxed">{{ recognizedText }}</p>
+                  </div>
+
+                  <!-- Assessment Error -->
+                  <div v-if="assessmentError" class="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                    <p class="text-xs text-red-600 text-center">{{ assessmentError }}</p>
+                  </div>
+
+                  <!-- Pronunciation Assessment Results -->
+                  <div v-if="assessmentResult && !isRecording" class="mt-4 space-y-4">
+                    <!-- Overall Score -->
+                    <div class="bg-white rounded-xl border border-violet-100 p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-bold text-gray-700">발음 평가 결과</span>
+                        <span
+                          class="px-3 py-1 rounded-full text-lg font-bold"
+                          :class="getScoreBgClass(assessmentResult.pronunciation_score)"
+                        >
+                          {{ Math.round(assessmentResult.pronunciation_score) }}점
+                        </span>
+                      </div>
+
+                      <!-- Score Breakdown -->
+                      <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                          <p class="text-xs text-gray-500 mb-1">정확도</p>
+                          <p class="text-sm font-bold" :class="getScoreBgClass(assessmentResult.accuracy_score)">
+                            {{ Math.round(assessmentResult.accuracy_score) }}
+                          </p>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                          <p class="text-xs text-gray-500 mb-1">유창성</p>
+                          <p class="text-sm font-bold" :class="getScoreBgClass(assessmentResult.fluency_score)">
+                            {{ Math.round(assessmentResult.fluency_score) }}
+                          </p>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 rounded-lg">
+                          <p class="text-xs text-gray-500 mb-1">운율</p>
+                          <p class="text-sm font-bold" :class="getScoreBgClass(assessmentResult.prosody_score)">
+                            {{ Math.round(assessmentResult.prosody_score) }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <!-- Feedback Message -->
+                      <div v-if="formattedFeedback" class="p-3 bg-violet-50 rounded-lg border border-violet-100">
+                        <p class="text-sm text-violet-800 font-medium mb-2">{{ formattedFeedback.overallFeedback }}</p>
+                        <ul v-if="formattedFeedback.detailedFeedback.length > 0" class="space-y-1">
+                          <li v-for="(feedback, idx) in formattedFeedback.detailedFeedback" :key="idx" class="text-xs text-violet-600">
+                            {{ feedback }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Word-by-Word Analysis -->
+                    <div v-if="assessmentResult.words && assessmentResult.words.length > 0" class="bg-white rounded-xl border border-violet-100 p-4">
+                      <p class="text-sm font-bold text-gray-700 mb-3">단어별 평가</p>
+                      <div class="flex flex-wrap gap-2">
+                        <div
+                          v-for="(word, idx) in assessmentResult.words"
+                          :key="idx"
+                          class="group relative"
+                        >
+                          <span
+                            class="inline-block px-2 py-1 rounded-md text-sm font-medium cursor-help transition-all"
+                            :class="getWordScoreClass(word.accuracy_score)"
+                          >
+                            {{ word.word }}
+                            <span class="text-xs opacity-70 ml-1">({{ Math.round(word.accuracy_score) }})</span>
+                          </span>
+
+                          <!-- Phoneme Tooltip -->
+                          <div v-if="word.phonemes && word.phonemes.length > 0"
+                               class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                            <div class="bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg whitespace-nowrap">
+                              <p class="font-bold mb-1">음소별 평가</p>
+                              <div class="flex flex-wrap gap-1">
+                                <span
+                                  v-for="(phoneme, pIdx) in word.phonemes"
+                                  :key="pIdx"
+                                  class="px-1.5 py-0.5 rounded"
+                                  :class="phoneme.accuracy_score >= 80 ? 'bg-green-600' : phoneme.accuracy_score >= 60 ? 'bg-yellow-600' : 'bg-red-600'"
+                                >
+                                  {{ phoneme.phoneme }} ({{ Math.round(phoneme.accuracy_score) }})
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <p class="text-xs text-gray-400 mt-2">* 단어 위에 마우스를 올리면 음소별 점수를 볼 수 있어요</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Completion Card (Inside Scroll Area) -->
+              <div v-if="currentLearningIndex >= learningItems.length - 1 && learningItems.length > 0"
+                   class="bg-white rounded-xl border border-emerald-200 p-6 text-center">
+                <div class="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckBadgeIcon class="w-7 h-7 text-emerald-600" />
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-1">모든 학습을 완료했습니다!</h4>
+                <p class="text-sm text-gray-600 mb-4">총 {{ learningItems.length }}개의 문장을 학습했어요.</p>
+                <div class="flex items-center justify-center gap-2">
+                  <button
+                    @click="currentLearningIndex = 0"
+                    class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 text-sm font-medium rounded-lg hover:bg-emerald-50 transition-all duration-200"
+                  >
+                    처음부터 다시
+                  </button>
+                  <button
+                    @click="exitLearningMode"
+                    class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-medium rounded-lg hover:from-emerald-600 hover:to-green-600 transition-all duration-200"
+                  >
+                    돌아가기
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Navigation -->
-            <div class="p-6 border-t border-gray-100 flex items-center justify-between">
+            <!-- Navigation (Fixed at Bottom) -->
+            <div class="flex-shrink-0 px-5 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
               <button
                 @click="prevLearningItem"
                 :disabled="currentLearningIndex === 0"
-                class="px-6 py-3 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2"
+                class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 shadow-sm"
               >
-                <ChevronLeftIcon class="w-5 h-5" />
+                <ChevronLeftIcon class="w-4 h-4" />
                 이전
               </button>
+
+              <!-- Page indicator dots -->
+              <div class="flex items-center gap-1">
+                <template v-for="(_, idx) in learningItems.slice(0, Math.min(learningItems.length, 7))" :key="idx">
+                  <div
+                    class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                    :class="idx === currentLearningIndex
+                      ? 'bg-gray-900 w-3'
+                      : idx < currentLearningIndex
+                        ? 'bg-gray-500'
+                        : 'bg-gray-300'"
+                  ></div>
+                </template>
+                <span v-if="learningItems.length > 7" class="text-xs text-gray-400 ml-1">
+                  +{{ learningItems.length - 7 }}
+                </span>
+              </div>
+
               <button
                 @click="nextLearningItem"
                 :disabled="currentLearningIndex >= learningItems.length - 1"
-                class="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2"
+                class="px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 shadow-sm"
               >
                 다음
-                <ChevronRightIcon class="w-5 h-5" />
+                <ChevronRightIcon class="w-4 h-4" />
               </button>
             </div>
-          </div>
-
-          <!-- Completion Card -->
-          <div v-if="currentLearningIndex >= learningItems.length - 1 && learningItems.length > 0" class="mt-6 bg-green-50 rounded-xl border border-green-200 p-6 text-center">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckBadgeIcon class="w-8 h-8 text-green-600" />
-            </div>
-            <h4 class="text-lg font-bold text-green-800 mb-2">모든 학습을 완료했습니다!</h4>
-            <p class="text-sm text-green-600 mb-4">계속 연습하여 실력을 향상시키세요.</p>
-            <button
-              @click="exitLearningMode"
-              class="px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition"
-            >
-              대화 기록으로 돌아가기
-            </button>
           </div>
         </div>
       </div>
@@ -659,7 +857,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import {
   MicrophoneIcon,
   SparklesIcon,
@@ -679,6 +877,9 @@ import {
   CheckIcon
 } from '@heroicons/vue/24/outline'
 import { speakingTutorService } from '@/services/speakingTutorService'
+
+// Composables
+import { useLearningVoice } from '@/composables/conversation/useLearningVoice'
 
 // Components
 import AudioUploadModal from '@/components/conversation/AudioUploadModal.vue'
@@ -716,9 +917,25 @@ const sessionsLoading = ref(false)
 // Learning Mode State
 const learningItems = ref([])
 const currentLearningIndex = ref(0)
-const isRecording = ref(false)
-const recordedText = ref('')
-const mediaRecorder = ref(null)
+const learningScrollContainer = ref(null)
+
+// Learning Voice (Azure Speech 기반 발음 평가)
+const {
+  isRecording,
+  isConnecting,
+  recordingTime,
+  interimText,
+  recognizedText,
+  isAssessing,
+  assessmentResult,
+  assessmentError,
+  formattedFeedback,
+  startRecording,
+  stopRecordingAndAssess,
+  resetState: resetVoiceState,
+  getScoreBgClass,
+  getWordScoreClass
+} = useLearningVoice()
 
 // Error State
 const errorMessage = ref(null)
@@ -965,7 +1182,7 @@ async function startLearningMode() {
 
     learningItems.value = result.learningItems || []
     currentLearningIndex.value = 0
-    recordedText.value = ''
+    resetVoiceState()
 
     if (learningItems.value.length === 0) {
       // If no learning items, check if we need feedback first
@@ -982,7 +1199,11 @@ async function startLearningMode() {
           utteranceId: u.id,
           originalText: u.text,
           improvedText: u.feedback.improvedSentence,
-          grammarPoints: u.feedback.grammarCorrections || [],
+          grammarCorrections: u.feedback.grammarCorrections || [],
+          suggestions: u.feedback.suggestions || [],
+          score: u.feedback.score || 0,
+          scoreBreakdown: u.feedback.scoreBreakdown || {},
+          speakerId: u.speakerId,
           practiceCount: 0
         }))
     }
@@ -1001,8 +1222,7 @@ async function startLearningMode() {
 
 function exitLearningMode() {
   currentView.value = 'results'
-  recordedText.value = ''
-  isRecording.value = false
+  resetVoiceState()
 }
 
 function goToLearningWithUtterance() {
@@ -1014,25 +1234,29 @@ function goToLearningWithUtterance() {
     utteranceId: utterance.id,
     originalText: utterance.text,
     improvedText: utterance.feedback.improvedSentence || utterance.text,
-    grammarPoints: utterance.feedback.grammarCorrections || [],
+    grammarCorrections: utterance.feedback.grammarCorrections || [],
+    suggestions: utterance.feedback.suggestions || [],
+    score: utterance.feedback.score || 0,
+    scoreBreakdown: utterance.feedback.scoreBreakdown || {},
+    speakerId: utterance.speakerId,
     practiceCount: 0
   }]
   currentLearningIndex.value = 0
-  recordedText.value = ''
+  resetVoiceState()
   currentView.value = 'learning'
 }
 
 function prevLearningItem() {
   if (currentLearningIndex.value > 0) {
     currentLearningIndex.value--
-    recordedText.value = ''
+    resetVoiceState()
   }
 }
 
 function nextLearningItem() {
   if (currentLearningIndex.value < learningItems.value.length - 1) {
     currentLearningIndex.value++
-    recordedText.value = ''
+    resetVoiceState()
   }
 }
 
@@ -1057,52 +1281,49 @@ function speakText(text) {
   }
 }
 
+/**
+ * 녹음 토글 (Azure Speech 기반 발음 평가)
+ *
+ * 녹음 시작 시: useRealtimeSTT로 실시간 음성 인식 시작
+ * 녹음 종료 시: Azure Speech로 발음 평가 수행
+ */
 async function toggleRecording() {
   if (isRecording.value) {
-    // Stop recording
-    if (mediaRecorder.value && mediaRecorder.value.state === 'recording') {
-      mediaRecorder.value.stop()
-    }
-    isRecording.value = false
-  } else {
-    // Start recording
+    // 녹음 중지 및 발음 평가 수행
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaRecorder.value = new MediaRecorder(stream)
+      const referenceText = currentLearningItem.value?.improvedText || ''
+      const language = currentSession.value?.language || 'en-US'
 
-      // Use Web Speech API for recognition
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        const recognition = new SpeechRecognition()
-        const lang = currentSession.value?.language || 'en-US'
-        recognition.lang = lang
-        recognition.interimResults = false
-        recognition.maxAlternatives = 1
+      await stopRecordingAndAssess(referenceText, language)
 
-        recognition.onresult = (event) => {
-          recordedText.value = event.results[0][0].transcript
-        }
-
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error:', event.error)
-          isRecording.value = false
-        }
-
-        recognition.onend = () => {
-          isRecording.value = false
-          stream.getTracks().forEach(track => track.stop())
-        }
-
-        recognition.start()
-        isRecording.value = true
-      } else {
-        errorMessage.value = '이 브라우저는 음성 인식을 지원하지 않습니다.'
-        stream.getTracks().forEach(track => track.stop())
-      }
+      // 발음 평가 완료 후 스크롤을 맨 아래로
+      await nextTick()
+      scrollLearningToBottom()
     } catch (error) {
-      console.error('Microphone access error:', error)
-      errorMessage.value = '마이크에 접근할 수 없습니다.'
+      console.error('Recording stop error:', error)
+      errorMessage.value = assessmentError.value || '발음 평가에 실패했습니다.'
     }
+  } else {
+    // 녹음 시작
+    try {
+      const language = currentSession.value?.language || 'en-US'
+      await startRecording(language)
+    } catch (error) {
+      console.error('Recording start error:', error)
+      errorMessage.value = '마이크에 접근할 수 없습니다. 권한을 확인해주세요.'
+    }
+  }
+}
+
+/**
+ * 학습 모드 스크롤을 맨 아래로 이동
+ */
+function scrollLearningToBottom() {
+  if (learningScrollContainer.value) {
+    learningScrollContainer.value.scrollTo({
+      top: learningScrollContainer.value.scrollHeight,
+      behavior: 'smooth'
+    })
   }
 }
 
