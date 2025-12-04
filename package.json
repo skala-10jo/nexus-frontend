@@ -17,6 +17,7 @@
     "@heroicons/vue": "^2.2.0",
     "@stomp/stompjs": "^7.2.1",
     "axios": "^1.7.9",
+    "gsap": "^3.13.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.47.0",
     "pinia": "^2.2.6",
     "sockjs-client": "^1.6.1",

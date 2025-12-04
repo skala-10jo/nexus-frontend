@@ -155,7 +155,7 @@ void main() {
   float glow = smoothstep(0.15, 0.0, d);
   
   // Base opacity + Glow (Much subtler as requested)
-  float alpha = 0.05 + glow * 0.25;
+  float alpha = 0.1 + glow * 0.25;
   
   gl_FragColor = vec4(color, alpha);
 }
@@ -203,9 +203,9 @@ const init = () => {
   // Groups
   earthGroup = new THREE.Group()
   // Positioned lower to be below text
-  earthGroup.position.y = -28 
+  earthGroup.position.y = -26.5
   // 45 degree tilt
-  earthGroup.rotation.z = 45 * Math.PI / 180
+  earthGroup.rotation.z = 0 * Math.PI / 180
   scene.add(earthGroup)
 
   nodesGroup = new THREE.Group()
@@ -307,31 +307,39 @@ const createStars = () => {
   // Increased to 20000
   for (let i = 0; i < 20000; i++) {
     vertices.push(
-      THREE.MathUtils.randFloatSpread(600), // Reduced spread for density
-      THREE.MathUtils.randFloatSpread(600),
+      THREE.MathUtils.randFloatSpread(100), // Reduced spread for density
+      THREE.MathUtils.randFloatSpread(150),
       THREE.MathUtils.randFloatSpread(600)
     )
   }
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
   
-  // Create round texture for stars
+  // Create glowing blur texture for stars
   const canvas = document.createElement('canvas')
-  canvas.width = 32
-  canvas.height = 32
+  canvas.width = 64
+  canvas.height = 64
   const ctx = canvas.getContext('2d')
-  ctx.beginPath()
-  ctx.arc(16, 16, 16, 0, 2 * Math.PI)
-  ctx.fillStyle = 'white'
-  ctx.fill()
+
+  // Radial gradient for soft glow effect
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
+  gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.8)')
+  gradient.addColorStop(0.3, 'rgba(200, 220, 255, 0.4)')
+  gradient.addColorStop(0.6, 'rgba(150, 180, 255, 0.15)')
+  gradient.addColorStop(1, 'rgba(100, 150, 255, 0)')
+
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 64, 64)
   const texture = new THREE.CanvasTexture(canvas)
 
-  const material = new THREE.PointsMaterial({ 
-    color: 0xffffff, 
-    size: 0.25, // Slightly larger
+  const material = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.8, // Larger for glow effect
     map: texture,
-    transparent: true, 
-    opacity: 0.9, // More visible
-    alphaTest: 0.1
+    transparent: true,
+    opacity: 0.9, // More transparent
+    blending: THREE.AdditiveBlending, // Additive for glow
+    depthWrite: false
   })
   starsMesh = new THREE.Points(geometry, material)
   scene.add(starsMesh)
