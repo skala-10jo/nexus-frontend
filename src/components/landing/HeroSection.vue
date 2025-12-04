@@ -34,6 +34,24 @@
       <!-- Background gradient -->
       <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800"></div>
 
+      <!-- DarkVeil Aurora Effect -->
+      <DarkVeil
+        class="absolute inset-0 z-0"
+        :hueShift="180"
+        :speed="0.3"
+        :noiseIntensity="0.02"
+        :warpAmount="0.3"
+      />
+
+      <!-- TextParticles with Globe -->
+      <TextParticles
+        class="absolute inset-0 z-10"
+        :particleCount="60"
+        :minFontSize="11"
+        :maxFontSize="16"
+        :mouseRadius="120"
+      />
+
       <!-- Content -->
       <div class="relative z-20 text-center px-6">
         <!-- Logo -->
@@ -75,6 +93,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import TextParticles from './TextParticles.vue'
+import DarkVeil from './DarkVeil.vue'
 
 const videoRef = ref(null)
 const videoEnded = ref(false)
