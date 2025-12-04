@@ -65,9 +65,16 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
 
   /**
    * 입력 모드 전환 (텍스트 ↔ 음성)
+   * 텍스트 모드로 전환 시 아바타 자동 비활성화
    */
   const toggleInputMode = () => {
-    inputMode.value = inputMode.value === 'text' ? 'voice' : 'text'
+    const newMode = inputMode.value === 'text' ? 'voice' : 'text'
+    inputMode.value = newMode
+
+    // 텍스트 모드로 전환 시 아바타 비활성화
+    if (newMode === 'text' && avatarEnabled.value) {
+      avatarEnabled.value = false
+    }
   }
 
   /**

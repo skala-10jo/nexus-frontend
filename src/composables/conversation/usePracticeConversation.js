@@ -71,6 +71,14 @@ export function usePracticeConversation({ scenario, onFeedbackReceived, getAudio
     return scenario.value?.requiredTerms || []
   })
 
+  /**
+   * 마지막 AI 메시지 (Avatar TTS용)
+   */
+  const lastAiMessage = computed(() => {
+    const aiMessages = messages.value.filter(m => m.speaker === 'ai')
+    return aiMessages.length > 0 ? aiMessages[aiMessages.length - 1].message : ''
+  })
+
   // ============================================
   // Actions
   // ============================================
@@ -354,6 +362,7 @@ export function usePracticeConversation({ scenario, onFeedbackReceived, getAudio
     // Computed
     userMessages,
     requiredTerms,
+    lastAiMessage,
 
     // Actions
     sendMessage,

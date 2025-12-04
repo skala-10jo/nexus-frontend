@@ -76,7 +76,7 @@ const props = defineProps({
   }
 })
 
-import { computed, isRef } from 'vue'
+import { computed, isRef, watch } from 'vue'
 
 const emit = defineEmits([
   'update:userInput',
@@ -84,8 +84,32 @@ const emit = defineEmits([
   'toggleAvatar',
   'startRecording',
   'stopRecording',
-  'sendMessage'
+  'sendMessage',
+  'inputAreaResized'
 ])
+
+// 입력 모드 변경 시 부모에게 resize 알림 (voice 모드 진입 시 Voice Input Status 영역 표시)
+watch(() => props.inputMode, (newVal) => {
+  if (newVal === 'voice') {
+    // voice 모드 진입 시 입력 영역이 확장되므로 스크롤 조정 필요
+    emit('inputAreaResized')
+  }
+})
+
+// 녹음 상태 변경 시 부모에게 resize 알림 (스크롤 조정용)
+watch(() => props.isRecording, (newVal) => {
+  if (newVal) {
+    // 녹음 시작 시 입력 영역이 확장되므로 스크롤 조정 필요
+    emit('inputAreaResized')
+  }
+})
+
+// finalTexts 변경 시에도 스크롤 조정 (텍스트가 늘어날 때)
+watch(() => props.finalTexts.length, () => {
+  if (props.isRecording) {
+    emit('inputAreaResized')
+  }
+})
 
 // userInput이 ref인 경우와 string인 경우 모두 처리
 const userInputValue = computed(() => {
@@ -100,30 +124,30 @@ const userInputValue = computed(() => {
   <div class="p-4 pb-20 md:pb-6 bg-white border-t border-gray-200 z-20 shrink-0">
     <div class="max-w-4xl mx-auto flex flex-col gap-4">
 
-      <!-- Voice Input Status (Chat Mode only) -->
+      <!-- Voice Input Status (음성 모드일 때 항상 표시) -->
       <div
-        v-if="inputMode === 'voice' && !avatarEnabled"
-        class="bg-gray-50 rounded-xl border border-gray-200 p-4 min-h-[100px] flex flex-col justify-center items-center relative overflow-hidden"
+        v-if="inputMode === 'voice'"
+        class="bg-gray-50 rounded-xl border border-gray-200 p-4 min-h-[82px] flex flex-col justify-center items-center relative overflow-hidden"
       >
         <!-- Connecting State -->
-        <div v-if="sttIsConnecting" class="flex flex-col items-center gap-3 z-10">
-          <div class="flex items-center gap-2 text-blue-500 font-bold">
-            <ArrowPathIcon class="w-5 h-5 animate-spin" />
-            Connecting to Speech Service...
+        <div v-if="sttIsConnecting" class="flex flex-col items-center gap-1 z-10 w-full">
+          <div class="flex items-center gap-2 text-blue-500 font-bold text-sm">
+            <ArrowPathIcon class="w-4 h-4 animate-spin" />
+            Connecting...
           </div>
-          <p class="text-gray-500 text-sm">마이크 권한을 허용해주세요</p>
+          <p class="text-gray-400 text-sm truncate">마이크 권한을 허용해주세요</p>
         </div>
 
         <!-- Recording State -->
-        <div v-else-if="isRecording" class="flex flex-col items-center gap-3 z-10 w-full">
-          <div class="flex items-center gap-2 text-red-500 font-bold animate-pulse">
-            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+        <div v-else-if="isRecording" class="flex flex-col items-center gap-1 z-10 w-full">
+          <div class="flex items-center gap-2 text-red-500 font-bold animate-pulse text-sm">
+            <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
             Recording... {{ recordingTime }}s
           </div>
-          <div class="text-center space-y-1 max-w-full px-4">
-            <p v-for="(text, idx) in finalTexts" :key="idx" class="text-gray-900 font-medium break-words">{{ text }}</p>
-            <p v-if="interimText" class="text-blue-600 italic animate-pulse break-words">{{ interimText }}</p>
-            <p v-else class="text-gray-400 italic">Listening...</p>
+          <div class="text-center max-w-full px-4 text-sm truncate">
+            <p v-if="finalTexts.length" class="text-gray-900 font-medium truncate">{{ finalTexts[finalTexts.length - 1] }}</p>
+            <p v-if="interimText" class="text-blue-600 italic animate-pulse truncate">{{ interimText }}</p>
+            <p v-else-if="!finalTexts.length" class="text-gray-400 italic">Listening...</p>
           </div>
         </div>
 
