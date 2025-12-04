@@ -75,12 +75,21 @@
         />
       </main>
 
+      <!-- Mobile Backdrop -->
+      <div 
+        v-if="showMobileFeedback" 
+        class="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"
+        @click="showMobileFeedback = false"
+      ></div>
+
       <!-- Feedback Sidebar -->
       <FeedbackSidebar
         :user-messages="conversation.userMessages.value"
         :selected-message-index="feedback.selectedMessageIndex.value"
         :selected-message-feedback="feedback.selectedMessageFeedback.value"
+        :is-mobile-open="showMobileFeedback"
         @select-message="feedback.selectMessage"
+        @close="showMobileFeedback = false"
       />
     </div>
   </div>
@@ -116,6 +125,9 @@ import { usePracticeConversation } from '@/composables/conversation/usePracticeC
 import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
 import { usePracticeTTS } from '@/composables/conversation/usePracticeTTS'
+
+// Services
+import conversationService from '@/services/conversationService'
 
 // ============================================
 // Composables Initialization
@@ -208,6 +220,9 @@ const handleSendMessage = async () => {
   }
 }
 
+// Mobile Feedback State
+const showMobileFeedback = ref(false)
+
 /**
  * 메시지 클릭 처리
  */
@@ -215,6 +230,7 @@ const handleMessageClick = (message) => {
   const index = conversation.userMessages.value.findIndex(m => m === message)
   if (index !== -1) {
     feedback.selectMessage(index)
+    showMobileFeedback.value = true // 모바일에서 피드백 창 열기
   }
 }
 
@@ -238,10 +254,27 @@ const handleStopRecording = async () => {
 
 /**
  * 대화 초기화 처리
+ * 백엔드 세션을 삭제하고 새 대화를 시작하여 AI 초기 발화를 받아옵니다.
  */
 const handleReset = async () => {
-  await conversation.resetConversation()
-  feedback.resetFeedbacks()
+  if (!confirm('Reset conversation?')) return
+
+  try {
+    // 1. 백엔드 세션 삭제 (필수! - 이것이 없으면 start가 initialMessage를 반환하지 않음)
+    await conversationService.reset(scenarioId)
+
+    // 2. 프론트엔드 상태 초기화
+    conversation.resetConversation()
+    feedback.resetFeedbacks()
+
+    // 3. 새 대화 시작하여 AI 초기 발화 받아오기
+    const response = await conversationService.start(scenarioId)
+    conversation.addInitialMessage(response.initialMessage)
+    await nextTick()
+    scrollToBottom()
+  } catch (err) {
+    console.error('Failed to reset conversation:', err)
+  }
 }
 
 /**

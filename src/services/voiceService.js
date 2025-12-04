@@ -49,8 +49,8 @@ export async function speechToText(audioFile, language = 'ko-KR') {
 export function createMultiLangSTTStream(language = 'en-US', callbacks = {}) {
   // WebSocket URL 생성 (realtime 엔드포인트 사용)
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsHost = import.meta.env.VITE_API_URL
-    ? new URL(import.meta.env.VITE_API_URL).host
+  const wsHost = import.meta.env.VITE_PYTHON_API_URL
+    ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
     : 'localhost:8000'
   const wsUrl = `${wsProtocol}//${wsHost}/api/ai/voice/realtime`
 

@@ -121,7 +121,7 @@ const userInputValue = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-white border-t border-gray-200 z-20 shrink-0">
+  <div class="p-4 pb-20 md:pb-6 bg-white border-t border-gray-200 z-20 shrink-0">
     <div class="max-w-4xl mx-auto flex flex-col gap-4">
 
       <!-- Voice Input Status (음성 모드일 때 항상 표시) -->
@@ -215,7 +215,7 @@ const userInputValue = computed(() => {
             :value="userInputValue"
             @input="emit('update:userInput', $event.target.value)"
             @keydown.enter.prevent="emit('sendMessage')"
-            placeholder="메시지를 입력하세요... (Enter로 전송)"
+            placeholder="메시지를 입력하세요"
             class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none text-gray-900 placeholder-gray-400 transition-all"
             rows="1"
             style="min-height: 50px; max-height: 150px;"

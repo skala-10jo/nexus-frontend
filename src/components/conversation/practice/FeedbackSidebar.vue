@@ -30,22 +30,42 @@ defineProps({
   selectedMessageFeedback: {
     type: Object,
     default: null
+  },
+  /** 모바일에서 열림 상태 */
+  isMobileOpen: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits([
-  'selectMessage'
+  'selectMessage',
+  'close'
 ])
 </script>
 
 <template>
-  <aside class="w-[45%] min-w-[450px] max-w-[1400px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
+  <aside class="bg-white border-l border-gray-200 flex flex-col shadow-xl z-50 transition-all duration-300
+           md:w-[45%] md:min-w-[450px] md:max-w-[1400px] md:static md:h-auto md:border-l
+           fixed inset-x-0 bottom-0 h-[85vh] rounded-t-2xl md:rounded-none w-full" :class="[
+            isMobileOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0'
+          ]">
     <!-- Header -->
-    <div class="p-5 border-b border-gray-100 bg-white">
-      <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-        <ChartBarIcon class="w-5 h-5 text-blue-700" />
-        대화별 피드백
-      </h2>
+    <div class="p-5 border-b border-gray-100 bg-white rounded-t-2xl md:rounded-none">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <ChartBarIcon class="w-5 h-5 text-blue-700" />
+          대화별 피드백
+        </h2>
+        <!-- Mobile Close Button -->
+        <button @click="emit('close')"
+          class="md:hidden p-2 -mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Content -->
@@ -62,21 +82,17 @@ const emit = defineEmits([
         <div v-else class="space-y-6">
           <!-- Message Navigator -->
           <div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 border border-gray-100">
-            <button
-              @click="emit('selectMessage', Math.max(0, selectedMessageIndex - 1))"
+            <button @click="emit('selectMessage', Math.max(0, selectedMessageIndex - 1))"
               :disabled="selectedMessageIndex <= 0"
-              class="p-2 hover:bg-white rounded-lg disabled:opacity-30 transition-colors"
-            >
+              class="p-2 hover:bg-white rounded-lg disabled:opacity-30 transition-colors">
               <ChevronLeftIcon class="w-5 h-5 text-gray-600" />
             </button>
             <span class="text-sm font-bold text-gray-700">
               메시지 {{ selectedMessageIndex + 1 }} / {{ userMessages.length }}
             </span>
-            <button
-              @click="emit('selectMessage', Math.min(userMessages.length - 1, selectedMessageIndex + 1))"
+            <button @click="emit('selectMessage', Math.min(userMessages.length - 1, selectedMessageIndex + 1))"
               :disabled="selectedMessageIndex >= userMessages.length - 1"
-              class="p-2 hover:bg-white rounded-lg disabled:opacity-30 transition-colors"
-            >
+              class="p-2 hover:bg-white rounded-lg disabled:opacity-30 transition-colors">
               <ChevronRightIcon class="w-5 h-5 text-gray-600" />
             </button>
           </div>
@@ -103,7 +119,8 @@ const emit = defineEmits([
                 </div>
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-gray-500 font-medium">어휘</span>
-                  <span class="font-bold text-gray-900">{{ selectedMessageFeedback.score_breakdown?.vocabulary }}/10</span>
+                  <span class="font-bold text-gray-900">{{ selectedMessageFeedback.score_breakdown?.vocabulary
+                    }}/10</span>
                 </div>
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-gray-500 font-medium">유창성</span>
@@ -122,11 +139,8 @@ const emit = defineEmits([
                 <div v-if="selectedMessageFeedback.terminology_usage.used?.length" class="space-y-2">
                   <p class="text-xs font-bold text-emerald-600 uppercase">사용한 용어</p>
                   <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(term, idx) in selectedMessageFeedback.terminology_usage.used"
-                      :key="idx"
-                      class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium"
-                    >
+                    <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.used" :key="idx"
+                      class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium">
                       {{ term }}
                     </span>
                   </div>
@@ -134,11 +148,8 @@ const emit = defineEmits([
                 <div v-if="selectedMessageFeedback.terminology_usage.missed?.length" class="space-y-2">
                   <p class="text-xs font-bold text-gray-500 uppercase">미사용 용어</p>
                   <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(term, idx) in selectedMessageFeedback.terminology_usage.missed"
-                      :key="idx"
-                      class="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium"
-                    >
+                    <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.missed" :key="idx"
+                      class="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
                       {{ term }}
                     </span>
                   </div>
@@ -152,17 +163,16 @@ const emit = defineEmits([
             <!-- Grammar Corrections -->
             <div class="space-y-3">
               <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <ExclamationCircleIcon v-if="selectedMessageFeedback.grammar_corrections?.length" class="w-4 h-4 text-amber-500" />
+                <ExclamationCircleIcon v-if="selectedMessageFeedback.grammar_corrections?.length"
+                  class="w-4 h-4 text-amber-500" />
                 <CheckCircleIcon v-else class="w-4 h-4 text-emerald-500" />
                 문법 교정
               </h3>
               <!-- 문법 교정이 있는 경우 -->
-              <div v-if="selectedMessageFeedback.grammar_corrections?.length" class="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
-                <div
-                  v-for="(correction, idx) in selectedMessageFeedback.grammar_corrections"
-                  :key="idx"
-                  class="flex gap-2 text-sm text-gray-700"
-                >
+              <div v-if="selectedMessageFeedback.grammar_corrections?.length"
+                class="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
+                <div v-for="(correction, idx) in selectedMessageFeedback.grammar_corrections" :key="idx"
+                  class="flex gap-2 text-sm text-gray-700">
                   <span class="text-amber-500">•</span>
                   <span>{{ correction }}</span>
                 </div>
@@ -181,11 +191,8 @@ const emit = defineEmits([
                 개선 제안
               </h3>
               <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
-                <div
-                  v-for="(suggestion, idx) in selectedMessageFeedback.suggestions"
-                  :key="idx"
-                  class="flex gap-2 text-sm text-gray-700"
-                >
+                <div v-for="(suggestion, idx) in selectedMessageFeedback.suggestions" :key="idx"
+                  class="flex gap-2 text-sm text-gray-700">
                   <span class="text-blue-500">•</span>
                   <span>{{ suggestion }}</span>
                 </div>
@@ -211,32 +218,30 @@ const emit = defineEmits([
                   <div class="space-y-1 text-xs">
                     <div class="flex justify-between">
                       <span class="text-gray-500">정확도</span>
-                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.accuracy_score?.toFixed(0) }}</span>
+                      <span class="font-medium">{{
+                        selectedMessageFeedback.pronunciation_details.accuracy_score?.toFixed(0) }}</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-gray-500">유창성</span>
-                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.fluency_score?.toFixed(0) }}</span>
+                      <span class="font-medium">{{
+                        selectedMessageFeedback.pronunciation_details.fluency_score?.toFixed(0) }}</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-gray-500">운율</span>
-                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.prosody_score?.toFixed(0) }}</span>
+                      <span class="font-medium">{{
+                        selectedMessageFeedback.pronunciation_details.prosody_score?.toFixed(0) }}</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Word-level scores -->
                 <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="(word, idx) in selectedMessageFeedback.pronunciation_details.words"
-                    :key="idx"
-                    class="px-2 py-1 rounded-lg text-sm font-medium border transition-colors cursor-help"
-                    :class="[
+                  <span v-for="(word, idx) in selectedMessageFeedback.pronunciation_details.words" :key="idx"
+                    class="px-2 py-1 rounded-lg text-sm font-medium border transition-colors cursor-help" :class="[
                       word.accuracy_score >= 90 ? 'bg-green-50 text-green-700 border-green-200' :
-                      word.accuracy_score >= 70 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                      'bg-red-50 text-red-700 border-red-200'
-                    ]"
-                    :title="`Score: ${word.accuracy_score?.toFixed(0)}`"
-                  >
+                        word.accuracy_score >= 70 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                          'bg-red-50 text-red-700 border-red-200'
+                    ]" :title="`Score: ${word.accuracy_score?.toFixed(0)}`">
                     {{ word.word }}
                   </span>
                 </div>
@@ -250,11 +255,8 @@ const emit = defineEmits([
                 발음 피드백
               </h3>
               <div class="bg-purple-50 border border-purple-100 rounded-xl p-4 space-y-2">
-                <div
-                  v-for="(tip, idx) in selectedMessageFeedback.pronunciation_feedback"
-                  :key="idx"
-                  class="flex gap-2 text-sm text-gray-700"
-                >
+                <div v-for="(tip, idx) in selectedMessageFeedback.pronunciation_feedback" :key="idx"
+                  class="flex gap-2 text-sm text-gray-700">
                   <span class="text-purple-500">•</span>
                   <span>{{ tip }}</span>
                 </div>
@@ -272,21 +274,32 @@ const emit = defineEmits([
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e5e7eb;
   border-radius: 3px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out forwards;
 }

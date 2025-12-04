@@ -23,25 +23,20 @@ const emit = defineEmits(['reset', 'end'])
 </script>
 
 <template>
-  <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-4">
-      <div>
-        <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-          {{ scenario?.title || '회화 연습' }}
-          <span
-            v-if="scenario?.category"
-            class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100"
-          >
-            {{ scenario.category }}
-          </span>
+  <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-4 md:px-6 py-4 flex items-center justify-between shrink-0">
+    <div class="flex items-center gap-4 min-w-0 flex-1 mr-2">
+      <div class="min-w-0">
+        <h1 class="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 truncate">
+          <span class="truncate">{{ scenario?.title || '회화 연습' }}</span>
+
         </h1>
-        <p class="text-sm text-gray-500 mt-0.5">
+        <p class="text-sm text-gray-500 mt-0.5 hidden md:block truncate">
           {{ scenario?.description }}
         </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 md:gap-3 shrink-0">
       <!-- Role Info -->
       <div
         v-if="scenario"
@@ -71,7 +66,7 @@ const emit = defineEmits(['reset', 'end'])
       <!-- End Button -->
       <button
         @click="emit('end')"
-        class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+        class="px-3 py-1.5 md:px-4 md:py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
       >
         종료
       </button>

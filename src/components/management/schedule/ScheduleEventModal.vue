@@ -233,13 +233,6 @@ const handleClose = () => {
             삭제
           </button>
           <button
-            type="button"
-            class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-            @click="handleClose"
-          >
-            취소
-          </button>
-          <button
             type="submit"
             :disabled="saving"
             class="px-8 py-3 text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
