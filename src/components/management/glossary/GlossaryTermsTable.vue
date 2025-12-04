@@ -111,15 +111,15 @@ const emit = defineEmits([
               class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
           </th>
-          <th v-if="visibleLanguages.includes('korean')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-36">한국어</th>
-          <th v-if="visibleLanguages.includes('english')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">영어</th>
-          <th v-if="visibleLanguages.includes('vietnamese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">베트남어</th>
-          <th v-if="visibleLanguages.includes('japanese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">일본어</th>
-          <th v-if="visibleLanguages.includes('chinese')" class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-40">중국어</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">약어</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">상태</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-20">검증</th>
-          <th class="px-4 py-2.5 text-left text-[10px] font-bold text-gray-400 uppercase w-24">작업</th>
+          <th v-if="visibleLanguages.includes('korean')" class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-36">한국어</th>
+          <th v-if="visibleLanguages.includes('english')" class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-40">영어</th>
+          <th v-if="visibleLanguages.includes('vietnamese')" class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-40">베트남어</th>
+          <th v-if="visibleLanguages.includes('japanese')" class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-40">일본어</th>
+          <th v-if="visibleLanguages.includes('chinese')" class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-40">중국어</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-20">약어</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-20">상태</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-20">검증</th>
+          <th class="px-4 py-2.5 text-left text-[11px] font-bold text-gray-400 uppercase w-24">작업</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">
@@ -140,29 +140,29 @@ const emit = defineEmits([
           <td v-if="visibleLanguages.includes('korean')" class="px-4 py-2">
             <button
               @click="emit('click-term', term)"
-              class="text-xs font-bold text-gray-900 hover:text-blue-600 text-left"
+              class="text-sm font-bold text-gray-900 hover:text-blue-600 text-left"
             >
               {{ term.koreanTerm }}
             </button>
           </td>
           <td v-if="visibleLanguages.includes('english')" class="px-4 py-2">
-            <span class="text-xs text-gray-600">{{ term.englishTerm || '-' }}</span>
+            <span class="text-sm text-gray-600">{{ term.englishTerm || '-' }}</span>
           </td>
           <td v-if="visibleLanguages.includes('vietnamese')" class="px-4 py-2">
-            <span class="text-xs text-gray-600">{{ term.vietnameseTerm || '-' }}</span>
+            <span class="text-sm text-gray-600">{{ term.vietnameseTerm || '-' }}</span>
           </td>
           <td v-if="visibleLanguages.includes('japanese')" class="px-4 py-2">
-            <span class="text-xs text-gray-600">{{ term.japaneseTerm || '-' }}</span>
+            <span class="text-sm text-gray-600">{{ term.japaneseTerm || '-' }}</span>
           </td>
           <td v-if="visibleLanguages.includes('chinese')" class="px-4 py-2">
-            <span class="text-xs text-gray-600">{{ term.chineseTerm || '-' }}</span>
+            <span class="text-sm text-gray-600">{{ term.chineseTerm || '-' }}</span>
           </td>
           <td class="px-4 py-2">
-            <span class="text-xs text-gray-500">{{ term.abbreviation || '-' }}</span>
+            <span class="text-sm text-gray-500">{{ term.abbreviation || '-' }}</span>
           </td>
           <td class="px-4 py-2">
             <span
-              class="px-1.5 py-0.5 text-[9px] font-bold rounded uppercase"
+              class="px-1.5 py-0.5 text-[10px] font-bold rounded uppercase"
               :class="getStatusBadgeClass(term.status)"
             >
               {{ getStatusLabel(term.status) }}
@@ -171,11 +171,11 @@ const emit = defineEmits([
           <td class="px-4 py-2">
             <div v-if="term.isVerified" class="flex items-center gap-1 text-green-600">
               <CheckCircleIcon class="w-3.5 h-3.5" />
-              <span class="text-[10px] font-bold">검증</span>
+              <span class="text-[11px] font-bold">검증</span>
             </div>
             <div v-else class="flex items-center gap-1 text-gray-400">
               <div class="w-3.5 h-3.5 rounded-full border-2 border-gray-300"></div>
-              <span class="text-[10px] font-bold">미검증</span>
+              <span class="text-[11px] font-bold">미검증</span>
             </div>
           </td>
           <td class="px-4 py-2">

@@ -124,7 +124,7 @@ const emit = defineEmits([
     >
       <div class="flex items-center gap-2">
         <DocumentTextIcon class="w-4 h-4 text-blue-500" />
-        <h2 class="text-sm font-bold text-gray-900">문서 관리</h2>
+        <h2 class="text-base font-bold text-gray-900">문서 관리</h2>
         <span class="text-xs text-gray-400 font-medium">({{ documents.length }})</span>
       </div>
       <div class="flex items-center gap-3">
@@ -190,11 +190,11 @@ const emit = defineEmits([
                       class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                   </th>
-                  <th class="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase" style="width: 35%">파일명</th>
-                  <th class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase" style="width: 15%">크기</th>
-                  <th class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase" style="width: 15%">날짜</th>
-                  <th class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase" style="width: 15%">상태</th>
-                  <th class="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase" style="width: 20%">작업</th>
+                  <th class="px-4 py-2 text-[11px] font-bold text-gray-400 uppercase" style="width: 35%">파일명</th>
+                  <th class="px-3 py-2 text-[11px] font-bold text-gray-400 uppercase" style="width: 15%">크기</th>
+                  <th class="px-3 py-2 text-[11px] font-bold text-gray-400 uppercase" style="width: 15%">날짜</th>
+                  <th class="px-3 py-2 text-[11px] font-bold text-gray-400 uppercase" style="width: 15%">상태</th>
+                  <th class="px-3 py-2 text-[11px] font-bold text-gray-400 uppercase" style="width: 20%">작업</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50">
@@ -215,20 +215,20 @@ const emit = defineEmits([
                   <td class="px-4 py-1.5">
                     <div class="flex items-center gap-2 min-w-0">
                       <span class="text-base flex-shrink-0">{{ getFileIcon(doc.fileType) }}</span>
-                      <span class="text-xs font-medium text-gray-900 truncate">
+                      <span class="text-sm font-medium text-gray-900 truncate">
                         {{ doc.originalFilename }}
                       </span>
                     </div>
                   </td>
                   <td class="px-3 py-1.5">
-                    <span class="text-xs text-gray-500">{{ formatFileSize(doc.fileSize) }}</span>
+                    <span class="text-sm text-gray-500">{{ formatFileSize(doc.fileSize) }}</span>
                   </td>
                   <td class="px-3 py-1.5">
-                    <span class="text-xs text-gray-500">{{ formatDate(doc.uploadDate) }}</span>
+                    <span class="text-sm text-gray-500">{{ formatDate(doc.uploadDate) }}</span>
                   </td>
                   <td class="px-3 py-1.5">
                     <span
-                      class="px-1.5 py-0.5 text-[9px] font-bold rounded uppercase"
+                      class="px-1.5 py-0.5 text-[10px] font-bold rounded uppercase"
                       :class="getDocStatusClass(doc.status)"
                     >
                       {{ getDocStatusText(doc.status) }}
