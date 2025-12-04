@@ -20,11 +20,11 @@ const emit = defineEmits([
 </script>
 
 <template>
-  <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-4 border-b border-gray-100">
+  <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">프로젝트•일정 관리</h1>
-        <p class="text-sm text-gray-500 mt-1 font-medium">
+        <h1 class="text-2xl font-bold text-gray-900">프로젝트 · 일정 관리</h1>
+        <p class="text-sm text-gray-500 font-medium mt-0.5">
           프로젝트 타임라인을 관리하고 추적하세요
         </p>
       </div>

@@ -60,7 +60,8 @@ const updateField = (field, value) => {
 
         <!-- Content -->
         <div class="p-6 overflow-y-auto custom-scrollbar">
-          <form @submit.prevent="emit('save')" class="space-y-4">
+          <form @submit.prevent="emit('save')" class="space-y-6">
+            <!-- Row 1: Korean, English -->
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-1.5">
                 <label class="text-[10px] font-bold text-gray-500 uppercase">한국어 용어 <span class="text-red-500">*</span></label>
@@ -86,6 +87,7 @@ const updateField = (field, value) => {
               </div>
             </div>
 
+            <!-- Row 2: Vietnamese, Japanese, Chinese -->
             <div class="grid grid-cols-3 gap-4">
               <div class="space-y-1.5">
                 <label class="text-[10px] font-bold text-gray-500 uppercase">베트남어</label>
@@ -96,6 +98,28 @@ const updateField = (field, value) => {
                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-gray-500 uppercase">일본어</label>
+                <input
+                  :value="form.japaneseTerm"
+                  @input="$emit('update:form', { ...form, japaneseTerm: $event.target.value })"
+                  type="text"
+                  class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-gray-500 uppercase">중국어</label>
+                <input
+                  :value="form.chineseTerm"
+                  @input="$emit('update:form', { ...form, chineseTerm: $event.target.value })"
+                  type="text"
+                  class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Row 3: Abbreviation, Domain -->
+            <div class="grid grid-cols-2 gap-4">
               <div class="space-y-1.5">
                 <label class="text-[10px] font-bold text-gray-500 uppercase">약어</label>
                 <input
@@ -116,22 +140,35 @@ const updateField = (field, value) => {
               </div>
             </div>
 
+            <!-- Definition -->
             <div class="space-y-1.5">
               <label class="text-[10px] font-bold text-gray-500 uppercase">정의</label>
               <textarea
                 :value="form.definition"
                 @input="$emit('update:form', { ...form, definition: $event.target.value })"
-                rows="2"
+                rows="3"
                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                 placeholder="용어의 정의..."
               ></textarea>
             </div>
 
+            <!-- Context -->
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-gray-500 uppercase">문맥 / 용례</label>
+              <label class="text-[10px] font-bold text-gray-500 uppercase">문맥</label>
               <textarea
                 :value="form.context"
                 @input="$emit('update:form', { ...form, context: $event.target.value })"
+                rows="2"
+                class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+              ></textarea>
+            </div>
+
+            <!-- Example Sentence -->
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-gray-500 uppercase">예문</label>
+              <textarea
+                :value="form.exampleSentence"
+                @input="$emit('update:form', { ...form, exampleSentence: $event.target.value })"
                 rows="2"
                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
               ></textarea>

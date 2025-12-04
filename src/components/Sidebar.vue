@@ -59,10 +59,8 @@
             :class="{ 'rotate-180': openMenus.has('management') }" />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트•일정</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서•전문용어사전</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
         </div>
       </div>
 
@@ -145,17 +143,40 @@
 
     </nav>
 
-    <!-- User Profile (Desktop) -->
+    <!-- User Profile & Logout -->
     <div class="mt-auto pt-4 border-t border-gray-200/50" :class="isCollapsed ? 'px-3 pb-4' : 'px-6 pb-6'">
-      <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
-        :class="isCollapsed ? 'justify-center' : ''" :title="isCollapsed ? user?.fullName || 'User' : ''">
-        <img :src="`https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=0D8ABC&color=fff`"
-          class="w-10 h-10 rounded-full object-cover flex-shrink-0" alt="" />
-        <div v-if="!isCollapsed">
+      <div
+        class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
+        :class="isCollapsed ? 'justify-center' : ''"
+        :title="isCollapsed ? user?.fullName || 'User' : ''"
+      >
+        <img
+          :src="`https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=0D8ABC&color=fff`"
+          class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          alt=""
+        />
+        <div v-if="!isCollapsed" class="flex-1">
           <div class="text-sm font-bold text-gray-900">{{ user?.fullName || 'User' }}</div>
           <div class="text-xs text-gray-500">Product Designer</div>
         </div>
+        <button
+          v-if="!isCollapsed"
+          @click="handleLogout"
+          class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          title="로그아웃"
+        >
+          <ArrowRightOnRectangleIcon class="w-5 h-5" />
+        </button>
       </div>
+      <!-- Collapsed logout button -->
+      <button
+        v-if="isCollapsed"
+        @click="handleLogout"
+        class="w-full mt-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex justify-center"
+        title="로그아웃"
+      >
+        <ArrowRightOnRectangleIcon class="w-5 h-5" />
+      </button>
     </div>
   </aside>
 
@@ -290,7 +311,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {
   HomeIcon,
@@ -298,13 +319,21 @@ import {
   ChatBubbleLeftRightIcon,
   GlobeAltIcon,
   EnvelopeIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline';
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 
 const user = computed(() => authStore.user);
+
+// Logout handler
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/');
+};
 
 // Sidebar collapse state
 const isCollapsed = ref(false);
