@@ -12,7 +12,9 @@ import {
   LightBulbIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   XMarkIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  SpeakerWaveIcon,
+  StopIcon
 } from '@heroicons/vue/24/outline'
 import AvatarPanel from './AvatarPanel.vue'
 import voiceAvatarService from '@/services/voiceAvatarService'
@@ -170,13 +172,25 @@ const props = defineProps({
   lastAiMessage: {
     type: String,
     default: ''
+  },
+  /** TTS 재생 중 여부 */
+  isSpeaking: {
+    type: Boolean,
+    default: false
+  },
+  /** 현재 재생 중인 메시지 인덱스 */
+  speakingMessageIndex: {
+    type: Number,
+    default: -1
   }
 })
 
 const emit = defineEmits([
   'toggleTranslation',
   'toggleHint',
-  'messageClick'
+  'messageClick',
+  'playMessage',
+  'stopMessage'
 ])
 
 /**
@@ -397,11 +411,11 @@ watch(
   }
 )
 
-// 대화창 오버레이 열릴 때 스크롤 맨 아래로
+// 대화창 오버레이 열릴 때 스크롤 맨 아래로 (애니메이션 없이 즉시)
 watch(showChatOverlay, async (newVal) => {
   if (newVal) {
     await nextTick()
-    scrollToBottom()
+    scrollToBottom(false)
   }
 })
 
@@ -556,10 +570,10 @@ const onResizeEnd = () => {
       </div>
     </div>
 
-    <!-- Chat Overlay Toggle Button (Bottom Left) -->
+    <!-- Chat Overlay Toggle Button (Bottom Right) -->
     <button
       @click="showChatOverlay = !showChatOverlay"
-      class="absolute bottom-4 left-4 p-3 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-black/80 transition-all z-30"
+      class="absolute bottom-4 right-4 p-3 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-black/80 transition-all z-30"
       :class="showChatOverlay ? 'ring-2 ring-blue-400' : ''"
       title="대화창 보기"
     >
@@ -625,6 +639,19 @@ const onResizeEnd = () => {
 
         <!-- AI Message Actions -->
         <div v-if="message.speaker === 'ai'" class="absolute -bottom-9 left-0 flex items-center gap-2 z-10">
+          <!-- Play/Stop Button -->
+          <button
+            @click.stop="isSpeaking && speakingMessageIndex === index ? emit('stopMessage') : emit('playMessage', message.message, index)"
+            class="text-xs font-bold flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors shadow-sm border"
+            :class="isSpeaking && speakingMessageIndex === index
+              ? 'text-red-600 hover:text-red-800 bg-red-50 border-red-100'
+              : 'text-green-600 hover:text-green-800 bg-green-50 border-green-100'"
+          >
+            <StopIcon v-if="isSpeaking && speakingMessageIndex === index" class="w-3.5 h-3.5" />
+            <SpeakerWaveIcon v-else class="w-3.5 h-3.5" />
+            {{ isSpeaking && speakingMessageIndex === index ? '중지' : '재생' }}
+          </button>
+
           <!-- Translation Button -->
           <button
             @click.stop="emit('toggleTranslation', index)"
@@ -777,6 +804,18 @@ const onResizeEnd = () => {
 
         <!-- AI Message Actions -->
         <div v-if="message.speaker === 'ai'" class="absolute -bottom-9 left-0 flex items-center gap-2 z-10">
+          <!-- Play/Stop Button -->
+          <button
+            @click.stop="isSpeaking && speakingMessageIndex === index ? emit('stopMessage') : emit('playMessage', message.message, index)"
+            class="text-xs font-bold flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors shadow-sm border"
+            :class="isSpeaking && speakingMessageIndex === index
+              ? 'text-red-600 hover:text-red-800 bg-red-50 border-red-100'
+              : 'text-green-600 hover:text-green-800 bg-green-50 border-green-100'"
+          >
+            <StopIcon v-if="isSpeaking && speakingMessageIndex === index" class="w-3.5 h-3.5" />
+            <SpeakerWaveIcon v-else class="w-3.5 h-3.5" />
+            {{ isSpeaking && speakingMessageIndex === index ? '중지' : '재생' }}
+          </button>
           <button
             @click.stop="emit('toggleTranslation', index)"
             :disabled="translationLoading[index]"

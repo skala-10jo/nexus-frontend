@@ -77,7 +77,6 @@ export function usePracticeTTS({ scenario }) {
   const updateVoiceFromScenario = () => {
     if (scenario.value?.language) {
       currentVoice.value = getVoiceForLanguage(scenario.value.language)
-      console.log(`🔊 TTS voice updated: ${currentVoice.value}`)
     }
   }
 
@@ -99,8 +98,6 @@ export function usePracticeTTS({ scenario }) {
       updateVoiceFromScenario()
 
       speakingMessageIndex.value = messageIndex
-
-      console.log(`🔊 Speaking AI response: "${text.substring(0, 50)}..."`)
 
       await speak(text, currentVoice.value, {
         rate: options.rate || 0.3,  // 기본 70% 느리게 (회화 학습용)
@@ -133,7 +130,6 @@ export function usePracticeTTS({ scenario }) {
    */
   const toggleAutoPlay = () => {
     autoPlayEnabled.value = !autoPlayEnabled.value
-    console.log(`🔊 Auto-play ${autoPlayEnabled.value ? 'enabled' : 'disabled'}`)
   }
 
   /**
@@ -146,8 +142,6 @@ export function usePracticeTTS({ scenario }) {
     if (!ttsEnabled.value && isSpeaking.value) {
       stopSpeaking()
     }
-
-    console.log(`🔊 TTS ${ttsEnabled.value ? 'enabled' : 'disabled'}`)
   }
 
   /**
@@ -159,12 +153,10 @@ export function usePracticeTTS({ scenario }) {
     }
 
     try {
-      console.log('🔊 Initializing TTS...')
       await initialize()
       updateVoiceFromScenario()
-      console.log('✅ TTS initialized')
     } catch (err) {
-      console.error('❌ TTS initialization failed:', err)
+      console.error('TTS initialization failed:', err)
       throw err
     }
   }
@@ -178,6 +170,16 @@ export function usePracticeTTS({ scenario }) {
     () => scenario.value?.language,
     () => {
       updateVoiceFromScenario()
+    }
+  )
+
+  // TTS 재생 완료 시 speakingMessageIndex 자동 리셋
+  watch(
+    () => isSpeaking.value,
+    (newValue) => {
+      if (!newValue && speakingMessageIndex.value !== -1) {
+        speakingMessageIndex.value = -1
+      }
     }
   )
 

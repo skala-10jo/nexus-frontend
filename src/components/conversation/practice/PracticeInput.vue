@@ -127,7 +127,7 @@ const userInputValue = computed(() => {
       <!-- Voice Input Status (음성 모드일 때 항상 표시) -->
       <div
         v-if="inputMode === 'voice'"
-        class="bg-gray-50 rounded-xl border border-gray-200 p-4 min-h-[82px] flex flex-col justify-center items-center relative overflow-hidden"
+        class="bg-gray-50 rounded-xl border border-gray-200 p-4 h-[82px] flex flex-col justify-center items-center relative overflow-hidden"
       >
         <!-- Connecting State -->
         <div v-if="sttIsConnecting" class="flex flex-col items-center gap-1 z-10 w-full">
@@ -158,9 +158,11 @@ const userInputValue = computed(() => {
         </div>
 
         <!-- Recognized Text -->
-        <div v-else-if="recognizedText" class="text-center z-10">
-          <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Recognized Text</p>
-          <p class="text-gray-900 text-lg">{{ recognizedText }}</p>
+        <div v-else-if="recognizedText" class="text-center z-10 w-full h-full flex flex-col">
+          <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 flex-shrink-0">Recognized Text</p>
+          <div class="overflow-y-auto flex-1 px-2">
+            <p class="text-gray-900 text-lg">{{ recognizedText }}</p>
+          </div>
         </div>
 
         <!-- Idle State -->

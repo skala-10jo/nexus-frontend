@@ -53,10 +53,9 @@ export function useRealtimeSTT() {
   /**
    * 실시간 STT 녹음 시작
    *
-   * @param {string} language - 주 인식 언어 (BCP-47 코드, 예: 'en-US')
-   * @param {string} secondaryLanguage - 보조 언어 (선택사항, 백엔드에서 최소 2개 필요)
+   * @param {string} language - 인식 언어 (BCP-47 코드, 예: 'en-US')
    */
-  async function startRecording(language = 'en-US', secondaryLanguage = 'ko-KR') {
+  async function startRecording(language = 'en-US') {
     if (isRecording.value || isConnecting.value) {
       console.warn('⚠️ Already recording or connecting')
       return
@@ -122,10 +121,8 @@ export function useRealtimeSTT() {
       sourceNode = audioContext.createMediaStreamSource(audioStream)
       sourceNode.connect(audioWorkletNode)
 
-      // 6. WebSocket 연결 (백엔드는 최소 2개 언어 필요)
-      const selectedLanguages = [language, secondaryLanguage]
-
-      wsConnection = createMultiLangSTTStream(selectedLanguages, {
+      // 6. WebSocket 연결 (단일 언어)
+      wsConnection = createMultiLangSTTStream(language, {
         onConnected: () => {
           console.log('✅ Realtime STT connected')
 

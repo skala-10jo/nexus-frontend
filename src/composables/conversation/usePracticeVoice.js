@@ -17,9 +17,10 @@ import { useRealtimeSTT } from '@/composables/useRealtimeSTT'
  * @param {Object} options - 옵션
  * @param {Ref<string>} options.userInput - 사용자 입력 ref
  * @param {Function} options.onSendMessage - 메시지 전송 콜백
+ * @param {Ref<Object>} options.scenario - 시나리오 ref (언어 정보 포함)
  * @returns {Object} 음성 입력 상태 및 메서드
  */
-export function usePracticeVoice({ userInput, onSendMessage }) {
+export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
   // ============================================
   // Realtime STT Composable
   // ============================================
@@ -78,16 +79,41 @@ export function usePracticeVoice({ userInput, onSendMessage }) {
   }
 
   /**
+   * ISO 639-1 → BCP-47 변환
+   * Azure Speech SDK는 BCP-47 형식 필요 (en → en-US)
+   */
+  const toBCP47 = (lang) => {
+    const mapping = {
+      'en': 'en-US',
+      'ko': 'ko-KR',
+      'ja': 'ja-JP',
+      'zh': 'zh-CN',
+      'vi': 'vi-VN',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE'
+    }
+    // 이미 BCP-47 형식이면 그대로 반환
+    if (lang && lang.includes('-')) {
+      return lang
+    }
+    return mapping[lang] || 'en-US'
+  }
+
+  /**
    * 녹음 시작
+   * 시나리오에 지정된 언어로 STT 수행 (언어 감지 없이 단일 언어)
    */
   const startRecording = async () => {
     try {
       recognizedText.value = ''
       clearSTTResults()
 
-      // 영어 기본, 한국어 보조 (백엔드 요구사항)
-      await startRealtimeSTT('en-US', 'ko-KR')
-      console.log('Recording started')
+      // 시나리오 언어를 BCP-47 형식으로 변환
+      const rawLang = scenario?.value?.language || 'en'
+      const language = toBCP47(rawLang)
+      await startRealtimeSTT(language)
+      console.log(`Recording started with language: ${language} (from: ${rawLang})`)
     } catch (err) {
       console.error('Failed to start recording:', err)
       throw new Error(sttError.value || '마이크 권한을 허용해주세요.')
