@@ -33,16 +33,28 @@ export function useAzureTTS() {
   /**
    * 백엔드에서 토큰을 받아 Azure TTS 초기화
    *
+   * @param {boolean} forceRefresh - 토큰 강제 갱신 여부
    * @throws {Error} 초기화 실패 시
    */
-  async function initialize() {
-    if (isInitialized.value) {
+  async function initialize(forceRefresh = false) {
+    if (isInitialized.value && !forceRefresh) {
       return
+    }
+
+    // 강제 갱신 시 기존 리소스 정리
+    if (forceRefresh) {
+      dispose()
     }
 
     try {
       isConnecting.value = true
       error.value = null
+
+      // 강제 갱신 시 캐시 클리어
+      if (forceRefresh) {
+        speechStore.clearToken()
+        console.log('🔄 Force refreshing Azure Speech token...')
+      }
 
       // 스토어에서 토큰 가져오기 (캐싱 지원)
       console.log('🔑 Requesting Azure Speech token for TTS...')
@@ -52,10 +64,9 @@ export function useAzureTTS() {
       // Speech 설정 생성
       speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region)
 
-      // 기본 오디오 출력 사용
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput()
-
-      // 합성기 생성 (각 음성마다 재생성됨)
+      // 브라우저 환경에서 오디오 재생을 위한 SpeakerAudioDestination 사용
+      player = new SpeechSDK.SpeakerAudioDestination()
+      const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(player)
       synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig)
 
       isInitialized.value = true
@@ -79,6 +90,7 @@ export function useAzureTTS() {
    * @param {number} options.rate - 말하기 속도 (0.5 - 2.0, 기본값 1.0)
    * @param {number} options.pitch - 음높이 (-50% ~ +50%, 기본값 0)
    * @param {number} options.volume - 음량 (0 - 100, 기본값 100)
+   * @param {boolean} options._isRetry - 내부 재시도 플래그 (사용자 지정 금지)
    * @returns {Promise<void>}
    */
   async function speak(text, voiceName, options = {}) {
@@ -106,7 +118,7 @@ export function useAzureTTS() {
       const ssml = buildSSML(text, voiceName, options)
 
       console.log(`🔊 Speaking with voice: ${voiceName}`)
-      console.log(`📝 Text: "${text}"`)
+      console.log(`📝 Text: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`)
 
       // 음성 합성
       await new Promise((resolve, reject) => {
@@ -137,6 +149,19 @@ export function useAzureTTS() {
       console.error('❌ Failed to speak:', err)
       error.value = err.message
       isSpeaking.value = false
+
+      // StatusCode 1006 (WebSocket 연결 실패) 또는 토큰 관련 오류 시 재시도
+      const errorStr = String(err.message || err)
+      const isConnectionError = errorStr.includes('1006') ||
+                                errorStr.includes('Unable to contact server') ||
+                                errorStr.includes('WebSocket')
+
+      if (isConnectionError && !options._isRetry) {
+        console.log('🔄 Connection error detected, refreshing token and retrying...')
+        await initialize(true)  // 토큰 강제 갱신
+        return speak(text, voiceName, { ...options, _isRetry: true })
+      }
+
       throw err
     }
   }
@@ -206,7 +231,8 @@ export function useAzureTTS() {
       }
 
       // 합성기 재생성
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput()
+      player = new SpeechSDK.SpeakerAudioDestination()
+      const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(player)
       synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig)
 
       isSpeaking.value = false

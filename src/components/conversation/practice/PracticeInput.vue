@@ -76,7 +76,7 @@ const props = defineProps({
   }
 })
 
-import { computed, isRef } from 'vue'
+import { computed, isRef, watch } from 'vue'
 
 const emit = defineEmits([
   'update:userInput',
@@ -84,8 +84,32 @@ const emit = defineEmits([
   'toggleAvatar',
   'startRecording',
   'stopRecording',
-  'sendMessage'
+  'sendMessage',
+  'inputAreaResized'
 ])
+
+// 입력 모드 변경 시 부모에게 resize 알림 (voice 모드 진입 시 Voice Input Status 영역 표시)
+watch(() => props.inputMode, (newVal) => {
+  if (newVal === 'voice') {
+    // voice 모드 진입 시 입력 영역이 확장되므로 스크롤 조정 필요
+    emit('inputAreaResized')
+  }
+})
+
+// 녹음 상태 변경 시 부모에게 resize 알림 (스크롤 조정용)
+watch(() => props.isRecording, (newVal) => {
+  if (newVal) {
+    // 녹음 시작 시 입력 영역이 확장되므로 스크롤 조정 필요
+    emit('inputAreaResized')
+  }
+})
+
+// finalTexts 변경 시에도 스크롤 조정 (텍스트가 늘어날 때)
+watch(() => props.finalTexts.length, () => {
+  if (props.isRecording) {
+    emit('inputAreaResized')
+  }
+})
 
 // userInput이 ref인 경우와 string인 경우 모두 처리
 const userInputValue = computed(() => {

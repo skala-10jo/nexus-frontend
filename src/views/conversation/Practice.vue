@@ -42,6 +42,7 @@
           :recording-time="voice.recordingTime.value"
           :final-texts="voice.finalTexts.value"
           :interim-text="voice.interimText.value"
+          :last-ai-message="conversation.lastAiMessage.value"
           @toggle-translation="conversation.toggleTranslation"
           @toggle-hint="handleToggleHint"
           @message-click="handleMessageClick"
@@ -67,6 +68,7 @@
           @start-recording="handleStartRecording"
           @stop-recording="handleStopRecording"
           @send-message="handleSendMessage"
+          @input-area-resized="handleInputAreaResized"
         />
       </main>
 
@@ -95,10 +97,11 @@
  * - usePracticeConversation: 대화 관리 (메시지, 번역)
  * - usePracticeVoice: 음성 입력 (STT, Avatar)
  * - usePracticeFeedback: 피드백 관리
+ * - usePracticeTTS: AI 응답 음성 출력 (Azure TTS)
  *
  * @module Practice
  */
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 
 // Components
 import PracticeHeader from '@/components/conversation/practice/PracticeHeader.vue'
@@ -112,6 +115,7 @@ import { usePractice } from '@/composables/conversation/usePractice'
 import { usePracticeConversation } from '@/composables/conversation/usePracticeConversation'
 import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
+import { usePracticeTTS } from '@/composables/conversation/usePracticeTTS'
 
 // ============================================
 // Composables Initialization
@@ -170,8 +174,16 @@ const feedback = usePracticeFeedback({
 // feedbackAddFn 연결
 feedbackAddFn = feedback.addFeedback
 
+// TTS (AI 응답 음성 출력)
+const tts = usePracticeTTS({
+  scenario
+})
+
 // Refs
 const conversationAreaRef = ref(null)
+
+// 초기 로드 완료 플래그 (히스토리 로드 시 TTS 방지)
+const isInitialLoadComplete = ref(false)
 
 // ============================================
 // Event Handlers
@@ -250,6 +262,55 @@ const scrollToBottom = () => {
   }
 }
 
+/**
+ * 입력 영역 크기 변경 시 스크롤 조정
+ * 녹음 시작 시 인식 텍스트 영역이 확장되면 대화 영역 스크롤
+ */
+const handleInputAreaResized = async () => {
+  // DOM 업데이트 대기
+  await nextTick()
+  // 레이아웃 재계산 후 스크롤 (입력 영역 확장 반영)
+  setTimeout(() => {
+    scrollToBottom()
+  }, 150)
+}
+
+// ============================================
+// Watchers
+// ============================================
+
+/**
+ * AI 응답 시 자동 TTS 재생
+ * messages 배열의 마지막 항목이 AI 메시지일 때 자동 재생
+ * 초기 히스토리 로드 시에는 TTS 재생하지 않음
+ */
+watch(
+  () => conversation.messages.value.length,
+  async (newLength, oldLength) => {
+    // 초기 로드가 완료되지 않았으면 TTS 재생하지 않음
+    if (!isInitialLoadComplete.value) {
+      return
+    }
+
+    // 메시지가 추가되었고, 자동 재생이 활성화되어 있을 때
+    if (newLength > oldLength && tts.autoPlayEnabled.value && tts.ttsEnabled.value) {
+      const lastMessage = conversation.messages.value[newLength - 1]
+
+      // 마지막 메시지가 AI 응답인 경우에만 재생
+      if (lastMessage && lastMessage.speaker === 'ai') {
+        // Avatar 모드가 아닐 때만 TTS 재생 (Avatar는 자체 음성 사용)
+        if (!voice.avatarEnabled.value) {
+          try {
+            await tts.speakAiResponse(lastMessage.message, newLength - 1)
+          } catch (err) {
+            console.error('Auto TTS failed:', err)
+          }
+        }
+      }
+    }
+  }
+)
+
 // ============================================
 // Lifecycle
 // ============================================
@@ -270,6 +331,9 @@ onMounted(async () => {
       scrollToBottom()
     }
   )
+
+  // 초기 로드 완료 후 TTS 활성화 (히스토리 로드 시 TTS 방지)
+  isInitialLoadComplete.value = true
 })
 </script>
 

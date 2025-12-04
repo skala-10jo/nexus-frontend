@@ -9,31 +9,67 @@ import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   LanguageIcon,
-  ChartBarIcon,
-  UserCircleIcon,
   LightBulbIcon
 } from '@heroicons/vue/24/outline'
 import AvatarPanel from './AvatarPanel.vue'
-import { useAvatarStore } from '@/stores/avatar'
 import voiceAvatarService from '@/services/voiceAvatarService'
 
-const avatarStore = useAvatarStore()
+// Azure Avatar 캐릭터 및 스타일 옵션 (실시간 API 지원 Video Avatars)
+// https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech-avatar/standard-avatars
+// 주의: Lisa는 실시간 API에서 casual-sitting만 지원
+const AVATAR_OPTIONS = {
+  lisa: { name: 'Lisa', styles: ['casual-sitting'] },
+  harry: { name: 'Harry', styles: ['business', 'casual', 'youthful'] },
+  jeff: { name: 'Jeff', styles: ['business', 'formal'] },
+  lori: { name: 'Lori', styles: ['casual', 'graceful', 'formal'] },
+  max: { name: 'Max', styles: ['business', 'casual', 'formal'] },
+  meg: { name: 'Meg', styles: ['formal', 'casual', 'business'] }
+}
 
 // WebRTC Avatar video ref
 const webrtcVideoRef = ref(null)
 const isWebRTCReady = ref(false)
 const avatarError = ref(null)
 
+// 아바타 선택 상태
+const selectedCharacter = ref('lisa')
+const selectedStyle = ref('casual-sitting')
+const isChangingAvatar = ref(false)
+
+// 선택된 캐릭터에서 사용 가능한 스타일 목록
+const availableStyles = computed(() => {
+  return AVATAR_OPTIONS[selectedCharacter.value]?.styles || ['casual-sitting']
+})
+
+// 캐릭터 변경 시 첫 번째 스타일로 자동 선택
+watch(selectedCharacter, (newChar) => {
+  const styles = AVATAR_OPTIONS[newChar]?.styles
+  if (styles && styles.length > 0) {
+    selectedStyle.value = styles[0]
+  }
+})
+
 // 스크롤 컨테이너 ref
 const scrollContainer = ref(null)
 
 /**
  * 스크롤을 맨 아래로 이동
+ * @param {boolean} smooth - 부드러운 스크롤 여부
  */
-const scrollToBottom = () => {
-  if (scrollContainer.value) {
-    scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
-  }
+const scrollToBottom = (smooth = true) => {
+  if (!scrollContainer.value) return
+
+  // 이중 requestAnimationFrame으로 레이아웃 완전 반영 후 스크롤
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTo({
+          top: scrollContainer.value.scrollHeight,
+          behavior: smooth ? 'smooth' : 'instant'
+        })
+      }
+    })
+  })
 }
 
 // 외부에서 호출 가능하도록 expose
@@ -148,13 +184,6 @@ const formatTime = (date) => {
 }
 
 /**
- * 아바타 패널 토글
- */
-const toggleAvatarPanel = () => {
-  avatarStore.togglePanel()
-}
-
-/**
  * 마지막 AI 메시지의 언어 추정
  */
 const estimatedLanguage = computed(() => {
@@ -201,27 +230,54 @@ async function initializeWebRTCAvatar() {
 
   try {
     avatarError.value = null
-    console.log('[PracticeConversation] WebRTC Avatar 초기화 시작...')
 
     // video element가 준비될 때까지 대기
     await new Promise(resolve => setTimeout(resolve, 200))
 
     if (!webrtcVideoRef.value) {
-      console.error('[PracticeConversation] Video element not found')
       return
     }
 
     await voiceAvatarService.initializeAvatar(webrtcVideoRef.value, {
-      character: 'lisa',
-      style: 'casual-sitting',
+      character: selectedCharacter.value,
+      style: selectedStyle.value,
       language: estimatedLanguage.value
     })
 
     isWebRTCReady.value = true
-    console.log('[PracticeConversation] ✅ WebRTC Avatar 초기화 완료')
   } catch (err) {
-    console.error('[PracticeConversation] ❌ WebRTC Avatar 초기화 실패:', err)
     avatarError.value = err.message || 'Avatar 초기화 실패'
+  }
+}
+
+/**
+ * 아바타 캐릭터/스타일 변경 적용
+ */
+async function applyAvatarChange() {
+  if (!props.avatarEnabled || isChangingAvatar.value) return
+
+  try {
+    isChangingAvatar.value = true
+    avatarError.value = null
+
+    // 기존 연결 해제
+    await cleanupWebRTCAvatar()
+
+    // Azure Avatar throttling 방지를 위해 충분히 대기 (연결 해제 완료 보장)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    // 새로운 설정으로 초기화
+    await voiceAvatarService.initializeAvatar(webrtcVideoRef.value, {
+      character: selectedCharacter.value,
+      style: selectedStyle.value,
+      language: estimatedLanguage.value
+    })
+
+    isWebRTCReady.value = true
+  } catch (err) {
+    avatarError.value = err.message || 'Avatar 변경 실패'
+  } finally {
+    isChangingAvatar.value = false
   }
 }
 
@@ -234,9 +290,8 @@ async function cleanupWebRTCAvatar() {
   try {
     await voiceAvatarService.disconnectAvatar()
     isWebRTCReady.value = false
-    console.log('[PracticeConversation] Avatar 연결 해제 완료')
   } catch (err) {
-    console.error('[PracticeConversation] Avatar cleanup error:', err)
+    // 무시
   }
 }
 
@@ -272,86 +327,120 @@ watch(
     :language="estimatedLanguage"
   />
 
-  <!-- Avatar Toggle Button (Chat Mode에서만 표시) -->
-  <button
-    v-if="!avatarEnabled"
-    @click="toggleAvatarPanel"
-    class="absolute top-4 left-4 z-40 p-2.5 bg-white/90 hover:bg-white shadow-lg rounded-xl border border-gray-200 transition-all hover:scale-105"
-    title="AI 아바타 열기"
-  >
-    <UserCircleIcon class="w-5 h-5 text-gray-600" />
-  </button>
 
   <!-- Avatar View -->
-  <div v-if="avatarEnabled" class="flex-1 bg-gradient-to-b from-gray-900 to-black flex flex-col">
-    <div class="flex-1 relative flex items-center justify-center">
-      <!-- WebRTC Avatar Video -->
-      <div class="flex flex-col items-center justify-center">
-        <video
-          ref="webrtcVideoRef"
-          autoplay
-          playsinline
-          class="rounded-2xl shadow-2xl border-4 border-white/20 bg-gray-800"
-          style="width: 640px; height: 360px; object-fit: contain;"
-        />
-        <p class="mt-4 text-white/60 text-sm">AI Assistant</p>
+  <div v-if="avatarEnabled" class="flex-1 bg-white flex flex-col relative overflow-hidden">
+    <!-- WebRTC Avatar Video (전체 화면) -->
+    <video
+      ref="webrtcVideoRef"
+      autoplay
+      playsinline
+      class="w-full h-full object-cover"
+    />
 
-        <!-- Error State -->
-        <div v-if="avatarError" class="mt-2 px-3 py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg">
-          {{ avatarError }}
-        </div>
+    <!-- Error State -->
+    <div v-if="avatarError" class="absolute bottom-20 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-500/80 text-white text-sm rounded-lg">
+      {{ avatarError }}
+    </div>
 
-        <!-- Loading State -->
-        <div v-if="!isWebRTCReady && !avatarError" class="absolute inset-0 flex items-center justify-center">
-          <div class="flex flex-col items-center gap-3">
-            <ArrowPathIcon class="w-8 h-8 text-white animate-spin" />
-            <span class="text-white/60 text-sm">Avatar 연결 중...</span>
-          </div>
-        </div>
+    <!-- Loading State -->
+    <div v-if="!isWebRTCReady && !avatarError" class="absolute inset-0 flex items-center justify-center bg-black/50">
+      <div class="flex flex-col items-center gap-3">
+        <ArrowPathIcon class="w-10 h-10 text-white animate-spin" />
+        <span class="text-white/80 text-sm">Avatar 연결 중...</span>
       </div>
+    </div>
 
-      <!-- Avatar Status Badge -->
-      <div class="absolute top-4 right-4">
-        <div
-          class="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 text-xs font-bold border border-white/10"
-          :class="isWebRTCReady ? 'text-green-400' : 'text-yellow-400'"
-        >
-          <span
-            class="w-2 h-2 rounded-full"
-            :class="isWebRTCReady ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'"
-          ></span>
-          {{ isWebRTCReady ? 'Avatar 연결됨' : '연결 중...' }}
-        </div>
-      </div>
-
-      <!-- Voice Status Overlay -->
+    <!-- Avatar Status Badge (Top Left) -->
+    <div class="absolute top-4 left-4">
       <div
-        v-if="sttIsConnecting || isRecording || isProcessingVoice || recognizedText"
-        class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md rounded-2xl p-6 text-center max-w-lg border border-white/10 transition-all"
+        class="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 text-xs font-bold border border-white/10"
+        :class="isWebRTCReady ? 'text-green-400' : 'text-yellow-400'"
       >
-        <div v-if="sttIsConnecting" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
-          <ArrowPathIcon class="w-6 h-6 animate-spin" />
-          Connecting...
+        <span
+          class="w-2 h-2 rounded-full"
+          :class="isWebRTCReady ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'"
+        ></span>
+        {{ isWebRTCReady ? 'Avatar 연결됨' : '연결 중...' }}
+      </div>
+    </div>
+
+    <!-- Avatar Selection Panel (Top Right) -->
+    <div class="absolute top-4 right-4">
+      <div class="bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 min-w-[180px]">
+        <!-- Character Select -->
+        <div class="mb-3">
+          <label class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">캐릭터</label>
+          <select
+            v-model="selectedCharacter"
+            class="w-full bg-white/10 text-white text-sm rounded-lg px-3 py-1.5 border border-white/20 focus:outline-none focus:border-blue-400 cursor-pointer"
+            :disabled="isChangingAvatar"
+          >
+            <option v-for="(info, key) in AVATAR_OPTIONS" :key="key" :value="key" class="bg-gray-800 text-white">
+              {{ info.name }}
+            </option>
+          </select>
         </div>
-        <div v-else-if="isRecording" class="space-y-3">
-          <div class="flex items-center justify-center gap-2 text-red-400 font-bold animate-pulse">
-            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-            Recording... {{ recordingTime }}s
-          </div>
-          <div class="space-y-1">
-            <p v-for="(text, idx) in finalTexts" :key="idx" class="text-white font-medium">{{ text }}</p>
-            <p v-if="interimText" class="text-blue-300 italic animate-pulse">{{ interimText }}</p>
-            <p v-else class="text-gray-400">Listening...</p>
-          </div>
+
+        <!-- Style Select -->
+        <div class="mb-3">
+          <label class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">스타일</label>
+          <select
+            v-model="selectedStyle"
+            class="w-full bg-white/10 text-white text-sm rounded-lg px-3 py-1.5 border border-white/20 focus:outline-none focus:border-blue-400 cursor-pointer"
+            :disabled="isChangingAvatar || availableStyles.length <= 1"
+          >
+            <option v-for="style in availableStyles" :key="style" :value="style" class="bg-gray-800 text-white">
+              {{ style }}
+            </option>
+          </select>
         </div>
-        <div v-else-if="isProcessingVoice" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
-          <ArrowPathIcon class="w-6 h-6 animate-spin" />
-          Sending message...
+
+        <!-- Apply Button -->
+        <button
+          @click="applyAvatarChange"
+          :disabled="isChangingAvatar || !isWebRTCReady"
+          class="w-full py-1.5 rounded-lg text-xs font-bold transition-all"
+          :class="isChangingAvatar
+            ? 'bg-blue-400/50 text-white/70 cursor-wait'
+            : 'bg-blue-500 text-white hover:bg-blue-600'"
+        >
+          <span v-if="isChangingAvatar" class="flex items-center justify-center gap-2">
+            <ArrowPathIcon class="w-3.5 h-3.5 animate-spin" />
+            변경 중...
+          </span>
+          <span v-else>적용</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Voice Status Overlay -->
+    <div
+      v-if="sttIsConnecting || isRecording || isProcessingVoice || recognizedText"
+      class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md rounded-2xl p-6 text-center max-w-lg border border-white/10 transition-all"
+    >
+      <div v-if="sttIsConnecting" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
+        <ArrowPathIcon class="w-6 h-6 animate-spin" />
+        Connecting...
+      </div>
+      <div v-else-if="isRecording" class="space-y-3">
+        <div class="flex items-center justify-center gap-2 text-red-400 font-bold animate-pulse">
+          <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+          Recording... {{ recordingTime }}s
         </div>
-        <div v-else-if="recognizedText" class="space-y-2">
-          <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">You Said</p>
-          <p class="text-white text-xl font-medium">"{{ recognizedText }}"</p>
+        <div class="space-y-1">
+          <p v-for="(text, idx) in finalTexts" :key="idx" class="text-white font-medium">{{ text }}</p>
+          <p v-if="interimText" class="text-blue-300 italic animate-pulse">{{ interimText }}</p>
+          <p v-else class="text-gray-400">Listening...</p>
         </div>
+      </div>
+      <div v-else-if="isProcessingVoice" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
+        <ArrowPathIcon class="w-6 h-6 animate-spin" />
+        Sending message...
+      </div>
+      <div v-else-if="recognizedText" class="space-y-2">
+        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">You Said</p>
+        <p class="text-white text-xl font-medium">"{{ recognizedText }}"</p>
       </div>
     </div>
   </div>
@@ -501,5 +590,6 @@ watch(
         <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
       </div>
     </div>
+
   </div>
 </template>

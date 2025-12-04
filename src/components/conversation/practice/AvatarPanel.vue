@@ -136,21 +136,17 @@ async function initializeWebRTC() {
       isWebRTCInitialized.value = true
       avatarMode.value = 'webrtc'
       avatarStore.setConnectionStatus('connected')
-      console.log('[AvatarPanel] WebRTC Avatar 초기화 완료')
     } else {
       // Video 엘리먼트가 없으면 Viseme fallback
-      console.warn('[AvatarPanel] Video element not found, using viseme fallback')
       avatarMode.value = 'viseme'
       initCanvas()
       avatarStore.setConnectionStatus('connected')
     }
   } catch (err) {
-    console.error('[AvatarPanel] WebRTC 초기화 실패:', err)
     // Fallback to viseme mode
     avatarMode.value = 'viseme'
     initCanvas()
     avatarStore.setConnectionStatus('connected')
-    console.log('[AvatarPanel] Viseme fallback 모드로 전환')
   } finally {
     avatarStore.setLoading(false)
   }
