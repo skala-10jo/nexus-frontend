@@ -297,7 +297,9 @@ const quickActions = [
 const { allEvents, fetchAllEvents, loading: loadingEvents } = useScheduleEvents();
 const selectedDate = ref(null);
 
-// Color Palette for Events (Vibrant + Pastel)
+// ============================================================
+// 이벤트 색상 팔레트 및 매핑
+// ============================================================
 const eventColors = [
   { bg: 'bg-blue-500', light: 'bg-blue-100' },
   { bg: 'bg-pink-500', light: 'bg-pink-100' },
@@ -305,13 +307,28 @@ const eventColors = [
   { bg: 'bg-orange-500', light: 'bg-orange-100' },
   { bg: 'bg-purple-500', light: 'bg-purple-100' },
   { bg: 'bg-teal-500', light: 'bg-teal-100' },
-];
+]
 
+// id → 색상 인덱스 매핑 (메모리 보관)
+const eventColorMap = new Map()
+let nextColorIndex = 0
+
+/**
+ * 이벤트 ID에 대해 일관된 색상 반환
+ * - 같은 id는 항상 같은 색
+ * - 새 id는 팔레트를 순서대로 순환하며 배정
+ */
 const getEventColor = (eventId) => {
-  // Simple hash to assign consistent color
-  const index = eventId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % eventColors.length;
-  return eventColors[index];
-};
+  const key = eventId ?? '__no_id__'  // id 없을 때 대비
+
+  if (!eventColorMap.has(key)) {
+    eventColorMap.set(key, nextColorIndex)
+    nextColorIndex = (nextColorIndex + 1) % eventColors.length
+  }
+
+  const index = eventColorMap.get(key)
+  return eventColors[index]
+}
 
 const upcomingEvents = computed(() => {
   let events = allEvents.value;
@@ -342,11 +359,10 @@ const upcomingEvents = computed(() => {
   }
 
   // Sort by start date
-  const sorted = events.sort((a, b) => new Date(a.start) - new Date(b.start));
-  
-  // Assign colors to events for display
-  return sorted.slice(0, 50).map(event => {
-    const colors = getEventColor(event.id);
+    const sorted = [...events].sort((a, b) => new Date(a.start) - new Date(b.start))
+
+    return sorted.slice(0, 50).map(event => {
+    const colors = getEventColor(event.id)
     return {
       ...event,
       colorClass: colors.bg,
