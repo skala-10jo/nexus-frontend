@@ -31,70 +31,17 @@
       class="absolute inset-0 z-10 flex flex-col items-center justify-center"
       :class="{ 'animate-fade-in': videoEnded }"
     >
-      <!-- Background gradient -->
-      <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800"></div>
+      <!-- Earth Background (Includes UI Overlay) -->
+      <Earth3D class="absolute inset-0 z-0" @scrollToFeatures="scrollToFeatures" />
 
-      <!-- DarkVeil Aurora Effect -->
-      <DarkVeil
-        class="absolute inset-0 z-0"
-        :hueShift="180"
-        :speed="0.3"
-        :noiseIntensity="0.02"
-        :warpAmount="0.3"
-      />
 
-      <!-- TextParticles with Globe -->
-      <TextParticles
-        class="absolute inset-0 z-10"
-        :particleCount="60"
-        :minFontSize="11"
-        :maxFontSize="16"
-        :mouseRadius="120"
-      />
-
-      <!-- Content -->
-      <div class="relative z-20 text-center px-6">
-        <!-- Logo -->
-        <h1 class="text-8xl md:text-9xl font-black text-white mb-6 tracking-tight">
-          NEXUS
-        </h1>
-
-        <!-- Tagline -->
-        <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
-          AI 기반 번역 · 회화 · 협업 플랫폼
-        </p>
-
-        <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link
-            to="/login"
-            class="px-8 py-4 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
-          >
-            시작하기
-          </router-link>
-          <button
-            @click="scrollToFeatures"
-            class="px-8 py-4 border border-white/30 text-white font-semibold rounded-lg hover:bg-white/10 transition-all duration-300"
-          >
-            기능 살펴보기
-          </button>
-        </div>
-      </div>
-
-      <!-- Scroll indicator -->
-      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
     </div>
   </section>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import TextParticles from './TextParticles.vue'
-import DarkVeil from './DarkVeil.vue'
+import Earth3D from './Earth3D.vue'
 
 const videoRef = ref(null)
 const videoEnded = ref(false)
@@ -119,18 +66,18 @@ const scrollToFeatures = () => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500&display=swap');
+
 .animate-fade-in {
-  animation: fadeIn 1s ease-out forwards;
+  animation: fadeIn 1.5s ease-out forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 </style>
