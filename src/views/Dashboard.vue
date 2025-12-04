@@ -18,7 +18,15 @@
                 📅 <span class="font-bold">{{ upcomingEvents.length }}</span> schedules remaining {{ selectedDate ? 'on selected date' : 'today' }}!
               </p>
               <p class="text-base font-medium">
-                💬 Today's Expression: <span class="font-bold underline decoration-2 underline-offset-4">"Let's touch base later."</span>
+                💬 오늘의 Biz 표현:
+                <router-link
+                  v-if="todayExpression"
+                  to="/conversation/expression"
+                  class="font-bold underline decoration-2 underline-offset-4 hover:text-blue-200 cursor-pointer transition-colors"
+                >
+                  "{{ todayExpression.expression }} ({{ todayExpression.meaning }})"
+                </router-link>
+                <span v-else class="font-bold underline decoration-2 underline-offset-4 opacity-50">Loading...</span>
               </p>
             </div>
           </div>
@@ -260,6 +268,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useScheduleEvents } from '@/composables/management/useScheduleEvents';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Pagination } from 'swiper/modules';
+import api from '@/services/api';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
@@ -296,6 +305,44 @@ const quickActions = [
 // Schedule Logic
 const { allEvents, fetchAllEvents, loading: loadingEvents } = useScheduleEvents();
 const selectedDate = ref(null);
+
+// Today's Expression
+const todayExpression = ref(null);
+
+const fetchRandomExpression = async () => {
+  try {
+    // Unit 목록 가져오기
+    const unitsResponse = await api.get('/expressions/units');
+    const units = unitsResponse.data.data || [];
+
+    if (units.length === 0) return;
+
+    // 랜덤 Unit 선택
+    const randomUnit = units[Math.floor(Math.random() * units.length)];
+
+    // 해당 Unit에서 표현 1개 가져오기
+    const expressionResponse = await api.get('/expressions', {
+      params: {
+        unit: randomUnit.unit,
+        limit: 1
+      }
+    });
+
+    const expressions = expressionResponse.data.data || [];
+    if (expressions.length > 0) {
+      const expr = expressions[0];
+      // meaning에서 {} 제거
+      if (expr.meaning) {
+        expr.meaning = expr.meaning.replace(/[{}]/g, '');
+      }
+      todayExpression.value = expr;
+    }
+  } catch (err) {
+    console.error('Failed to fetch random expression:', err);
+    // 실패해도 조용히 처리 (fallback 표현 표시)
+    todayExpression.value = { expression: "Let's touch base later.", meaning: "나중에 연락하자" };
+  }
+};
 
 // ============================================================
 // 이벤트 색상 팔레트 및 매핑
@@ -497,6 +544,9 @@ function goToPractice(event) {
 }
 
 onMounted(async () => {
-  await fetchAllEvents();
+  await Promise.all([
+    fetchAllEvents(),
+    fetchRandomExpression()
+  ]);
 });
 </script>
