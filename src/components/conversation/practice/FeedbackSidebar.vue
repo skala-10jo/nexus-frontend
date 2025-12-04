@@ -2,7 +2,7 @@
 /**
  * Practice 피드백 사이드바 컴포넌트
  *
- * 대화별 피드백과 종합 피드백을 표시합니다.
+ * 대화별 피드백을 표시합니다.
  */
 import {
   ChartBarIcon,
@@ -12,16 +12,10 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   LightBulbIcon,
-  ArrowPathIcon,
   MicrophoneIcon
 } from '@heroicons/vue/24/outline'
 
 defineProps({
-  /** 활성 탭 */
-  activeTab: {
-    type: String,
-    default: 'messages'
-  },
   /** 사용자 메시지 목록 */
   userMessages: {
     type: Array,
@@ -37,11 +31,6 @@ defineProps({
     type: Object,
     default: null
   },
-  /** 종합 피드백 */
-  comprehensiveFeedback: {
-    type: Object,
-    default: null
-  },
   /** 모바일에서 열림 상태 */
   isMobileOpen: {
     type: Boolean,
@@ -50,7 +39,6 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'update:activeTab',
   'selectMessage',
   'close'
 ])
@@ -64,10 +52,10 @@ const emit = defineEmits([
           ]">
     <!-- Header -->
     <div class="p-5 border-b border-gray-100 bg-white rounded-t-2xl md:rounded-none">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
           <ChartBarIcon class="w-5 h-5 text-blue-700" />
-          피드백
+          대화별 피드백
         </h2>
         <!-- Mobile Close Button -->
         <button @click="emit('close')"
@@ -78,25 +66,13 @@ const emit = defineEmits([
           </svg>
         </button>
       </div>
-
-      <!-- Tabs -->
-      <div class="flex p-1 bg-gray-100 rounded-xl">
-        <button v-for="tab in ['messages', 'comprehensive']" :key="tab" @click="emit('update:activeTab', tab)"
-          class="flex-1 py-2 text-sm font-bold rounded-lg transition-all" :class="[
-            activeTab === tab
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          ]">
-          {{ tab === 'messages' ? '대화별 피드백' : '종합 피드백' }}
-        </button>
-      </div>
     </div>
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
 
-      <!-- Message Analysis Tab -->
-      <div v-if="activeTab === 'messages'">
+      <!-- Message Analysis -->
+      <div>
         <!-- Empty State -->
         <div v-if="userMessages.length === 0" class="text-center py-12 text-gray-400">
           <ChatBubbleLeftRightIcon class="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -290,59 +266,6 @@ const emit = defineEmits([
         </div>
       </div>
 
-      <!-- Comprehensive Report Tab -->
-      <div v-else>
-        <!-- Empty State -->
-        <div v-if="!comprehensiveFeedback" class="text-center py-12 text-gray-400">
-          <ChartBarIcon class="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p class="text-sm">대화를 완료하면 종합 리포트가 생성됩니다</p>
-        </div>
-
-        <div v-else class="space-y-6 animate-fadeIn">
-          <!-- Overall Score Card -->
-          <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
-            <div class="text-center">
-              <div class="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">종합 점수</div>
-              <div class="text-5xl font-black mb-2">{{ comprehensiveFeedback.overall_score?.toFixed(1) || 0 }}</div>
-              <div class="flex justify-center gap-4 text-xs font-medium text-blue-100">
-                <span>유창성: {{ comprehensiveFeedback.fluency_score?.toFixed(1) }}</span>
-                <span>•</span>
-                <span>정확도: {{ comprehensiveFeedback.accuracy_score?.toFixed(1) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Strengths -->
-          <div v-if="comprehensiveFeedback.strengths?.length" class="space-y-3">
-            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <CheckCircleIcon class="w-4 h-4 text-green-500" />
-              잘한 점
-            </h3>
-            <ul class="space-y-2">
-              <li v-for="(strength, idx) in comprehensiveFeedback.strengths" :key="idx"
-                class="flex gap-3 text-sm text-gray-600 bg-green-50/50 p-3 rounded-xl border border-green-100">
-                <span class="text-green-500 font-bold">•</span>
-                {{ strength }}
-              </li>
-            </ul>
-          </div>
-
-          <!-- Improvements -->
-          <div v-if="comprehensiveFeedback.areas_for_improvement?.length" class="space-y-3">
-            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <ArrowPathIcon class="w-4 h-4 text-amber-500" />
-              개선할 점
-            </h3>
-            <ul class="space-y-2">
-              <li v-for="(area, idx) in comprehensiveFeedback.areas_for_improvement" :key="idx"
-                class="flex gap-3 text-sm text-gray-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100">
-                <span class="text-amber-500 font-bold">•</span>
-                {{ area }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   </aside>
 </template>

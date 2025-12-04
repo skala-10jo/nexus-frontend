@@ -42,9 +42,13 @@
           :final-texts="voice.finalTexts.value"
           :interim-text="voice.interimText.value"
           :last-ai-message="conversation.lastAiMessage.value"
+          :is-speaking="tts.isSpeaking.value"
+          :speaking-message-index="tts.speakingMessageIndex.value"
           @toggle-translation="conversation.toggleTranslation"
           @toggle-hint="handleToggleHint"
           @message-click="handleMessageClick"
+          @play-message="handlePlayMessage"
+          @stop-message="tts.stopSpeaking"
         />
 
         <!-- Input Area -->
@@ -80,13 +84,10 @@
 
       <!-- Feedback Sidebar -->
       <FeedbackSidebar
-        :active-tab="feedback.activeTab.value"
         :user-messages="conversation.userMessages.value"
         :selected-message-index="feedback.selectedMessageIndex.value"
         :selected-message-feedback="feedback.selectedMessageFeedback.value"
-        :comprehensive-feedback="feedback.comprehensiveFeedback.value"
         :is-mobile-open="showMobileFeedback"
-        @update:active-tab="feedback.activeTab.value = $event"
         @select-message="feedback.selectMessage"
         @close="showMobileFeedback = false"
       />
@@ -125,6 +126,9 @@ import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
 import { usePracticeTTS } from '@/composables/conversation/usePracticeTTS'
 
+// Services
+import conversationService from '@/services/conversationService'
+
 // ============================================
 // Composables Initialization
 // ============================================
@@ -146,7 +150,8 @@ const sharedUserInput = ref('')
 // Voice (초기화를 먼저 해야 getAudioBlob 사용 가능)
 const voice = usePracticeVoice({
   userInput: sharedUserInput,
-  onSendMessage: () => handleSendMessage()
+  onSendMessage: () => handleSendMessage(),
+  scenario  // 시나리오 언어로 STT 수행
 })
 
 // Feedback placeholder (conversation 초기화 후 업데이트)
@@ -159,8 +164,6 @@ const conversation = usePracticeConversation({
   onFeedbackReceived: (feedbackData) => {
     if (feedbackAddFn) {
       feedbackAddFn(feedbackData)
-      // 피드백 수신 시 '대화별 피드백' 탭으로 자동 전환
-      feedback.activeTab.value = 'messages'
     }
   },
   // 음성 모드에서 발음 평가를 위한 오디오 blob 가져오기
@@ -251,10 +254,27 @@ const handleStopRecording = async () => {
 
 /**
  * 대화 초기화 처리
+ * 백엔드 세션을 삭제하고 새 대화를 시작하여 AI 초기 발화를 받아옵니다.
  */
 const handleReset = async () => {
-  await conversation.resetConversation()
-  feedback.resetFeedbacks()
+  if (!confirm('Reset conversation?')) return
+
+  try {
+    // 1. 백엔드 세션 삭제 (필수! - 이것이 없으면 start가 initialMessage를 반환하지 않음)
+    await conversationService.reset(scenarioId)
+
+    // 2. 프론트엔드 상태 초기화
+    conversation.resetConversation()
+    feedback.resetFeedbacks()
+
+    // 3. 새 대화 시작하여 AI 초기 발화 받아오기
+    const response = await conversationService.start(scenarioId)
+    conversation.addInitialMessage(response.initialMessage)
+    await nextTick()
+    scrollToBottom()
+  } catch (err) {
+    console.error('Failed to reset conversation:', err)
+  }
 }
 
 /**
@@ -263,6 +283,20 @@ const handleReset = async () => {
  */
 const handleToggleHint = async (index) => {
   await conversation.toggleHint(index, scenarioId)
+}
+
+/**
+ * AI 메시지 재생 처리
+ * @param {string} text - 재생할 텍스트
+ * @param {number} index - 메시지 인덱스
+ */
+const handlePlayMessage = async (text, index) => {
+  try {
+    await tts.speakAiResponse(text, index)
+  } catch (err) {
+    console.error('TTS playback failed:', err)
+    error.value = 'TTS 재생에 실패했습니다.'
+  }
 }
 
 /**
@@ -295,12 +329,18 @@ const handleInputAreaResized = async () => {
  * AI 응답 시 자동 TTS 재생
  * messages 배열의 마지막 항목이 AI 메시지일 때 자동 재생
  * 초기 히스토리 로드 시에는 TTS 재생하지 않음
+ * 텍스트 입력 모드에서는 자동 TTS 재생하지 않음 (음성 모드에서만)
  */
 watch(
   () => conversation.messages.value.length,
   async (newLength, oldLength) => {
     // 초기 로드가 완료되지 않았으면 TTS 재생하지 않음
     if (!isInitialLoadComplete.value) {
+      return
+    }
+
+    // 텍스트 입력 모드에서는 자동 TTS 재생하지 않음
+    if (voice.inputMode.value === 'text') {
       return
     }
 
@@ -334,13 +374,19 @@ onMounted(async () => {
       conversation.loadHistory(historyResponse)
       feedback.loadFeedbacksFromHistory(historyResponse.messages)
       await nextTick()
-      scrollToBottom()
+      // 초기 로드 시 애니메이션 없이 즉시 스크롤 (smooth = false)
+      if (conversationAreaRef.value?.scrollToBottom) {
+        conversationAreaRef.value.scrollToBottom(false)
+      }
     },
     // 새 대화 시작 콜백
     async (response) => {
       conversation.addInitialMessage(response.initialMessage)
       await nextTick()
-      scrollToBottom()
+      // 초기 로드 시 애니메이션 없이 즉시 스크롤 (smooth = false)
+      if (conversationAreaRef.value?.scrollToBottom) {
+        conversationAreaRef.value.scrollToBottom(false)
+      }
     }
   )
 

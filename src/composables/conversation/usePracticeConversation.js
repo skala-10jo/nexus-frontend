@@ -277,13 +277,12 @@ export function usePracticeConversation({ scenario, onFeedbackReceived, getAudio
   }
 
   /**
-   * 대화 초기화 확인 및 실행
+   * 대화 상태 초기화 (프론트엔드만)
+   * 백엔드 세션 삭제는 호출하는 쪽에서 별도로 처리해야 함
    *
-   * @returns {Promise<void>}
+   * @returns {void}
    */
-  const resetConversation = async () => {
-    if (!confirm('Reset conversation?')) return
-
+  const resetConversation = () => {
     messages.value = []
     detectedTerms.value = []
   }

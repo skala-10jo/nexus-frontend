@@ -149,19 +149,20 @@
         class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
         :class="isCollapsed ? 'justify-center' : ''"
         :title="isCollapsed ? user?.fullName || 'User' : ''"
+        @click="openProfileModal"
       >
         <img
-          :src="`https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=0D8ABC&color=fff`"
-          class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          :src="avatarUrl"
+          class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
           alt=""
         />
-        <div v-if="!isCollapsed" class="flex-1">
-          <div class="text-sm font-bold text-gray-900">{{ user?.fullName || 'User' }}</div>
-          <div class="text-xs text-gray-500">Product Designer</div>
+        <div v-if="!isCollapsed" class="flex-1 min-w-0">
+          <div class="text-sm font-bold text-gray-900 truncate">{{ user?.fullName || 'User' }}</div>
+          <div class="text-xs text-gray-500 truncate">{{ user?.role || '역할을 설정해주세요' }}</div>
         </div>
         <button
           v-if="!isCollapsed"
-          @click="handleLogout"
+          @click.stop="handleLogout"
           class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           title="로그아웃"
         >
@@ -178,6 +179,12 @@
         <ArrowRightOnRectangleIcon class="w-5 h-5" />
       </button>
     </div>
+
+    <!-- User Profile Modal -->
+    <UserProfileModal
+      :show="showProfileModal"
+      @close="closeProfileModal"
+    />
   </aside>
 
   <!-- Mobile Bottom Navigation -->
@@ -322,12 +329,39 @@ import {
   ChevronDownIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline';
+import UserProfileModal from '@/components/user/UserProfileModal.vue';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
 const user = computed(() => authStore.user);
+
+// Profile Modal
+const showProfileModal = ref(false);
+
+const openProfileModal = () => {
+  showProfileModal.value = true;
+};
+
+const closeProfileModal = () => {
+  showProfileModal.value = false;
+};
+
+// Avatar URL computation
+const avatarUrl = computed(() => {
+  if (user.value?.avatarUrl) {
+    // Check if it's a relative path (stored file) or external URL
+    if (user.value.avatarUrl.startsWith('http')) {
+      return user.value.avatarUrl;
+    }
+    // Construct URL for stored files
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    return `${apiUrl}/files/serve/${user.value.avatarUrl}`;
+  }
+  // Default avatar using ui-avatars.com
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.value?.fullName || 'User')}&background=0D8ABC&color=fff`;
+});
 
 // Logout handler
 const handleLogout = () => {

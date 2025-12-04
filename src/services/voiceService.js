@@ -35,19 +35,19 @@ export async function speechToText(audioFile, language = 'ko-KR') {
 }
 
 /**
- * WebSocket 다국어 STT 스트리밍 연결 생성 (자동 언어 감지 + 번역)
+ * WebSocket STT 스트리밍 연결 생성 (단일 언어, 언어 감지 없음)
  *
- * @param {string[]} selectedLanguages - 선택된 언어 목록 (BCP-47 코드, 예: ["ko-KR", "en-US", "ja-JP"])
+ * @param {string} language - 인식 언어 (BCP-47 코드, 예: "en-US")
  * @param {Object} callbacks - 이벤트 콜백 함수
- * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백 (★ 추가: MediaRecorder 시작용)
- * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백 (번역 없음)
- * @param {Function} callbacks.onRecognized - 최종 인식 결과 + 번역 콜백
+ * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
+ * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백
+ * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백
  * @param {Function} callbacks.onError - 에러 콜백
  * @param {Function} callbacks.onEnd - 종료 콜백
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
-export function createMultiLangSTTStream(selectedLanguages = ['ko-KR', 'en-US'], callbacks = {}) {
-  // WebSocket URL 생성 (Python 백엔드의 realtime 엔드포인트 사용)
+export function createMultiLangSTTStream(language = 'en-US', callbacks = {}) {
+  // WebSocket URL 생성 (realtime 엔드포인트 사용)
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const wsHost = import.meta.env.VITE_PYTHON_API_URL
     ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
@@ -59,146 +59,18 @@ export function createMultiLangSTTStream(selectedLanguages = ['ko-KR', 'en-US'],
   // WebSocket 연결
   const ws = new WebSocket(wsUrl)
 
-  // 연결 성공 시 초기 설정 전송 (다국어 모드)
+  // 연결 성공 시 초기 설정 전송 (단일 언어 모드)
   ws.onopen = () => {
-    console.log('✅ WebSocket Multi-lang STT connected')
-    console.log('Selected languages:', selectedLanguages)
+    console.log('✅ WebSocket STT connected')
+    console.log('Language:', language)
     ws.send(JSON.stringify({
-      selected_languages: selectedLanguages
+      language: language
     }))
 
-    // ★ 연결 완료 콜백 호출 (MediaRecorder 시작 신호)
+    // 연결 완료 콜백 호출
     if (callbacks.onConnected) {
       callbacks.onConnected()
     }
-  }
-
-  // 메시지 수신
-  ws.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data)
-
-      switch (message.type) {
-        case 'recognizing':
-          // 중간 인식 결과 (번역 없음)
-          if (callbacks.onRecognizing) {
-            callbacks.onRecognizing(message)
-          }
-          break
-
-        case 'recognized':
-          // 최종 인식 결과 + 번역
-          console.log('🎤 STT:', message.text)
-          console.log('🌐 Detected:', message.detected_language)
-          console.log('🌐 Translations:', message.translations)
-          if (callbacks.onRecognized) {
-            callbacks.onRecognized(message)
-          }
-          break
-
-        case 'error':
-          // 에러
-          console.error('❌ Multi-lang STT error:', message.message || message.error)
-          if (callbacks.onError) {
-            callbacks.onError(message.message || message.error)
-          }
-          break
-
-        case 'end':
-          // 종료
-          console.log('🔚 Multi-lang STT stream ended')
-          if (callbacks.onEnd) {
-            callbacks.onEnd()
-          }
-          break
-
-        default:
-          console.warn('Unknown message type:', message.type)
-      }
-    } catch (error) {
-      console.error('Failed to parse WebSocket message:', error)
-      if (callbacks.onError) {
-        callbacks.onError(error.message)
-      }
-    }
-  }
-
-  // 연결 종료
-  ws.onclose = () => {
-    console.log('🔌 WebSocket Multi-lang STT disconnected')
-    if (callbacks.onEnd) {
-      callbacks.onEnd()
-    }
-  }
-
-  // 에러
-  ws.onerror = (error) => {
-    console.error('❌ WebSocket error:', error)
-    if (callbacks.onError) {
-      callbacks.onError(error.message || 'WebSocket error')
-    }
-  }
-
-  // 제어 함수 반환
-  return {
-    ws,
-
-    /**
-     * 오디오 청크 전송
-     * @param {Blob|ArrayBuffer} audioChunk - 오디오 데이터
-     */
-    send(audioChunk) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(audioChunk)
-      } else {
-        console.warn('WebSocket is not open. Ready state:', ws.readyState)
-      }
-    },
-
-    /**
-     * WebSocket 연결 종료
-     */
-    close() {
-      if (ws.readyState === WebSocket.OPEN) {
-        // 종료 메시지 전송
-        ws.send(JSON.stringify({ type: 'end' }))
-        // WebSocket 닫기
-        setTimeout(() => ws.close(), 100)
-      } else {
-        ws.close()
-      }
-    }
-  }
-}
-
-/**
- * WebSocket STT 스트리밍 연결 생성 (단일 언어)
- *
- * @param {string} language - BCP-47 언어 코드
- * @param {Object} callbacks - 이벤트 콜백 함수
- * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백
- * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백
- * @param {Function} callbacks.onError - 에러 콜백
- * @param {Function} callbacks.onEnd - 종료 콜백
- * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
- */
-export function createSTTStream(language = 'ko-KR', callbacks = {}) {
-  // WebSocket URL 생성 (Python 백엔드의 realtime 엔드포인트 사용)
-  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsHost = import.meta.env.VITE_PYTHON_API_URL
-    ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
-    : 'localhost:8000'
-  const wsUrl = `${wsProtocol}//${wsHost}/api/ai/voice/realtime`
-
-  // WebSocket 연결
-  const ws = new WebSocket(wsUrl)
-
-  // 연결 성공 시 초기 설정 전송
-  ws.onopen = () => {
-    console.log('✅ WebSocket STT connected')
-    ws.send(JSON.stringify({
-      language
-    }))
   }
 
   // 메시지 수신
@@ -216,6 +88,7 @@ export function createSTTStream(language = 'ko-KR', callbacks = {}) {
 
         case 'recognized':
           // 최종 인식 결과
+          console.log('🎤 STT:', message.text)
           if (callbacks.onRecognized) {
             callbacks.onRecognized(message)
           }
@@ -223,9 +96,9 @@ export function createSTTStream(language = 'ko-KR', callbacks = {}) {
 
         case 'error':
           // 에러
-          console.error('❌ STT error:', message.error)
+          console.error('❌ STT error:', message.message || message.error)
           if (callbacks.onError) {
-            callbacks.onError(message.error)
+            callbacks.onError(message.message || message.error)
           }
           break
 
