@@ -42,61 +42,8 @@
           
           <!-- 2. Small Talk / Scenario Practice -->
           <!-- Reduced height to 50% to prevent cutting off bottom row -->
-          <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-1/2 flex flex-col relative group hover:shadow-md transition-all shrink-0">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10 shrink-0">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                </div>
-                <h2 class="text-base font-bold text-gray-900">Let's Practice Small Talk!</h2>
-              </div>
-              <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Chat Area -->
-            <div class="flex-1 bg-gray-50 p-4 overflow-y-auto space-y-3 custom-scrollbar">
-              <!-- AI Message -->
-              <div class="flex items-start gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-md">AI</div>
-                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 max-w-[80%]">
-                  <p class="text-gray-800 leading-relaxed text-sm">
-                    Hi {{ user?.fullName }}! I noticed you have a meeting with the design team later.
-                    <br>Want to practice some casual openers?
-                  </p>
-                </div>
-              </div>
-
-              <!-- User Message (Mockup) -->
-              <div class="flex items-start gap-3 justify-end opacity-50">
-                <div class="bg-blue-600 p-3 rounded-2xl rounded-tr-none shadow-sm text-white max-w-[80%]">
-                  <p class="text-sm">Sure, let's try that.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Input Area -->
-            <div class="p-3 bg-white border-t border-gray-100 shrink-0">
-              <div class="flex gap-3">
-                <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 group">
-                  <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                  Voice Input
-                </button>
-                <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border-2 border-gray-100 text-gray-700 text-sm font-bold hover:bg-gray-50 hover:border-gray-200 transition-all">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Text Input
-                </button>
-              </div>
-            </div>
+          <div class="h-1/2 shrink-0 relative">
+            <SmallTalkChat />
           </div>
 
           <!-- Bottom Row: Performance & Quick Actions -->
@@ -206,31 +153,42 @@
             <!-- Calendar Grid -->
             <!-- Changed justify-center to justify-start to prevent top clipping -->
             <div class="flex-1 flex flex-col justify-start overflow-hidden">
-              <div class="grid grid-cols-7 gap-1 text-center mb-1">
-                <span v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="day" class="text-[10px] font-bold text-gray-400 py-1">{{ day }}</span>
-              </div>
               <div class="grid grid-cols-7 gap-1 text-center">
-                <div v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays" :key="date.toISOString()" 
-                  @click="selectDate(date)"
-                  class="aspect-square flex flex-col items-center justify-center relative rounded-full text-xs font-medium transition-all cursor-pointer"
-                  :class="[
-                    // Base text color
-                    !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
-                    
-                    // Hover state (only if not an event start)
-                    !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
-
-                    // Event Styling (Start Date - Solid Color)
-                    eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md transform scale-105` : '',
-
-                    // Event Styling (Continued - Light Color)
-                    eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
-
-                    // Selected State (if no event)
-                    isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
-                  ]"
+                <div
+                  v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays"
+                  :key="date.toISOString()"
+                  class="aspect-square relative" 
                 >
-                  {{ date.getDate() }}
+                  <button
+                    @click="selectDate(date)"
+                    class="
+                      absolute 
+                      inset-[5%]        
+                      flex items-center justify-center
+                      rounded-full
+                      text-xs font-medium
+                      transition-all
+                      cursor-pointer
+                    "
+                    :class="[
+                      // Base text color
+                      !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
+
+                      // Hover state (only if not an event start)
+                      !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
+
+                      // Event Styling (Start Date - Solid Color)
+                      eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md` : '',
+
+                      // Event Styling (Continued - Light Color)
+                      eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
+
+                      // Selected State (if no event)
+                      isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+                    ]"
+                  >
+                    {{ date.getDate() }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -305,15 +263,17 @@ import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import { 
-  DocumentTextIcon, 
-  LanguageIcon, 
-  FolderPlusIcon, 
-  EnvelopeIcon, 
-  CalendarIcon, 
-  ChatBubbleLeftRightIcon, 
-  BookOpenIcon, 
-  VideoCameraIcon 
+import SmallTalkChat from '@/components/dashboard/SmallTalkChat.vue';
+
+import {
+  DocumentTextIcon,
+  LanguageIcon,
+  FolderPlusIcon,
+  EnvelopeIcon,
+  CalendarIcon,
+  ChatBubbleLeftRightIcon,
+  BookOpenIcon,
+  VideoCameraIcon
 } from '@heroicons/vue/24/outline';
 
 const router = useRouter();
