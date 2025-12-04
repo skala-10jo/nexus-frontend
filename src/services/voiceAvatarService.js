@@ -23,6 +23,8 @@ const voiceAvatarService = {
   _isAvatarConnected: false,
   _isSpeaking: false,
   _currentCharacter: 'lisa', // 현재 아바타 캐릭터
+  _isDisconnecting: false, // 연결 해제 중 플래그
+  _isInitializing: false, // 초기화 중 플래그
 
   /**
    * 음성 TTS 초기화
@@ -191,7 +193,24 @@ const voiceAvatarService = {
    * @returns {Promise<void>}
    */
   async initializeAvatar(videoElement, options = {}) {
+    // 이미 초기화 중이면 대기
+    if (this._isInitializing) {
+      console.warn('[Avatar] 이미 초기화 중입니다. 대기...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      if (this._isInitializing) {
+        throw new Error('Avatar 초기화가 진행 중입니다')
+      }
+    }
 
+    // 기존 연결이 있으면 먼저 정리
+    if (this._avatarSynthesizer || this._peerConnection || this._isAvatarConnected) {
+      console.log('[Avatar] 기존 연결 정리 중...')
+      await this.disconnectAvatar()
+      // Azure 서버 정리 대기 (throttling 방지)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    this._isInitializing = true
     this._avatarVideoElement = videoElement
     const character = options.character || 'lisa'
     const style = options.style || 'casual-sitting'
@@ -239,10 +258,49 @@ const voiceAvatarService = {
 
       // 6. Avatar 시작
       await this._startAvatarConnection()
+      this._isInitializing = false
+      console.log('[Avatar] 초기화 완료')
     } catch (error) {
+      this._isInitializing = false
+      // 실패 시 리소스 정리
+      await this._cleanupResources()
       console.error('Avatar 초기화 실패:', error)
       throw error
     }
+  },
+
+  /**
+   * 리소스 정리 (내부용)
+   * @private
+   */
+  async _cleanupResources() {
+    if (this._avatarSynthesizer) {
+      try {
+        this._avatarSynthesizer.close()
+      } catch (e) { /* ignore */ }
+      this._avatarSynthesizer = null
+    }
+
+    if (this._peerConnection) {
+      try {
+        this._peerConnection.close()
+      } catch (e) { /* ignore */ }
+      this._peerConnection = null
+    }
+
+    if (this._avatarVideoElement) {
+      this._avatarVideoElement.srcObject = null
+    }
+
+    if (this._avatarAudioElement) {
+      this._avatarAudioElement.pause()
+      this._avatarAudioElement.srcObject = null
+    }
+
+    this._speechConfig = null
+    this._avatarConfig = null
+    this._isAvatarConnected = false
+    this._isSpeaking = false
   },
 
   /**
@@ -422,49 +480,125 @@ const voiceAvatarService = {
 
   /**
    * Avatar 연결 해제
+   * @param {boolean} isPageUnload - 페이지 언로드 시 동기적 정리 필요
    */
-  async disconnectAvatar() {
-
-    // 발화 중지
-    if (this._isSpeaking) {
-      await this.stopAvatarSpeaking()
+  async disconnectAvatar(isPageUnload = false) {
+    // 이미 연결 해제 중이면 대기
+    if (this._isDisconnecting) {
+      console.log('[Avatar] 이미 연결 해제 중...')
+      // 짧은 대기 후 리턴 (중복 호출 방지)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      return
     }
 
-    // AvatarSynthesizer 종료
-    if (this._avatarSynthesizer) {
-      try {
-        await this._avatarSynthesizer.stopAvatarAsync()
-        this._avatarSynthesizer.close()
-      } catch (error) {
-        console.warn('AvatarSynthesizer close warning:', error)
+    // 연결된 것이 없으면 리턴
+    if (!this._avatarSynthesizer && !this._peerConnection && !this._isAvatarConnected) {
+      console.log('[Avatar] 정리할 연결이 없습니다')
+      return
+    }
+
+    this._isDisconnecting = true
+    console.log('[Avatar] 연결 해제 시작...')
+
+    try {
+      // 발화 중지
+      if (this._isSpeaking && this._avatarSynthesizer) {
+        try {
+          await Promise.race([
+            this._avatarSynthesizer.stopSpeakingAsync(),
+            new Promise(resolve => setTimeout(resolve, 1000)) // 1초 타임아웃
+          ])
+        } catch (e) {
+          console.warn('[Avatar] stopSpeakingAsync 경고:', e.message)
+        }
+        this._isSpeaking = false
       }
-      this._avatarSynthesizer = null
-    }
 
-    // PeerConnection 종료
+      // AvatarSynthesizer 종료 (타임아웃 적용)
+      if (this._avatarSynthesizer) {
+        try {
+          // stopAvatarAsync에 타임아웃 적용 (서버에 종료 신호 전송)
+          await Promise.race([
+            this._avatarSynthesizer.stopAvatarAsync(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('stopAvatarAsync timeout')), 3000))
+          ])
+          console.log('[Avatar] stopAvatarAsync 완료')
+        } catch (error) {
+          console.warn('[Avatar] stopAvatarAsync 경고:', error.message)
+        }
+
+        try {
+          this._avatarSynthesizer.close()
+        } catch (e) { /* ignore */ }
+        this._avatarSynthesizer = null
+      }
+
+      // PeerConnection 종료
+      if (this._peerConnection) {
+        try {
+          this._peerConnection.close()
+        } catch (e) { /* ignore */ }
+        this._peerConnection = null
+      }
+
+      // Video element 정리
+      if (this._avatarVideoElement) {
+        this._avatarVideoElement.srcObject = null
+      }
+
+      // Audio element 정리
+      if (this._avatarAudioElement) {
+        this._avatarAudioElement.pause()
+        this._avatarAudioElement.srcObject = null
+        try {
+          this._avatarAudioElement.remove()
+        } catch (e) { /* ignore */ }
+        this._avatarAudioElement = null
+      }
+
+      // 상태 초기화
+      this._isAvatarConnected = false
+      this._speechConfig = null
+      this._avatarConfig = null
+      this._isSpeaking = false
+
+      console.log('[Avatar] 연결 해제 완료')
+    } finally {
+      this._isDisconnecting = false
+    }
+  },
+
+  /**
+   * 동기적 정리 (beforeunload용)
+   * 페이지 언로드 시 사용 - async 대기 불가
+   */
+  disconnectAvatarSync() {
+    console.log('[Avatar] 동기 정리 시작')
+
+    // 동기적으로 가능한 정리만 수행
     if (this._peerConnection) {
-      this._peerConnection.close()
+      try {
+        this._peerConnection.close()
+      } catch (e) { /* ignore */ }
       this._peerConnection = null
     }
 
-    // Video element 정리
     if (this._avatarVideoElement) {
       this._avatarVideoElement.srcObject = null
     }
 
-    // Audio element 정리
     if (this._avatarAudioElement) {
       this._avatarAudioElement.pause()
       this._avatarAudioElement.srcObject = null
-      this._avatarAudioElement.remove()
-      this._avatarAudioElement = null
     }
 
-    // 상태 초기화
     this._isAvatarConnected = false
+    this._avatarSynthesizer = null
     this._speechConfig = null
     this._avatarConfig = null
     this._isSpeaking = false
+    this._isDisconnecting = false
+    this._isInitializing = false
   },
 
   /**

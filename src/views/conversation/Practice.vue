@@ -17,9 +17,8 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- Main Chat Area -->
       <main class="flex-1 flex flex-col relative min-w-0 bg-gray-50 transition-all duration-300">
-        <!-- Terminology Section (Chat Mode only) -->
+        <!-- Terminology Section (필수 용어 표시) -->
         <PracticeTerminology
-          v-if="!voice.avatarEnabled.value"
           :required-terms="conversation.requiredTerms.value"
           :detected-terms="conversation.detectedTerms.value"
         />
