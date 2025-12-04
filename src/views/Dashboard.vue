@@ -1,30 +1,30 @@
 <template>
-  <div class="h-full overflow-y-auto bg-gray-50/50 p-6 md:p-8">
-    <div class="max-w-[1600px] mx-auto space-y-8">
+  <div class="h-full overflow-hidden bg-gray-50/50 p-4 md:p-6">
+    <div class="max-w-[1600px] mx-auto h-full flex flex-col gap-4">
       
       <!-- 1. Welcome Banner -->
-      <div class="bg-blue-600 rounded-[2rem] p-8 md:p-10 text-white relative overflow-hidden shadow-lg shadow-blue-200">
+      <div class="bg-blue-600 rounded-[2rem] p-5 md:p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200 shrink-0">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-10">
           <div class="absolute right-0 top-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="absolute left-0 bottom-0 w-64 h-64 bg-blue-400 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
         </div>
 
-        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div class="space-y-4 max-w-2xl">
-            <h1 class="text-3xl md:text-4xl font-bold font-nanum-round-eb">Welcome back, {{ user?.fullName || 'User' }}!</h1>
-            <div class="space-y-1 opacity-90">
-              <p class="text-lg font-medium">
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-2 max-w-2xl">
+            <h1 class="text-2xl md:text-3xl font-bold font-nanum-round-eb">Welcome back, {{ user?.fullName || 'User' }}!</h1>
+            <div class="space-y-0.5 opacity-90">
+              <p class="text-base font-medium">
                 📅 <span class="font-bold">{{ upcomingEvents.length }}</span> schedules remaining {{ selectedDate ? 'on selected date' : 'today' }}!
               </p>
-              <p class="text-lg font-medium">
+              <p class="text-base font-medium">
                 💬 Today's Expression: <span class="font-bold underline decoration-2 underline-offset-4">"Let's touch base later."</span>
               </p>
             </div>
           </div>
           
           <!-- 3D Avatar Placeholder -->
-          <div class="hidden md:block w-48 h-48 -my-10 relative">
+          <div class="hidden md:block w-32 h-32 -my-6 relative">
             <img 
               src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
               alt="User Avatar"
@@ -35,21 +35,22 @@
       </div>
 
       <!-- Main Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
         
         <!-- Left Column (Content) -->
-        <div class="lg:col-span-8 space-y-8">
+        <div class="lg:col-span-8 flex flex-col gap-4 h-full overflow-hidden">
           
           <!-- 2. Small Talk / Scenario Practice -->
-          <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-[500px] flex flex-col relative group hover:shadow-md transition-all">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white z-10">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Reduced height to 50% to prevent cutting off bottom row -->
+          <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden h-1/2 flex flex-col relative group hover:shadow-md transition-all shrink-0">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10 shrink-0">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
-                <h2 class="text-lg font-bold text-gray-900">Let's Practice Small Talk!</h2>
+                <h2 class="text-base font-bold text-gray-900">Let's Practice Small Talk!</h2>
               </div>
               <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,12 +60,12 @@
             </div>
 
             <!-- Chat Area -->
-            <div class="flex-1 bg-gray-50 p-6 overflow-y-auto space-y-6">
+            <div class="flex-1 bg-gray-50 p-4 overflow-y-auto space-y-3 custom-scrollbar">
               <!-- AI Message -->
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shrink-0 shadow-md">AI</div>
-                <div class="bg-white p-5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 max-w-[80%]">
-                  <p class="text-gray-800 leading-relaxed text-lg">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-md">AI</div>
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 max-w-[80%]">
+                  <p class="text-gray-800 leading-relaxed text-sm">
                     Hi {{ user?.fullName }}! I noticed you have a meeting with the design team later.
                     <br>Want to practice some casual openers?
                   </p>
@@ -72,24 +73,24 @@
               </div>
 
               <!-- User Message (Mockup) -->
-              <div class="flex items-start gap-4 justify-end opacity-50">
-                <div class="bg-blue-600 p-5 rounded-2xl rounded-tr-none shadow-sm text-white max-w-[80%]">
-                  <p class="text-lg">Sure, let's try that.</p>
+              <div class="flex items-start gap-3 justify-end opacity-50">
+                <div class="bg-blue-600 p-3 rounded-2xl rounded-tr-none shadow-sm text-white max-w-[80%]">
+                  <p class="text-sm">Sure, let's try that.</p>
                 </div>
               </div>
             </div>
 
             <!-- Input Area -->
-            <div class="p-6 bg-white border-t border-gray-100">
-              <div class="flex gap-4">
-                <button class="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 group">
-                  <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-white border-t border-gray-100 shrink-0">
+              <div class="flex gap-3">
+                <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 group">
+                  <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   </svg>
                   Voice Input
                 </button>
-                <button class="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl bg-white border-2 border-gray-100 text-gray-700 font-bold hover:bg-gray-50 hover:border-gray-200 transition-all">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border-2 border-gray-100 text-gray-700 text-sm font-bold hover:bg-gray-50 hover:border-gray-200 transition-all">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                   Text Input
@@ -99,11 +100,11 @@
           </div>
 
           <!-- Bottom Row: Performance & Quick Actions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-1/2 min-h-0 shrink-0">
             <!-- Performance Chart -->
-            <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-              <div class="flex items-center justify-between mb-6">
-                <h3 class="font-bold text-gray-900">Performance</h3>
+            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
+              <div class="flex items-center justify-between mb-3 shrink-0">
+                <h3 class="font-bold text-gray-900 text-sm">Performance</h3>
                 <select class="text-xs font-bold text-gray-500 bg-gray-50 rounded-lg px-2 py-1 border-none focus:ring-0">
                   <option>Overall</option>
                   <option>Weekly</option>
@@ -111,7 +112,7 @@
               </div>
               
               <!-- Mockup Chart -->
-              <div class="relative h-48 w-full">
+              <div class="relative flex-1 w-full min-h-0">
                 <!-- Grid Lines -->
                 <div class="absolute inset-0 flex flex-col justify-between text-xs text-gray-300">
                   <div class="border-b border-gray-50 w-full h-0"></div>
@@ -136,7 +137,7 @@
                   <circle cx="300" cy="80" r="4" fill="#3b82f6" stroke="white" stroke-width="2" />
                 </svg>
               </div>
-              <div class="flex justify-between mt-2 text-xs text-gray-400">
+              <div class="flex justify-between mt-2 text-xs text-gray-400 shrink-0">
                 <span>1</span>
                 <span>2</span>
                 <span>3</span>
@@ -144,100 +145,100 @@
               </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-              <h3 class="font-bold text-gray-900 mb-6">Quick Actions</h3>
-              <div class="grid grid-cols-2 gap-4">
-                <router-link to="/management/documents" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all group">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-blue-600 group-hover:scale-110 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
+            <!-- Quick Actions (Swiper) -->
+            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden">
+              <h3 class="font-bold text-gray-900 text-sm mb-3 shrink-0">Quick Actions</h3>
+              
+              <swiper
+                :modules="modules"
+                :pagination="{ clickable: true }"
+                class="w-full h-full pb-6"
+              >
+                <!-- Slide 1: 2 Rows, 2 Columns -->
+                <swiper-slide>
+                  <div class="grid grid-cols-2 gap-3 h-full">
+                    <router-link v-for="action in quickActions.slice(0, 4)" :key="action.name" :to="action.path" 
+                      class="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all group h-full"
+                    >
+                      <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-blue-600 group-hover:scale-110 transition-all">
+                        <component :is="action.icon" class="w-5 h-5" />
+                      </div>
+                      <span class="text-xs font-bold text-center leading-tight">{{ action.name }}</span>
+                    </router-link>
                   </div>
-                  <span class="text-xs font-bold">Upload</span>
-                </router-link>
+                </swiper-slide>
 
-                <router-link to="/translation/text" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-amber-50 hover:text-amber-600 transition-all group">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-amber-600 group-hover:scale-110 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                    </svg>
+                <!-- Slide 2: 2 Rows, 2 Columns -->
+                <swiper-slide>
+                  <div class="grid grid-cols-2 gap-3 h-full">
+                    <router-link v-for="action in quickActions.slice(4, 8)" :key="action.name" :to="action.path" 
+                      class="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl bg-gray-50 hover:bg-blue-50 hover:text-blue-600 transition-all group h-full"
+                    >
+                      <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-blue-600 group-hover:scale-110 transition-all">
+                        <component :is="action.icon" class="w-5 h-5" />
+                      </div>
+                      <span class="text-xs font-bold text-center leading-tight">{{ action.name }}</span>
+                    </router-link>
                   </div>
-                  <span class="text-xs font-bold">Translate</span>
-                </router-link>
-
-                <router-link to="/management/project" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-emerald-50 hover:text-emerald-600 transition-all group">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-emerald-600 group-hover:scale-110 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                  <span class="text-xs font-bold">New Project</span>
-                </router-link>
-
-                <router-link to="/collaboration/mail" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50 hover:bg-rose-50 hover:text-rose-600 transition-all group">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-gray-600 group-hover:text-rose-600 group-hover:scale-110 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span class="text-xs font-bold">Mail</span>
-                </router-link>
-              </div>
+                </swiper-slide>
+              </swiper>
             </div>
           </div>
         </div>
 
         <!-- Right Column (Sidebar) -->
-        <div class="lg:col-span-4 space-y-8">
+        <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
           
-          <!-- 3. Mini Calendar -->
-          <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="font-bold text-gray-900 uppercase tracking-wider text-sm">{{ currentMonthName }} {{ currentYear }}</h3>
-              <div class="flex gap-2">
+          <!-- 3. Mini Calendar (Strict 1:1 Ratio, Overflow Hidden) -->
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 h-1/2 min-h-0 flex flex-col overflow-hidden relative z-10">
+            <div class="flex items-center justify-between mb-2 shrink-0">
+              <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs">{{ currentMonthName }} {{ currentYear }}</h3>
+              <div class="flex gap-1">
                 <button @click="prevMonth" class="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <button @click="nextMonth" class="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
               </div>
             </div>
 
             <!-- Calendar Grid -->
-            <div class="grid grid-cols-7 gap-2 text-center mb-2">
-              <span v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="day" class="text-xs font-bold text-gray-400 py-2">{{ day }}</span>
-            </div>
-            <div class="grid grid-cols-7 gap-2 text-center">
-              <div v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays" :key="date.toISOString()" 
-                @click="selectDate(date)"
-                class="aspect-square flex flex-col items-center justify-center relative rounded-full text-sm font-medium transition-all cursor-pointer"
-                :class="[
-                  // Base text color
-                  !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
-                  
-                  // Hover state (only if not an event start)
-                  !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
+            <!-- Changed justify-center to justify-start to prevent top clipping -->
+            <div class="flex-1 flex flex-col justify-start overflow-hidden">
+              <div class="grid grid-cols-7 gap-1 text-center mb-1">
+                <span v-for="day in ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']" :key="day" class="text-[10px] font-bold text-gray-400 py-1">{{ day }}</span>
+              </div>
+              <div class="grid grid-cols-7 gap-1 text-center">
+                <div v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays" :key="date.toISOString()" 
+                  @click="selectDate(date)"
+                  class="aspect-square flex flex-col items-center justify-center relative rounded-full text-xs font-medium transition-all cursor-pointer"
+                  :class="[
+                    // Base text color
+                    !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
+                    
+                    // Hover state (only if not an event start)
+                    !eventInfo?.isStart && isCurrentMonth ? 'hover:bg-gray-100' : '',
 
-                  // Event Styling (Start Date - Solid Color)
-                  eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md transform scale-105` : '',
+                    // Event Styling (Start Date - Solid Color)
+                    eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md transform scale-105` : '',
 
-                  // Event Styling (Continued - Light Color)
-                  eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
+                    // Event Styling (Continued - Light Color)
+                    eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
 
-                  // Selected State (if no event)
-                  isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
-                ]"
-              >
-                {{ date.getDate() }}
+                    // Selected State (if no event)
+                    isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+                  ]"
+                >
+                  {{ date.getDate() }}
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 4. Upcoming Tasks -->
-          <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-6">
+          <!-- 4. Upcoming Tasks (Strict 1:1 Ratio) -->
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 h-1/2 min-h-0 flex flex-col overflow-hidden relative z-20">
+            <div class="flex items-center justify-between mb-3 shrink-0">
               <h3 class="font-bold text-gray-900">
                 {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
               </h3>
@@ -245,42 +246,41 @@
               <router-link v-else to="/management/schedule" class="text-xs font-bold text-blue-600 hover:text-blue-700">See all</router-link>
             </div>
 
-            <div class="space-y-4">
-              <div v-if="loadingEvents" class="space-y-3">
-                <div v-for="i in 3" :key="i" class="h-20 bg-gray-50 rounded-xl animate-pulse"></div>
+            <div class="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+              <div v-if="loadingEvents" class="space-y-2">
+                <div v-for="i in 3" :key="i" class="h-14 bg-gray-50 rounded-xl animate-pulse"></div>
               </div>
-              
-              <div v-else-if="upcomingEvents.length === 0" class="text-center py-8 text-gray-400">
+
+              <div v-else-if="upcomingEvents.length === 0" class="text-center py-4 text-gray-400">
                 <p class="text-sm">No tasks {{ selectedDate ? 'on this day' : 'upcoming' }}</p>
               </div>
 
-              <div v-else v-for="event in upcomingEvents" :key="event.id" 
-                class="group flex items-center gap-4 p-4 rounded-2xl transition-all border border-transparent hover:shadow-md"
-                :class="[event.colorClass ? event.lightColorClass : 'bg-gray-50 hover:bg-white hover:border-gray-100']"
+              <div v-else v-for="event in upcomingEvents" :key="event.id"
+                class="group flex items-center gap-4 p-4 rounded-2xl transition-all border border-transparent hover:shadow-md shrink-0"
+                :class="[event.lightColorClass]"
               >
                 <!-- Date Badge -->
-                <div class="flex flex-col items-center justify-center w-12 h-12 rounded-xl shadow-sm shrink-0 transition-colors"
-                  :class="[event.colorClass || 'bg-white group-hover:bg-blue-50 text-gray-900']"
+                <div class="flex flex-col items-center justify-center w-12 h-12 rounded-full shadow-sm shrink-0 transition-colors"
+                  :class="[event.colorClass]"
                 >
-                  <span class="text-xs font-bold uppercase" :class="event.colorClass ? 'text-white/80' : 'text-gray-500'">{{ formatMonth(event.start) }}</span>
-                  <span class="text-lg font-bold" :class="event.colorClass ? 'text-white' : ''">{{ formatDay(event.start) }}</span>
+                  <span class="text-lg font-bold text-white">{{ formatDay(event.start) }}</span>
                 </div>
 
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-bold text-gray-900 truncate">{{ event.title }}</h4>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span class="text-xs" :class="event.colorClass ? 'text-gray-600' : 'text-gray-500'">{{ formatTime(event.start) }}</span>
-                    <span v-if="event.extendedProps?.project" class="text-[10px] px-2 py-0.5 rounded-full font-bold truncate max-w-[100px]"
-                      :class="event.colorClass ? 'bg-white/50 text-gray-800' : 'bg-blue-100 text-blue-700'"
-                    >
-                      {{ event.extendedProps.project.name }}
-                    </span>
+                  <h4 class="font-bold text-gray-900 text-sm truncate">{{ event.title }}</h4>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs text-gray-500">{{ formatDateRange(event.start, event.end) }}</span>
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span class="text-xs text-gray-500">{{ formatTime(event.start) }} - {{ formatTime(event.end || event.start) }}</span>
+                  </div>
+                  <div v-if="event.extendedProps?.project" class="text-xs text-gray-500 mt-0.5 truncate">
+                    {{ event.extendedProps.project.name }}
                   </div>
                 </div>
 
                 <!-- Action Button -->
-                <button @click="goToPractice(event)" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:scale-110 transition-all shadow-sm">
+                <button @click="goToPractice(event)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
@@ -300,23 +300,51 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useScheduleEvents } from '@/composables/management/useScheduleEvents';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+
+import { 
+  DocumentTextIcon, 
+  LanguageIcon, 
+  FolderPlusIcon, 
+  EnvelopeIcon, 
+  CalendarIcon, 
+  ChatBubbleLeftRightIcon, 
+  BookOpenIcon, 
+  VideoCameraIcon 
+} from '@heroicons/vue/24/outline';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const user = computed(() => authStore.user);
+const modules = [Pagination];
+
+// Quick Actions Data
+const quickActions = [
+  { name: 'Upload', path: '/management/documents', icon: DocumentTextIcon },
+  { name: 'Translate', path: '/translation/text', icon: LanguageIcon },
+  { name: 'New Project', path: '/management/project', icon: FolderPlusIcon },
+  { name: 'Mail', path: '/collaboration/mail', icon: EnvelopeIcon },
+  { name: 'Schedule', path: '/management/schedule', icon: CalendarIcon },
+  { name: 'Scenario', path: '/conversation/scenario', icon: ChatBubbleLeftRightIcon },
+  { name: 'Expression', path: '/conversation/expression', icon: BookOpenIcon },
+  { name: 'Video', path: '/translation/video', icon: VideoCameraIcon },
+];
 
 // Schedule Logic
 const { allEvents, fetchAllEvents, loading: loadingEvents } = useScheduleEvents();
 const selectedDate = ref(null);
 
-// Color Palette for Events
+// Color Palette for Events (Vibrant + Pastel)
 const eventColors = [
-  { bg: 'bg-blue-500', light: 'bg-blue-50' },
-  { bg: 'bg-pink-500', light: 'bg-pink-50' },
-  { bg: 'bg-green-500', light: 'bg-green-50' },
-  { bg: 'bg-orange-500', light: 'bg-orange-50' },
-  { bg: 'bg-purple-500', light: 'bg-purple-50' },
-  { bg: 'bg-teal-500', light: 'bg-teal-50' },
+  { bg: 'bg-blue-500', light: 'bg-blue-100' },
+  { bg: 'bg-pink-500', light: 'bg-pink-100' },
+  { bg: 'bg-green-500', light: 'bg-green-100' },
+  { bg: 'bg-orange-500', light: 'bg-orange-100' },
+  { bg: 'bg-purple-500', light: 'bg-purple-100' },
+  { bg: 'bg-teal-500', light: 'bg-teal-100' },
 ];
 
 const getEventColor = (eventId) => {
@@ -357,7 +385,7 @@ const upcomingEvents = computed(() => {
   const sorted = events.sort((a, b) => new Date(a.start) - new Date(b.start));
   
   // Assign colors to events for display
-  return sorted.slice(0, 5).map(event => {
+  return sorted.slice(0, 50).map(event => {
     const colors = getEventColor(event.id);
     return {
       ...event,
@@ -475,6 +503,16 @@ const isSelected = (date) => {
 const formatMonth = (date) => new Date(date).toLocaleString('en-US', { month: 'short' });
 const formatDay = (date) => new Date(date).getDate();
 const formatTime = (date) => new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+const formatDateRange = (start, end) => {
+  const s = new Date(start);
+  const e = end ? new Date(end) : s;
+  const sDay = s.getDate();
+  const eDay = e.getDate();
+  const month = s.toLocaleString('en-US', { month: 'short' });
+  
+  if (sDay === eDay) return `${sDay}th ${month} ${s.getFullYear()}`;
+  return `${sDay}th - ${eDay}th ${month} ${s.getFullYear()}`;
+};
 
 function goToPractice(event) {
   // Navigate to scenario practice
