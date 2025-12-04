@@ -13,15 +13,15 @@ import {
   CommandLineIcon
 } from '@heroicons/vue/24/outline'
 
-defineProps({
+const props = defineProps({
   /** 입력 모드 (text/voice) */
   inputMode: {
     type: String,
     default: 'text'
   },
-  /** 사용자 입력 텍스트 */
+  /** 사용자 입력 텍스트 (ref 또는 string) */
   userInput: {
-    type: String,
+    type: [String, Object],
     default: ''
   },
   /** 로딩 상태 */
@@ -76,6 +76,8 @@ defineProps({
   }
 })
 
+import { computed, isRef } from 'vue'
+
 const emit = defineEmits([
   'update:userInput',
   'toggleInputMode',
@@ -84,6 +86,14 @@ const emit = defineEmits([
   'stopRecording',
   'sendMessage'
 ])
+
+// userInput이 ref인 경우와 string인 경우 모두 처리
+const userInputValue = computed(() => {
+  if (isRef(props.userInput)) {
+    return props.userInput.value || ''
+  }
+  return props.userInput || ''
+})
 </script>
 
 <template>
@@ -145,7 +155,7 @@ const emit = defineEmits([
       </div>
 
       <!-- Controls -->
-      <div class="flex items-end gap-3">
+      <div class="flex items-center gap-3">
         <!-- Mode Toggle -->
         <button
           @click="emit('toggleInputMode')"
@@ -176,7 +186,7 @@ const emit = defineEmits([
         <!-- Input Field (Text Mode) -->
         <div v-if="inputMode === 'text'" class="flex-1 relative">
           <textarea
-            :value="userInput"
+            :value="userInputValue"
             @input="emit('update:userInput', $event.target.value)"
             @keydown.enter.prevent="emit('sendMessage')"
             placeholder="메시지를 입력하세요... (Enter로 전송)"
@@ -218,10 +228,11 @@ const emit = defineEmits([
           </div>
         </button>
 
-        <!-- Send Button -->
+        <!-- Send Button (Text Mode only - Voice Mode auto-sends) -->
         <button
+          v-if="inputMode === 'text'"
           @click="emit('sendMessage')"
-          :disabled="!userInput.trim() || isLoading || isRecording || isProcessingVoice"
+          :disabled="!userInputValue.trim() || isLoading"
           class="p-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200/50"
         >
           <PaperAirplaneIcon class="w-6 h-6" />

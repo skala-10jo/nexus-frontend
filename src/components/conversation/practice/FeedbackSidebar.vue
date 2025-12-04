@@ -51,7 +51,7 @@ const emit = defineEmits([
 </script>
 
 <template>
-  <aside class="w-[700px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
+  <aside class="w-[45%] min-w-[450px] max-w-[1400px] bg-white border-l border-gray-200 flex flex-col shadow-xl z-30 shrink-0 transition-all duration-300">
     <!-- Header -->
     <div class="p-5 border-b border-gray-100 bg-white">
       <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
@@ -179,12 +179,14 @@ const emit = defineEmits([
             </div>
 
             <!-- Grammar Corrections -->
-            <div v-if="selectedMessageFeedback.grammar_corrections?.length" class="space-y-3">
+            <div class="space-y-3">
               <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <ExclamationCircleIcon class="w-4 h-4 text-amber-500" />
+                <ExclamationCircleIcon v-if="selectedMessageFeedback.grammar_corrections?.length" class="w-4 h-4 text-amber-500" />
+                <CheckCircleIcon v-else class="w-4 h-4 text-emerald-500" />
                 문법 교정
               </h3>
-              <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
+              <!-- 문법 교정이 있는 경우 -->
+              <div v-if="selectedMessageFeedback.grammar_corrections?.length" class="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
                 <div
                   v-for="(correction, idx) in selectedMessageFeedback.grammar_corrections"
                   :key="idx"
@@ -193,6 +195,11 @@ const emit = defineEmits([
                   <span class="text-amber-500">•</span>
                   <span>{{ correction }}</span>
                 </div>
+              </div>
+              <!-- 문법 교정이 없는 경우 칭찬 메시지 -->
+              <div v-else class="bg-amber-50/50 rounded-xl border border-amber-100 p-4 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
+                <p class="text-sm text-gray-900">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
               </div>
             </div>
 
@@ -218,17 +225,35 @@ const emit = defineEmits([
             <div v-if="selectedMessageFeedback.pronunciation_details" class="space-y-3">
               <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                 <MicrophoneIcon class="w-4 h-4 text-purple-500" />
-                발음
+                발음 평가
               </h3>
 
-              <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                  <span class="text-sm font-medium text-gray-600">정확도</span>
-                  <span class="text-lg font-bold text-purple-600">
-                    {{ selectedMessageFeedback.pronunciation_details.pronunciation_score?.toFixed(1) }}
-                  </span>
+              <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
+                <!-- Scores -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">
+                      {{ selectedMessageFeedback.pronunciation_details.pronunciation_score?.toFixed(0) }}
+                    </div>
+                    <div class="text-xs text-gray-500">전체 점수</div>
+                  </div>
+                  <div class="space-y-1 text-xs">
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">정확도</span>
+                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.accuracy_score?.toFixed(0) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">유창성</span>
+                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.fluency_score?.toFixed(0) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">운율</span>
+                      <span class="font-medium">{{ selectedMessageFeedback.pronunciation_details.prosody_score?.toFixed(0) }}</span>
+                    </div>
+                  </div>
                 </div>
 
+                <!-- Word-level scores -->
                 <div class="flex flex-wrap gap-2">
                   <span
                     v-for="(word, idx) in selectedMessageFeedback.pronunciation_details.words"
@@ -243,6 +268,24 @@ const emit = defineEmits([
                   >
                     {{ word.word }}
                   </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pronunciation Feedback Text (from GPT) -->
+            <div v-if="selectedMessageFeedback.pronunciation_feedback?.length" class="space-y-3">
+              <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <MicrophoneIcon class="w-4 h-4 text-purple-500" />
+                발음 피드백
+              </h3>
+              <div class="bg-purple-50 border border-purple-100 rounded-xl p-4 space-y-2">
+                <div
+                  v-for="(tip, idx) in selectedMessageFeedback.pronunciation_feedback"
+                  :key="idx"
+                  class="flex gap-2 text-sm text-gray-700"
+                >
+                  <span class="text-purple-500">•</span>
+                  <span>{{ tip }}</span>
                 </div>
               </div>
             </div>

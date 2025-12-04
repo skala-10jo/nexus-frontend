@@ -4,12 +4,29 @@
  *
  * 메시지 목록, 아바타 뷰, 로딩 상태를 표시합니다.
  */
+import { ref, watch, nextTick } from 'vue'
 import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   LanguageIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  LightBulbIcon
 } from '@heroicons/vue/24/outline'
+
+// 스크롤 컨테이너 ref
+const scrollContainer = ref(null)
+
+/**
+ * 스크롤을 맨 아래로 이동
+ */
+const scrollToBottom = () => {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+  }
+}
+
+// 외부에서 호출 가능하도록 expose
+defineExpose({ scrollToBottom })
 
 const props = defineProps({
   /** 메시지 목록 */
@@ -29,6 +46,11 @@ const props = defineProps({
   },
   /** 번역 로딩 상태 */
   translationLoading: {
+    type: Object,
+    default: () => ({})
+  },
+  /** 힌트 로딩 상태 */
+  hintLoading: {
     type: Object,
     default: () => ({})
   },
@@ -86,6 +108,7 @@ const props = defineProps({
 
 const emit = defineEmits([
   'toggleTranslation',
+  'toggleHint',
   'messageClick'
 ])
 
@@ -107,6 +130,26 @@ const formatTime = (date) => {
     minute: '2-digit'
   })
 }
+
+// 메시지 변경 시 자동 스크롤
+watch(
+  () => props.messages.length,
+  async () => {
+    await nextTick()
+    scrollToBottom()
+  }
+)
+
+// 로딩 상태 변경 시에도 스크롤 (AI 응답 대기 중)
+watch(
+  () => props.isLoading,
+  async (newVal) => {
+    if (newVal) {
+      await nextTick()
+      scrollToBottom()
+    }
+  }
+)
 </script>
 
 <template>
@@ -160,7 +203,7 @@ const formatTime = (date) => {
   </div>
 
   <!-- Chat Mode View -->
-  <div v-else class="flex-1 flex flex-col min-h-0 bg-gray-50 overflow-y-auto p-6 space-y-6 scroll-smooth">
+  <div ref="scrollContainer" v-else class="flex-1 flex flex-col min-h-0 bg-gray-50 overflow-y-auto p-6 space-y-6 scroll-smooth">
     <!-- Empty State -->
     <div v-if="!isLoading && messages.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
       <ChatBubbleLeftRightIcon class="w-16 h-16 opacity-20" />
@@ -193,16 +236,87 @@ const formatTime = (date) => {
         <!-- Message Content -->
         <p>{{ message.showTranslation ? (message.translatedText || message.message) : message.message }}</p>
 
-        <!-- Translation Button (AI only) -->
-        <button
-          v-if="message.speaker === 'ai'"
-          @click.stop="emit('toggleTranslation', index)"
-          :disabled="translationLoading[index]"
-          class="absolute -bottom-9 left-0 text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md transition-colors shadow-sm border border-blue-100 z-10"
+        <!-- AI Message Actions -->
+        <div v-if="message.speaker === 'ai'" class="absolute -bottom-9 left-0 flex items-center gap-2 z-10">
+          <!-- Translation Button -->
+          <button
+            @click.stop="emit('toggleTranslation', index)"
+            :disabled="translationLoading[index]"
+            class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md transition-colors shadow-sm border border-blue-100"
+          >
+            <LanguageIcon class="w-3.5 h-3.5" />
+            {{ translationLoading[index] ? '번역 중...' : (message.showTranslation ? '원문 보기' : '번역') }}
+          </button>
+
+          <!-- Hint Button -->
+          <button
+            @click.stop="emit('toggleHint', index)"
+            :disabled="hintLoading[index]"
+            class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1.5 bg-amber-50 px-2 py-1 rounded-md transition-colors shadow-sm border border-amber-100"
+          >
+            <LightBulbIcon class="w-3.5 h-3.5" />
+            {{ hintLoading[index] ? '생성 중...' : (message.showHint ? '힌트 닫기' : '힌트') }}
+          </button>
+        </div>
+
+        <!-- Hint Display - Multiple Hints -->
+        <div
+          v-if="message.speaker === 'ai' && message.showHint && message.hints?.length"
+          class="mt-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4 relative animate-fade-in-down"
         >
-          <LanguageIcon class="w-3.5 h-3.5" />
-          {{ translationLoading[index] ? '번역 중...' : (message.showTranslation ? '원문 보기' : '번역') }}
-        </button>
+          <div class="absolute -top-1.5 left-20 w-3 h-3 bg-amber-50 border-t border-l border-amber-100 transform rotate-45"></div>
+
+          <!-- Header -->
+          <div class="flex items-center gap-2 mb-3">
+            <div class="p-1 bg-amber-100 rounded-full text-amber-600">
+              <LightBulbIcon class="w-3.5 h-3.5" />
+            </div>
+            <p class="text-[13px] font-bold text-amber-600 uppercase tracking-wider">이렇게 말해보세요!</p>
+          </div>
+
+          <!-- Hints List -->
+          <div class="space-y-3">
+            <div
+              v-for="(hint, hintIdx) in message.hints"
+              :key="hintIdx"
+              class="group/hint"
+            >
+              <!-- Hint Text -->
+              <div class="flex items-start gap-2">
+                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-200 text-amber-700 text-xs font-bold flex items-center justify-center">
+                  {{ hintIdx + 1 }}
+                </span>
+                <div class="flex-1">
+                  <p class="text-sm text-gray-900 font-medium leading-relaxed">"{{ hint }}"</p>
+                  <!-- Hint Explanation (Korean) -->
+                  <p
+                    v-if="message.hintExplanations?.[hintIdx]"
+                    class="text-xs text-gray-500 mt-1 pl-0.5"
+                  >
+                    {{ message.hintExplanations[hintIdx] }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminology Suggestions -->
+          <div
+            v-if="message.terminologySuggestions?.length"
+            class="mt-3 pt-3 border-t border-amber-100"
+          >
+            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-1.5">추천 용어</p>
+            <div class="flex flex-wrap gap-1.5">
+              <span
+                v-for="term in message.terminologySuggestions"
+                :key="term"
+                class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium"
+              >
+                {{ term }}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <!-- Feedback Indicator (User only) -->
         <div
