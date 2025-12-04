@@ -68,11 +68,14 @@ export const speakingTutorService = {
   /**
    * Get learning mode data
    * @param {string} sessionId - Session UUID
-   * @param {number} speakerId - Optional speaker filter
+   * @param {number[]} speakerIds - Optional speaker IDs filter
    * @returns {Promise<Object>} Learning items
    */
-  getLearningData: async (sessionId, speakerId = null) => {
-    const params = speakerId ? { speakerId } : {}
+  getLearningData: async (sessionId, speakerIds = null) => {
+    const params = {}
+    if (speakerIds && speakerIds.length > 0) {
+      params.speakerIds = speakerIds.join(',')
+    }
     const response = await pythonAPI.get(`${BASE_URL}/learning/${sessionId}`, { params })
     return response.data
   },
