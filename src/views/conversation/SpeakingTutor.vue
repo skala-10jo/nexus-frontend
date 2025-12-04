@@ -113,115 +113,158 @@
       <!-- Analysis Results -->
       <div v-else-if="currentView === 'results'" class="flex-1 flex gap-6 p-6 overflow-hidden">
         <!-- Left Panel: Transcript Timeline -->
-        <div class="w-[55%] min-w-0 flex flex-col gap-4 overflow-hidden">
-          <!-- Speaker Filter -->
-          <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex-shrink-0">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="text-sm font-semibold text-gray-900">화자</h4>
-              <button
-                @click="showAllSpeakers"
-                class="text-xs text-blue-600 hover:text-blue-700 font-medium"
-              >
-                전체 보기
-              </button>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="speaker in speakers"
-                :key="speaker.id"
-                class="flex items-center gap-1"
-              >
-                <!-- 편집 모드 -->
-                <div
-                  v-if="editingSpeakerId === speaker.id"
-                  class="flex items-center gap-1 bg-white border-2 border-blue-400 rounded-full px-2 py-1"
+        <!-- Left Panel: Transcript Timeline -->
+        <div class="w-[55%] min-w-0 flex flex-col h-full">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-lg h-full overflow-hidden flex flex-col">
+            <!-- Header & Speaker Filter -->
+            <div class="p-6 border-b border-gray-100 bg-white z-10">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <UserIcon class="w-5 h-5 text-gray-500" />
+                  대화 참여자
+                </h4>
+                <button
+                  @click="showAllSpeakers"
+                  class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors"
                 >
-                  <span
-                    class="inline-block w-2 h-2 rounded-full"
-                    :class="getSpeakerColor(speaker.id)"
-                  ></span>
-                  <input
-                    v-model="editingSpeakerLabel"
-                    type="text"
-                    class="w-24 text-sm border-none outline-none bg-transparent"
-                    placeholder="이름 입력"
-                    @keyup.enter="saveSpeakerLabel(speaker.id)"
-                    @keyup.esc="cancelEditSpeaker"
-                    autofocus
-                  />
-                  <button
-                    @click="saveSpeakerLabel(speaker.id)"
-                    :disabled="isSavingSpeakerLabel"
-                    class="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition"
-                    title="저장"
-                  >
-                    <CheckIcon class="w-4 h-4" />
-                  </button>
-                  <button
-                    @click="cancelEditSpeaker"
-                    class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
-                    title="취소"
-                  >
-                    <XMarkIcon class="w-4 h-4" />
-                  </button>
-                </div>
-                <!-- 일반 모드 -->
-                <template v-else>
-                  <button
-                    @click="toggleSpeakerFilter(speaker.id)"
-                    class="px-3 py-1.5 rounded-full text-sm font-medium transition"
-                    :class="selectedSpeakers.includes(speaker.id)
-                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                      : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'"
+                  전체 보기
+                </button>
+              </div>
+              
+              <div class="flex flex-wrap gap-2">
+                <div
+                  v-for="speaker in speakers"
+                  :key="speaker.id"
+                  class="group"
+                >
+                  <!-- Edit Mode -->
+                  <div
+                    v-if="editingSpeakerId === speaker.id"
+                    class="flex items-center gap-1 bg-white border-2 border-indigo-500 rounded-full px-2 py-1 shadow-sm"
                   >
                     <span
-                      class="inline-block w-2 h-2 rounded-full mr-1.5"
+                      class="inline-block w-2.5 h-2.5 rounded-full"
                       :class="getSpeakerColor(speaker.id)"
                     ></span>
-                    {{ speaker.label }} ({{ speaker.utteranceCount }})
-                  </button>
-                  <button
-                    @click.stop="startEditSpeaker(speaker)"
-                    class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
-                    title="이름 변경"
+                    <input
+                      v-model="editingSpeakerLabel"
+                      type="text"
+                      class="w-24 text-sm font-medium border-none outline-none bg-transparent text-gray-900 placeholder-gray-400"
+                      placeholder="이름 입력"
+                      @keyup.enter="saveSpeakerLabel(speaker.id)"
+                      @keyup.esc="cancelEditSpeaker"
+                      autofocus
+                    />
+                    <button
+                      @click="saveSpeakerLabel(speaker.id)"
+                      :disabled="isSavingSpeakerLabel"
+                      class="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition"
+                      title="저장"
+                    >
+                      <CheckIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="cancelEditSpeaker"
+                      class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
+                      title="취소"
+                    >
+                      <XMarkIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <!-- Normal Mode -->
+                  <div 
+                    v-else 
+                    class="flex items-center rounded-full border transition-all duration-200 group/chip"
+                    :class="selectedSpeakers.includes(speaker.id)
+                      ? 'bg-indigo-50 border-indigo-200 shadow-sm'
+                      : 'bg-white border-gray-200 hover:border-indigo-200'"
                   >
-                    <PencilIcon class="w-3.5 h-3.5" />
-                  </button>
-                </template>
+                    <button
+                      @click="toggleSpeakerFilter(speaker.id)"
+                      class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-l-full"
+                    >
+                      <span
+                        class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs shadow-sm"
+                        :class="getSpeakerBgColor(speaker.id)"
+                      >
+                        <UserIcon class="w-3.5 h-3.5" />
+                      </span>
+                      <span 
+                        class="text-sm font-bold transition-colors"
+                        :class="selectedSpeakers.includes(speaker.id) ? 'text-indigo-900' : 'text-gray-600 group-hover/chip:text-gray-900'"
+                      >
+                        {{ speaker.label }}
+                      </span>
+                      <span 
+                        class="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                        :class="selectedSpeakers.includes(speaker.id) ? 'bg-white text-indigo-600' : 'bg-gray-100 text-gray-500'"
+                      >
+                        {{ speaker.utteranceCount }}
+                      </span>
+                    </button>
+                    
+                    <!-- Separator -->
+                    <div class="w-px h-3 bg-gray-200 group-hover/chip:bg-indigo-200 transition-colors"></div>
+
+                    <button
+                      @click.stop="startEditSpeaker(speaker)"
+                      class="pl-2 pr-3 py-1.5 rounded-r-full text-gray-400 hover:text-indigo-600 transition-colors"
+                      title="이름 변경"
+                    >
+                      <PencilIcon class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Transcript List -->
-          <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-              <h4 class="text-sm font-semibold text-gray-900">대화 타임라인</h4>
-              <span class="text-xs text-gray-500">{{ filteredUtterances.length }}개 발화</span>
-            </div>
-            <div class="flex-1 overflow-y-auto">
+            <!-- Transcript List (Chat Style) -->
+            <div class="flex-1 overflow-y-auto bg-gray-50/50 p-4 space-y-4">
+              <div v-if="filteredUtterances.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
+                <ChatBubbleLeftRightIcon class="w-12 h-12 mb-2 opacity-20" />
+                <p class="text-sm">표시할 대화 내용이 없습니다</p>
+              </div>
+
               <div
                 v-for="utterance in filteredUtterances"
                 :key="utterance.id"
                 @click="selectUtterance(utterance)"
-                class="px-4 py-3 border-b border-gray-50 cursor-pointer transition hover:bg-gray-50"
-                :class="selectedUtterance?.id === utterance.id ? 'bg-blue-50' : ''"
+                class="group flex gap-3 transition-all duration-200 cursor-pointer"
               >
-                <div class="flex items-start gap-3">
-                  <div
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0"
-                    :class="getSpeakerBgColor(utterance.speakerId)"
-                  >
-                    <UserIcon class="w-5 h-5" />
+                <!-- Avatar -->
+                <div
+                  class="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-sm mt-1 transition-transform group-hover:scale-105"
+                  :class="getSpeakerBgColor(utterance.speakerId)"
+                >
+                  <UserIcon class="w-5 h-5" />
+                </div>
+
+                <!-- Bubble -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2 mb-1">
+                    <span class="text-sm font-bold text-gray-900">{{ utterance.speakerLabel }}</span>
+                    <span class="text-xs text-gray-400 font-medium">{{ formatTime(utterance.startTimeMs) }}</span>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-sm font-medium text-gray-900">{{ utterance.speakerLabel }}</span>
-                      <span class="text-xs text-gray-400">{{ formatTime(utterance.startTimeMs) }}</span>
-                    </div>
-                    <p class="text-sm text-gray-700">{{ utterance.text }}</p>
-                    <div v-if="utterance.hasFeedback" class="mt-2 flex items-center gap-2">
-                      <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                        점수: {{ utterance.feedback?.score || 0 }}/10
+                  
+                  <div 
+                    class="relative p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed transition-all duration-200 border"
+                    :class="selectedUtterance?.id === utterance.id
+                      ? 'bg-indigo-50 border-indigo-200 text-gray-900 shadow-md'
+                      : 'bg-white border-gray-100 text-gray-700 shadow-sm hover:shadow-md hover:border-gray-200'"
+                  >
+                    {{ utterance.text }}
+                    
+                    <!-- Feedback Indicator Badge -->
+                    <div v-if="utterance.hasFeedback" class="absolute -top-2 -right-2">
+                      <span 
+                        class="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border"
+                        :class="utterance.feedback?.score >= 7 ? 'bg-green-100 text-green-700 border-green-200' : 
+                                utterance.feedback?.score >= 5 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                                'bg-red-100 text-red-700 border-red-200'"
+                      >
+                        <SparklesIcon class="w-3 h-3" />
+                        {{ utterance.feedback?.score || 0 }}
                       </span>
                     </div>
                   </div>
@@ -274,9 +317,41 @@
                           <span class="text-lg text-gray-400 font-medium">/ 10</span>
                         </div>
                       </div>
-                      <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
+                      <div class="w-16 h-16 rounded-full flex items-center justify-center p-1"
                            :class="getScoreBgColor(selectedUtterance.feedback.score)">
-                        {{ getScoreEmoji(selectedUtterance.feedback.score) }}
+                        <!-- Excellent (9-10) -->
+                        <svg v-if="selectedUtterance.feedback.score >= 9" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+                          <circle cx="50" cy="50" r="45" fill="#FCD34D" />
+                          <circle cx="32" cy="40" r="5" fill="#374151" />
+                          <circle cx="68" cy="40" r="5" fill="#374151" />
+                          <path d="M30 60 Q50 80 70 60" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
+                          <circle cx="25" cy="55" r="5" fill="#F87171" opacity="0.6" />
+                          <circle cx="75" cy="55" r="5" fill="#F87171" opacity="0.6" />
+                          <path d="M45 25 L50 15 L55 25 Z" fill="#F59E0B" /> <!-- Crown/Star hint -->
+                        </svg>
+                        <!-- Good (7-8) -->
+                        <svg v-else-if="selectedUtterance.feedback.score >= 7" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+                          <circle cx="50" cy="50" r="45" fill="#FDE047" />
+                          <circle cx="35" cy="40" r="5" fill="#374151" />
+                          <circle cx="65" cy="40" r="5" fill="#374151" />
+                          <path d="M35 65 Q50 75 65 65" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
+                        </svg>
+                        <!-- Average (5-6) -->
+                        <svg v-else-if="selectedUtterance.feedback.score >= 5" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+                          <circle cx="50" cy="50" r="45" fill="#FDBA74" />
+                          <circle cx="35" cy="40" r="5" fill="#374151" />
+                          <circle cx="65" cy="40" r="5" fill="#374151" />
+                          <line x1="35" y1="65" x2="65" y2="65" stroke="#374151" stroke-width="5" stroke-linecap="round" />
+                          <path d="M60 30 Q70 25 80 30" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        <!-- Poor (0-4) -->
+                        <svg v-else viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+                          <circle cx="50" cy="50" r="45" fill="#93C5FD" />
+                          <circle cx="35" cy="45" r="5" fill="#374151" />
+                          <circle cx="65" cy="45" r="5" fill="#374151" />
+                          <path d="M35 70 Q50 60 65 70" fill="none" stroke="#374151" stroke-width="5" stroke-linecap="round" />
+                          <path d="M75 40 Q80 50 75 60" fill="#60A5FA" opacity="0.6" /> <!-- Sweat drop -->
+                        </svg>
                       </div>
                     </div>
                     
@@ -294,12 +369,14 @@
                   </div>
 
                   <!-- Grammar Corrections -->
-                  <div v-if="selectedUtterance.feedback.grammarCorrections?.length" class="space-y-3">
+                  <div class="space-y-3">
                     <h5 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                      <ExclamationTriangleIcon class="w-4 h-4 text-amber-500" />
+                      <ExclamationTriangleIcon v-if="selectedUtterance.feedback.grammarCorrections?.length" class="w-4 h-4 text-amber-500" />
+                      <CheckBadgeIcon v-else class="w-4 h-4 text-emerald-500" />
                       문법 교정
                     </h5>
-                    <div class="bg-amber-50/50 rounded-2xl border border-amber-100 overflow-hidden">
+                    <!-- 교정 사항이 있는 경우 -->
+                    <div v-if="selectedUtterance.feedback.grammarCorrections?.length" class="bg-amber-50/50 rounded-2xl border border-amber-100 overflow-hidden">
                       <div
                         v-for="(correction, idx) in selectedUtterance.feedback.grammarCorrections"
                         :key="idx"
@@ -308,6 +385,11 @@
                         <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{{ idx + 1 }}</span>
                         <p class="text-sm text-gray-700 leading-relaxed">{{ correction }}</p>
                       </div>
+                    </div>
+                    <!-- 교정 사항이 없는 경우 -->
+                    <div v-else class="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-4 flex items-center gap-3">
+                      <span class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
+                      <p class="text-sm text-emerald-700 font-medium">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
                     </div>
                   </div>
 
@@ -961,12 +1043,7 @@ function getScoreBgColor(score) {
   return 'bg-red-100 text-red-600'
 }
 
-function getScoreEmoji(score) {
-  if (score >= 9) return '🤩'
-  if (score >= 7) return '😊'
-  if (score >= 5) return '🤔'
-  return '😅'
-}
+
 
 function speakText(text) {
   if ('speechSynthesis' in window) {
