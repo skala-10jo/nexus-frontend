@@ -372,7 +372,7 @@
                   <div class="space-y-3">
                     <h5 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                       <ExclamationTriangleIcon v-if="selectedUtterance.feedback.grammarCorrections?.length" class="w-4 h-4 text-amber-500" />
-                      <CheckBadgeIcon v-else class="w-4 h-4 text-emerald-500" />
+                      <CheckBadgeIcon v-else class="w-4 h-4 text-amber-500" />
                       문법 교정
                     </h5>
                     <!-- 교정 사항이 있는 경우 -->
@@ -387,9 +387,9 @@
                       </div>
                     </div>
                     <!-- 교정 사항이 없는 경우 -->
-                    <div v-else class="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-4 flex items-center gap-3">
-                      <span class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
-                      <p class="text-sm text-emerald-700 font-medium">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
+                    <div v-else class="bg-amber-50/50 rounded-2xl border border-amber-100 p-4 flex items-center gap-3">
+                      <span class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-lg flex-shrink-0">👏</span>
+                      <p class="text-sm text-amber-700 font-medium">훌륭해요! 올바른 문법을 사용하고 있습니다.</p>
                     </div>
                   </div>
 
