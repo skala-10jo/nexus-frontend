@@ -18,11 +18,57 @@ export function useGlossaryDocument() {
   const fileInput = ref(null)
   const uploadingFiles = ref([])
 
+  // Pagination State
+  const pagination = ref({
+    page: 0,
+    size: 5, // Default 5 items per page
+    totalElements: 0,
+    totalPages: 0
+  })
+
+  // Selection State
+  const selectedDocumentIds = ref([])
+
   // ============================================
   // Computed
   // ============================================
   const documents = computed(() => documentStore.documents)
   const documentLoading = computed(() => documentStore.loading)
+
+  // Displayed pages for pagination UI
+  const displayedPages = computed(() => {
+    const current = pagination.value.page
+    const total = pagination.value.totalPages
+    const delta = 2
+    const range = []
+    const rangeWithDots = []
+    let l
+
+    for (let i = 0; i < total; i++) {
+      if (i === 0 || i === total - 1 || (i >= current - delta && i <= current + delta)) {
+        range.push(i)
+      }
+    }
+
+    for (const i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1)
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...')
+        }
+      }
+      rangeWithDots.push(i)
+      l = i
+    }
+
+    return rangeWithDots
+  })
+
+  // All selected check
+  const isAllDocumentsSelected = computed(() =>
+    documents.value.length > 0 && selectedDocumentIds.value.length === documents.value.length
+  )
 
   // ============================================
   // Actions
@@ -33,10 +79,41 @@ export function useGlossaryDocument() {
    */
   const loadDocuments = async () => {
     try {
-      await documentStore.fetchDocuments({ sort: 'uploadDate,desc' })
+      selectedDocumentIds.value = [] // Reset selection on load
+      await documentStore.fetchDocuments({
+        sort: 'uploadDate,desc',
+        page: pagination.value.page,
+        size: pagination.value.size
+      })
+
+      // Update pagination state from store
+      pagination.value = {
+        ...pagination.value,
+        totalElements: documentStore.pagination.totalElements,
+        totalPages: documentStore.pagination.totalPages
+      }
     } catch (error) {
       console.error('Failed to load documents:', error)
     }
+  }
+
+  /**
+   * 페이지 변경
+   */
+  const changePage = async (page) => {
+    if (page >= 0 && page < pagination.value.totalPages) {
+      pagination.value.page = page
+      await loadDocuments()
+    }
+  }
+
+  /**
+   * 페이지 크기 변경
+   */
+  const changePageSize = async (size) => {
+    pagination.value.size = size
+    pagination.value.page = 0 // Reset to first page
+    await loadDocuments()
   }
 
   /**
@@ -44,6 +121,43 @@ export function useGlossaryDocument() {
    */
   const toggleSection = () => {
     isDocumentSectionCollapsed.value = !isDocumentSectionCollapsed.value
+  }
+
+  /**
+   * 문서 선택 토글
+   */
+  const toggleSelectDocument = (docId) => {
+    const index = selectedDocumentIds.value.indexOf(docId)
+    if (index > -1) selectedDocumentIds.value.splice(index, 1)
+    else selectedDocumentIds.value.push(docId)
+  }
+
+  /**
+   * 전체 문서 선택 토글
+   */
+  const toggleSelectAllDocuments = () => {
+    if (isAllDocumentsSelected.value) selectedDocumentIds.value = []
+    else selectedDocumentIds.value = documents.value.map(d => d.id)
+  }
+
+  /**
+   * 문서 일괄 삭제
+   */
+  const handleBulkDeleteDocuments = async () => {
+    if (selectedDocumentIds.value.length === 0) return
+    if (!confirm(`선택한 ${selectedDocumentIds.value.length}개 문서를 삭제하시겠습니까?`)) return
+
+    try {
+      // Execute delete for each document (since store might not have bulk delete yet)
+      // Ideally backend should support bulk delete, but for now loop is fine for small batches
+      for (const id of selectedDocumentIds.value) {
+        await documentStore.deleteDocument(id)
+      }
+      await loadDocuments()
+    } catch (error) {
+      console.error('Failed to delete documents:', error)
+      alert('문서 삭제에 실패했습니다.')
+    }
   }
 
   /**
@@ -151,6 +265,8 @@ export function useGlossaryDocument() {
     if (confirm(`'${doc.originalFilename}' 파일을 삭제하시겠습니까?`)) {
       try {
         await documentStore.deleteDocument(doc.id)
+        // Reload to update list and pagination
+        await loadDocuments()
       } catch (error) {
         console.error('Failed to delete document:', error)
         alert('삭제에 실패했습니다.')
@@ -236,10 +352,19 @@ export function useGlossaryDocument() {
     isDragActive,
     fileInput,
     uploadingFiles,
+    pagination,
+    displayedPages,
+    selectedDocumentIds,
+    isAllDocumentsSelected,
 
     // Actions
     loadDocuments,
+    changePage,
+    changePageSize,
     toggleSection,
+    toggleSelectDocument,
+    toggleSelectAllDocuments,
+    handleBulkDeleteDocuments,
     triggerFileInput,
     handleDrop,
     handleFileSelect,

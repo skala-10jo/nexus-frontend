@@ -3,13 +3,14 @@
  * 용어사전 용어 툴바 컴포넌트
  * @description 문서 필터, 검색, 상태 필터, 검증 필터, 새로고침
  */
+import { ref, onMounted, onUnmounted } from 'vue'
 import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon
 } from '@heroicons/vue/24/solid'
 
-defineProps({
+const props = defineProps({
   /** 문서 목록 */
   documents: {
     type: Array,
@@ -39,6 +40,11 @@ defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  /** 선택된 언어 목록 */
+  selectedLanguages: {
+    type: Array,
+    default: () => ['korean', 'english', 'vietnamese']
   }
 })
 
@@ -51,6 +57,8 @@ const emit = defineEmits([
   'update:filterStatus',
   /** 검증 필터 변경 */
   'update:filterVerified',
+  /** 언어 선택 변경 */
+  'update:selectedLanguages',
   /** 문서 변경 */
   'document-change',
   /** 검색 */
@@ -58,6 +66,9 @@ const emit = defineEmits([
   /** 새로고침 */
   'refresh'
 ])
+
+const isLanguageDropdownOpen = ref(false)
+const languageDropdownRef = ref(null)
 
 const handleDocumentChange = (e) => {
   emit('update:selectedDocumentId', e.target.value)
@@ -76,6 +87,37 @@ const handleStatusChange = (e) => {
 const handleVerifiedChange = (e) => {
   emit('update:filterVerified', e.target.value)
 }
+
+const toggleLanguage = (lang) => {
+  const newLanguages = [...props.selectedLanguages]
+  const index = newLanguages.indexOf(lang)
+  
+  if (index > -1) {
+    // Don't allow deselecting all languages (optional, but good UX)
+    if (newLanguages.length > 1) {
+      newLanguages.splice(index, 1)
+    }
+  } else {
+    newLanguages.push(lang)
+  }
+  
+  emit('update:selectedLanguages', newLanguages)
+}
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (languageDropdownRef.value && !languageDropdownRef.value.contains(event.target)) {
+    isLanguageDropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
@@ -110,6 +152,74 @@ const handleVerifiedChange = (e) => {
     </div>
 
     <div class="flex items-center gap-2">
+      <!-- Language Filter (Multi-select) -->
+      <div class="relative" ref="languageDropdownRef">
+        <button
+          @click="isLanguageDropdownOpen = !isLanguageDropdownOpen"
+          class="flex items-center gap-2 pl-3 pr-2 py-1.5 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-600 hover:border-gray-300 transition-all"
+        >
+          <span>언어 선택 ({{ selectedLanguages.length }})</span>
+          <ChevronDownIcon class="w-3 h-3 text-gray-400 transition-transform" :class="{ 'rotate-180': isLanguageDropdownOpen }" />
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div
+          v-if="isLanguageDropdownOpen"
+          class="absolute top-full right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20"
+        >
+          <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              value="korean"
+              :checked="selectedLanguages.includes('korean')"
+              @change="toggleLanguage('korean')"
+              class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-2 text-xs text-gray-700">한국어</span>
+          </label>
+          <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              value="english"
+              :checked="selectedLanguages.includes('english')"
+              @change="toggleLanguage('english')"
+              class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-2 text-xs text-gray-700">영어</span>
+          </label>
+          <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              value="vietnamese"
+              :checked="selectedLanguages.includes('vietnamese')"
+              @change="toggleLanguage('vietnamese')"
+              class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-2 text-xs text-gray-700">베트남어</span>
+          </label>
+          <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              value="japanese"
+              :checked="selectedLanguages.includes('japanese')"
+              @change="toggleLanguage('japanese')"
+              class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-2 text-xs text-gray-700">일본어</span>
+          </label>
+          <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              value="chinese"
+              :checked="selectedLanguages.includes('chinese')"
+              @change="toggleLanguage('chinese')"
+              class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span class="ml-2 text-xs text-gray-700">중국어</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Status Filter -->
       <div class="relative">
         <select

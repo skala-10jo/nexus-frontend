@@ -3,13 +3,19 @@ import { useAuthStore } from '@/stores/auth';
 
 const routes = [
   {
+    path: '/',
+    name: 'Landing',
+    component: () => import('@/views/LandingPage.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
     meta: { requiresGuest: true }
   },
   {
-    path: '/',
+    path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/views/Dashboard.vue'),
     meta: { requiresAuth: true }
@@ -62,6 +68,12 @@ const routes = [
     path: '/conversation/mistakes',
     name: 'Mistakes',
     component: () => import('@/views/conversation/Mistakes.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/conversation/speaking-tutor',
+    name: 'SpeakingTutor',
+    component: () => import('@/views/conversation/SpeakingTutor.vue'),
     meta: { requiresAuth: true }
   },
   // Translation routes
@@ -129,7 +141,7 @@ router.beforeEach(async (to, from, next) => {
     next('/login');
   } else if (to.meta.requiresGuest && isAuthenticated) {
     // Redirect to dashboard if route is for guests only and user is authenticated
-    next('/');
+    next('/dashboard');
   } else {
     next();
   }
