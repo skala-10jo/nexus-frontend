@@ -64,6 +64,12 @@ const routes = [
     component: () => import('@/views/conversation/Mistakes.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/conversation/speaking-tutor',
+    name: 'SpeakingTutor',
+    component: () => import('@/views/conversation/SpeakingTutor.vue'),
+    meta: { requiresAuth: true }
+  },
   // Translation routes
   {
     path: '/translation/text',
