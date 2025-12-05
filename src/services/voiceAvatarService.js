@@ -1,10 +1,10 @@
 /**
- * 음성 TTS 서비스
+ * 음성 TTS 서비스 (Azure Speech SDK Avatar 지원)
  *
  * Azure Speech SDK를 사용하여 AI 응답을 음성으로 변환합니다.
- *
- * 주의: Avatar 비디오 기능은 현재 Azure 구독에서 지원되지 않습니다.
+ * Azure AI Speech Avatar WebRTC 연결 지원
  */
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import { pythonAPI } from './api'
 
 const voiceAvatarService = {
@@ -12,6 +12,19 @@ const voiceAvatarService = {
   _currentAudioElement: null,
   _currentLanguage: 'en-US',
   _isPlaying: false,
+
+  // Azure Speech SDK Avatar 관련
+  _speechConfig: null,
+  _avatarConfig: null,
+  _avatarSynthesizer: null,
+  _peerConnection: null,
+  _avatarVideoElement: null,
+  _avatarAudioElement: null, // Audio track 전용 element
+  _isAvatarConnected: false,
+  _isSpeaking: false,
+  _currentCharacter: 'lisa', // 현재 아바타 캐릭터
+  _isDisconnecting: false, // 연결 해제 중 플래그
+  _isInitializing: false, // 초기화 중 플래그
 
   /**
    * 음성 TTS 초기화
@@ -27,7 +40,6 @@ const voiceAvatarService = {
     this._currentLanguage = language
 
     console.log('✅ 음성 TTS 준비 완료')
-    console.warn('⚠️ Avatar 비디오는 현재 Azure 구독에서 지원되지 않습니다')
   },
 
   /**
@@ -116,22 +128,493 @@ const voiceAvatarService = {
   },
 
   /**
-   * 언어에 맞는 음성 반환
+   * 캐릭터와 언어에 맞는 음성 반환
+   * Azure Avatar 캐릭터별 권장 음성 매핑
    * @param {string} language - 언어 코드
    * @returns {string} 음성 이름
    */
   _getVoiceForLanguage(language) {
-    const voiceMap = {
-      'en-US': 'en-US-JennyNeural',
-      'en-GB': 'en-GB-SoniaNeural',
-      'ko-KR': 'ko-KR-SunHiNeural',
-      'ja-JP': 'ja-JP-NanamiNeural',
-      'zh-CN': 'zh-CN-XiaoxiaoNeural',
-      'es-ES': 'es-ES-ElviraNeural',
-      'fr-FR': 'fr-FR-DeniseNeural',
-      'de-DE': 'de-DE-KatjaNeural'
+    // 캐릭터별 음성 매핑 (성별 및 특성 고려)
+    // Lisa, Lori, Meg = 여성 / Harry, Jeff, Max = 남성
+    const characterVoiceMap = {
+      // 여성 캐릭터
+      lisa: {
+        'en-US': 'en-US-JennyNeural',
+        'ko-KR': 'ko-KR-SunHiNeural',
+        'ja-JP': 'ja-JP-NanamiNeural',
+        'zh-CN': 'zh-CN-XiaoxiaoNeural'
+      },
+      lori: {
+        'en-US': 'en-US-AriaNeural',
+        'ko-KR': 'ko-KR-SunHiNeural',
+        'ja-JP': 'ja-JP-NanamiNeural',
+        'zh-CN': 'zh-CN-XiaohanNeural'
+      },
+      meg: {
+        'en-US': 'en-US-SaraNeural',
+        'ko-KR': 'ko-KR-SunHiNeural',
+        'ja-JP': 'ja-JP-MayuNeural',
+        'zh-CN': 'zh-CN-XiaoxuanNeural'
+      },
+      // 남성 캐릭터
+      harry: {
+        'en-US': 'en-US-GuyNeural',
+        'ko-KR': 'ko-KR-InJoonNeural',
+        'ja-JP': 'ja-JP-KeitaNeural',
+        'zh-CN': 'zh-CN-YunxiNeural'
+      },
+      jeff: {
+        'en-US': 'en-US-DavisNeural',
+        'ko-KR': 'ko-KR-InJoonNeural',
+        'ja-JP': 'ja-JP-KeitaNeural',
+        'zh-CN': 'zh-CN-YunjianNeural'
+      },
+      max: {
+        'en-US': 'en-US-JasonNeural',
+        'ko-KR': 'ko-KR-InJoonNeural',
+        'ja-JP': 'ja-JP-KeitaNeural',
+        'zh-CN': 'zh-CN-YunyangNeural'
+      }
     }
-    return voiceMap[language] || 'en-US-JennyNeural'
+
+    // 현재 캐릭터의 음성 맵 가져오기
+    const voiceMap = characterVoiceMap[this._currentCharacter] || characterVoiceMap.lisa
+
+    // 해당 언어의 음성 반환, 없으면 영어 기본값
+    return voiceMap[language] || voiceMap['en-US'] || 'en-US-JennyNeural'
+  },
+
+  // =========== Avatar WebRTC 관련 메서드 (Azure Speech SDK) ===========
+
+  /**
+   * Avatar WebRTC 연결 초기화 (Azure Speech SDK 사용)
+   * @param {HTMLVideoElement} videoElement - 아바타를 표시할 video 엘리먼트
+   * @param {Object} options - 옵션 (character, style, language)
+   * @returns {Promise<void>}
+   */
+  async initializeAvatar(videoElement, options = {}) {
+    // 이미 초기화 중이면 대기
+    if (this._isInitializing) {
+      console.warn('[Avatar] 이미 초기화 중입니다. 대기...')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      if (this._isInitializing) {
+        throw new Error('Avatar 초기화가 진행 중입니다')
+      }
+    }
+
+    // 기존 연결이 있으면 먼저 정리
+    if (this._avatarSynthesizer || this._peerConnection || this._isAvatarConnected) {
+      console.log('[Avatar] 기존 연결 정리 중...')
+      await this.disconnectAvatar()
+      // Azure 서버 정리 대기 (throttling 방지)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    this._isInitializing = true
+    this._avatarVideoElement = videoElement
+    const character = options.character || 'lisa'
+    const style = options.style || 'casual-sitting'
+    const language = options.language || this._currentLanguage || 'en-US'
+
+    // 현재 캐릭터 저장 (음성 매칭용)
+    this._currentCharacter = character
+
+    try {
+      // 1. 백엔드에서 토큰 및 ICE 서버 정보 가져오기
+      const configResponse = await pythonAPI.get('/avatar/config')
+      if (!configResponse.data.success) {
+        throw new Error('Avatar config fetch failed')
+      }
+
+      const config = configResponse.data.data
+
+      // 2. Azure Speech SDK 설정
+      this._speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
+        config.token,
+        config.region
+      )
+
+      // 음성 설정
+      const voiceName = this._getVoiceForLanguage(language)
+      this._speechConfig.speechSynthesisVoiceName = voiceName
+
+      // 3. Avatar 설정 (VideoFormat 포함 - 16:9 비율 필수!)
+      const videoFormat = new SpeechSDK.AvatarVideoFormat()
+      videoFormat.width = 1920
+      videoFormat.height = 1080
+
+      this._avatarConfig = new SpeechSDK.AvatarConfig(character, style, videoFormat)
+      this._avatarConfig.customized = false
+      this._avatarConfig.backgroundColor = '#FFFFFFFF' // 흰색 배경
+
+      // 4. WebRTC PeerConnection 설정
+      await this._setupWebRTCWithSDK(config.ice_servers)
+
+      // 5. AvatarSynthesizer 생성
+      this._avatarSynthesizer = new SpeechSDK.AvatarSynthesizer(
+        this._speechConfig,
+        this._avatarConfig
+      )
+
+      // 6. Avatar 시작
+      await this._startAvatarConnection()
+      this._isInitializing = false
+      console.log('[Avatar] 초기화 완료')
+    } catch (error) {
+      this._isInitializing = false
+      // 실패 시 리소스 정리
+      await this._cleanupResources()
+      console.error('Avatar 초기화 실패:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 리소스 정리 (내부용)
+   * @private
+   */
+  async _cleanupResources() {
+    if (this._avatarSynthesizer) {
+      try {
+        this._avatarSynthesizer.close()
+      } catch (e) { /* ignore */ }
+      this._avatarSynthesizer = null
+    }
+
+    if (this._peerConnection) {
+      try {
+        this._peerConnection.close()
+      } catch (e) { /* ignore */ }
+      this._peerConnection = null
+    }
+
+    if (this._avatarVideoElement) {
+      this._avatarVideoElement.srcObject = null
+    }
+
+    if (this._avatarAudioElement) {
+      this._avatarAudioElement.pause()
+      this._avatarAudioElement.srcObject = null
+    }
+
+    this._speechConfig = null
+    this._avatarConfig = null
+    this._isAvatarConnected = false
+    this._isSpeaking = false
+  },
+
+  /**
+   * WebRTC PeerConnection 설정 (Azure Speech SDK용)
+   * @private
+   */
+  async _setupWebRTCWithSDK(iceServers) {
+
+    // ICE 서버 설정 (Azure Avatar 공식 샘플 방식)
+    const configuration = {
+      iceServers: [
+        {
+          urls: iceServers.urls,
+          username: iceServers.username,
+          credential: iceServers.credential
+        }
+      ]
+    }
+
+    // PeerConnection 생성
+    this._peerConnection = new RTCPeerConnection(configuration)
+
+    // 양방향 트랜시버 추가 (Azure Avatar SDK 요구사항 - sendrecv 필수!)
+    this._peerConnection.addTransceiver('video', { direction: 'sendrecv' })
+    this._peerConnection.addTransceiver('audio', { direction: 'sendrecv' })
+
+    // Audio element 생성 (숨김) - audio track 전용
+    if (!this._avatarAudioElement) {
+      this._avatarAudioElement = document.createElement('audio')
+      this._avatarAudioElement.autoplay = true
+      this._avatarAudioElement.id = 'avatar-audio-player'
+      document.body.appendChild(this._avatarAudioElement)
+    }
+
+    // 이벤트 핸들러 설정
+    this._peerConnection.ontrack = (event) => {
+      if (event.track.kind === 'video') {
+        // Video track → video element
+        if (this._avatarVideoElement && event.streams && event.streams[0]) {
+          this._avatarVideoElement.srcObject = event.streams[0]
+        }
+      } else if (event.track.kind === 'audio') {
+        // Audio track → audio element
+        if (this._avatarAudioElement && event.streams && event.streams[0]) {
+          this._avatarAudioElement.srcObject = event.streams[0]
+
+          // 오디오 재생 시도
+          this._avatarAudioElement.play().catch(() => {})
+        }
+      }
+    }
+
+    this._peerConnection.oniceconnectionstatechange = () => {
+      const state = this._peerConnection?.iceConnectionState
+      this._isAvatarConnected = state === 'connected' || state === 'completed'
+    }
+  },
+
+  /**
+   * Avatar WebRTC 연결 시작 (SDP 교환)
+   * @private
+   */
+  async _startAvatarConnection() {
+    return new Promise((resolve, reject) => {
+      this._avatarSynthesizer.startAvatarAsync(this._peerConnection).then(
+        (result) => {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            this._isAvatarConnected = true
+
+            // 비디오 재생 시작
+            if (this._avatarVideoElement) {
+              this._avatarVideoElement.play().catch(err => {
+                console.warn('Video autoplay blocked:', err)
+              })
+            }
+
+            resolve(result)
+          } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
+            const cancellation = SpeechSDK.CancellationDetails.fromResult(result)
+            reject(new Error(`Avatar 연결 취소: ${cancellation.errorDetails || cancellation.reason}`))
+          } else {
+            reject(new Error(`Avatar 연결 실패: ${result.reason}`))
+          }
+        },
+        (error) => {
+          reject(error)
+        }
+      )
+    })
+  },
+
+  /**
+   * Avatar 세션 시작 (WebRTC 연결)
+   * @param {string} character - 아바타 캐릭터 (lisa, harry 등)
+   * @param {string} style - 아바타 스타일 (casual-sitting 등)
+   * @returns {Promise<Object>} 세션 정보
+   */
+  async startAvatarSession(character = 'lisa', style = 'casual-sitting') {
+
+    // Avatar가 이미 초기화되어 있지 않으면 초기화
+    if (!this._avatarSynthesizer && this._avatarVideoElement) {
+      await this.initializeAvatar(this._avatarVideoElement, { character, style })
+    }
+
+    return {
+      session_id: `avatar_${Date.now()}`,
+      character,
+      style,
+      connected: this._isAvatarConnected
+    }
+  },
+
+  /**
+   * Avatar에 텍스트 전송 (말하기) - Azure Speech SDK 사용
+   * @param {string} text - 말할 텍스트
+   * @param {string} language - 언어 코드
+   * @returns {Promise<void>}
+   */
+  async speakWithAvatar(text, language = 'en-US') {
+    if (!text || !text.trim()) {
+      console.warn('Avatar TTS: 빈 텍스트')
+      return
+    }
+
+    if (!this._avatarSynthesizer) {
+      console.error('Avatar가 초기화되지 않았습니다')
+      throw new Error('Avatar not initialized')
+    }
+
+    if (this._isSpeaking) {
+      console.warn('Avatar가 이미 말하고 있습니다')
+      return
+    }
+
+    this._isSpeaking = true
+
+    try {
+      // 음성 설정 업데이트 (언어가 변경된 경우)
+      const voiceName = this._getVoiceForLanguage(language)
+      if (this._speechConfig.speechSynthesisVoiceName !== voiceName) {
+        this._speechConfig.speechSynthesisVoiceName = voiceName
+      }
+
+      // Promise 방식 사용 (공식 샘플 방식)
+      const result = await this._avatarSynthesizer.speakTextAsync(text)
+      this._isSpeaking = false
+
+      if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+        return result
+      } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
+        const cancellation = SpeechSDK.CancellationDetails.fromResult(result)
+        throw new Error(`Avatar speak canceled: ${cancellation.errorDetails}`)
+      } else {
+        return result
+      }
+    } catch (error) {
+      this._isSpeaking = false
+      throw error
+    }
+  },
+
+  /**
+   * Avatar 발화 중지
+   */
+  async stopAvatarSpeaking() {
+    if (!this._avatarSynthesizer || !this._isSpeaking) {
+      return
+    }
+
+    try {
+      await this._avatarSynthesizer.stopSpeakingAsync()
+      this._isSpeaking = false
+    } catch (error) {
+      // 무시
+    }
+  },
+
+  /**
+   * Avatar 연결 해제
+   * @param {boolean} isPageUnload - 페이지 언로드 시 동기적 정리 필요
+   */
+  async disconnectAvatar(isPageUnload = false) {
+    // 이미 연결 해제 중이면 대기
+    if (this._isDisconnecting) {
+      console.log('[Avatar] 이미 연결 해제 중...')
+      // 짧은 대기 후 리턴 (중복 호출 방지)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      return
+    }
+
+    // 연결된 것이 없으면 리턴
+    if (!this._avatarSynthesizer && !this._peerConnection && !this._isAvatarConnected) {
+      console.log('[Avatar] 정리할 연결이 없습니다')
+      return
+    }
+
+    this._isDisconnecting = true
+    console.log('[Avatar] 연결 해제 시작...')
+
+    try {
+      // 발화 중지
+      if (this._isSpeaking && this._avatarSynthesizer) {
+        try {
+          await Promise.race([
+            this._avatarSynthesizer.stopSpeakingAsync(),
+            new Promise(resolve => setTimeout(resolve, 1000)) // 1초 타임아웃
+          ])
+        } catch (e) {
+          console.warn('[Avatar] stopSpeakingAsync 경고:', e.message)
+        }
+        this._isSpeaking = false
+      }
+
+      // AvatarSynthesizer 종료 (타임아웃 적용)
+      if (this._avatarSynthesizer) {
+        try {
+          // stopAvatarAsync에 타임아웃 적용 (서버에 종료 신호 전송)
+          await Promise.race([
+            this._avatarSynthesizer.stopAvatarAsync(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('stopAvatarAsync timeout')), 3000))
+          ])
+          console.log('[Avatar] stopAvatarAsync 완료')
+        } catch (error) {
+          console.warn('[Avatar] stopAvatarAsync 경고:', error.message)
+        }
+
+        try {
+          this._avatarSynthesizer.close()
+        } catch (e) { /* ignore */ }
+        this._avatarSynthesizer = null
+      }
+
+      // PeerConnection 종료
+      if (this._peerConnection) {
+        try {
+          this._peerConnection.close()
+        } catch (e) { /* ignore */ }
+        this._peerConnection = null
+      }
+
+      // Video element 정리
+      if (this._avatarVideoElement) {
+        this._avatarVideoElement.srcObject = null
+      }
+
+      // Audio element 정리
+      if (this._avatarAudioElement) {
+        this._avatarAudioElement.pause()
+        this._avatarAudioElement.srcObject = null
+        try {
+          this._avatarAudioElement.remove()
+        } catch (e) { /* ignore */ }
+        this._avatarAudioElement = null
+      }
+
+      // 상태 초기화
+      this._isAvatarConnected = false
+      this._speechConfig = null
+      this._avatarConfig = null
+      this._isSpeaking = false
+
+      console.log('[Avatar] 연결 해제 완료')
+    } finally {
+      this._isDisconnecting = false
+    }
+  },
+
+  /**
+   * 동기적 정리 (beforeunload용)
+   * 페이지 언로드 시 사용 - async 대기 불가
+   */
+  disconnectAvatarSync() {
+    console.log('[Avatar] 동기 정리 시작')
+
+    // 동기적으로 가능한 정리만 수행
+    if (this._peerConnection) {
+      try {
+        this._peerConnection.close()
+      } catch (e) { /* ignore */ }
+      this._peerConnection = null
+    }
+
+    if (this._avatarVideoElement) {
+      this._avatarVideoElement.srcObject = null
+    }
+
+    if (this._avatarAudioElement) {
+      this._avatarAudioElement.pause()
+      this._avatarAudioElement.srcObject = null
+    }
+
+    this._isAvatarConnected = false
+    this._avatarSynthesizer = null
+    this._speechConfig = null
+    this._avatarConfig = null
+    this._isSpeaking = false
+    this._isDisconnecting = false
+    this._isInitializing = false
+  },
+
+  /**
+   * Avatar 연결 상태 확인
+   * @returns {boolean}
+   */
+  isAvatarConnected() {
+    return this._isAvatarConnected
+  },
+
+  /**
+   * Avatar 발화 중인지 확인
+   * @returns {boolean}
+   */
+  isAvatarSpeaking() {
+    return this._isSpeaking
   }
 }
 

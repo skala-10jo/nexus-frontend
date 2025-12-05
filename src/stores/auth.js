@@ -66,6 +66,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user');
   };
 
+  const setUser = (userData) => {
+    user.value = userData;
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
   const initAuth = async () => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -95,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    setUser,
     initAuth
   };
 });

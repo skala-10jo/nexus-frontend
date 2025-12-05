@@ -85,7 +85,12 @@ export const authAPI = {
 // User API
 export const userAPI = {
   getUser: (id) => api.get(`/users/${id}`),
-  updateUser: (id, data) => api.put(`/users/${id}`, data)
+  updateUser: (id, data) => api.put(`/users/${id}`, data),
+  uploadAvatar: (id, formData) => api.post(`/users/${id}/avatar`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 };
 
 // Schedule API

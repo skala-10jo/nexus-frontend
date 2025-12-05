@@ -1,90 +1,131 @@
 <template>
   <div class="h-full flex flex-col relative">
     <!-- Header -->
-    <div class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-8 border-b border-gray-100">
+    <div
+      class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-100">
       <div class="flex items-center gap-4">
-        <h2 class="text-2xl font-bold text-gray-800 font-nanum-round-eb">시나리오 회화 연습</h2>
-        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ scenarios.length }}</span>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 font-nanum-round-eb truncate">시나리오 회화</h2>
+        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold shrink-0">{{ scenarios.length
+        }}</span>
       </div>
 
       <div class="flex items-center gap-4">
-        <button
-          @click="showCreateDialog = true"
-          class="bg-black text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2"
-        >
+        <button @click="showCreateDialog = true"
+          class="bg-black text-white px-4 py-2 md:px-6 md:py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          시나리오 생성
+          <span class="hidden md:inline">시나리오 생성</span>
+          <span class="md:hidden">생성</span>
         </button>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 flex pt-20 overflow-hidden">
-      <!-- Left Sidebar (Filters) -->
-      <ScenarioProjectSidebar
-        :projects="projects"
-        :selected-projects="selectedProjects"
-        :selected-schedules="selectedSchedules"
-        :upcoming-schedules="upcomingSchedules"
-        :projects-loading="projectsLoading"
-        :schedules-loading="schedulesLoading"
-        :scenarios="allScenarios"
-        @toggle-project="toggleProjectSelection"
-        @toggle-schedule="toggleScheduleSelection"
-      />
+    <div class="flex-1 flex pt-20 overflow-hidden bg-gray-50/50">
+      <!-- Left Sidebar (Filters) - Desktop Only -->
+      <div class="hidden md:block h-full">
+        <ScenarioProjectSidebar :projects="projects" :selected-projects="selectedProjects"
+          :selected-schedules="selectedSchedules" :upcoming-schedules="upcomingSchedules"
+          :projects-loading="projectsLoading" :schedules-loading="schedulesLoading" :scenarios="allScenarios"
+          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection"
+          @show-all="showAllScenarios" />
+      </div>
 
-      <!-- Right Content (Scenarios Grid) -->
-      <div class="flex-1 overflow-y-auto bg-white p-8">
+      <!-- Right Content -->
+      <div class="flex-1 md:overflow-y-auto overflow-hidden p-4 md:p-8 w-full relative">
+        <!-- Mobile Project Selector -->
+        <div class="mb-6 relative z-30 md:hidden">
+          <button @click="mobileShowProjects = !mobileShowProjects"
+            class="flex items-center gap-2 text-lg font-bold text-gray-900 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+            <span>{{ currentProjectLabel }}</span>
+            <ChevronDownIcon class="w-5 h-5 text-gray-500 transition-transform duration-200"
+              :class="{ 'rotate-180': mobileShowProjects }" />
+          </button>
+
+          <!-- Project Dropdown -->
+          <div v-if="mobileShowProjects"
+            class="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-slideDown">
+            <div class="p-2 max-h-60 overflow-y-auto">
+              <button @click="selectedProjects = []; mobileShowProjects = false; loadScenariosForFilters()"
+                class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                :class="selectedProjects.length === 0 ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
+                전체 프로젝트
+              </button>
+              <button v-for="project in projects" :key="project.id"
+                @click="toggleProjectSelection(project); mobileShowProjects = false"
+                class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors" :class="selectedProjects.find(p => p.id === project.id)
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50'">
+                {{ project.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="scenariosLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="i in 6" :key="i" class="h-64 bg-gray-50 rounded-3xl animate-pulse"></div>
         </div>
 
-        <!-- Scenario Grid -->
-        <div v-else-if="scenarios.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ScenarioCard
-            v-for="scenario in scenarios"
-            :key="scenario.id"
-            :scenario="scenario"
-            @edit="openEditDialog"
-            @delete="deleteScenario"
-            @start="startPractice"
-          />
-        </div>
+        <template v-else-if="scenarios.length > 0">
+          <!-- Desktop Grid View -->
+          <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+            <ScenarioCard v-for="scenario in scenarios" :key="scenario.id" :scenario="scenario" @edit="openEditDialog"
+              @delete="deleteScenario" @start="startPractice" />
+          </div>
+
+          <!-- Mobile Swiper View -->
+          <div class="md:hidden h-full flex flex-col justify-center pb-10">
+
+
+            <!-- Carousel -->
+            <div class="flex-1 flex flex-col justify-center">
+              <swiper :effect="'cards'" :grabCursor="true" :modules="modules" class="w-full max-w-sm mx-auto"
+                :cardsEffect="{
+                  perSlideOffset: 1,
+                  perSlideRotate: 2,
+                  rotate: true,
+                  slideShadows: true,
+                }">
+                <swiper-slide v-for="scenario in scenarios" :key="scenario.id" class="rounded-3xl">
+                  <ScenarioCard :scenario="scenario" @edit="openEditDialog" @delete="deleteScenario"
+                    @start="startPractice" class="h-[55vh] shadow-xl" />
+                </swiper-slide>
+              </swiper>
+            </div>
+          </div>
+        </template>
 
         <!-- Empty State -->
         <ScenarioEmptyState v-else @create="showCreateDialog = true" />
       </div>
     </div>
 
+
+
     <!-- Create Dialog -->
-    <ScenarioCreateDialog
-      :show="showCreateDialog"
-      :projects="projects"
-      :upcoming-schedules="upcomingSchedules"
-      @close="showCreateDialog = false"
-      @created="handleCreateScenario"
-    />
+    <ScenarioCreateDialog :show="showCreateDialog" :projects="projects" :upcoming-schedules="upcomingSchedules"
+      @close="showCreateDialog = false" @created="handleCreateScenario" />
 
     <!-- Edit Dialog -->
-    <ScenarioEditDialog
-      :show="showEditDialog"
-      :scenario="editingScenario"
-      :projects="projects"
-      :upcoming-schedules="upcomingSchedules"
-      @close="showEditDialog = false"
-      @save="handleUpdateScenario"
-    />
+    <ScenarioEditDialog :show="showEditDialog" :scenario="editingScenario" :projects="projects"
+      :upcoming-schedules="upcomingSchedules" @close="showEditDialog = false" @save="handleUpdateScenario" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
+import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+
+// Swiper
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { EffectCards } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/effect-cards'
 
 // Components
 import ScenarioProjectSidebar from '@/components/conversation/ScenarioProjectSidebar.vue'
@@ -94,6 +135,8 @@ import ScenarioCreateDialog from '@/components/conversation/ScenarioCreateDialog
 import ScenarioEditDialog from '@/components/conversation/ScenarioEditDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
+const modules = [EffectCards]
 
 // State
 const projects = ref([])
@@ -106,6 +149,14 @@ const schedulesLoading = ref(false)
 const scenarios = ref([])
 const allScenarios = ref([])
 const scenariosLoading = ref(false)
+
+// Mobile UI State
+const mobileShowProjects = ref(false)
+const currentProjectLabel = computed(() => {
+  if (selectedProjects.value.length === 0) return '전체 프로젝트'
+  if (selectedProjects.value.length === 1) return selectedProjects.value[0].name
+  return `${selectedProjects.value.length}개 프로젝트 선택됨`
+})
 
 // Dialog State
 const showCreateDialog = ref(false)
@@ -134,6 +185,12 @@ async function toggleProjectSelection(project) {
   if (selectedSchedules.value.length === 0) {
     await loadScenariosForFilters()
   }
+}
+
+async function showAllScenarios() {
+  selectedProjects.value = []
+  selectedSchedules.value = []
+  await loadScenariosForFilters()
 }
 
 // Methods: Data Loading
@@ -187,7 +244,6 @@ async function loadAllUpcomingSchedules() {
   schedulesLoading.value = true
   try {
     const allSchedules = []
-    const now = new Date()
 
     for (const project of projects.value) {
       try {
@@ -195,21 +251,20 @@ async function loadAllUpcomingSchedules() {
         const schedules = response.data.data || response.data || []
 
         schedules.forEach(schedule => {
-          if (new Date(schedule.startTime) >= now) {
-            allSchedules.push({
-              ...schedule,
-              projectId: project.id,
-              projectName: project.name
-            })
-          }
+          allSchedules.push({
+            ...schedule,
+            projectId: project.id,
+            projectName: project.name
+          })
         })
       } catch (error) {
         console.error(`Failed to load schedules for project ${project.id}:`, error)
       }
     }
 
+    // 최신 일정이 위로 오도록 내림차순 정렬
     upcomingSchedules.value = allSchedules.sort((a, b) =>
-      new Date(a.startTime) - new Date(b.startTime)
+      new Date(b.startTime) - new Date(a.startTime)
     )
   } catch (error) {
     console.error('Failed to load schedules:', error)
@@ -284,6 +339,34 @@ onMounted(async () => {
   await loadProjects()
   await loadAllUpcomingSchedules()
   await loadAllScenarios()
+
+  // 쿼리 파라미터로 scheduleId가 전달된 경우 해당 일정 자동 선택
+  const scheduleId = route.query.scheduleId
+  if (scheduleId) {
+    const targetSchedule = upcomingSchedules.value.find(s => String(s.id) === String(scheduleId))
+    if (targetSchedule) {
+      selectedSchedules.value = [targetSchedule]
+    }
+  }
+
   await loadScenariosForFilters()
 })
 </script>
+
+<style scoped>
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out forwards;
+}
+</style>

@@ -1,13 +1,13 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-0 md:p-4"
     @click="handleClose"
   >
-    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
+    <div class="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-6xl md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col" @click.stop>
       <!-- Header -->
-      <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
-        <h3 class="text-2xl font-bold text-gray-900">시나리오 생성</h3>
+      <div class="p-4 md:p-8 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
+        <h3 class="text-xl md:text-2xl font-bold text-gray-900">시나리오 생성</h3>
         <button @click="handleClose" class="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -15,10 +15,33 @@
         </button>
       </div>
 
+      <!-- Mobile Tabs -->
+      <div class="flex md:hidden border-b border-gray-100 shrink-0">
+        <button
+          @click="mobileTab = 'form'"
+          class="flex-1 py-3 text-sm font-bold transition-colors relative"
+          :class="mobileTab === 'form' ? 'text-gray-900' : 'text-gray-400'"
+        >
+          시나리오 설정
+          <div v-if="mobileTab === 'form'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>
+        </button>
+        <button
+          @click="mobileTab = 'chat'"
+          class="flex-1 py-3 text-sm font-bold transition-colors relative"
+          :class="mobileTab === 'chat' ? 'text-gray-900' : 'text-gray-400'"
+        >
+          AI Assistant
+          <div v-if="mobileTab === 'chat'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>
+        </button>
+      </div>
+
       <!-- Content: Two Column Layout -->
-      <div class="flex-1 flex overflow-hidden">
+      <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         <!-- Left Column: Scenario Form -->
-        <div class="flex-1 overflow-y-auto p-8 border-r border-gray-100">
+        <div 
+          class="flex-1 overflow-y-auto p-4 md:p-8 border-r-0 md:border-r border-gray-100"
+          :class="{ 'hidden md:block': mobileTab !== 'form' }"
+        >
           <!-- Settings with Toggle Buttons -->
           <div class="space-y-6 mb-8">
             <!-- Language Toggle -->
@@ -64,30 +87,68 @@
 
           <!-- Project/Schedule Selection -->
           <div class="space-y-4 mb-8">
-            <div class="space-y-2">
+            <div class="space-y-2 relative">
               <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">프로젝트 (선택)</label>
-              <select
-                v-model="selectedProjectId"
-                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
+              <button
+                @click="showProjectDropdown = !showProjectDropdown"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent hover:bg-gray-100 rounded-xl font-medium text-gray-900 transition-all text-left flex items-center justify-between"
               >
-                <option :value="null">선택 안함</option>
-                <option v-for="project in projects" :key="project.id" :value="project.id">
+                <span :class="!selectedProjectId ? 'text-gray-500' : 'text-gray-900'">
+                  {{ selectedProjectId ? projects.find(p => p.id === selectedProjectId)?.name : '선택 안함' }}
+                </span>
+                <ChevronDownIcon class="w-5 h-5 text-gray-400" />
+              </button>
+              
+              <!-- Project Dropdown -->
+              <div v-if="showProjectDropdown" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-20 max-h-60 overflow-y-auto">
+                <button
+                  @click="selectedProjectId = null; showProjectDropdown = false"
+                  class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium text-gray-500 border-b border-gray-50"
+                >
+                  선택 안함
+                </button>
+                <button
+                  v-for="project in projects"
+                  :key="project.id"
+                  @click="selectedProjectId = project.id; showProjectDropdown = false"
+                  class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium text-gray-900"
+                  :class="{ 'bg-blue-50 text-blue-700': selectedProjectId === project.id }"
+                >
                   {{ project.name }}
-                </option>
-              </select>
+                </button>
+              </div>
             </div>
 
-            <div v-if="selectedProjectId" class="space-y-2">
+            <div v-if="selectedProjectId" class="space-y-2 relative">
               <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">일정 (선택)</label>
-              <select
-                v-model="selectedScheduleId"
-                class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all"
+              <button
+                @click="showScheduleDropdown = !showScheduleDropdown"
+                class="w-full px-4 py-3 bg-gray-50 border border-transparent hover:bg-gray-100 rounded-xl font-medium text-gray-900 transition-all text-left flex items-center justify-between"
               >
-                <option :value="null">선택 안함 (프로젝트 전체)</option>
-                <option v-for="schedule in filteredSchedules" :key="schedule.id" :value="schedule.id">
+                <span :class="!selectedScheduleId ? 'text-gray-500' : 'text-gray-900'">
+                  {{ selectedScheduleId ? filteredSchedules.find(s => s.id === selectedScheduleId)?.title : '선택 안함 (프로젝트 전체)' }}
+                </span>
+                <ChevronDownIcon class="w-5 h-5 text-gray-400" />
+              </button>
+
+              <!-- Schedule Dropdown -->
+              <div v-if="showScheduleDropdown" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-20 max-h-60 overflow-y-auto">
+                <button
+                  @click="selectedScheduleId = null; showScheduleDropdown = false"
+                  class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium text-gray-500 border-b border-gray-50"
+                >
+                  선택 안함 (프로젝트 전체)
+                </button>
+                <button
+                  v-for="schedule in filteredSchedules"
+                  :key="schedule.id"
+                  @click="selectedScheduleId = schedule.id; showScheduleDropdown = false"
+                  class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-medium text-gray-900"
+                  :class="{ 'bg-blue-50 text-blue-700': selectedScheduleId === schedule.id }"
+                >
                   {{ schedule.title }} - {{ formatScheduleTime(schedule.startTime) }}
-                </option>
-              </select>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -174,7 +235,10 @@
         </div>
 
         <!-- Right Column: AI Chatbot -->
-        <div class="w-96 flex flex-col bg-gray-50">
+        <div 
+          class="w-full md:w-96 flex flex-col bg-gray-50"
+          :class="{ 'hidden md:flex': mobileTab !== 'chat' }"
+        >
           <!-- Chat Header -->
           <div class="p-4 border-b border-gray-200 flex items-start justify-between">
             <div>
@@ -250,7 +314,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4">
+      <div class="p-4 md:p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-4 shrink-0">
         <button @click="handleClose" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition-colors">
           취소
         </button>
@@ -269,6 +333,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { scenarioService } from '@/services/scenarioService'
+import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   show: {
@@ -321,6 +386,13 @@ const formData = ref({
 const selectedProjectId = ref(null)
 const selectedScheduleId = ref(null)
 const isGenerating = ref(false)
+
+// Dropdown State
+const showProjectDropdown = ref(false)
+const showScheduleDropdown = ref(false)
+
+// Mobile UI State
+const mobileTab = ref('form')
 
 // Chat State
 const chatMessages = ref([])

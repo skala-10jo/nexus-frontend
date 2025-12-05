@@ -3,7 +3,6 @@
  *
  * 회화 연습 페이지의 피드백 관리를 담당합니다.
  * - 대화별 피드백 관리
- * - 종합 피드백
  * - 메시지 선택 및 탐색
  *
  * @module usePracticeFeedback
@@ -21,8 +20,6 @@ export function usePracticeFeedback({ userMessages }) {
   // ============================================
   // State
   // ============================================
-  const activeTab = ref('messages') // 'messages' | 'comprehensive'
-  const comprehensiveFeedback = ref(null)
   const selectedMessageIndex = ref(0)
   const messageFeedbacks = ref([])
 
@@ -55,7 +52,6 @@ export function usePracticeFeedback({ userMessages }) {
    */
   const selectMessage = (index) => {
     selectedMessageIndex.value = index
-    activeTab.value = 'messages'
   }
 
   /**
@@ -113,21 +109,11 @@ export function usePracticeFeedback({ userMessages }) {
   }
 
   /**
-   * 종합 피드백 설정
-   *
-   * @param {Object} feedback - 종합 피드백 데이터
-   */
-  const setComprehensiveFeedback = (feedback) => {
-    comprehensiveFeedback.value = feedback
-  }
-
-  /**
    * 피드백 초기화
    */
   const resetFeedbacks = () => {
     messageFeedbacks.value = []
     selectedMessageIndex.value = 0
-    comprehensiveFeedback.value = null
   }
 
   /**
@@ -148,8 +134,6 @@ export function usePracticeFeedback({ userMessages }) {
   // ============================================
   return {
     // State
-    activeTab,
-    comprehensiveFeedback,
     selectedMessageIndex,
     messageFeedbacks,
 
@@ -163,7 +147,6 @@ export function usePracticeFeedback({ userMessages }) {
     selectNextMessage,
     addFeedback,
     loadFeedbacksFromHistory,
-    setComprehensiveFeedback,
     resetFeedbacks,
     isMessageSelected
   }

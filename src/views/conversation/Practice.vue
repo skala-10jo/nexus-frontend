@@ -17,9 +17,8 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- Main Chat Area -->
       <main class="flex-1 flex flex-col relative min-w-0 bg-gray-50 transition-all duration-300">
-        <!-- Terminology Section (Chat Mode only) -->
+        <!-- Terminology Section (필수 용어 표시) -->
         <PracticeTerminology
-          v-if="!voice.avatarEnabled.value"
           :required-terms="conversation.requiredTerms.value"
           :detected-terms="conversation.detectedTerms.value"
         />
@@ -42,9 +41,14 @@
           :recording-time="voice.recordingTime.value"
           :final-texts="voice.finalTexts.value"
           :interim-text="voice.interimText.value"
+          :last-ai-message="conversation.lastAiMessage.value"
+          :is-speaking="tts.isSpeaking.value"
+          :speaking-message-index="tts.speakingMessageIndex.value"
           @toggle-translation="conversation.toggleTranslation"
           @toggle-hint="handleToggleHint"
           @message-click="handleMessageClick"
+          @play-message="handlePlayMessage"
+          @stop-message="tts.stopSpeaking"
         />
 
         <!-- Input Area -->
@@ -67,18 +71,25 @@
           @start-recording="handleStartRecording"
           @stop-recording="handleStopRecording"
           @send-message="handleSendMessage"
+          @input-area-resized="handleInputAreaResized"
         />
       </main>
 
+      <!-- Mobile Backdrop -->
+      <div 
+        v-if="showMobileFeedback" 
+        class="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"
+        @click="showMobileFeedback = false"
+      ></div>
+
       <!-- Feedback Sidebar -->
       <FeedbackSidebar
-        :active-tab="feedback.activeTab.value"
         :user-messages="conversation.userMessages.value"
         :selected-message-index="feedback.selectedMessageIndex.value"
         :selected-message-feedback="feedback.selectedMessageFeedback.value"
-        :comprehensive-feedback="feedback.comprehensiveFeedback.value"
-        @update:active-tab="feedback.activeTab.value = $event"
+        :is-mobile-open="showMobileFeedback"
         @select-message="feedback.selectMessage"
+        @close="showMobileFeedback = false"
       />
     </div>
   </div>
@@ -95,10 +106,11 @@
  * - usePracticeConversation: 대화 관리 (메시지, 번역)
  * - usePracticeVoice: 음성 입력 (STT, Avatar)
  * - usePracticeFeedback: 피드백 관리
+ * - usePracticeTTS: AI 응답 음성 출력 (Azure TTS)
  *
  * @module Practice
  */
-import { ref, onMounted, nextTick, computed } from 'vue'
+import { ref, onMounted, nextTick, computed, watch } from 'vue'
 
 // Components
 import PracticeHeader from '@/components/conversation/practice/PracticeHeader.vue'
@@ -112,6 +124,10 @@ import { usePractice } from '@/composables/conversation/usePractice'
 import { usePracticeConversation } from '@/composables/conversation/usePracticeConversation'
 import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
+import { usePracticeTTS } from '@/composables/conversation/usePracticeTTS'
+
+// Services
+import conversationService from '@/services/conversationService'
 
 // ============================================
 // Composables Initialization
@@ -134,7 +150,8 @@ const sharedUserInput = ref('')
 // Voice (초기화를 먼저 해야 getAudioBlob 사용 가능)
 const voice = usePracticeVoice({
   userInput: sharedUserInput,
-  onSendMessage: () => handleSendMessage()
+  onSendMessage: () => handleSendMessage(),
+  scenario  // 시나리오 언어로 STT 수행
 })
 
 // Feedback placeholder (conversation 초기화 후 업데이트)
@@ -147,8 +164,6 @@ const conversation = usePracticeConversation({
   onFeedbackReceived: (feedbackData) => {
     if (feedbackAddFn) {
       feedbackAddFn(feedbackData)
-      // 피드백 수신 시 '대화별 피드백' 탭으로 자동 전환
-      feedback.activeTab.value = 'messages'
     }
   },
   // 음성 모드에서 발음 평가를 위한 오디오 blob 가져오기
@@ -170,8 +185,16 @@ const feedback = usePracticeFeedback({
 // feedbackAddFn 연결
 feedbackAddFn = feedback.addFeedback
 
+// TTS (AI 응답 음성 출력)
+const tts = usePracticeTTS({
+  scenario
+})
+
 // Refs
 const conversationAreaRef = ref(null)
+
+// 초기 로드 완료 플래그 (히스토리 로드 시 TTS 방지)
+const isInitialLoadComplete = ref(false)
 
 // ============================================
 // Event Handlers
@@ -197,6 +220,9 @@ const handleSendMessage = async () => {
   }
 }
 
+// Mobile Feedback State
+const showMobileFeedback = ref(false)
+
 /**
  * 메시지 클릭 처리
  */
@@ -204,6 +230,7 @@ const handleMessageClick = (message) => {
   const index = conversation.userMessages.value.findIndex(m => m === message)
   if (index !== -1) {
     feedback.selectMessage(index)
+    showMobileFeedback.value = true // 모바일에서 피드백 창 열기
   }
 }
 
@@ -227,10 +254,27 @@ const handleStopRecording = async () => {
 
 /**
  * 대화 초기화 처리
+ * 백엔드 세션을 삭제하고 새 대화를 시작하여 AI 초기 발화를 받아옵니다.
  */
 const handleReset = async () => {
-  await conversation.resetConversation()
-  feedback.resetFeedbacks()
+  if (!confirm('Reset conversation?')) return
+
+  try {
+    // 1. 백엔드 세션 삭제 (필수! - 이것이 없으면 start가 initialMessage를 반환하지 않음)
+    await conversationService.reset(scenarioId)
+
+    // 2. 프론트엔드 상태 초기화
+    conversation.resetConversation()
+    feedback.resetFeedbacks()
+
+    // 3. 새 대화 시작하여 AI 초기 발화 받아오기
+    const response = await conversationService.start(scenarioId)
+    conversation.addInitialMessage(response.initialMessage)
+    await nextTick()
+    scrollToBottom()
+  } catch (err) {
+    console.error('Failed to reset conversation:', err)
+  }
 }
 
 /**
@@ -242,6 +286,20 @@ const handleToggleHint = async (index) => {
 }
 
 /**
+ * AI 메시지 재생 처리
+ * @param {string} text - 재생할 텍스트
+ * @param {number} index - 메시지 인덱스
+ */
+const handlePlayMessage = async (text, index) => {
+  try {
+    await tts.speakAiResponse(text, index)
+  } catch (err) {
+    console.error('TTS playback failed:', err)
+    error.value = 'TTS 재생에 실패했습니다.'
+  }
+}
+
+/**
  * 스크롤을 맨 아래로 이동
  */
 const scrollToBottom = () => {
@@ -249,6 +307,61 @@ const scrollToBottom = () => {
     conversationAreaRef.value.scrollToBottom()
   }
 }
+
+/**
+ * 입력 영역 크기 변경 시 스크롤 조정
+ * 녹음 시작 시 인식 텍스트 영역이 확장되면 대화 영역 스크롤
+ */
+const handleInputAreaResized = async () => {
+  // DOM 업데이트 대기
+  await nextTick()
+  // 레이아웃 재계산 후 스크롤 (입력 영역 확장 반영)
+  setTimeout(() => {
+    scrollToBottom()
+  }, 150)
+}
+
+// ============================================
+// Watchers
+// ============================================
+
+/**
+ * AI 응답 시 자동 TTS 재생
+ * messages 배열의 마지막 항목이 AI 메시지일 때 자동 재생
+ * 초기 히스토리 로드 시에는 TTS 재생하지 않음
+ * 텍스트 입력 모드에서는 자동 TTS 재생하지 않음 (음성 모드에서만)
+ */
+watch(
+  () => conversation.messages.value.length,
+  async (newLength, oldLength) => {
+    // 초기 로드가 완료되지 않았으면 TTS 재생하지 않음
+    if (!isInitialLoadComplete.value) {
+      return
+    }
+
+    // 텍스트 입력 모드에서는 자동 TTS 재생하지 않음
+    if (voice.inputMode.value === 'text') {
+      return
+    }
+
+    // 메시지가 추가되었고, 자동 재생이 활성화되어 있을 때
+    if (newLength > oldLength && tts.autoPlayEnabled.value && tts.ttsEnabled.value) {
+      const lastMessage = conversation.messages.value[newLength - 1]
+
+      // 마지막 메시지가 AI 응답인 경우에만 재생
+      if (lastMessage && lastMessage.speaker === 'ai') {
+        // Avatar 모드가 아닐 때만 TTS 재생 (Avatar는 자체 음성 사용)
+        if (!voice.avatarEnabled.value) {
+          try {
+            await tts.speakAiResponse(lastMessage.message, newLength - 1)
+          } catch (err) {
+            console.error('Auto TTS failed:', err)
+          }
+        }
+      }
+    }
+  }
+)
 
 // ============================================
 // Lifecycle
@@ -261,15 +374,24 @@ onMounted(async () => {
       conversation.loadHistory(historyResponse)
       feedback.loadFeedbacksFromHistory(historyResponse.messages)
       await nextTick()
-      scrollToBottom()
+      // 초기 로드 시 애니메이션 없이 즉시 스크롤 (smooth = false)
+      if (conversationAreaRef.value?.scrollToBottom) {
+        conversationAreaRef.value.scrollToBottom(false)
+      }
     },
     // 새 대화 시작 콜백
     async (response) => {
       conversation.addInitialMessage(response.initialMessage)
       await nextTick()
-      scrollToBottom()
+      // 초기 로드 시 애니메이션 없이 즉시 스크롤 (smooth = false)
+      if (conversationAreaRef.value?.scrollToBottom) {
+        conversationAreaRef.value.scrollToBottom(false)
+      }
     }
   )
+
+  // 초기 로드 완료 후 TTS 활성화 (히스토리 로드 시 TTS 방지)
+  isInitialLoadComplete.value = true
 })
 </script>
 

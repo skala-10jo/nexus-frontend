@@ -28,42 +28,50 @@ export function useAzureTTS() {
   // Azure SDK 인스턴스
   let speechConfig = null
   let synthesizer = null
-  let player = null
+
+  // Web Audio API 인스턴스 (재생 제어용)
+  let currentAudioContext = null
+  let currentSource = null
 
   /**
    * 백엔드에서 토큰을 받아 Azure TTS 초기화
    *
+   * @param {boolean} forceRefresh - 토큰 강제 갱신 여부
    * @throws {Error} 초기화 실패 시
    */
-  async function initialize() {
-    if (isInitialized.value) {
+  async function initialize(forceRefresh = false) {
+    if (isInitialized.value && !forceRefresh) {
       return
+    }
+
+    // 강제 갱신 시 기존 리소스 정리
+    if (forceRefresh) {
+      dispose()
     }
 
     try {
       isConnecting.value = true
       error.value = null
 
+      // 강제 갱신 시 캐시 클리어
+      if (forceRefresh) {
+        speechStore.clearToken()
+      }
+
       // 스토어에서 토큰 가져오기 (캐싱 지원)
-      console.log('🔑 Requesting Azure Speech token for TTS...')
       const { token, region } = await speechStore.ensureToken()
-      console.log(`✅ TTS token received for region: ${region}`)
 
       // Speech 설정 생성
       speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region)
 
-      // 기본 오디오 출력 사용
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput()
-
-      // 합성기 생성 (각 음성마다 재생성됨)
-      synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig)
+      // 오디오 출력 없이 합성만 수행 (Web Audio API로 직접 재생)
+      // null을 전달하면 오디오 데이터만 반환하고 자동 재생하지 않음
+      synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null)
 
       isInitialized.value = true
       isConnecting.value = false
-
-      console.log('✅ Azure TTS initialized successfully')
     } catch (err) {
-      console.error('❌ Failed to initialize Azure TTS:', err)
+      console.error('Failed to initialize Azure TTS:', err)
       error.value = err.message
       isConnecting.value = false
       throw err
@@ -79,6 +87,7 @@ export function useAzureTTS() {
    * @param {number} options.rate - 말하기 속도 (0.5 - 2.0, 기본값 1.0)
    * @param {number} options.pitch - 음높이 (-50% ~ +50%, 기본값 0)
    * @param {number} options.volume - 음량 (0 - 100, 기본값 100)
+   * @param {boolean} options._isRetry - 내부 재시도 플래그 (사용자 지정 금지)
    * @returns {Promise<void>}
    */
   async function speak(text, voiceName, options = {}) {
@@ -105,38 +114,94 @@ export function useAzureTTS() {
       // 고급 제어를 위한 SSML 생성
       const ssml = buildSSML(text, voiceName, options)
 
-      console.log(`🔊 Speaking with voice: ${voiceName}`)
-      console.log(`📝 Text: "${text}"`)
-
-      // 음성 합성
-      await new Promise((resolve, reject) => {
+      // 음성 합성 (오디오 데이터만 받기)
+      const audioData = await new Promise((resolve, reject) => {
         synthesizer.speakSsmlAsync(
           ssml,
           result => {
             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-              console.log('✅ Speech synthesis completed')
-              isSpeaking.value = false
-              resolve()
+              resolve(result.audioData)
             } else {
               const errorDetails = result.errorDetails
               console.error('❌ Speech synthesis failed:', errorDetails)
               error.value = errorDetails
-              isSpeaking.value = false
               reject(new Error(errorDetails))
             }
           },
           err => {
             console.error('❌ Speech synthesis error:', err)
             error.value = err
-            isSpeaking.value = false
             reject(err)
           }
         )
       })
+
+      // Web Audio API로 직접 재생 (정확한 완료 감지)
+      if (audioData && audioData.byteLength > 0) {
+        // 기존 재생 중인 오디오 정리
+        if (currentSource) {
+          try {
+            currentSource.stop()
+          } catch (e) {
+            // 이미 중지된 경우 무시
+          }
+        }
+        if (currentAudioContext) {
+          try {
+            currentAudioContext.close()
+          } catch (e) {
+            // 이미 닫힌 경우 무시
+          }
+        }
+
+        currentAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+
+        try {
+          // ArrayBuffer를 AudioBuffer로 디코딩
+          const audioBuffer = await currentAudioContext.decodeAudioData(audioData.slice(0))
+
+          // AudioBufferSourceNode 생성
+          currentSource = currentAudioContext.createBufferSource()
+          currentSource.buffer = audioBuffer
+          currentSource.connect(currentAudioContext.destination)
+
+          // 재생 완료 이벤트
+          await new Promise((resolve) => {
+            currentSource.onended = () => {
+              isSpeaking.value = false
+              if (currentAudioContext) {
+                currentAudioContext.close()
+                currentAudioContext = null
+              }
+              currentSource = null
+              resolve()
+            }
+            currentSource.start(0)
+          })
+        } catch (decodeError) {
+          console.error('❌ Audio decode error:', decodeError)
+          isSpeaking.value = false
+          currentAudioContext = null
+          currentSource = null
+          throw decodeError
+        }
+      }
     } catch (err) {
       console.error('❌ Failed to speak:', err)
       error.value = err.message
       isSpeaking.value = false
+
+      // StatusCode 1006 (WebSocket 연결 실패) 또는 토큰 관련 오류 시 재시도
+      const errorStr = String(err.message || err)
+      const isConnectionError = errorStr.includes('1006') ||
+                                errorStr.includes('Unable to contact server') ||
+                                errorStr.includes('WebSocket')
+
+      if (isConnectionError && !options._isRetry) {
+        await initialize(true)  // 토큰 강제 갱신
+        return speak(text, voiceName, { ...options, _isRetry: true })
+      }
+
       throw err
     }
   }
@@ -200,20 +265,30 @@ export function useAzureTTS() {
     }
 
     try {
-      // 즉시 중지하기 위해 합성기 닫고 재생성
-      if (synthesizer) {
-        synthesizer.close()
+      // Web Audio API 재생 중지
+      if (currentSource) {
+        try {
+          currentSource.onended = null  // 이벤트 핸들러 제거 (중복 호출 방지)
+          currentSource.stop()
+        } catch (e) {
+          // 이미 중지된 경우 무시
+        }
+        currentSource = null
       }
 
-      // 합성기 재생성
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput()
-      synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig)
+      if (currentAudioContext) {
+        try {
+          currentAudioContext.close()
+        } catch (e) {
+          // 이미 닫힌 경우 무시
+        }
+        currentAudioContext = null
+      }
 
       isSpeaking.value = false
-
-      console.log('⏹️ Speech stopped')
     } catch (err) {
       console.error('❌ Failed to stop speech:', err)
+      isSpeaking.value = false
       throw err
     }
   }
@@ -222,20 +297,35 @@ export function useAzureTTS() {
    * 모든 리소스 정리
    */
   function dispose() {
+    // Web Audio API 정리
+    if (currentSource) {
+      try {
+        currentSource.onended = null
+        currentSource.stop()
+      } catch (e) {
+        // 이미 중지된 경우 무시
+      }
+      currentSource = null
+    }
+
+    if (currentAudioContext) {
+      try {
+        currentAudioContext.close()
+      } catch (e) {
+        // 이미 닫힌 경우 무시
+      }
+      currentAudioContext = null
+    }
+
+    // Azure SDK 정리
     if (synthesizer) {
       synthesizer.close()
       synthesizer = null
     }
 
-    if (player) {
-      player = null
-    }
-
     speechConfig = null
     isInitialized.value = false
     isSpeaking.value = false
-
-    console.log('🗑️ Azure TTS disposed')
   }
 
   return {
