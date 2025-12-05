@@ -5,11 +5,11 @@
     <!-- Card Header -->
     <div class="flex justify-between items-start mb-4">
       <div class="flex gap-2">
-        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-base flex items-center gap-1">
-          <span>{{ languageFlag }}</span>
+        <span class="w-8 h-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50 text-xl hover:scale-110 transition-transform">
+          {{ languageFlag }}
         </span>
         <span
-          class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide"
+          class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center"
           :class="difficultyClass"
         >
           {{ difficultyLabel }}

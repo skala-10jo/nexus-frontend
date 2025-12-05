@@ -47,7 +47,9 @@ const emit = defineEmits([
   /** 프로젝트 선택 토글 */
   'toggle-project',
   /** 일정 선택 토글 */
-  'toggle-schedule'
+  'toggle-schedule',
+  /** 전체 시나리오 보기 */
+  'show-all'
 ])
 
 /**
@@ -111,6 +113,32 @@ const formatDate = (dateTimeString) => {
         </router-link>
       </div>
     </div>
+
+    <!-- Show All Button -->
+    <div class="px-3 pb-2">
+      <button
+        @click="emit('show-all')"
+        class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+        :class="selectedProjects.length === 0 && selectedSchedules.length === 0
+          ? 'bg-blue-50 text-blue-800 font-bold'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+      >
+        <div class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
+          :class="selectedProjects.length === 0 && selectedSchedules.length === 0 ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+        </div>
+        <span class="text-base font-medium">전체 프로젝트</span>
+        <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ml-auto"
+          :class="selectedProjects.length === 0 && selectedSchedules.length === 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'">
+          {{ scenarios.length }}
+        </span>
+      </button>
+    </div>
+
+    <div class="mx-3 border-t border-gray-100 mb-2"></div>
 
     <!-- Loading State -->
     <div v-if="projectsLoading" class="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
