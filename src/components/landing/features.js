@@ -12,6 +12,15 @@ export const features = [
     icon: 'BookOpenIcon'
   },
   {
+    id: 'project-schedule',
+    title: '프로젝트 · 일정',
+    subtitle: '통합 프로젝트 관리',
+    description: '프로젝트를 생성하고 문서를 연결하여 일정을 효율적으로 관리할 수 있습니다.',
+    video: '/videos/project-schedule-demo.mp4',
+    route: '/management/schedule',
+    icon: 'CalendarDaysIcon'
+  },
+  {
     id: 'scenario',
     title: '시나리오 회화 연습',
     subtitle: 'AI와 함께하는 비즈니스 회화',

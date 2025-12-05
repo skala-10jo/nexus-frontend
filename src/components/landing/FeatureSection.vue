@@ -1,8 +1,8 @@
 <template>
-  <section id="features" class="py-24 bg-gray-50">
+  <section id="features" class="py-40 bg-gray-50">
     <div class="max-w-7xl mx-auto px-6">
       <!-- Section Title -->
-      <div class="text-center mb-20">
+      <div class="text-center mb-44">
         <span class="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
           Features
         </span>
@@ -13,7 +13,7 @@
       </div>
 
       <!-- Feature Items -->
-      <div class="space-y-32">
+      <div class="space-y-48">
         <FeatureItem
           v-for="(feature, index) in features"
           :key="feature.id"

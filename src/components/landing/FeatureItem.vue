@@ -1,38 +1,44 @@
 <template>
-  <div
-    ref="sectionRef"
-    class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20"
-    :class="reverse ? 'lg:flex-row-reverse' : ''"
-  >
-    <!-- Mock UI -->
+  <!-- 고정 높이 컨테이너 -->
+  <div ref="sectionRef" class="h-[600px] flex flex-col">
+    <!-- Content Area - flex-none으로 고정 -->
     <div
-      class="flex-1 w-full transition-all duration-1000"
-      :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
+      class="flex-none flex flex-col lg:flex-row items-center gap-12 lg:gap-16"
+      :class="reverse ? 'lg:flex-row-reverse' : ''"
     >
-      <component :is="mockUIComponent" :isVisible="isVisible" />
+      <!-- Mock UI -->
+      <div
+        class="flex-1 w-full transition-all duration-1000"
+        :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
+      >
+        <component :is="mockUIComponent" :isVisible="isVisible" />
+      </div>
+
+      <!-- Text - sticky로 중앙 고정 -->
+      <div
+        class="flex-1 lg:sticky lg:top-1/2 lg:-translate-y-1/2 transition-all duration-1000 delay-300"
+        :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
+      >
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+          <component :is="iconComponent" class="w-4 h-4" />
+          <span>{{ feature.subtitle }}</span>
+        </div>
+        <h3 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{{ feature.title }}</h3>
+        <p class="text-lg text-gray-600 mb-8 leading-relaxed">{{ feature.description }}</p>
+        <router-link
+          :to="feature.route"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-all duration-300 group"
+        >
+          <span>자세히 보기</span>
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </router-link>
+      </div>
     </div>
 
-    <!-- Text -->
-    <div
-      class="flex-1 transition-all duration-1000 delay-300"
-      :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
-    >
-      <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-        <component :is="iconComponent" class="w-4 h-4" />
-        <span>{{ feature.subtitle }}</span>
-      </div>
-      <h3 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{{ feature.title }}</h3>
-      <p class="text-lg text-gray-600 mb-8 leading-relaxed">{{ feature.description }}</p>
-      <router-link
-        :to="feature.route"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-all duration-300 group"
-      >
-        <span>자세히 보기</span>
-        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </router-link>
-    </div>
+    <!-- Spacer - 완충 영역 (Mock UI가 커지면 줄어듦) -->
+    <div class="flex-1 min-h-[80px]"></div>
   </div>
 </template>
 
@@ -44,11 +50,13 @@ import {
   MicrophoneIcon,
   DocumentTextIcon,
   FilmIcon,
-  EnvelopeIcon
+  EnvelopeIcon,
+  CalendarDaysIcon
 } from '@heroicons/vue/24/outline'
 
 // Mock UI components
 import GlossaryMockUI from './mockui/GlossaryMockUI.vue'
+import ProjectScheduleMockUI from './mockui/ProjectScheduleMockUI.vue'
 import ScenarioMockUI from './mockui/ScenarioMockUI.vue'
 import VoiceTranslationMockUI from './mockui/VoiceTranslationMockUI.vue'
 import TextTranslationMockUI from './mockui/TextTranslationMockUI.vue'
@@ -73,6 +81,7 @@ let observer = null
 // Icon mapping
 const iconMap = {
   BookOpenIcon: markRaw(BookOpenIcon),
+  CalendarDaysIcon: markRaw(CalendarDaysIcon),
   ChatBubbleLeftRightIcon: markRaw(ChatBubbleLeftRightIcon),
   MicrophoneIcon: markRaw(MicrophoneIcon),
   DocumentTextIcon: markRaw(DocumentTextIcon),
@@ -83,6 +92,7 @@ const iconMap = {
 // Mock UI mapping
 const mockUIMap = {
   glossary: markRaw(GlossaryMockUI),
+  'project-schedule': markRaw(ProjectScheduleMockUI),
   scenario: markRaw(ScenarioMockUI),
   'voice-translation': markRaw(VoiceTranslationMockUI),
   'text-translation': markRaw(TextTranslationMockUI),
