@@ -103,12 +103,9 @@
             :class="{ 'rotate-180': openMenus.has('translation') }" />
         </button>
         <div v-show="openMenus.has('translation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/text') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
-          <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/voice') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
-          <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/video') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
+          <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/text') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
+          <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/voice') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
+          <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/video') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
         </div>
       </div>
 
@@ -129,10 +126,8 @@
             :class="{ 'rotate-180': openMenus.has('collaboration') }" />
         </button>
         <div v-show="openMenus.has('collaboration') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/mail') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
-          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/messenger') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
+          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/collaboration/mail') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
+          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/collaboration/messenger') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
         </div>
       </div>
 
