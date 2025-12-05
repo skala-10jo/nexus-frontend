@@ -30,6 +30,15 @@ export function useAttendance() {
         try {
             await api.post('/attendance/check-in');
             isCheckedIn.value = true;
+
+            // 오늘 날짜를 attendanceDates에 즉시 추가 (새로고침 없이 불 이모지 표시)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+            attendanceDates.value = new Set([...attendanceDates.value, todayStr]);
+
             return true; // Success
         } catch (err) {
             console.error('Failed to check in:', err);
