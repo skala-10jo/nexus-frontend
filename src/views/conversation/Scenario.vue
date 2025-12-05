@@ -71,8 +71,8 @@
         <template v-else-if="scenarios.length > 0">
           <!-- Desktop Grid View -->
           <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
-            <ScenarioCard v-for="scenario in scenarios" :key="scenario.id" :scenario="scenario" @edit="openEditDialog"
-              @delete="deleteScenario" @start="startPractice" />
+            <ScenarioCard v-for="scenario in scenarios" :key="scenario.id" :scenario="scenario" :projects="projects"
+              :schedules="upcomingSchedules" @edit="openEditDialog" @delete="deleteScenario" @start="startPractice" />
           </div>
 
           <!-- Mobile Swiper View -->
@@ -89,8 +89,8 @@
                   slideShadows: true,
                 }">
                 <swiper-slide v-for="scenario in scenarios" :key="scenario.id" class="rounded-3xl">
-                  <ScenarioCard :scenario="scenario" @edit="openEditDialog" @delete="deleteScenario"
-                    @start="startPractice" class="h-[55vh] shadow-xl" />
+                  <ScenarioCard :scenario="scenario" :projects="projects" :schedules="upcomingSchedules"
+                    @edit="openEditDialog" @delete="deleteScenario" @start="startPractice" class="h-[55vh] shadow-xl" />
                 </swiper-slide>
               </swiper>
             </div>
