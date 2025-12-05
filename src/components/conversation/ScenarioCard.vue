@@ -9,7 +9,7 @@
           <span>{{ languageFlag }}</span>
         </span>
         <span
-          class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide"
+          class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center"
           :class="difficultyClass"
         >
           {{ difficultyLabel }}
