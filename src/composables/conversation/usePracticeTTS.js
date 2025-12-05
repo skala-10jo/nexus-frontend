@@ -14,8 +14,10 @@ import { useAzureTTS } from '@/composables/useAzureTTS'
 /**
  * 언어별 기본 음성 매핑
  * Azure Neural Voice 이름
+ * BCP-47 형식 (en-US) 및 ISO 639-1 형식 (en) 모두 지원
  */
 const VOICE_MAP = {
+  // BCP-47 형식
   'en-US': 'en-US-JennyNeural',
   'en-GB': 'en-GB-SoniaNeural',
   'ko-KR': 'ko-KR-SunHiNeural',
@@ -24,7 +26,17 @@ const VOICE_MAP = {
   'zh-TW': 'zh-TW-HsiaoChenNeural',
   'es-ES': 'es-ES-ElviraNeural',
   'fr-FR': 'fr-FR-DeniseNeural',
-  'de-DE': 'de-DE-KatjaNeural'
+  'de-DE': 'de-DE-KatjaNeural',
+  'vi-VN': 'vi-VN-HoaiMyNeural',
+  // ISO 639-1 형식 (시나리오에서 사용하는 형식)
+  'en': 'en-US-JennyNeural',
+  'ko': 'ko-KR-SunHiNeural',
+  'ja': 'ja-JP-NanamiNeural',
+  'zh': 'zh-CN-XiaoxiaoNeural',
+  'es': 'es-ES-ElviraNeural',
+  'fr': 'fr-FR-DeniseNeural',
+  'de': 'de-DE-KatjaNeural',
+  'vi': 'vi-VN-HoaiMyNeural'
 }
 
 /**
@@ -100,7 +112,7 @@ export function usePracticeTTS({ scenario }) {
       speakingMessageIndex.value = messageIndex
 
       await speak(text, currentVoice.value, {
-        rate: options.rate || 0.3,  // 기본 70% 느리게 (회화 학습용)
+        rate: options.rate || 0,  // 기본 속도 (1.0 = 100%)
         pitch: options.pitch || 0,
         volume: options.volume || 100
       })

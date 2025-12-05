@@ -141,6 +141,12 @@ export function useExpressionRecording() {
 
   const startAudioCapture = async (stream) => {
     audioContext = new AudioContext({ sampleRate: 16000 })
+
+    // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
+
     const source = audioContext.createMediaStreamSource(stream)
 
     audioProcessor = audioContext.createScriptProcessor(4096, 1, 1)
@@ -208,7 +214,11 @@ export function useExpressionRecording() {
       isPlayingRecording.value = false
     }
 
-    recordedAudio.play()
+    // Chrome Autoplay Policy: play()는 Promise 반환, 에러 처리 필요
+    recordedAudio.play().catch(err => {
+      console.error('Recorded audio play failed:', err)
+      isPlayingRecording.value = false
+    })
   }
 
   const stopPlayingRecordedAudio = () => {

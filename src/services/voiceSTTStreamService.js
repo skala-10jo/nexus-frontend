@@ -216,6 +216,11 @@ class VoiceSTTStreamService {
       sampleRate: 16000  // Azure Speech SDK 권장
     })
 
+    // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
+
     // MediaStream을 AudioContext로 연결
     const source = audioContext.createMediaStreamSource(this.stream)
 

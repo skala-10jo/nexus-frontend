@@ -156,6 +156,12 @@ export function useAzureTTS() {
 
         currentAudioContext = new (window.AudioContext || window.webkitAudioContext)()
 
+        // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+        // Chrome 66+에서는 사용자 제스처 없이 생성된 AudioContext가 suspended 상태로 시작
+        if (currentAudioContext.state === 'suspended') {
+          await currentAudioContext.resume()
+        }
+
         try {
           // ArrayBuffer를 AudioBuffer로 디코딩
           const audioBuffer = await currentAudioContext.decodeAudioData(audioData.slice(0))

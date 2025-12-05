@@ -40,6 +40,11 @@ export function useMultiLanguageSTT() {
       // 2. AudioContext 생성
       audioContext = new (window.AudioContext || window.webkitAudioContext)()
 
+      // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
+
       // 3. AudioWorklet 로드
       await audioContext.audioWorklet.addModule('/pcm-processor.js')
 

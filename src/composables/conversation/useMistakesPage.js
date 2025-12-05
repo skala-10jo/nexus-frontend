@@ -49,8 +49,12 @@ export function useMistakesPage() {
       const audioBlob = new Blob([response.data], { type: 'audio/wav' })
       const audioUrl = URL.createObjectURL(audioBlob)
       const audio = new Audio(audioUrl)
-      audio.play()
       audio.onended = () => URL.revokeObjectURL(audioUrl)
+      // Chrome Autoplay Policy: play()는 Promise 반환, 에러 처리 필요
+      audio.play().catch(err => {
+        console.error('Audio play failed:', err)
+        URL.revokeObjectURL(audioUrl)
+      })
     } catch (error) {
       console.error('TTS failed:', error)
     } finally {

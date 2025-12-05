@@ -125,6 +125,12 @@ export function useVoiceRecorder() {
 
       // 3. 음성 시각화 (Web Audio API)
       audioContext = new (window.AudioContext || window.webkitAudioContext)()
+
+      // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
+
       const source = audioContext.createMediaStreamSource(stream)
       analyser = audioContext.createAnalyser()
       analyser.fftSize = 256  // FFT 크기 (작을수록 빠름)

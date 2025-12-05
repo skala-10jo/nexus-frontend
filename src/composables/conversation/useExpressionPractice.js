@@ -40,8 +40,12 @@ export function useExpressionPractice(currentSessionExpressions, currentExpressi
       const audioBlob = new Blob([response.data], { type: 'audio/wav' })
       const audioUrl = URL.createObjectURL(audioBlob)
       const audio = new Audio(audioUrl)
-      audio.play()
       audio.onended = () => URL.revokeObjectURL(audioUrl)
+      // Chrome Autoplay Policy: play()는 Promise 반환, 에러 처리 필요
+      audio.play().catch(err => {
+        console.error('Audio play failed:', err)
+        URL.revokeObjectURL(audioUrl)
+      })
     } catch (error) {
       console.error('TTS failed:', error)
       alert('음성 합성에 실패했습니다.')

@@ -362,6 +362,11 @@ export function useWebSocketSTT() {
         sampleRate: 16000
       })
 
+      // Chrome Autoplay Policy 대응: suspended 상태면 resume 필요
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
+
       const source = audioContext.createMediaStreamSource(mediaStream)
 
       // ScriptProcessor (오디오 처리)
