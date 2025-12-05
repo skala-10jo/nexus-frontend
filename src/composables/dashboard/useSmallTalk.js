@@ -2,6 +2,21 @@ import { ref, computed } from 'vue'
 import smallTalkService from '@/services/smallTalkService'
 
 /**
+ * Blob을 Base64 문자열로 변환
+ */
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
  * Small Talk 상태 관리 Composable
  *
  * 대시보드 진입 시 자동으로 대화가 시작됩니다.
@@ -62,8 +77,10 @@ export function useSmallTalk() {
 
   /**
    * 메시지 전송
+   * @param {string} text - 사용자 메시지
+   * @param {Blob} audioBlob - 음성 녹음 Blob (발음 평가용, 선택)
    */
-  async function sendMessage(text) {
+  async function sendMessage(text, audioBlob = null) {
     if (!text.trim() || isLoading.value) return
 
     isLoading.value = true
@@ -76,6 +93,7 @@ export function useSmallTalk() {
       timestamp: new Date()
     }
     messages.value.push(userMessage)
+    const userMessageIndex = userMessages.value.length - 1
 
     try {
       // 히스토리 포맷 변환
@@ -95,6 +113,31 @@ export function useSmallTalk() {
         message: response.ai_message,
         timestamp: new Date()
       })
+
+      // 피드백 자동 요청 (오디오가 있으면 발음 평가 포함)
+      try {
+        let audioData = null
+        if (audioBlob) {
+          try {
+            audioData = await blobToBase64(audioBlob)
+            console.log('🎤 Audio data prepared for pronunciation assessment:', audioData.length, 'chars')
+          } catch (audioErr) {
+            console.warn('Failed to convert audio to Base64:', audioErr)
+          }
+        }
+
+        const feedbackResponse = await smallTalkService.getFeedback(
+          text.trim(),
+          history,
+          audioData
+        )
+
+        // 피드백 저장
+        feedbacks.value[userMessageIndex] = feedbackResponse
+        console.log('📝 Feedback received:', feedbackResponse.score)
+      } catch (feedbackErr) {
+        console.error('Failed to get feedback:', feedbackErr)
+      }
     } catch (err) {
       console.error('Failed to send message:', err)
       error.value = 'Failed to send message'

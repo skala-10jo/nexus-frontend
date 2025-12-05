@@ -89,13 +89,20 @@ const hasUserInteracted = computed(() => {
 })
 
 // Methods
+// 마지막 오디오 blob 저장 (발음 평가용)
+const lastAudioBlob = ref(null)
+
 async function handleSend() {
   if (!canSend.value) return
 
   const text = inputText.value.trim()
   inputText.value = ''
 
-  await sendMessage(text)
+  // 오디오 blob이 있으면 발음 평가용으로 전달
+  const audioBlob = lastAudioBlob.value
+  lastAudioBlob.value = null
+
+  await sendMessage(text, audioBlob)
   await scrollToBottom()
 }
 
@@ -173,18 +180,23 @@ async function startRecording() {
 }
 
 async function stopRecording() {
-  // STT 결과 가져오기
+  // STT 결과 가져오기 (오디오 blob 포함)
   const result = stopRealtimeSTT()
 
   let fullText = ''
+  let audioBlob = null
+
   if (result && typeof result === 'object') {
     fullText = result.text || ''
+    audioBlob = result.audioBlob || null
   } else if (typeof result === 'string') {
     fullText = result
   }
 
   if (fullText && fullText.trim()) {
     inputText.value = fullText
+    // 오디오 blob 저장 (발음 평가용)
+    lastAudioBlob.value = audioBlob
 
     // 자동 전송
     isProcessingVoice.value = true

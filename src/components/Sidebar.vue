@@ -57,8 +57,8 @@
             :class="{ 'rotate-180': openMenus.has('management') }" />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/management/schedule') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/management/glossary') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
         </div>
       </div>
 
@@ -79,10 +79,10 @@
             :class="{ 'rotate-180': openMenus.has('conversation') }" />
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
-          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/speaking-tutor') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
-          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
-          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
+          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/scenario') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
+          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/speaking-tutor') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
+          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/expression') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
+          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/mistakes') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
         </div>
       </div>
 
@@ -104,11 +104,11 @@
         </button>
         <div v-show="openMenus.has('translation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/text') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
+            :class="isSubActive('/translation/text') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
           <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/voice') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
+            :class="isSubActive('/translation/voice') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
           <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/video') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
+            :class="isSubActive('/translation/video') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
         </div>
       </div>
 
@@ -130,9 +130,9 @@
         </button>
         <div v-show="openMenus.has('collaboration') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/mail') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
+            :class="isSubActive('/collaboration/mail') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
           <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/messenger') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
+            :class="isSubActive('/collaboration/messenger') ? 'text-blue-600 bg-gray-100 shadow-inner font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
         </div>
       </div>
 
@@ -419,7 +419,7 @@ const toggleMobileMenu = (menuName) => {
 
 const isActive = (path) => {
   if (path === '/') {
-    return route.path === '/';
+    return route.path === '/' || route.path === '/dashboard';
   }
   return route.path.startsWith(path);
 };

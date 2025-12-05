@@ -62,6 +62,19 @@ function nextMessage() {
     emit('select-message', props.selectedIndex + 1)
   }
 }
+
+/**
+ * 단어 점수에 따른 스타일 클래스 반환
+ */
+function getWordScoreClass(score) {
+  if (score >= 80) {
+    return 'bg-green-100 text-green-700 border-green-200'
+  } else if (score >= 60) {
+    return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+  } else {
+    return 'bg-red-100 text-red-700 border-red-200'
+  }
+}
 </script>
 
 <template>
@@ -192,7 +205,49 @@ function nextMessage() {
                 </div>
               </div>
             </div>
+            <!-- Pronunciation Score (발음 평가 결과가 있을 때만) -->
+            <div v-if="feedback.pronunciation_details" class="bg-purple-50 border border-purple-100 rounded-xl p-4 shadow-sm">
+              <div class="flex items-center gap-2 mb-3">
+                <MicrophoneIcon class="w-4 h-4 text-purple-600" />
+                <span class="text-xs font-bold text-purple-700 uppercase">발음 평가</span>
+              </div>
 
+              <!-- Score Summary -->
+              <div class="flex items-center gap-6 mb-4">
+                <!-- 전체 점수 -->
+                <div class="text-center">
+                  <div class="text-3xl font-black text-purple-600">{{ Math.round(feedback.pronunciation_details.pronunciation_score) }}</div>
+                  <div class="text-xs text-purple-400 font-medium">전체 점수</div>
+                </div>
+                <!-- 상세 점수 -->
+                <div class="flex-1 space-y-1">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-500">정확도</span>
+                    <span class="font-bold text-gray-700">{{ Math.round(feedback.pronunciation_details.accuracy_score) }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-500">유창성</span>
+                    <span class="font-bold text-gray-700">{{ Math.round(feedback.pronunciation_details.fluency_score) }}</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-500">운율</span>
+                    <span class="font-bold text-gray-700">{{ Math.round(feedback.pronunciation_details.prosody_score) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 단어별 발음 평가 -->
+              <div v-if="feedback.pronunciation_details.words?.length" class="flex flex-wrap gap-2">
+                <span
+                  v-for="(word, idx) in feedback.pronunciation_details.words"
+                  :key="idx"
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium border"
+                  :class="getWordScoreClass(word.accuracy_score)"
+                >
+                  {{ word.word }}
+                </span>
+              </div>
+            </div>
             <!-- Pronunciation Feedback -->
             <div v-if="feedback.pronunciation_feedback?.length" class="space-y-2">
               <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
