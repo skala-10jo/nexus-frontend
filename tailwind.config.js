@@ -11,6 +11,8 @@ export default {
         'nanum-round': ['"NanumSquareRound"', 'sans-serif'],
         'nanum-round-eb': ['"NanumSquareRoundEB"', 'sans-serif'],
         'nanum-neo': ['"NanumSquareNeo"', 'sans-serif'],
+        'space-grotesk': ['"Space Grotesk"', 'sans-serif'],
+        'inter': ['"Inter"', 'sans-serif'],
       },
       colors: {
         orange: {
