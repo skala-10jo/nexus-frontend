@@ -181,12 +181,14 @@
         </div>
 
         <!-- Right Column (Sidebar) -->
-        <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
+        <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto">
           
           <!-- 3. Mini Calendar (Strict 1:1 Ratio, Overflow Hidden) -->
-          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 h-1/2 min-h-0 flex flex-col overflow-hidden relative z-10">
-            <div class="flex items-center justify-between mb-2 shrink-0">
-              <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs">{{ currentMonthName }} {{ currentYear }}</h3>
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col relative z-10">
+          <div class="flex items-center justify-between mb-2 shrink-0">
+            <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs">
+              {{ currentMonthName }} {{ currentYear }}
+            </h3>
               <div class="flex gap-1">
                 <button @click="prevMonth" class="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -199,54 +201,40 @@
 
             <!-- Calendar Grid -->
             <!-- Changed justify-center to justify-start to prevent top clipping -->
-            <div class="flex-1 flex flex-col justify-start overflow-hidden">
-              <div class="grid grid-cols-7 gap-1 text-center">
+            <div class="mt-2">
+              <div class="grid grid-cols-7 gap-x-1 gap-y-1 text-center">
                 <div
                   v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays"
                   :key="date.toISOString()"
-                  class="aspect-square relative" 
+                  class="flex items-center justify-center py-1.5"
                 >
                   <button
                     @click="selectDate(date)"
                     class="
-                      absolute 
-                      inset-[5%]        
+                      relative
+                      w-10 h-10 md:w-11 md:h-11   <!-- 여기 숫자 줄이면 더 작아짐 -->
                       flex items-center justify-center
                       rounded-full
-                      text-xs font-medium
+                      text-[12px] md:text-xs font-medium
                       transition-all
                       cursor-pointer
                     "
                     :class="[
-                      // Base text color
                       !isCurrentMonth ? 'text-gray-300' : 'text-gray-700',
-
-                      // Hover state (only if not an event start and not today)
                       !eventInfo?.isStart && isCurrentMonth && !isToday ? 'hover:bg-gray-100' : '',
-
-                      // Event Styling (Start Date - Solid Color)
                       eventInfo?.isStart ? `${eventInfo.color} text-white shadow-md` : '',
-
-                      // Event Styling (Continued - Light Color)
                       eventInfo?.isContinued ? `${eventInfo.lightColor} text-gray-700` : '',
-
-                      // Selected State (if no event)
                       isSelected(date) && !eventInfo ? 'ring-2 ring-blue-600 ring-offset-2' : '',
-
-                      // Today's Date Styling
-                      // Always use Thick Black Border (Ring)
                       isToday ? 'ring-[3px] ring-inset ring-gray-900 font-extrabold z-10 overflow-hidden' : ''
                     ]"
                   >
-                    <!-- Date Number (On Top) -->
                     <span class="relative z-10">{{ date.getDate() }}</span>
 
-                    <!-- Attendance Fire Emoji (출석한 날짜에 표시) -->
                     <img
                       v-if="hasAttendance(date)"
                       src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Star.png"
                       alt="Fire"
-                      class="absolute inset-0 w-full h-full object-contain p-1 opacity-90 z-0 pointer-events-none"
+                      class="absolute inset-0 w-full h-full object-contain p-0.5 opacity-90 z-0 pointer-events-none"
                     />
                   </button>
                 </div>
@@ -255,7 +243,7 @@
           </div>
 
           <!-- 4. Upcoming Tasks (Strict 1:1 Ratio) -->
-          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 h-1/2 min-h-0 flex flex-col overflow-hidden relative z-20">
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[200px]">
             <div class="flex items-center justify-between mb-3 shrink-0">
               <h3 class="font-bold text-gray-900">
                 {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
@@ -617,12 +605,16 @@ const calendarDays = computed(() => {
   }
   
   // Next month padding (to fill 6 rows = 42 cells)
-  const remaining = 42 - days.length;
+  const totalCells = days.length;              // 현재: 이전달 패딩 + 이번달 날짜 수
+  const rows = Math.ceil(totalCells / 7);      // 4 ~ 6 중 하나
+  const targetCells = rows * 7;                // 이 달에 필요한 최소 칸 수
+  const remaining = targetCells - totalCells;  // 모자란 칸만큼만 다음달 날짜로 채움
+
   for (let i = 1; i <= remaining; i++) {
     const d = new Date(year, month + 1, i);
     days.push({ date: d, isCurrentMonth: false, isToday: false, eventInfo: null });
   }
-  
+
   return days;
 });
 

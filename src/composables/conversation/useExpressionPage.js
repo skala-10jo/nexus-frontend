@@ -6,7 +6,7 @@
 import { ref, computed } from 'vue'
 import api from '@/services/api'
 
-const SESSION_COUNT = 3
+const SESSION_SIZE = 5  // 세션당 기본 표현 개수
 
 export function useExpressionPage() {
   // View State
@@ -102,18 +102,31 @@ export function useExpressionPage() {
 
   const splitIntoSessions = () => {
     const total = allExpressions.value.length
-    const sessionSize = Math.ceil(total / SESSION_COUNT)
+    if (total === 0) {
+      sessions.value = []
+      return
+    }
+
+    const remainder = total % SESSION_SIZE
+    // 나머지가 1 또는 2개면 마지막 세션에 합침 (5+1=6 또는 5+2=7)
+    const shouldMergeRemainder = remainder > 0 && remainder <= 2
+    const sessionCount = shouldMergeRemainder
+      ? Math.floor(total / SESSION_SIZE)
+      : Math.ceil(total / SESSION_SIZE)
+
+    // 세션이 0개가 되는 경우 (total이 1 또는 2) 처리
+    const finalSessionCount = sessionCount === 0 ? 1 : sessionCount
 
     sessions.value = []
-    for (let i = 0; i < SESSION_COUNT; i++) {
-      const start = i * sessionSize
-      const end = Math.min(start + sessionSize, total)
-      if (start < total) {
-        sessions.value.push({
-          expressions: allExpressions.value.slice(start, end),
-          completed: false
-        })
-      }
+    for (let i = 0; i < finalSessionCount; i++) {
+      const start = i * SESSION_SIZE
+      const isLastSession = i === finalSessionCount - 1
+      const end = isLastSession ? total : start + SESSION_SIZE
+
+      sessions.value.push({
+        expressions: allExpressions.value.slice(start, end),
+        completed: false
+      })
     }
   }
 
