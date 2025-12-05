@@ -28,7 +28,8 @@
         <ScenarioProjectSidebar :projects="projects" :selected-projects="selectedProjects"
           :selected-schedules="selectedSchedules" :upcoming-schedules="upcomingSchedules"
           :projects-loading="projectsLoading" :schedules-loading="schedulesLoading" :scenarios="allScenarios"
-          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection" />
+          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection"
+          @show-all="showAllScenarios" />
       </div>
 
       <!-- Right Content -->
@@ -186,6 +187,12 @@ async function toggleProjectSelection(project) {
   }
 }
 
+async function showAllScenarios() {
+  selectedProjects.value = []
+  selectedSchedules.value = []
+  await loadScenariosForFilters()
+}
+
 // Methods: Data Loading
 async function loadScenariosForFilters() {
   scenariosLoading.value = true
@@ -237,7 +244,6 @@ async function loadAllUpcomingSchedules() {
   schedulesLoading.value = true
   try {
     const allSchedules = []
-    const now = new Date()
 
     for (const project of projects.value) {
       try {
@@ -245,21 +251,20 @@ async function loadAllUpcomingSchedules() {
         const schedules = response.data.data || response.data || []
 
         schedules.forEach(schedule => {
-          if (new Date(schedule.startTime) >= now) {
-            allSchedules.push({
-              ...schedule,
-              projectId: project.id,
-              projectName: project.name
-            })
-          }
+          allSchedules.push({
+            ...schedule,
+            projectId: project.id,
+            projectName: project.name
+          })
         })
       } catch (error) {
         console.error(`Failed to load schedules for project ${project.id}:`, error)
       }
     }
 
+    // 최신 일정이 위로 오도록 내림차순 정렬
     upcomingSchedules.value = allSchedules.sort((a, b) =>
-      new Date(a.startTime) - new Date(b.startTime)
+      new Date(b.startTime) - new Date(a.startTime)
     )
   } catch (error) {
     console.error('Failed to load schedules:', error)
