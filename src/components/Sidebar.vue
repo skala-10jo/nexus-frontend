@@ -32,112 +32,107 @@
 
       <!-- Dashboard -->
       <router-link to="/"
-        class="flex items-center gap-4 rounded-2xl transition-all duration-200 group relative overflow-hidden" :class="[
-          isActive('/') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+        class="flex items-center gap-4 rounded-2xl transition-all duration-300 group relative overflow-hidden border" :class="[
+          isActive('/') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
           isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
         ]" :title="isCollapsed ? 'Dashboard' : ''">
-        <div v-if="isActive('/')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
-        <HomeIcon class="w-5 h-5 flex-shrink-0" />
-        <span v-if="!isCollapsed" class="font-medium text-[15px]">대시보드</span>
+        <HomeIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
+        <span v-if="!isCollapsed" class="font-extrabold text-[15px]">대시보드</span>
       </router-link>
 
       <!-- Management -->
       <div class="space-y-1">
         <button @click="toggleMenu('management')"
-          class="w-full flex items-center rounded-2xl transition-all duration-200 group relative overflow-hidden"
+          class="w-full flex items-center rounded-2xl transition-all duration-300 group relative overflow-hidden border"
           :class="[
-            isActive('/management') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+            isActive('/management') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
             isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between'
           ]" :title="isCollapsed ? 'Management' : ''">
-          <div v-if="isActive('/management')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
             <DocumentTextIcon class="w-5 h-5 flex-shrink-0"
               :class="isActive('/management') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
-            <span v-if="!isCollapsed" class="font-medium text-[15px]">관리</span>
+            <span v-if="!isCollapsed" class="font-extrabold text-[15px]">관리</span>
           </div>
           <ChevronDownIcon v-if="!isCollapsed" class="w-4 h-4 transition-transform duration-300"
             :class="{ 'rotate-180': openMenus.has('management') }" />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/schedule') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/management/glossary') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
         </div>
       </div>
 
       <!-- Conversation -->
       <div class="space-y-1">
         <button @click="toggleMenu('conversation')"
-          class="w-full flex items-center rounded-2xl transition-all duration-200 group relative overflow-hidden"
+          class="w-full flex items-center rounded-2xl transition-all duration-300 group relative overflow-hidden border"
           :class="[
-            isActive('/conversation') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+            isActive('/conversation') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
             isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between'
           ]" :title="isCollapsed ? 'Conversation' : ''">
-          <div v-if="isActive('/conversation')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
             <ChatBubbleLeftRightIcon class="w-5 h-5 flex-shrink-0"
               :class="isActive('/conversation') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
-            <span v-if="!isCollapsed" class="font-medium text-[15px]">회화</span>
+            <span v-if="!isCollapsed" class="font-extrabold text-[15px]">회화</span>
           </div>
           <ChevronDownIcon v-if="!isCollapsed" class="w-4 h-4 transition-transform duration-300"
             :class="{ 'rotate-180': openMenus.has('conversation') }" />
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
-          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/speaking-tutor') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
-          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
-          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
+          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/scenario') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
+          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/speaking-tutor') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
+          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/expression') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
+          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition" :class="isSubActive('/conversation/mistakes') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
         </div>
       </div>
 
       <!-- Translation -->
       <div class="space-y-1">
         <button @click="toggleMenu('translation')"
-          class="w-full flex items-center rounded-2xl transition-all duration-200 group relative overflow-hidden"
+          class="w-full flex items-center rounded-2xl transition-all duration-300 group relative overflow-hidden border"
           :class="[
-            isActive('/translation') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+            isActive('/translation') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
             isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between'
           ]" :title="isCollapsed ? 'Translation' : ''">
-          <div v-if="isActive('/translation')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
             <GlobeAltIcon class="w-5 h-5 flex-shrink-0"
               :class="isActive('/translation') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
-            <span v-if="!isCollapsed" class="font-medium text-[15px]">번역</span>
+            <span v-if="!isCollapsed" class="font-extrabold text-[15px]">번역</span>
           </div>
           <ChevronDownIcon v-if="!isCollapsed" class="w-4 h-4 transition-transform duration-300"
             :class="{ 'rotate-180': openMenus.has('translation') }" />
         </button>
         <div v-show="openMenus.has('translation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/text') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
+            :class="isSubActive('/translation/text') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
           <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/voice') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
+            :class="isSubActive('/translation/voice') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
           <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/translation/video') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
+            :class="isSubActive('/translation/video') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
         </div>
       </div>
 
       <!-- Collaboration -->
       <div class="space-y-1">
         <button @click="toggleMenu('collaboration')"
-          class="w-full flex items-center rounded-2xl transition-all duration-200 group relative overflow-hidden"
+          class="w-full flex items-center rounded-2xl transition-all duration-300 group relative overflow-hidden border"
           :class="[
-            isActive('/collaboration') ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-sm',
+            isActive('/collaboration') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
             isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3 justify-between'
           ]" :title="isCollapsed ? 'Collaboration' : ''">
-          <div v-if="isActive('/collaboration')" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
           <div class="flex items-center gap-4">
             <EnvelopeIcon class="w-5 h-5 flex-shrink-0"
               :class="isActive('/collaboration') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
-            <span v-if="!isCollapsed" class="font-medium text-[15px]">협업</span>
+            <span v-if="!isCollapsed" class="font-extrabold text-[15px]">협업</span>
           </div>
           <ChevronDownIcon v-if="!isCollapsed" class="w-4 h-4 transition-transform duration-300"
             :class="{ 'rotate-180': openMenus.has('collaboration') }" />
         </button>
         <div v-show="openMenus.has('collaboration') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/mail') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
+            :class="isSubActive('/collaboration/mail') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
           <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition"
-            :class="isSubActive('/collaboration/messenger') ? 'text-gray-900 bg-white font-medium' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
+            :class="isSubActive('/collaboration/messenger') ? 'text-blue-600 bg-blue-50 font-bold' : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
         </div>
       </div>
 

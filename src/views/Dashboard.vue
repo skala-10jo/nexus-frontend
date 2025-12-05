@@ -52,7 +52,7 @@
             <div class="relative z-20 group">
               <div class="bg-white text-gray-800 px-6 py-4 rounded-2xl rounded-tr-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 border-b-4 border-b-gray-200 flex flex-col items-center gap-3 min-w-[140px] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]">
                 <p class="text-sm font-bold whitespace-nowrap flex items-center gap-1.5 text-gray-700">
-                  {{ isCheckedIn ? '출석 완료! 🎉' : '출석하세용 👋' }}
+                  {{ isCheckedIn ? '출석 완료! 🌟' : '출석하세용 ⭐️'}}
                 </p>
                 
                 <button 
@@ -244,7 +244,7 @@
                     <!-- Attendance Fire Emoji (출석한 날짜에 표시) -->
                     <img
                       v-if="hasAttendance(date)"
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png"
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Star.png"
                       alt="Fire"
                       class="absolute inset-0 w-full h-full object-contain p-1 opacity-90 z-0 pointer-events-none"
                     />
