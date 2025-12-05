@@ -18,15 +18,26 @@
     <!-- Content Overlay -->
     <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
       <!-- Branding Section -->
-      <div class="text-center mb-10">
-        <!-- Project Name -->
-        <h1 class="text-7xl md:text-8xl font-bold tracking-tight mb-4"
-            style="font-family: 'Space Grotesk', sans-serif !important; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);">
-          <span class="text-white">Nex</span><span class="text-sky-300">US</span>
-        </h1>
+      <div class="flex flex-col items-center mb-10">
+        <!-- Project Name with SplitText Animation -->
+        <div class="w-full flex justify-center mb-4">
+          <SplitText
+            text="NexUS"
+            class="text-8xl md:text-9xl font-thin text-white tracking-widest"
+            :delay="80"
+            :duration="0.8"
+            ease="power3.out"
+            split-type="chars"
+            :from="{ opacity: 0, y: 50, rotateX: -90 }"
+            :to="{ opacity: 1, y: 0, rotateX: 0 }"
+            :auto-play="true"
+            text-align="center"
+            style="font-family: 'Inter', sans-serif !important; text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);"
+          />
+        </div>
 
         <!-- Slogan with TextType -->
-        <div style="font-family: 'Inter', sans-serif !important;">
+        <div class="w-full flex justify-center">
           <TextType
             :text="['Collaborate Beyond Language']"
             :typingSpeed="50"
@@ -34,9 +45,9 @@
             :showCursor="true"
             cursorCharacter="|"
             :loop="false"
-            :initialDelay="600"
-            class="text-xl md:text-2xl text-white font-medium tracking-wide"
-            style="font-family: 'Inter', sans-serif !important; text-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);"
+            :initialDelay="800"
+            class="text-xl md:text-3xl text-gray-200 font-light tracking-wide"
+            style="font-family: 'Inter', sans-serif !important; text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);"
           />
         </div>
       </div>
@@ -306,6 +317,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import axios from 'axios';
 import Galaxy from '@/components/common/effects/Galaxy.vue';
+import SplitText from '@/components/common/effects/SplitText.vue';
 import TextType from '@/components/common/effects/TextType.vue';
 
 const router = useRouter();
