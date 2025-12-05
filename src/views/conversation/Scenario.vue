@@ -28,7 +28,8 @@
         <ScenarioProjectSidebar :projects="projects" :selected-projects="selectedProjects"
           :selected-schedules="selectedSchedules" :upcoming-schedules="upcomingSchedules"
           :projects-loading="projectsLoading" :schedules-loading="schedulesLoading" :scenarios="allScenarios"
-          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection" />
+          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection"
+          @show-all="showAllScenarios" />
       </div>
 
       <!-- Right Content -->
@@ -184,6 +185,12 @@ async function toggleProjectSelection(project) {
   if (selectedSchedules.value.length === 0) {
     await loadScenariosForFilters()
   }
+}
+
+async function showAllScenarios() {
+  selectedProjects.value = []
+  selectedSchedules.value = []
+  await loadScenariosForFilters()
 }
 
 // Methods: Data Loading
