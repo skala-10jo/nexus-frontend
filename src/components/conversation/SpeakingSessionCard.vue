@@ -1,22 +1,22 @@
 <template>
   <div
-    class="group bg-white border border-gray-100 rounded-3xl p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
+    class="group bg-white border border-gray-100 rounded-3xl p-4 md:p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
   >
     <!-- Card Header -->
-    <div class="flex justify-between items-start mb-4">
+    <div class="flex justify-between items-start mb-3 md:mb-4">
       <div class="flex gap-2">
-        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold uppercase tracking-wide">
+        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide">
           {{ languageLabel }}
         </span>
         <span
-          class="px-2.5 py-1 rounded-lg text-xs font-bold"
+          class="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold"
           :class="statusClass"
         >
           {{ statusLabel }}
         </span>
       </div>
 
-      <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <button
           @click.stop="$emit('delete', session.id)"
           class="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-600 transition-colors"
@@ -30,25 +30,25 @@
     </div>
 
     <!-- Title & Description -->
-    <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+    <h3 class="text-base md:text-lg font-bold text-gray-900 mb-1 md:mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
       {{ session.originalFilename || '녹음 파일' }}
     </h3>
-    <p class="text-sm text-gray-500 mb-4 line-clamp-2 flex-1">
+    <p class="text-xs md:text-sm text-gray-500 mb-3 md:mb-4 line-clamp-2 flex-1">
       {{ description }}
     </p>
 
     <!-- Stats -->
-    <div class="bg-gray-50 rounded-2xl p-4 mb-4 space-y-2">
-      <div class="flex items-center gap-2 text-xs">
-        <span class="w-16 text-gray-400 font-medium">화자</span>
+    <div class="bg-gray-50 rounded-2xl p-3 md:p-4 mb-3 md:mb-4 space-y-1.5 md:space-y-2">
+      <div class="flex items-center gap-2 text-[10px] md:text-xs">
+        <span class="w-14 md:w-16 text-gray-400 font-medium">화자</span>
         <span class="font-bold text-gray-800">{{ session.speakerCount || 0 }}명</span>
       </div>
-      <div class="flex items-center gap-2 text-xs">
-        <span class="w-16 text-gray-400 font-medium">발화</span>
+      <div class="flex items-center gap-2 text-[10px] md:text-xs">
+        <span class="w-14 md:w-16 text-gray-400 font-medium">발화</span>
         <span class="font-bold text-gray-800">{{ session.utteranceCount || 0 }}개</span>
       </div>
-      <div class="flex items-center gap-2 text-xs">
-        <span class="w-16 text-gray-400 font-medium">분석일</span>
+      <div class="flex items-center gap-2 text-[10px] md:text-xs">
+        <span class="w-14 md:w-16 text-gray-400 font-medium">분석일</span>
         <span class="font-bold text-gray-800">{{ formattedDate }}</span>
       </div>
     </div>
@@ -74,7 +74,7 @@
     <button
       @click="$emit('select', session.id)"
       :disabled="isProcessing"
-      class="w-full py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
+      class="w-full py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
       :class="isProcessing
         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
         : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98]'"

@@ -209,6 +209,12 @@
             @click="mobileOpenMenu = null">
             시나리오 회화
           </router-link>
+          <router-link to="/conversation/speaking-tutor"
+            class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
+            :class="isSubActive('/conversation/speaking-tutor') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
+            @click="mobileOpenMenu = null">
+            AI 스피킹 튜터
+          </router-link>
           <router-link to="/conversation/expression"
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
             :class="isSubActive('/conversation/expression') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"

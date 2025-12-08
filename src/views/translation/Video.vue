@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50/50">
+  <div class="min-h-full md:h-full flex flex-col bg-gray-50/50 pb-24 md:pb-0 md:overflow-hidden">
     <!-- Header -->
     <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <div class="flex items-center justify-between">
@@ -10,7 +10,7 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-8">
+    <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
       <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Upload Section -->
@@ -53,7 +53,7 @@
 
           <!-- Language Config -->
           <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
               <div class="flex-1 w-full max-w-xs space-y-2">
                 <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Source Language</label>
                 <select v-model="sourceLang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
@@ -63,7 +63,7 @@
                   <option value="vi">Vietnamese</option>
                 </select>
               </div>
-              
+
               <ArrowRightIcon class="w-6 h-6 text-gray-300 rotate-90 md:rotate-0" />
 
               <div class="flex-1 w-full max-w-xs space-y-2">
@@ -170,7 +170,7 @@
           </LanguageSelector>
 
           <!-- Player & Subtitles -->
-          <div v-if="displaySubtitles.length > 0" class="flex flex-col lg:flex-row gap-6 h-[600px]">
+          <div v-if="displaySubtitles.length > 0" class="flex flex-col lg:flex-row gap-6 h-auto lg:h-[600px]">
             <!-- Player -->
             <div class="flex-1 bg-black rounded-2xl overflow-hidden relative group">
               <video

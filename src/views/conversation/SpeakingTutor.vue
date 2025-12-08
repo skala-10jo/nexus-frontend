@@ -15,7 +15,7 @@
         </div>
         <button
           @click="showUploadModal = true"
-          class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
+          class="hidden md:flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -56,7 +56,18 @@
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden">
       <!-- List View -->
-      <div v-if="currentView === 'list'" class="flex-1 overflow-y-auto bg-white p-8">
+      <div v-if="currentView === 'list'" class="flex-1 overflow-y-auto bg-white p-4 md:p-8">
+        <!-- Mobile Upload Button -->
+        <button
+          @click="showUploadModal = true"
+          class="md:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold active:scale-95 transition-all shadow-lg shadow-gray-900/20"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          오디오 업로드
+        </button>
+
         <!-- Loading State -->
         <div v-if="sessionsLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="i in 6" :key="i" class="h-64 bg-gray-50 rounded-3xl animate-pulse"></div>
@@ -110,13 +121,20 @@
       </div>
 
       <!-- Analysis Results -->
-      <div v-else-if="currentView === 'results'" class="flex-1 flex gap-6 p-6 overflow-hidden">
+      <div v-else-if="currentView === 'results'" class="flex-1 flex flex-col md:flex-row gap-0 md:gap-6 p-0 md:p-6 overflow-hidden relative">
+        
+        <!-- Mobile Feedback Backdrop -->
+        <div 
+          v-if="showMobileFeedback" 
+          class="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
+          @click="showMobileFeedback = false"
+        ></div>
+
         <!-- Left Panel: Transcript Timeline -->
-        <!-- Left Panel: Transcript Timeline -->
-        <div class="w-[55%] min-w-0 flex flex-col h-full">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-lg h-full overflow-hidden flex flex-col">
+        <div class="w-full md:w-[55%] min-w-0 flex flex-col h-full z-0">
+          <div class="bg-white md:rounded-2xl border-x-0 md:border border-gray-100 shadow-none md:shadow-lg h-full overflow-hidden flex flex-col">
             <!-- Header & Speaker Filter -->
-            <div class="p-6 border-b border-gray-100 bg-white z-10">
+            <div class="p-4 md:p-6 border-b border-gray-100 bg-white z-10">
               <div class="flex items-center justify-between mb-4">
                 <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <UserIcon class="w-5 h-5 text-gray-500" />
@@ -219,7 +237,7 @@
             </div>
 
             <!-- Transcript List (Chat Style) -->
-            <div class="flex-1 overflow-y-auto bg-gray-50/50 p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto bg-gray-50/50 p-4 space-y-4 pb-24 md:pb-4">
               <div v-if="filteredUtterances.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
                 <ChatBubbleLeftRightIcon class="w-12 h-12 mb-2 opacity-20" />
                 <p class="text-sm">표시할 대화 내용이 없습니다</p>
@@ -273,9 +291,18 @@
           </div>
         </div>
 
-        <!-- Right Panel: Feedback -->
-        <div class="w-[45%] flex-shrink-0 overflow-hidden flex flex-col h-full">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-lg h-full overflow-hidden flex flex-col relative">
+        <!-- Right Panel: Feedback (Bottom Sheet on Mobile) -->
+        <div 
+          class="fixed inset-x-0 bottom-0 z-50 h-[85vh] md:h-auto md:static md:w-[45%] md:flex-shrink-0 flex flex-col transition-transform duration-300 transform md:transform-none"
+          :class="showMobileFeedback ? 'translate-y-0' : 'translate-y-full md:translate-y-0'"
+        >
+          <div class="bg-white rounded-t-3xl md:rounded-2xl border border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-lg h-full overflow-hidden flex flex-col relative">
+            
+            <!-- Mobile Handle -->
+            <div class="md:hidden flex justify-center pt-3 pb-1" @click="showMobileFeedback = false">
+              <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+
             <!-- Background Decoration -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full blur-3xl opacity-50 -mr-32 -mt-32 pointer-events-none"></div>
 
@@ -292,15 +319,25 @@
                   </div>
                 </div>
                 
-                <button
-                  v-if="!selectedUtterance.hasFeedback"
-                  @click="requestFeedback"
-                  :disabled="isLoadingFeedback"
-                  class="px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black hover:shadow-lg hover:shadow-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform active:scale-95"
-                >
-                  <SparklesIcon class="w-4 h-4" :class="{ 'animate-spin': isLoadingFeedback }" />
-                  {{ isLoadingFeedback ? '분석 중...' : '피드백 받기' }}
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    v-if="!selectedUtterance.hasFeedback"
+                    @click="requestFeedback"
+                    :disabled="isLoadingFeedback"
+                    class="hidden md:flex px-5 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black hover:shadow-lg hover:shadow-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2 transform active:scale-95"
+                  >
+                    <SparklesIcon class="w-4 h-4" :class="{ 'animate-spin': isLoadingFeedback }" />
+                    {{ isLoadingFeedback ? '분석 중...' : '피드백 받기' }}
+                  </button>
+                  
+                  <!-- Mobile Close Button -->
+                  <button 
+                    @click="showMobileFeedback = false"
+                    class="md:hidden p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <XMarkIcon class="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
               <!-- Content -->
@@ -463,7 +500,7 @@
               </div>
             </template>
 
-            <!-- No Utterance Selected State -->
+            <!-- No Utterance Selected State (Desktop Only) -->
             <template v-else>
               <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
                 <div class="w-24 h-24 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
@@ -1132,8 +1169,12 @@ async function saveSpeakerLabel(speakerId) {
   }
 }
 
+// Mobile Feedback State
+const showMobileFeedback = ref(false)
+
 function selectUtterance(utterance) {
   selectedUtterance.value = utterance
+  showMobileFeedback.value = true
 }
 
 async function requestFeedback() {

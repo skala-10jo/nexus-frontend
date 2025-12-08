@@ -1,7 +1,7 @@
 <template>
-  <div class="h-full flex flex-col relative bg-white">
+  <div class="h-full flex flex-col relative bg-white pb-24 md:pb-0">
     <!-- Header Section -->
-    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-20 overflow-visible">
       <!-- Row 1: Title -->
       <div class="flex items-center gap-4 mb-6">
         <div>
@@ -11,31 +11,32 @@
       </div>
 
       <!-- Row 2: Controls -->
-      <div class="flex items-center gap-4">
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
         <LanguageSwitcher
           v-model:source-language="sourceLang"
           v-model:target-language="targetLang"
           @swap="onLanguageSwap"
+          class="w-full md:w-auto"
         />
 
-        <div class="h-10 w-px bg-gray-200 mx-2"></div>
+        <div class="hidden md:block h-10 w-px bg-gray-200 mx-2"></div>
 
         <ProjectSelector
           v-model="selectedProjectId"
           :projects="projects"
           :context-info="contextInfo"
           @change="onProjectChange"
-          class="min-w-[240px]"
+          class="w-full md:w-auto md:min-w-[240px]"
         />
       </div>
     </div>
 
     <!-- Workspace Section -->
-    <div class="flex-1 bg-gray-50/50 p-6 overflow-hidden">
-      <div class="h-full grid grid-cols-2 gap-6 max-w-[1920px] mx-auto">
+    <div class="flex-1 bg-gray-50/50 p-4 md:p-6 overflow-y-auto md:overflow-hidden">
+      <div class="h-auto md:h-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-[1920px] mx-auto">
         
         <!-- Input Card -->
-        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden group transition-all hover:shadow-md">
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden group transition-all hover:shadow-md h-[300px] md:h-full">
           <div class="flex-1 relative p-8">
             <textarea
               v-model="sourceText"
@@ -79,7 +80,7 @@
         </div>
 
         <!-- Output Card -->
-        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden relative">
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden relative h-[300px] md:h-full">
           <!-- Output Header -->
           <div class="h-16 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-50 bg-white">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Result</span>
