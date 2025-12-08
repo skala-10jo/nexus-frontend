@@ -2,66 +2,74 @@
   <div class="relative w-full h-full flex flex-col justify-center items-center overflow-hidden py-10">
 
     <!-- Circular Gallery -->
-    <CircularGallery ref="galleryRef" :items="units" :item-width="400" :gap="20" :bend="2" :scroll-speed="2"
+    <CircularGallery ref="galleryRef" :items="units" :item-width="420" :gap="20" :bend="2" :scroll-speed="2"
       :scroll-ease="0.05" @select="handleGallerySelect">
-      <template #default="{ item: unit, isActive }">
-        <!-- Card Wrapper (for ring effect) -->
+      <template #default="{ item: unit, index: idx, isActive }">
+        <!-- Card -->
         <div
-          class="w-[400px] h-[500px] rounded-3xl transition-all duration-500"
-          :class="isActive ? 'scale-100 opacity-100 ring-4 ring-blue-400/50' : 'scale-95 opacity-70'"
-          @click="scrollToIndex(units.indexOf(unit))">
-          <!-- Card (with overflow-hidden) -->
-          <div class="w-full h-full rounded-3xl overflow-hidden relative group shadow-2xl">
-            <!-- Background Image -->
-            <div class="absolute inset-0 z-0">
-              <img :src="getUnitImage(unit.unit)"
-                class="w-full h-full object-cover"
-                alt="Unit Background" />
-              <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/60"></div>
-            </div>
+          class="w-[420px] h-[520px] bg-white rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.08)] p-8 flex flex-col relative overflow-hidden transition-all duration-300 hover:border-blue-200"
+          :class="isActive
+            ? 'ring-4 ring-blue-400 ring-offset-4 ring-offset-gray-50 shadow-[0_15px_50px_rgba(59,130,246,0.15)]'
+            : 'opacity-50 grayscale-[0.3] scale-90'"
+          @click="scrollToIndex(idx)">
 
-            <div class="relative z-10 h-full flex flex-col">
-              <!-- Unit Header -->
-              <div class="p-6 border-b border-white/10">
-                <div class="flex items-center justify-between">
-                  <div class="flex-1">
-                    <h2 class="text-2xl font-bold text-white mb-2 drop-shadow-md">{{ unit.unit }}</h2>
-                    <div class="flex items-center gap-3">
-                      <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm shadow-inner">
-                        <div
-                          class="h-full rounded-full transition-all duration-500 bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.6)]"
-                          :style="{ width: `${unit.accuracyRate || 0}%` }"></div>
-                      </div>
-                      <span class="text-sm font-medium text-white/90 whitespace-nowrap drop-shadow-md">
-                        {{ Math.round(unit.accuracyRate || 0) }}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <!-- Pneumatic Highlight -->
+          <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80"></div>
 
-              <!-- Chapters Grid -->
-              <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                <div v-if="unitChapters[unit.unit]?.length > 0">
-                  <div class="space-y-3">
-                    <button v-for="chapter in unitChapters[unit.unit]" :key="chapter.chapter"
-                      @click.stop="$emit('select-chapter', unit.unit, chapter.chapter)"
-                      class="w-full p-4 rounded-xl border border-white/10 transition-all duration-200 hover:bg-white/10 hover:border-white/30 bg-black/40 backdrop-blur-md group/chapter flex items-center justify-between gap-3 text-left">
-                      <span class="font-semibold text-white text-sm truncate flex-1 group-hover/chapter:text-blue-200">{{
-                        chapter.chapter }}</span>
-                      <div class="w-16 h-1.5 bg-white/20 rounded-full overflow-hidden shrink-0">
-                        <div class="h-full rounded-full transition-all duration-300 bg-blue-400"
-                          :style="{ width: `${chapter.accuracyRate || 0}%` }"></div>
-                      </div>
-                    </button>
-                  </div>
+          <!-- Unit Header -->
+          <div class="flex justify-between items-start mb-6">
+            <span
+              class="flex items-center justify-center w-14 h-14 rounded-2xl font-bold text-xl shadow-inner transition-colors duration-300"
+              :class="getUnitIconStyle(unit.unit)">
+              {{ getUnitIcon(unit.unit) }}
+            </span>
+            <div class="text-right flex-1 ml-4">
+              <h3 class="font-bold text-gray-800 text-xl leading-tight">{{ unit.unit }}</h3>
+              <div class="flex items-center justify-end gap-2 mt-2">
+                <div class="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500 bg-blue-400"
+                    :style="{ width: `${unit.accuracyRate || 0}%` }"></div>
                 </div>
-                <div v-else class="text-center py-8 text-white/60">
-                  Loading...
-                </div>
+                <span class="text-sm font-medium text-gray-500 whitespace-nowrap">
+                  {{ Math.round(unit.accuracyRate || 0) }}%
+                </span>
               </div>
             </div>
           </div>
+
+          <!-- Chapters List -->
+          <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div v-if="unitChapters[unit.unit]?.length > 0" class="space-y-4">
+              <button
+                v-for="chapter in unitChapters[unit.unit]"
+                :key="chapter.chapter"
+                @click.stop="$emit('select-chapter', unit.unit, chapter.chapter)"
+                class="w-full p-4 rounded-xl border border-gray-100 transition-all duration-200 hover:bg-blue-50 hover:border-blue-200 bg-gray-50/50 group/chapter flex items-center justify-between gap-3 text-left">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-2 h-2 rounded-full bg-blue-300 flex-shrink-0"></div>
+                  <span class="font-medium text-gray-700 text-sm truncate group-hover/chapter:text-blue-600">
+                    {{ chapter.chapter }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <div class="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-300 bg-blue-400"
+                      :style="{ width: `${chapter.accuracyRate || 0}%` }"></div>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                    class="w-4 h-4 text-gray-400 group-hover/chapter:text-blue-500 transition-colors">
+                    <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+            <div v-else class="text-center py-8 text-gray-400">
+              Loading...
+            </div>
+          </div>
+
         </div>
       </template>
     </CircularGallery>
@@ -76,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref } from 'vue'
 import CircularGallery from '@/components/common/effects/CircularGallery.vue'
 
 const props = defineProps({
@@ -109,39 +117,41 @@ const scrollToIndex = (index) => {
   }
 }
 
-const getUnitImage = (unitName) => {
-  if (unitName.includes('미팅')) return '/images/expression/meeting.png';
-  if (unitName.includes('요청')) return '/images/expression/request.png';
-  if (unitName.includes('피드백')) return '/images/expression/feedback.png';
-  if (unitName.includes('이메일')) return '/images/expression/email.png';
-  return '/images/expression/meeting.png'; // Fallback
+// Unit icon based on unit name
+const getUnitIcon = (unitName) => {
+  if (unitName.includes('미팅')) return '🤝'
+  if (unitName.includes('요청')) return '📋'
+  if (unitName.includes('피드백')) return '💬'
+  if (unitName.includes('이메일')) return '📧'
+  return '📚'
+}
+
+// Unit icon background style
+const getUnitIconStyle = (unitName) => {
+  if (unitName.includes('미팅')) return 'bg-blue-100 text-blue-600'
+  if (unitName.includes('요청')) return 'bg-amber-100 text-amber-600'
+  if (unitName.includes('피드백')) return 'bg-green-100 text-green-600'
+  if (unitName.includes('이메일')) return 'bg-purple-100 text-purple-600'
+  return 'bg-gray-100 text-gray-600'
 }
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
 }
 </style>
