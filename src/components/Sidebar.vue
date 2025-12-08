@@ -4,11 +4,8 @@
     :class="isCollapsed ? 'w-[80px]' : 'w-80'">
     <!-- Brand Logo -->
     <div class="p-8 pb-6 flex items-center gap-3" :class="isCollapsed ? 'justify-center p-4' : ''">
-      <div
-        class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg flex-shrink-0">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img src="/images/logo.png" alt="NexUS Logo" class="w-full h-full object-cover" />
       </div>
       <span v-if="!isCollapsed" class="text-xl font-bold tracking-tight text-gray-900">NexUS</span>
       <button v-if="!isCollapsed" @click="toggleCollapse"
@@ -32,11 +29,13 @@
 
       <!-- Dashboard -->
       <router-link to="/"
-        class="flex items-center gap-4 rounded-2xl transition-all duration-300 group relative overflow-hidden border" :class="[
+        class="flex items-center gap-4 rounded-2xl transition-all duration-300 group relative overflow-hidden border"
+        :class="[
           isActive('/') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
           isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
         ]" :title="isCollapsed ? 'Dashboard' : ''">
-        <HomeIcon class="w-5 h-5 flex-shrink-0" :class="isActive('/') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
+        <HomeIcon class="w-5 h-5 flex-shrink-0"
+          :class="isActive('/') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" />
         <span v-if="!isCollapsed" class="font-extrabold text-[15px]">대시보드</span>
       </router-link>
 
@@ -57,8 +56,12 @@
             :class="{ 'rotate-180': openMenus.has('management') }" />
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/management/schedule') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트 · 일정</router-link>
-          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/management/glossary') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서 · 전문용어 사전</router-link>
+          <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/management/schedule') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트
+            · 일정</router-link>
+          <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/management/glossary') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서
+            · 전문용어 사전</router-link>
         </div>
       </div>
 
@@ -79,10 +82,17 @@
             :class="{ 'rotate-180': openMenus.has('conversation') }" />
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/scenario') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오 회화 연습</router-link>
-          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/speaking-tutor') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI 스피킹 튜터</router-link>
-          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/expression') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz 표현 학습</router-link>
-          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/conversation/mistakes') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
+          <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/conversation/scenario') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오
+            회화 연습</router-link>
+          <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/conversation/speaking-tutor') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI
+            스피킹 튜터</router-link>
+          <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/conversation/expression') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz
+            표현 학습</router-link>
+          <router-link to="/conversation/mistakes" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/conversation/mistakes') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">오답노트</router-link>
         </div>
       </div>
 
@@ -103,9 +113,12 @@
             :class="{ 'rotate-180': openMenus.has('translation') }" />
         </button>
         <div v-show="openMenus.has('translation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/text') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
-          <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/voice') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
-          <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/translation/video') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
+          <router-link to="/translation/text" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/translation/text') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">텍스트</router-link>
+          <router-link to="/translation/voice" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/translation/voice') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">음성</router-link>
+          <router-link to="/translation/video" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/translation/video') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">영상</router-link>
         </div>
       </div>
 
@@ -126,8 +139,10 @@
             :class="{ 'rotate-180': openMenus.has('collaboration') }" />
         </button>
         <div v-show="openMenus.has('collaboration') && !isCollapsed" class="pl-4 space-y-1 mt-1">
-          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/collaboration/mail') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
-          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition border" :class="isSubActive('/collaboration/messenger') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
+          <router-link to="/collaboration/mail" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/collaboration/mail') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메일</router-link>
+          <router-link to="/collaboration/messenger" class="block px-4 py-2 text-sm rounded-xl transition border"
+            :class="isSubActive('/collaboration/messenger') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">메신저</router-link>
         </div>
       </div>
 
@@ -135,46 +150,30 @@
 
     <!-- User Profile & Logout -->
     <div class="mt-auto pt-4 border-t border-gray-200/50" :class="isCollapsed ? 'px-3 pb-4' : 'px-6 pb-6'">
-      <div
-        class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
-        :class="isCollapsed ? 'justify-center' : ''"
-        :title="isCollapsed ? user?.fullName || 'User' : ''"
-        @click="openProfileModal"
-      >
-        <img
-          :src="avatarUrl"
-          class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
-          alt=""
-        />
+      <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
+        :class="isCollapsed ? 'justify-center' : ''" :title="isCollapsed ? user?.fullName || 'User' : ''"
+        @click="openProfileModal">
+        <img :src="avatarUrl" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+          alt="" />
         <div v-if="!isCollapsed" class="flex-1 min-w-0">
           <div class="text-sm font-bold text-gray-900 truncate">{{ user?.fullName || 'User' }}</div>
           <div class="text-xs text-gray-500 truncate">{{ user?.role || '역할을 설정해주세요' }}</div>
         </div>
-        <button
-          v-if="!isCollapsed"
-          @click.stop="handleLogout"
-          class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-          title="로그아웃"
-        >
+        <button v-if="!isCollapsed" @click.stop="handleLogout"
+          class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="로그아웃">
           <ArrowRightOnRectangleIcon class="w-5 h-5" />
         </button>
       </div>
       <!-- Collapsed logout button -->
-      <button
-        v-if="isCollapsed"
-        @click="handleLogout"
+      <button v-if="isCollapsed" @click="handleLogout"
         class="w-full mt-2 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex justify-center"
-        title="로그아웃"
-      >
+        title="로그아웃">
         <ArrowRightOnRectangleIcon class="w-5 h-5" />
       </button>
     </div>
 
     <!-- User Profile Modal -->
-    <UserProfileModal
-      :show="showProfileModal"
-      @close="closeProfileModal"
-    />
+    <UserProfileModal :show="showProfileModal" @close="closeProfileModal" />
   </aside>
 
   <!-- Mobile Bottom Navigation -->

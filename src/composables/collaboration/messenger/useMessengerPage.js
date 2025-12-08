@@ -41,10 +41,22 @@ export function useMessengerPage() {
            message.userId === currentUser.value.id
   }
 
-  // Format timestamp
+  // Format timestamp (handles both epoch seconds and ISO string formats)
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return ''
-    const date = new Date(parseFloat(timestamp) * 1000)
+
+    let date
+    // Check if it's an epoch timestamp (numeric string with possible decimal)
+    if (/^\d+(\.\d+)?$/.test(timestamp)) {
+      date = new Date(parseFloat(timestamp) * 1000)
+    } else {
+      // Try to parse as ISO string
+      date = new Date(timestamp)
+    }
+
+    // Validate the date
+    if (isNaN(date.getTime())) return ''
+
     const now = new Date()
     const isToday = date.toDateString() === now.toDateString()
 
@@ -107,23 +119,59 @@ export function useMessengerPage() {
     await slackStore.fetchChannels()
   }
 
+  // WebSocket message watcher cleanup function
+  let stopMessageWatch = null
+
+  // Helper: Parse timestamp to epoch seconds (handles both epoch and ISO formats)
+  const parseTimestampToEpoch = (ts) => {
+    if (!ts) return 0
+    // If it looks like an epoch timestamp (numeric string with possible decimal)
+    if (/^\d+(\.\d+)?$/.test(ts)) {
+      return parseFloat(ts)
+    }
+    // Otherwise, try to parse as ISO string
+    const date = new Date(ts)
+    return isNaN(date.getTime()) ? 0 : date.getTime() / 1000
+  }
+
   // Setup WebSocket message watch
   const setupMessageWatch = () => {
     if (!wsConnection.value) return
 
-    watch(() => wsConnection.value.messages, (newMessages) => {
+    // Stop previous watcher if exists
+    if (stopMessageWatch) {
+      stopMessageWatch()
+      stopMessageWatch = null
+    }
+
+    // Watch the messages ref's VALUE (not the ref itself)
+    // Using wsConnection.value.messages directly as it's a ref
+    const wsMessages = wsConnection.value.messages
+
+    stopMessageWatch = watch(wsMessages, (newMessages) => {
+      console.log('[MessageWatch] WebSocket messages updated:', newMessages?.length)
+
       if (newMessages && newMessages.length > 0) {
-        const lastMessage = newMessages[newMessages.length - 1]
+        // Process all new messages that aren't in the store yet
+        newMessages.forEach(wsMsg => {
+          const wsMsgEpoch = parseTimestampToEpoch(wsMsg.timestamp || wsMsg.ts)
 
-        // Add to messages if not already present
-        const exists = messages.value.some(m =>
-          m.text === lastMessage.text &&
-          m.timestamp === lastMessage.timestamp
-        )
+          const exists = messages.value.some(m => {
+            // Check exact timestamp match
+            if (m.timestamp === wsMsg.timestamp || m.ts === wsMsg.ts) return true
 
-        if (!exists) {
-          messages.value.push(lastMessage)
-        }
+            // Check similar timestamp (within 2 seconds) with same text
+            const mEpoch = parseTimestampToEpoch(m.timestamp || m.ts)
+            if (m.text === wsMsg.text && Math.abs(mEpoch - wsMsgEpoch) < 2) return true
+
+            return false
+          })
+
+          if (!exists) {
+            console.log('[MessageWatch] Adding new message:', wsMsg.text?.substring(0, 50))
+            messages.value.push(wsMsg)
+          }
+        })
       }
     }, { deep: true, immediate: true })
   }
@@ -152,10 +200,15 @@ export function useMessengerPage() {
     }
 
     try {
-      if (wsConnection.value && wsConnection.value.connected) {
+      // Check WebSocket connection - need to access .value of the ref
+      const isWsConnected = wsConnection.value && wsConnection.value.connected.value
+
+      if (isWsConnected) {
+        console.log('[SendMessage] Using WebSocket')
         wsConnection.value.sendMessage(messageText.value)
       } else {
         // Fallback to REST API
+        console.log('[SendMessage] Using REST API (WebSocket not connected)')
         await slackStore.sendMessage(
           selectedChannel.value.id,
           messageText.value
