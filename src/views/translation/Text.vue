@@ -1,11 +1,12 @@
 <template>
   <div class="h-full flex flex-col relative bg-white">
     <!-- Header Section -->
-    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-100 bg-white z-10">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <!-- Row 1: Title -->
       <div class="flex items-center gap-4 mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">텍스트 번역</h2>
+          <h1 class="text-2xl font-bold text-gray-900">텍스트 번역</h1>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">프로젝트 맥락을 반영한 전문 번역</p>
         </div>
       </div>
 

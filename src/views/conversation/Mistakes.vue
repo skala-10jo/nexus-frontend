@@ -1,11 +1,11 @@
 <template>
   <div class="h-full flex flex-col bg-gray-50/50">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 pt-6 pb-0 border-b border-gray-100">
-      <div class="flex items-center justify-between mb-6">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
+      <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">오답노트</h1>
-          <p class="text-sm text-gray-500 mt-1 font-medium">학습 중 틀린 내용과 피드백을 복습해보세요</p>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">학습 중 틀린 내용과 피드백을 복습해보세요</p>
         </div>
 
         <!-- Header Actions (Dynamic based on active tab) -->
@@ -22,21 +22,21 @@
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Tabs -->
-      <div class="flex gap-8">
-        <button @click="activeTab = 'feedback'" class="pb-4 text-sm font-medium transition-colors relative"
-          :class="activeTab === 'feedback' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'">
-          회화 피드백 노트
-          <div v-if="activeTab === 'feedback'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full">
-          </div>
-        </button>
-        <button @click="activeTab = 'biz'" class="pb-4 text-sm font-medium transition-colors relative"
-          :class="activeTab === 'biz' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'">
-          Biz 표현 오답노트
-          <div v-if="activeTab === 'biz'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full"></div>
-        </button>
-      </div>
+    <!-- Tabs -->
+    <div class="flex gap-8 px-8 border-b border-gray-100 bg-white">
+      <button @click="activeTab = 'feedback'" class="pb-4 pt-2 text-sm font-medium transition-colors relative"
+        :class="activeTab === 'feedback' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'">
+        회화 피드백 노트
+        <div v-if="activeTab === 'feedback'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full">
+        </div>
+      </button>
+      <button @click="activeTab = 'biz'" class="pb-4 pt-2 text-sm font-medium transition-colors relative"
+        :class="activeTab === 'biz' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'">
+        Biz 표현 오답노트
+        <div v-if="activeTab === 'biz'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full"></div>
+      </button>
     </div>
 
     <!-- Content -->

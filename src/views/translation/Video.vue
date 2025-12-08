@@ -1,11 +1,11 @@
 <template>
   <div class="h-full flex flex-col bg-gray-50/50">
     <!-- Header -->
-    <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">Video Translation</h1>
-          <p class="text-sm text-gray-500 mt-1 font-medium">AI-powered subtitle translation with glossary support</p>
+          <h1 class="text-2xl font-bold text-gray-900">영상 번역</h1>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">AI 기반 자막 번역 및 용어집 지원</p>
         </div>
       </div>
     </div>

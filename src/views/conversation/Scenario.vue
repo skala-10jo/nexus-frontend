@@ -1,28 +1,29 @@
 <template>
   <div class="h-full flex flex-col relative">
     <!-- Header -->
-    <div
-      class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-100">
-      <div class="flex items-center gap-4">
-        <h2 class="text-xl md:text-2xl font-bold text-gray-800 font-nanum-round-eb truncate">시나리오 회화</h2>
-        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold shrink-0">{{ scenarios.length
-        }}</span>
-      </div>
-
-      <div class="flex items-center gap-4">
+    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-gray-900">시나리오 회화 연습</h1>
+            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ scenarios.length }}</span>
+          </div>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">
+            비즈니스 상황별 시나리오로 회화를 연습하세요
+          </p>
+        </div>
         <button @click="showCreateDialog = true"
-          class="bg-black text-white px-4 py-2 md:px-6 md:py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2">
+          class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span class="hidden md:inline">시나리오 생성</span>
-          <span class="md:hidden">생성</span>
+          시나리오 생성
         </button>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 flex pt-20 overflow-hidden bg-gray-50/50">
+    <div class="flex-1 flex overflow-hidden bg-gray-50/50">
       <!-- Left Sidebar (Filters) - Desktop Only -->
       <div class="hidden md:block h-full">
         <ScenarioProjectSidebar :projects="projects" :selected-projects="selectedProjects"

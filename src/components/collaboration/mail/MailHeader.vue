@@ -36,11 +36,11 @@ const emit = defineEmits([
 </script>
 
 <template>
-  <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-20 px-8 py-6 border-b border-gray-100 flex-none">
+  <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 font-nanum-round-eb">메일</h1>
-        <!-- <p class="text-sm text-gray-500 mt-1 font-medium">Manage your communications</p> -->
+        <h1 class="text-2xl font-bold text-gray-900">메일</h1>
+        <p class="text-sm text-gray-500 font-medium mt-0.5">Outlook 메일을 관리하고 비즈니스 매너에 맞는 초안을 작성하세요</p>
       </div>
 
       <!-- Not Connected -->

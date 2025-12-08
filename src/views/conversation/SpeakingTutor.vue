@@ -3,20 +3,19 @@
     <!-- Header (List/Home View) -->
     <div
       v-if="currentView === 'list'"
-      class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-8 border-b border-gray-100"
+      class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10"
     >
-      <div class="flex flex-col">
-        <div class="flex items-center gap-4">
-          <h2 class="text-2xl font-bold text-gray-800 font-nanum-round-eb">AI 스피킹 튜터</h2>
-          <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ sessions.length }}</span>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-gray-900">AI 스피킹 튜터</h1>
+            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ sessions.length }}</span>
+          </div>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">실제 대화를 분석하고, AI와 함께 더 나은 표현을 배워보세요</p>
         </div>
-        <p class="text-sm text-gray-500 mt-1">실제 대화를 분석하고, AI와 함께 더 나은 표현을 배워보세요</p>
-      </div>
-
-      <div class="flex items-center gap-4">
         <button
           @click="showUploadModal = true"
-          class="bg-black text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 flex items-center gap-2"
+          class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -55,7 +54,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 flex overflow-hidden" :class="{ 'pt-20': currentView === 'list' }">
+    <div class="flex-1 flex overflow-hidden">
       <!-- List View -->
       <div v-if="currentView === 'list'" class="flex-1 overflow-y-auto bg-white p-8">
         <!-- Loading State -->
