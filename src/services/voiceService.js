@@ -191,16 +191,11 @@ export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
  */
 export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
   const wsUrl = `${getWebSocketProtocol()}//${getWebSocketHost()}/api/ai/voice/realtime`
-
-  console.log('🌐 [Translation] WebSocket URL:', wsUrl)
-
   const selectedLanguages = Array.isArray(languages) ? languages : [languages]
-  console.log('🌐 [Translation] Selected Languages:', selectedLanguages)
 
   const ws = new WebSocket(wsUrl)
 
   ws.onopen = () => {
-    console.log('✅ [Translation] WebSocket connected')
     ws.send(JSON.stringify({ selected_languages: selectedLanguages }))
 
     if (callbacks.onConnected) {
@@ -220,7 +215,6 @@ export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
           break
 
         case 'recognized':
-          console.log('🌐 [Translation] Recognized:', message.text)
           if (callbacks.onRecognized) {
             callbacks.onRecognized(message)
           }
@@ -234,14 +228,13 @@ export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
           break
 
         case 'end':
-          console.log('🔚 [Translation] Stream ended')
           if (callbacks.onEnd) {
             callbacks.onEnd()
           }
           break
 
         default:
-          console.warn('[Translation] Unknown message type:', message.type)
+          break
       }
     } catch (error) {
       console.error('[Translation] Failed to parse message:', error)
@@ -252,14 +245,12 @@ export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
   }
 
   ws.onclose = () => {
-    console.log('🔌 [Translation] WebSocket disconnected')
     if (callbacks.onEnd) {
       callbacks.onEnd()
     }
   }
 
   ws.onerror = (error) => {
-    console.error('❌ [Translation] WebSocket error:', error)
     if (callbacks.onError) {
       callbacks.onError(error.message || 'WebSocket error')
     }
@@ -270,8 +261,6 @@ export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
     send(audioChunk) {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(audioChunk)
-      } else {
-        console.warn('[Translation] WebSocket not open. State:', ws.readyState)
       }
     },
     close() {
