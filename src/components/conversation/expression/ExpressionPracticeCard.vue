@@ -87,10 +87,22 @@
       </div>
     </div>
 
-    <!-- Progress hint -->
-    <div v-if="!allPracticeCompleted" class="mt-4 pt-4 border-t border-gray-100">
-      <p class="text-center text-gray-400 text-xs">
-        모든 표현의 발음 연습을 완료하면 퀴즈로 넘어갈 수 있습니다
+    <!-- Quiz Button or Progress hint -->
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <div v-if="isLastExpression" class="flex flex-col items-center gap-2">
+        <button
+          @click="$emit('go-to-quiz')"
+          class="w-full max-w-xs px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2"
+        >
+          <AcademicCapIcon class="w-5 h-5" />
+          퀴즈 풀러가기
+        </button>
+        <p class="text-gray-400 text-xs">
+          연습을 더 하고 싶다면 이전 예문으로 돌아가서 연습하세요
+        </p>
+      </div>
+      <p v-else class="text-center text-gray-400 text-xs">
+        마지막 예문에서 퀴즈로 이동할 수 있습니다
       </p>
     </div>
   </div>
@@ -102,7 +114,8 @@ import {
   ChevronRightIcon,
   SpeakerWaveIcon,
   MicrophoneIcon,
-  CheckIcon
+  CheckIcon,
+  AcademicCapIcon
 } from '@heroicons/vue/24/outline'
 
 defineProps({
@@ -126,6 +139,10 @@ defineProps({
     type: Boolean,
     default: false
   },
+  isLastExpression: {
+    type: Boolean,
+    default: false
+  },
   ttsLoading: {
     type: Boolean,
     default: false
@@ -144,5 +161,5 @@ defineProps({
   }
 })
 
-defineEmits(['play-tts', 'start-practice', 'prev', 'next'])
+defineEmits(['play-tts', 'start-practice', 'prev', 'next', 'go-to-quiz'])
 </script>

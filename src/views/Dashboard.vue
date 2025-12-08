@@ -95,49 +95,8 @@
 
           <!-- Bottom Row: Performance & Quick Actions -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-1/2 min-h-0 shrink-0">
-            <!-- Performance Chart -->
-            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
-              <div class="flex items-center justify-between mb-3 shrink-0">
-                <h3 class="font-bold text-gray-900 text-sm">Performance</h3>
-                <select class="text-xs font-bold text-gray-500 bg-gray-50 rounded-lg px-2 py-1 border-none focus:ring-0">
-                  <option>Overall</option>
-                  <option>Weekly</option>
-                </select>
-              </div>
-              
-              <!-- Mockup Chart -->
-              <div class="relative flex-1 w-full min-h-0">
-                <!-- Grid Lines -->
-                <div class="absolute inset-0 flex flex-col justify-between text-xs text-gray-300">
-                  <div class="border-b border-gray-50 w-full h-0"></div>
-                  <div class="border-b border-gray-50 w-full h-0"></div>
-                  <div class="border-b border-gray-50 w-full h-0"></div>
-                  <div class="border-b border-gray-50 w-full h-0"></div>
-                  <div class="border-b border-gray-50 w-full h-0"></div>
-                </div>
-                
-                <!-- SVG Wave -->
-                <svg class="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.2" />
-                      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,100 C50,80 100,120 150,60 C200,0 250,40 300,80 L300,200 L0,200 Z" fill="url(#gradient)" />
-                  <path d="M0,100 C50,80 100,120 150,60 C200,0 250,40 300,80" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" />
-                  <!-- Points -->
-                  <circle cx="150" cy="60" r="4" fill="#3b82f6" stroke="white" stroke-width="2" />
-                  <circle cx="300" cy="80" r="4" fill="#3b82f6" stroke="white" stroke-width="2" />
-                </svg>
-              </div>
-              <div class="flex justify-between mt-2 text-xs text-gray-400 shrink-0">
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-              </div>
-            </div>
+            <!-- Performance Chart (Biz 표현학습 일일 통계) -->
+            <PerformanceChart />
 
             <!-- Quick Actions (Swiper) -->
             <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden">
@@ -321,6 +280,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 
 import SmallTalkChat from '@/components/dashboard/SmallTalkChat.vue';
+import PerformanceChart from '@/components/dashboard/PerformanceChart.vue';
 import { useAttendance } from '@/composables/useAttendance';
 
 import {

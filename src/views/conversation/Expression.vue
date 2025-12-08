@@ -68,9 +68,11 @@
           <ExpressionPracticeCard v-else-if="currentView === 'practice'" :expression="currentExpression"
             :current-index="currentExpressionIndex" :total-count="currentSessionExpressions.length"
             :practice-completed="practiceCompletedForCurrent" :all-practice-completed="allPracticeCompleted"
+            :is-last-expression="currentExpressionIndex === currentSessionExpressions.length - 1"
             :tts-loading="ttsLoading" :is-recording="isRecording" :format-meaning="formatMeaning"
             :highlight-expression="(text) => highlightExpression(text, currentExpression.expression)"
-            @play-tts="playTTS" @start-practice="handleStartPractice" @prev="prevExpression" @next="nextExpression" />
+            @play-tts="playTTS" @start-practice="handleStartPractice" @prev="prevExpression" @next="nextExpression"
+            @go-to-quiz="handleGoToQuiz" />
 
           <!-- View: Quiz -->
           <ExpressionQuizCard v-else-if="currentView === 'quiz'" :question="currentQuizQuestion"

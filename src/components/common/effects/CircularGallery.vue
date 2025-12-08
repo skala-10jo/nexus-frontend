@@ -44,6 +44,14 @@ const props = defineProps({
   scrollEase: {
     type: Number,
     default: 0.05
+  },
+  itemWidth: {
+    type: Number,
+    default: 420
+  },
+  gap: {
+    type: Number,
+    default: 40
   }
 });
 
@@ -142,7 +150,7 @@ class App {
   }
 
   init() {
-    const { items, gap = 40 } = this.config;
+    const { items, gap, itemWidth } = this.config;
     if (!items || items.length === 0) {
       console.warn('CircularGallery: No items provided');
       return;
@@ -150,12 +158,7 @@ class App {
 
     // Double the items for infinite scroll illusion
     const galleryItems = items.concat(items);
-    
-    // Assume fixed width for now or measure? 
-    // Since we are using slots, we might need to assume a width or measure the first item.
-    // Let's assume a standard card width from the user's design (420px) + gap.
-    const itemWidth = 420; 
-    
+
     this.medias = galleryItems.map((data, index) => {
       return new Media({
         index,
@@ -168,6 +171,23 @@ class App {
     });
 
     this.handleResize();
+  }
+
+  scrollTo(index) {
+    if (this.medias.length === 0) return;
+    const itemWidth = this.medias[0].width + this.medias[0].gap;
+
+    // Current "virtual" index
+    const currentIndex = Math.round(this.scroll.target / itemWidth);
+
+    // We want to go to a targetIndex such that targetIndex % items.length === index
+    // And targetIndex is close to currentIndex
+    const len = this.config.items.length;
+    const diff = (index - (currentIndex % len) + len) % len;
+    // Adjust diff to be -len/2 to +len/2 for shortest path
+    const shortestDiff = diff > len / 2 ? diff - len : diff;
+
+    this.scroll.target = (currentIndex + shortestDiff) * itemWidth;
   }
 
   update() {
@@ -291,6 +311,14 @@ function debounce(func, wait) {
 
 let resizeObserver = null;
 
+const scrollTo = (index) => {
+  if (app) app.scrollTo(index);
+};
+
+defineExpose({
+  scrollTo
+});
+
 onMounted(() => {
   if (!containerRef.value) return;
 
@@ -300,7 +328,8 @@ onMounted(() => {
     bend: props.bend,
     scrollSpeed: props.scrollSpeed,
     scrollEase: props.scrollEase,
-    gap: 40
+    itemWidth: props.itemWidth,
+    gap: props.gap
   });
 
   // Resize Observer for robustness
@@ -328,7 +357,8 @@ watch(() => props.items, (newItems) => {
       bend: props.bend,
       scrollSpeed: props.scrollSpeed,
       scrollEase: props.scrollEase,
-      gap: 40
+      itemWidth: props.itemWidth,
+      gap: props.gap
     });
   }
 }, { deep: true });
