@@ -23,8 +23,10 @@
               <button @click="handleBackButton" class="flex-shrink-0 text-gray-600 hover:text-gray-800 transition">
                 <ChevronLeftIcon class="w-5 h-5" />
               </button>
-              <div class="flex-shrink-0">
-                <p class="text-s text-gray-500">{{ selectedUnit }} > {{ selectedChapter }}</p>
+              <div class="flex-shrink-0 flex items-center gap-2">
+                <span class="text-base font-bold text-gray-900">{{ selectedUnit }}</span>
+                <span class="text-gray-300">/</span>
+                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-base font-bold rounded-lg">{{ selectedChapter }}</span>
               </div>
               <!-- Session Progress Bar -->
               <div v-if="currentView === 'practice'" class="flex-1 flex items-center gap-3">

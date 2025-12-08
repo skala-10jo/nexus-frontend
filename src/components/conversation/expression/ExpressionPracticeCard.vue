@@ -1,12 +1,13 @@
 <template>
   <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
     <!-- Expression Summary with Navigation -->
+    <!-- Expression Summary with Navigation -->
     <div class="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Expression Content (Left) -->
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 w-full">
           <div class="flex items-center gap-2 mb-1">
-            <h2 class="text-2xl md:text-3xl font-black text-gray-900 leading-tight tracking-tight">
+            <h2 class="text-2xl md:text-3xl font-black text-gray-900 leading-tight tracking-tight break-keep">
               {{ expression.expression }}
             </h2>
             <button
@@ -19,19 +20,19 @@
             </button>
             <span
               v-if="practiceCompleted"
-              class="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1"
+              class="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1 flex-shrink-0"
             >
               <CheckIcon class="w-3 h-3" />
             </span>
           </div>
-          <p class="text-gray-600 text-sm font-medium">
+          <p class="text-gray-600 text-sm font-medium break-keep">
             {{ formatMeaning(expression.meaning) }}
           </p>
         </div>
 
         <!-- Navigation (Right) -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <span class="text-sm text-gray-500">{{ currentIndex + 1 }} / {{ totalCount }}</span>
+        <div class="flex items-center justify-end gap-2 flex-shrink-0 w-full md:w-auto border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 mt-1 md:mt-0">
+          <span class="text-sm text-gray-500 mr-auto md:mr-0">{{ currentIndex + 1 }} / {{ totalCount }}</span>
           <button
             @click="$emit('prev')"
             :disabled="currentIndex === 0"
