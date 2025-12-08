@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full overflow-hidden bg-gray-50/50 p-4 md:p-6">
-    <div class="max-w-[1600px] mx-auto h-full flex flex-col gap-4">
+  <div class="h-full md:overflow-hidden overflow-y-auto bg-gray-50/50 p-4 md:p-6 pb-24 md:pb-6">
+    <div class="max-w-[1600px] mx-auto h-auto md:h-full flex flex-col gap-4">
       
       <!-- 1. Welcome Banner -->
       <div class="bg-blue-600 rounded-[2rem] p-5 md:p-6 text-white relative overflow-hidden shadow-lg shadow-blue-200 shrink-0">
@@ -13,7 +13,7 @@
         <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div class="space-y-2 max-w-2xl">
             <h1 class="text-2xl md:text-3xl font-bold font-nanum-round-eb">Welcome back, {{ user?.fullName || 'User' }}!</h1>
-            <div class="space-y-0.5 opacity-90">
+            <div class="hidden md:block space-y-0.5 opacity-90">
               <p class="text-base font-medium">
                 🗓️ {{ scheduleMessage.text }}
                 <router-link
@@ -47,18 +47,19 @@
           
           <!-- Attendance Bubble & Avatar Wrapper -->
           <!-- Attendance Bubble & Avatar Wrapper -->
-          <div class="hidden md:flex items-center gap-6 relative">
+          <!-- Attendance Bubble & Avatar Wrapper -->
+          <div class="flex flex-row md:flex-row items-center gap-4 md:gap-6 relative self-end md:self-auto mt-4 md:mt-0">
             <!-- Attendance Speech Bubble -->
             <div class="relative z-20 group">
-              <div class="bg-white text-gray-800 px-6 py-4 rounded-2xl rounded-tr-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 border-b-4 border-b-gray-200 flex flex-col items-center gap-3 min-w-[140px] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]">
-                <p class="text-sm font-bold whitespace-nowrap flex items-center gap-1.5 text-gray-700">
+              <div class="bg-white text-gray-800 px-4 py-3 md:px-6 md:py-4 rounded-2xl rounded-tr-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 border-b-4 border-b-gray-200 flex flex-col items-center gap-2 md:gap-3 min-w-[120px] md:min-w-[140px] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]">
+                <p class="text-xs md:text-sm font-bold whitespace-nowrap flex items-center gap-1.5 text-gray-700">
                   {{ isCheckedIn ? '출석 완료! 🌟' : '출석하세용 ⭐️'}}
                 </p>
                 
                 <button 
                   v-if="!isCheckedIn"
                   @click="handleCheckIn"
-                  class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-100 hover:scale-105 active:scale-95 transition-all w-full flex items-center justify-center gap-1"
+                  class="bg-blue-50 text-blue-600 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold hover:bg-blue-100 hover:scale-105 active:scale-95 transition-all w-full flex items-center justify-center gap-1"
                 >
                   <span>출check</span>
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" /></svg>
@@ -70,7 +71,7 @@
             </div>
 
             <!-- 3D Avatar Placeholder -->
-            <div class="w-32 h-32 -my-6 relative filter drop-shadow-2xl">
+            <div class="w-24 h-24 md:w-32 md:h-32 -my-6 relative filter drop-shadow-2xl">
               <img
                 src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
                 alt="User Avatar"
@@ -82,24 +83,24 @@
       </div>
 
       <!-- Main Grid -->
-      <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="flex-1 md:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
         
         <!-- Left Column (Content) -->
-        <div class="lg:col-span-8 flex flex-col gap-4 h-full overflow-hidden">
+        <div class="lg:col-span-8 flex flex-col gap-4 h-auto md:h-full md:overflow-hidden">
           
           <!-- 2. Small Talk / Scenario Practice -->
           <!-- Reduced height to 50% to prevent cutting off bottom row -->
-          <div class="h-1/2 shrink-0 relative">
+          <div class="h-[400px] md:h-1/2 shrink-0 relative">
             <SmallTalkChat />
           </div>
 
           <!-- Bottom Row: Performance & Quick Actions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-1/2 min-h-0 shrink-0">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:h-1/2 md:min-h-0 shrink-0">
             <!-- Performance Chart (Biz 표현학습 일일 통계) -->
             <PerformanceChart />
 
             <!-- Quick Actions (Swiper) -->
-            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden">
+            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-[300px] md:h-full relative overflow-hidden">
               <h3 class="font-bold text-gray-900 text-sm mb-3 shrink-0">Quick Actions</h3>
               
               <swiper
@@ -140,7 +141,7 @@
         </div>
 
         <!-- Right Column (Sidebar) -->
-        <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto">
+        <div class="lg:col-span-4 flex flex-col gap-4 h-auto md:h-full md:overflow-y-auto">
           
           <!-- 3. Mini Calendar (Strict 1:1 Ratio, Overflow Hidden) -->
           <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col relative z-10">
@@ -210,7 +211,7 @@
           </div>
 
           <!-- 4. Upcoming Tasks (Strict 1:1 Ratio) -->
-          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[250px]">
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col md:flex-1 min-h-[300px] md:min-h-[250px]">
             <div class="flex items-center justify-between mb-3 shrink-0">
               <h3 class="font-bold text-gray-900">
                 {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
