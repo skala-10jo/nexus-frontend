@@ -35,9 +35,9 @@ export async function speechToText(audioFile, language = 'ko-KR') {
 }
 
 /**
- * WebSocket STT 스트리밍 연결 생성 (단일 언어, 언어 감지 없음)
+ * WebSocket STT 스트리밍 연결 생성 (다중 언어 자동 감지)
  *
- * @param {string} language - 인식 언어 (BCP-47 코드, 예: "en-US")
+ * @param {string|string[]} languages - 인식 언어 (BCP-47 코드 배열, 예: ["ko-KR", "en-US", "ja-JP"])
  * @param {Object} callbacks - 이벤트 콜백 함수
  * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
  * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백
@@ -46,7 +46,7 @@ export async function speechToText(audioFile, language = 'ko-KR') {
  * @param {Function} callbacks.onEnd - 종료 콜백
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
-export function createMultiLangSTTStream(language = 'en-US', callbacks = {}) {
+export function createMultiLangSTTStream(languages = ['en-US'], callbacks = {}) {
   // WebSocket URL 생성 (realtime 엔드포인트 사용)
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const wsHost = import.meta.env.VITE_PYTHON_API_URL
@@ -56,15 +56,18 @@ export function createMultiLangSTTStream(language = 'en-US', callbacks = {}) {
 
   console.log('🔌 WebSocket URL:', wsUrl)
 
+  // 배열로 변환 (단일 언어 문자열도 지원)
+  const selectedLanguages = Array.isArray(languages) ? languages : [languages]
+
   // WebSocket 연결
   const ws = new WebSocket(wsUrl)
 
-  // 연결 성공 시 초기 설정 전송 (단일 언어 모드)
+  // 연결 성공 시 초기 설정 전송 (다중 언어 자동 감지 모드)
   ws.onopen = () => {
     console.log('✅ WebSocket STT connected')
-    console.log('Language:', language)
+    console.log('Selected Languages:', selectedLanguages)
     ws.send(JSON.stringify({
-      language: language
+      selected_languages: selectedLanguages
     }))
 
     // 연결 완료 콜백 호출
