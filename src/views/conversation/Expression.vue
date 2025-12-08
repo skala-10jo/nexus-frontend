@@ -5,7 +5,6 @@
       class="absolute top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-100">
       <div class="flex items-center gap-4">
         <h2 class="text-xl md:text-2xl font-bold text-gray-800 font-nanum-round-eb">Biz 표현 학습</h2>
-        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">Biz</span>
       </div>
     </div>
 

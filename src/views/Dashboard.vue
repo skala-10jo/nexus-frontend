@@ -201,18 +201,26 @@
 
             <!-- Calendar Grid -->
             <!-- Changed justify-center to justify-start to prevent top clipping -->
-            <div class="mt-2">
-              <div class="grid grid-cols-7 gap-x-1 gap-y-1 text-center">
+            <div class="mt-2 space-y-1">
+              <!-- 1) 요일 헤더 (일 ~ 토) -->
+              <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 tracking-wider">
+                <span v-for="day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="day">
+                  {{ day }}
+                </span>
+              </div>
+
+              <!-- 2) 날짜 그리드 -->
+              <div class="grid grid-cols-7 gap-x-1 gap-y-0.5 text-center">
                 <div
                   v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays"
                   :key="date.toISOString()"
-                  class="flex items-center justify-center py-1.5"
+                  class="flex items-center justify-center py-1"
                 >
                   <button
                     @click="selectDate(date)"
                     class="
                       relative
-                      w-10 h-10 md:w-11 md:h-11   <!-- 여기 숫자 줄이면 더 작아짐 -->
+                      w-10 h-10 md:w-11 md:h-11
                       flex items-center justify-center
                       rounded-full
                       text-[12px] md:text-xs font-medium
@@ -243,7 +251,7 @@
           </div>
 
           <!-- 4. Upcoming Tasks (Strict 1:1 Ratio) -->
-          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[200px]">
+          <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[250px]">
             <div class="flex items-center justify-between mb-3 shrink-0">
               <h3 class="font-bold text-gray-900">
                 {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
@@ -552,9 +560,9 @@ const calendarDays = computed(() => {
   
   // Previous month padding
   // Adjust for Monday start (0 = Sunday, 1 = Monday)
-  let startPadding = firstDay.getDay() - 1;
-  if (startPadding < 0) startPadding = 6;
-  
+  // Previous month padding (Sunday start: 0 = Sun, 6 = Sat)
+  const startPadding = firstDay.getDay();   // 0이면 패딩 없음, 1이면 1칸, ... 6이면 6칸
+
   for (let i = 0; i < startPadding; i++) {
     const d = new Date(year, month, 0 - i);
     days.unshift({ date: d, isCurrentMonth: false, isToday: false, eventInfo: null });
