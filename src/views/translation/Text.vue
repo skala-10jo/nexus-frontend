@@ -118,7 +118,16 @@
               @term-click="handleTermClick"
               class="text-lg leading-relaxed text-gray-800"
             />
+
           </div>
+
+          <!-- Detected Terms Bar (하단 고정) -->
+          <DetectedTermsBar
+            v-if="detectedTerms.length > 0 && translatedText"
+            :terms="detectedTerms"
+            @term-click="handleTermClick"
+            class="flex-shrink-0 mx-4 mb-2"
+          />
 
           <!-- Output Action Bar -->
           <div class="h-20 px-8 border-t border-gray-50 flex justify-end items-center gap-3 bg-white flex-shrink-0">
