@@ -1,5 +1,5 @@
 <template>
-  <section class="py-40 bg-gray-50">
+  <section class="pt-60 pb-48 bg-gray-50">
     <div class="max-w-7xl mx-auto px-6">
       <!-- Section Title -->
       <div class="text-center mb-44">
@@ -13,9 +13,7 @@
       </div>
 
       <!-- Glossary Feature Item -->
-      <div class="space-y-48">
-        <FeatureItem :feature="glossaryFeature" :reverse="false" />
-      </div>
+      <FeatureItem :feature="glossaryFeature" :reverse="false" />
     </div>
   </section>
 </template>

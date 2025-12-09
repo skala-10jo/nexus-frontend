@@ -51,7 +51,8 @@ import {
   DocumentTextIcon,
   FilmIcon,
   EnvelopeIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  UsersIcon
 } from '@heroicons/vue/24/outline'
 
 // Mock UI components
@@ -62,6 +63,7 @@ import VoiceTranslationMockUI from './mockui/VoiceTranslationMockUI.vue'
 import TextTranslationMockUI from './mockui/TextTranslationMockUI.vue'
 import VideoTranslationMockUI from './mockui/VideoTranslationMockUI.vue'
 import MailMockUI from './mockui/MailMockUI.vue'
+import RealtimeMeetingMockUI from './mockui/RealtimeMeetingMockUI.vue'
 
 const props = defineProps({
   feature: {
@@ -86,7 +88,8 @@ const iconMap = {
   MicrophoneIcon: markRaw(MicrophoneIcon),
   DocumentTextIcon: markRaw(DocumentTextIcon),
   FilmIcon: markRaw(FilmIcon),
-  EnvelopeIcon: markRaw(EnvelopeIcon)
+  EnvelopeIcon: markRaw(EnvelopeIcon),
+  UsersIcon: markRaw(UsersIcon)
 }
 
 // Mock UI mapping
@@ -97,7 +100,8 @@ const mockUIMap = {
   'voice-translation': markRaw(VoiceTranslationMockUI),
   'text-translation': markRaw(TextTranslationMockUI),
   'video-translation': markRaw(VideoTranslationMockUI),
-  mail: markRaw(MailMockUI)
+  mail: markRaw(MailMockUI),
+  'realtime-meeting': markRaw(RealtimeMeetingMockUI)
 }
 
 const iconComponent = computed(() => iconMap[props.feature.icon] || BookOpenIcon)

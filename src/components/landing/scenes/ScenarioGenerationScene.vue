@@ -363,9 +363,8 @@
         >
           <!-- Document Card (둥둥 떠있는 효과) - 선명하게 -->
           <div
-            class="bg-white rounded-xl shadow-2xl p-3.5 w-[140px] border border-gray-200 doc-card-crisp"
+            class="bg-white rounded-xl shadow-lg p-3.5 w-[140px] border border-gray-200 doc-card-crisp"
             :class="`animate-float-${index % 3}`"
-            :style="{ boxShadow: `0 0 25px ${doc.glowColor}, 0 8px 30px rgba(0,0,0,0.15)` }"
           >
             <!-- Document Icon -->
             <div class="flex items-center justify-center mb-2.5">
@@ -388,11 +387,11 @@
           </div>
         </div>
 
-        <!-- 추출된 키워드 (문서 옆에 표시, 더 크고 잘 보이게) -->
+        <!-- 추출된 키워드 (문서 옆에 표시, 흰 배경으로 잘 보이게) -->
         <div
           v-for="(keyword, index) in extractedKeywords"
           :key="'keyword-' + index"
-          class="absolute text-xs font-bold whitespace-nowrap pointer-events-none px-3 py-1.5 rounded-full shadow-lg"
+          class="absolute text-sm font-bold whitespace-nowrap pointer-events-none px-4 py-2 rounded-lg shadow-md"
           :style="keyword.style"
         >
           {{ keyword.text }}
@@ -948,15 +947,15 @@ const createParticlesFromDoc = (docX, docY, docIndex) => {
   }
 }
 
-// 키워드 생성 (6개 문서용 - 실제 IT 프로젝트 용어)
+// 키워드 생성 (6개 문서용 - 실제 IT 프로젝트 용어, 흰 배경)
 const createKeywordFromDoc = (docIndex, x, y) => {
   const keywords = [
-    { text: 'Sprint Planning', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' },
-    { text: 'REST API', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' },
-    { text: 'ERD', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
-    { text: 'Prototype', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)' },
-    { text: 'Deployment', color: '#6b7280', bg: 'rgba(107, 114, 128, 0.15)' },
-    { text: 'QA Test', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' }
+    { text: 'Sprint Planning', color: '#16a34a' },
+    { text: 'REST API', color: '#dc2626' },
+    { text: 'ERD', color: '#2563eb' },
+    { text: 'Prototype', color: '#9333ea' },
+    { text: 'Deployment', color: '#4b5563' },
+    { text: 'QA Test', color: '#16a34a' }
   ]
 
   if (docIndex < keywords.length) {
@@ -967,8 +966,8 @@ const createKeywordFromDoc = (docIndex, x, y) => {
         left: `${x}px`,
         top: `${y}px`,
         color: kw.color,
-        backgroundColor: kw.bg,
-        border: `1px solid ${kw.color}`,
+        backgroundColor: '#ffffff',
+        border: `2px solid ${kw.color}`,
         opacity: 0,
         transform: 'translateY(10px) scale(0.8)'
       }

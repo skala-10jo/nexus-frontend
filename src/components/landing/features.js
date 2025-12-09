@@ -3,13 +3,13 @@
  */
 export const features = [
   {
-    id: 'translation',
-    title: '전문용어 사전 + 프로젝트 문서 기반 번역',
-    subtitle: 'AI 기반 번역',
-    description: '텍스트/음성/영상을 프로젝트에 등록된 전문용어와 문서를 기반으로 정확하게 번역합니다.',
-    video: '/videos/translation-demo.mp4',
-    route: '/translation',
-    icon: 'LanguageIcon'
+    id: 'realtime-meeting',
+    title: '실시간 회의 AI 피드백',
+    subtitle: '발화자별 분석',
+    description: '회의 중 발화자를 자동으로 인식하고, 회의가 끝나면 AI가 참여자별 피드백과 분석 보고서를 자동으로 생성합니다.',
+    video: '/videos/meeting-demo.mp4',
+    route: '/collaboration/meeting',
+    icon: 'UsersIcon'
   },
   {
     id: 'voice-translation',

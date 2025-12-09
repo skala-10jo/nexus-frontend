@@ -1,5 +1,5 @@
 <template>
-  <section ref="sectionRef" class="relative bg-gray-50 pt-30">
+  <section ref="sectionRef" class="relative bg-gray-50 pt-30 pb-80">
     <div class="max-w-7xl mx-auto px-6">
       <!-- Main Content: 클로바노트 스타일 -->
       <div class="flex">
@@ -9,8 +9,10 @@
             v-for="(scene, index) in scenes"
             :key="index"
             :ref="el => triggerRefs[index] = el"
-            class="h-screen flex items-start pt-20"
-
+            :class="[
+              'flex items-start pt-20',
+              index === scenes.length - 1 ? 'h-[60vh]' : 'h-screen'
+            ]"
             :data-scene="index"
           >
             <div
