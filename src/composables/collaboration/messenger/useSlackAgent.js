@@ -2,12 +2,13 @@
  * Slack Agent Composable
  *
  * Slack 메시지 번역 및 BizGuide 기반 초안 작성 기능
+ * 세션 기반 챗봇 대화 지원
  *
  * NOTE: 이 composable은 싱글톤 패턴을 사용합니다.
  * 모든 컴포넌트에서 같은 상태를 공유합니다.
  */
 import { ref, computed, watch } from 'vue'
-import { translateMessage, createDraft } from '@/services/slackAgentService'
+import { translateMessage, createDraft, sendChatMessage, deleteSession } from '@/services/slackAgentService'
 import { userAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -54,6 +55,12 @@ const isDrafting = ref(false)
 const draftError = ref(null)
 const currentDraft = ref(null)
 const draftSuggestions = ref([])
+
+// Chat State (싱글톤) - 세션 기반 대화
+const chatSessionId = ref(null)
+const chatMessages = ref([]) // [{role: 'user'|'assistant', content: string, draft?: string, actionType?: string}]
+const isChatLoading = ref(false)
+const chatError = ref(null)
 
 // Temporary Language (세션 동안만 유지, 싱글톤)
 const temporaryLanguage = ref(null)
@@ -217,6 +224,104 @@ export function useSlackAgent() {
     draftError.value = null
   }
 
+  // ============================================
+  // CHAT FUNCTIONS (Session-based conversation)
+  // ============================================
+
+  /**
+   * Send a chat message and get AI response
+   * Supports draft creation, translation, and refinement
+   *
+   * @param {string} message - User's message
+   * @returns {Promise<{draft, actionType, suggestions}>}
+   */
+  const sendChat = async (message) => {
+    if (!message.trim()) return null
+
+    isChatLoading.value = true
+    chatError.value = null
+
+    // Add user message to chat
+    chatMessages.value.push({
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString()
+    })
+
+    try {
+      const result = await sendChatMessage(
+        message,
+        chatSessionId.value,
+        preferredLanguage.value
+      )
+
+      // Update session ID if new session was created
+      chatSessionId.value = result.session_id
+
+      // Add assistant response to chat
+      chatMessages.value.push({
+        role: 'assistant',
+        content: result.message,
+        draft: result.draft,
+        actionType: result.action_type,
+        suggestions: result.suggestions || [],
+        timestamp: new Date().toISOString()
+      })
+
+      // Also update currentDraft for compatibility
+      if (result.draft) {
+        currentDraft.value = result.draft
+        draftSuggestions.value = result.suggestions || []
+      }
+
+      return result
+    } catch (error) {
+      console.error('Chat failed:', error)
+      chatError.value = error.response?.data?.detail || '메시지 전송에 실패했습니다'
+
+      // Add error message to chat
+      chatMessages.value.push({
+        role: 'assistant',
+        content: '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.',
+        isError: true,
+        timestamp: new Date().toISOString()
+      })
+
+      throw error
+    } finally {
+      isChatLoading.value = false
+    }
+  }
+
+  /**
+   * Start a new chat session (clear history)
+   */
+  const startNewChat = async () => {
+    // Delete previous session if exists
+    if (chatSessionId.value) {
+      try {
+        await deleteSession(chatSessionId.value)
+      } catch (error) {
+        console.warn('Failed to delete previous session:', error)
+      }
+    }
+
+    chatSessionId.value = null
+    chatMessages.value = []
+    chatError.value = null
+    currentDraft.value = null
+    draftSuggestions.value = []
+  }
+
+  /**
+   * Get the latest draft from chat
+   */
+  const getLatestDraft = computed(() => {
+    const assistantMessages = chatMessages.value.filter(m => m.role === 'assistant' && m.draft)
+    if (assistantMessages.length === 0) return null
+    return assistantMessages[assistantMessages.length - 1].draft
+  })
+
   // No initialization needed - preferredLanguage is now computed from authStore
 
   return {
@@ -228,13 +333,22 @@ export function useSlackAgent() {
     getTranslation,
     clearTranslation,
 
-    // Draft
+    // Draft (legacy - for backward compatibility)
     isDrafting,
     draftError,
     currentDraft,
     draftSuggestions,
     createBizDraft,
     clearDraft,
+
+    // Chat (session-based conversation)
+    chatSessionId,
+    chatMessages,
+    isChatLoading,
+    chatError,
+    sendChat,
+    startNewChat,
+    getLatestDraft,
 
     // Language
     preferredLanguage,           // 기본 언어 (DB에 저장된 값)

@@ -66,14 +66,10 @@
       </svg>
     </button>
 
-    <!-- Biz Guide Side Panel -->
+    <!-- Biz Guide Side Panel (Chat Mode) -->
     <SlackBizGuidePanel
       :show="showBizGuidePanel"
-      :current-draft="currentDraft"
-      :suggestions="draftSuggestions"
-      :loading="isDrafting"
       @close="showBizGuidePanel = false"
-      @generate="handleCreateDraft"
       @use-draft="handleUseDraft"
     />
   </div>
@@ -121,32 +117,18 @@ const {
   sendSlackMessage
 } = useMessengerPage()
 
-// Biz Guide (Slack Agent)
+// Biz Guide (Slack Agent) - Now using chat mode
 const {
-  isDrafting,
-  currentDraft,
-  draftSuggestions,
-  createBizDraft,
-  clearDraft
+  clearDraft,
+  startNewChat
 } = useSlackAgent()
 
 // Biz Guide Panel State
 const showBizGuidePanel = ref(false)
 
-// Handle draft creation
-const handleCreateDraft = async (intent) => {
-  if (!intent.trim()) return
-  try {
-    await createBizDraft(intent)
-  } catch (error) {
-    console.error('Draft creation failed:', error)
-  }
-}
-
-// Use generated draft
+// Use generated draft from chat
 const handleUseDraft = (draft) => {
   messageText.value = draft
-  clearDraft()
   showBizGuidePanel.value = false
 }
 </script>
