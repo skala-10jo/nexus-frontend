@@ -111,6 +111,22 @@
                   <LockClosedIcon class="w-4 h-4 text-gray-400" />
                 </div>
               </div>
+
+              <!-- Preferred Language -->
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  기본 번역 언어
+                </label>
+                <select
+                  v-model="form.preferredLanguage"
+                  class="w-full px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-100 font-medium text-gray-800 transition-all cursor-pointer"
+                >
+                  <option v-for="lang in SUPPORTED_LANGUAGES" :key="lang.code" :value="lang.code">
+                    {{ lang.flag }} {{ lang.label }}
+                  </option>
+                </select>
+                <p class="text-xs text-gray-400">Slack 메시지 번역 시 기본으로 사용할 언어입니다</p>
+              </div>
             </div>
 
             <!-- Error Message -->
@@ -149,6 +165,7 @@ import { ref, computed, watch } from 'vue'
 import { XMarkIcon, CameraIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { userAPI } from '@/services/api'
+import { SUPPORTED_LANGUAGES } from '@/composables/collaboration/messenger/useSlackAgent'
 
 const props = defineProps({
   show: {
@@ -165,7 +182,8 @@ const user = computed(() => authStore.user)
 // Form state
 const form = ref({
   fullName: '',
-  role: ''
+  role: '',
+  preferredLanguage: 'ko'
 })
 
 // Avatar state
@@ -201,6 +219,7 @@ const hasChanges = computed(() => {
   return (
     form.value.fullName !== (user.value.fullName || '') ||
     form.value.role !== (user.value.role || '') ||
+    form.value.preferredLanguage !== (user.value.preferredLanguage || 'ko') ||
     selectedFile.value !== null
   )
 })
@@ -210,6 +229,7 @@ watch(() => props.show, (newVal) => {
   if (newVal && user.value) {
     form.value.fullName = user.value.fullName || ''
     form.value.role = user.value.role || ''
+    form.value.preferredLanguage = user.value.preferredLanguage || 'ko'
     selectedFile.value = null
     avatarPreview.value = null
     error.value = null
@@ -276,7 +296,8 @@ async function saveProfile() {
     // Update profile info
     const updateData = {
       fullName: form.value.fullName,
-      role: form.value.role
+      role: form.value.role,
+      preferredLanguage: form.value.preferredLanguage
     }
 
     const response = await userAPI.updateUser(user.value.id, updateData)

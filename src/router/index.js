@@ -113,14 +113,8 @@ const routes = [
     name: 'SlackCallback',
     component: () => import('@/views/collaboration/SlackCallback.vue'),
     meta: { requiresAuth: true }
-  },
-  // Settings route
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: () => import('@/views/Settings.vue'),
-    meta: { requiresAuth: true }
   }
+  // Settings route removed - UserProfileModal is now used for settings
 ];
 
 const router = createRouter({

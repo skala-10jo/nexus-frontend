@@ -6,12 +6,32 @@
  *
  * 주요 기능:
  * - WebSocket 기반 실시간 STT 스트리밍
+ *   - createSTTOnlyStream(): 단일 언어 STT (회화연습, Learning Mode용)
+ *   - createTranslationStream(): 다국어 자동감지 + 번역 (음성번역용)
  * - REST API 기반 번역
  * - REST API 기반 TTS (음성 합성)
  */
 import { pythonAPI } from './api'
 
 const BASE_URL = '/voice'
+
+/**
+ * WebSocket 호스트 URL 생성 헬퍼
+ * @returns {string} WebSocket 호스트 URL (예: 'localhost:8000')
+ */
+function getWebSocketHost() {
+  return import.meta.env.VITE_PYTHON_API_URL
+    ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
+    : 'localhost:8000'
+}
+
+/**
+ * WebSocket 프로토콜 결정 (https → wss, http → ws)
+ * @returns {string} 'wss:' 또는 'ws:'
+ */
+function getWebSocketProtocol() {
+  return window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+}
 
 /**
  * STT: 음성 파일을 텍스트로 변환 (POST 업로드)
@@ -34,139 +54,239 @@ export async function speechToText(audioFile, language = 'ko-KR') {
   return response.data.data
 }
 
+// ============================================================
+// WebSocket STT 스트리밍 함수들
+// ============================================================
+
 /**
- * WebSocket STT 스트리밍 연결 생성 (단일 언어, 언어 감지 없음)
+ * STT 전용 WebSocket 스트리밍 연결 생성 (번역 없음, 고성능)
  *
- * @param {string} language - 인식 언어 (BCP-47 코드, 예: "en-US")
+ * 회화연습, Learning Mode 등 번역이 필요 없는 경우 사용합니다.
+ * 자동 언어 감지 없이 지정된 단일 언어로만 인식하여 더 빠른 응답을 제공합니다.
+ *
+ * @param {string} language - 인식 언어 (BCP-47 코드, 예: "en-US", "ko-KR")
  * @param {Object} callbacks - 이벤트 콜백 함수
  * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
- * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백
- * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백
+ * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백 ({ text })
+ * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백 ({ text, language })
  * @param {Function} callbacks.onError - 에러 콜백
  * @param {Function} callbacks.onEnd - 종료 콜백
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
-export function createMultiLangSTTStream(language = 'en-US', callbacks = {}) {
-  // WebSocket URL 생성 (realtime 엔드포인트 사용)
-  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const wsHost = import.meta.env.VITE_PYTHON_API_URL
-    ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
-    : 'localhost:8000'
-  const wsUrl = `${wsProtocol}//${wsHost}/api/ai/voice/realtime`
+export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
+  const wsUrl = `${getWebSocketProtocol()}//${getWebSocketHost()}/api/ai/voice/stt-stream`
 
-  console.log('🔌 WebSocket URL:', wsUrl)
+  console.log('🎤 [STT-Only] WebSocket URL:', wsUrl)
+  console.log('🎤 [STT-Only] Language:', language)
 
-  // WebSocket 연결
+  // 언어가 배열이면 첫 번째 요소 사용 (하위 호환)
+  const singleLanguage = Array.isArray(language) ? language[0] : language
+
+  if (Array.isArray(language)) {
+    console.warn('⚠️ [STT-Only] Array received, using first element:', singleLanguage)
+  }
+
   const ws = new WebSocket(wsUrl)
 
-  // 연결 성공 시 초기 설정 전송 (단일 언어 모드)
   ws.onopen = () => {
-    console.log('✅ WebSocket STT connected')
-    console.log('Language:', language)
-    ws.send(JSON.stringify({
-      language: language
-    }))
+    console.log('✅ [STT-Only] WebSocket connected')
+    ws.send(JSON.stringify({ language: singleLanguage }))
 
-    // 연결 완료 콜백 호출
     if (callbacks.onConnected) {
       callbacks.onConnected()
     }
   }
 
-  // 메시지 수신
   ws.onmessage = (event) => {
     try {
       const message = JSON.parse(event.data)
 
       switch (message.type) {
         case 'recognizing':
-          // 중간 인식 결과
           if (callbacks.onRecognizing) {
             callbacks.onRecognizing(message)
           }
           break
 
         case 'recognized':
-          // 최종 인식 결과
-          console.log('🎤 STT:', message.text)
+          console.log('🎤 [STT-Only] Recognized:', message.text)
           if (callbacks.onRecognized) {
             callbacks.onRecognized(message)
           }
           break
 
         case 'error':
-          // 에러
-          console.error('❌ STT error:', message.message || message.error)
+          console.error('❌ [STT-Only] Error:', message.error)
           if (callbacks.onError) {
-            callbacks.onError(message.message || message.error)
+            callbacks.onError(message.error)
           }
           break
 
         case 'end':
-          // 종료
-          console.log('🔚 STT stream ended')
+          console.log('🔚 [STT-Only] Stream ended')
           if (callbacks.onEnd) {
             callbacks.onEnd()
           }
           break
 
         default:
-          console.warn('Unknown message type:', message.type)
+          console.warn('[STT-Only] Unknown message type:', message.type)
       }
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error)
+      console.error('[STT-Only] Failed to parse message:', error)
       if (callbacks.onError) {
         callbacks.onError(error.message)
       }
     }
   }
 
-  // 연결 종료
   ws.onclose = () => {
-    console.log('🔌 WebSocket STT disconnected')
+    console.log('🔌 [STT-Only] WebSocket disconnected')
     if (callbacks.onEnd) {
       callbacks.onEnd()
     }
   }
 
-  // 에러
   ws.onerror = (error) => {
-    console.error('❌ WebSocket error:', error)
+    console.error('❌ [STT-Only] WebSocket error:', error)
     if (callbacks.onError) {
       callbacks.onError(error.message || 'WebSocket error')
     }
   }
 
-  // 제어 함수 반환
   return {
     ws,
-
-    /**
-     * 오디오 청크 전송
-     * @param {Blob|ArrayBuffer} audioChunk - 오디오 데이터
-     */
     send(audioChunk) {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(audioChunk)
       } else {
-        console.warn('WebSocket is not open. Ready state:', ws.readyState)
+        console.warn('[STT-Only] WebSocket not open. State:', ws.readyState)
       }
     },
-
-    /**
-     * WebSocket 연결 종료
-     */
     close() {
       if (ws.readyState === WebSocket.OPEN) {
-        // 종료 메시지 전송
         ws.send(JSON.stringify({ type: 'end' }))
-        // WebSocket 닫기
         setTimeout(() => ws.close(), 100)
       } else {
         ws.close()
       }
     }
   }
+}
+
+/**
+ * 번역 포함 WebSocket 스트리밍 연결 생성 (다국어 자동 감지 + 번역)
+ *
+ * 음성번역 페이지에서 사용합니다.
+ * 선택한 언어들 중 자동으로 감지하고, 감지된 언어를 제외한 나머지 언어로 번역합니다.
+ *
+ * @param {string[]} languages - 인식 언어 배열 (BCP-47 코드, 예: ["ko-KR", "en-US", "ja-JP"])
+ * @param {Object} callbacks - 이벤트 콜백 함수
+ * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
+ * @param {Function} callbacks.onRecognizing - 중간 인식 결과 콜백 ({ text })
+ * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백 ({ text, detected_language, translations })
+ * @param {Function} callbacks.onError - 에러 콜백
+ * @param {Function} callbacks.onEnd - 종료 콜백
+ * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
+ */
+export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
+  const wsUrl = `${getWebSocketProtocol()}//${getWebSocketHost()}/api/ai/voice/realtime`
+  const selectedLanguages = Array.isArray(languages) ? languages : [languages]
+
+  const ws = new WebSocket(wsUrl)
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ selected_languages: selectedLanguages }))
+
+    if (callbacks.onConnected) {
+      callbacks.onConnected()
+    }
+  }
+
+  ws.onmessage = (event) => {
+    try {
+      const message = JSON.parse(event.data)
+
+      switch (message.type) {
+        case 'recognizing':
+          if (callbacks.onRecognizing) {
+            callbacks.onRecognizing(message)
+          }
+          break
+
+        case 'recognized':
+          if (callbacks.onRecognized) {
+            callbacks.onRecognized(message)
+          }
+          break
+
+        case 'error':
+          console.error('❌ [Translation] Error:', message.message || message.error)
+          if (callbacks.onError) {
+            callbacks.onError(message.message || message.error)
+          }
+          break
+
+        case 'end':
+          if (callbacks.onEnd) {
+            callbacks.onEnd()
+          }
+          break
+
+        default:
+          break
+      }
+    } catch (error) {
+      console.error('[Translation] Failed to parse message:', error)
+      if (callbacks.onError) {
+        callbacks.onError(error.message)
+      }
+    }
+  }
+
+  ws.onclose = () => {
+    if (callbacks.onEnd) {
+      callbacks.onEnd()
+    }
+  }
+
+  ws.onerror = (error) => {
+    if (callbacks.onError) {
+      callbacks.onError(error.message || 'WebSocket error')
+    }
+  }
+
+  return {
+    ws,
+    send(audioChunk) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(audioChunk)
+      }
+    },
+    close() {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'end' }))
+        setTimeout(() => ws.close(), 100)
+      } else {
+        ws.close()
+      }
+    }
+  }
+}
+
+/**
+ * @deprecated Use createSTTOnlyStream() or createTranslationStream() instead.
+ *
+ * 기존 함수 - 하위 호환성을 위해 유지
+ * 내부적으로 createTranslationStream()을 호출합니다.
+ *
+ * @param {string|string[]} languages - 인식 언어
+ * @param {Object} callbacks - 이벤트 콜백 함수
+ * @returns {Object} WebSocket 및 제어 함수
+ */
+export function createMultiLangSTTStream(languages = ['en-US'], callbacks = {}) {
+  console.warn('⚠️ createMultiLangSTTStream is deprecated. Use createSTTOnlyStream() or createTranslationStream() instead.')
+  return createTranslationStream(languages, callbacks)
 }
 
 /**

@@ -2,19 +2,20 @@
  * Real-time STT Composable for Conversation Practice
  *
  * 회화연습 페이지용 실시간 음성 인식 Composable
- * useMultiLanguageSTT.js의 아키텍처를 재사용하되, 번역 없이 단일 언어 STT에 집중
+ * 번역 없이 단일 언어 STT에 집중하여 더 빠른 응답 제공
  *
  * 주요 기능:
  * - 실시간 음성 인식 (WebSocket 기반)
  * - 중간 인식 결과 (recognizing) 표시
  * - 최종 인식 결과 (recognized) 누적
  * - 녹음 중지 시 전체 텍스트 반환
+ * - 발음 평가용 오디오 캡처
  *
- * @see useMultiLanguageSTT.js - 기반 아키텍처
- * @see voice_realtime.py - 백엔드 WebSocket API
+ * @see createSTTOnlyStream - STT 전용 WebSocket (번역 없음)
+ * @see voice_stt_stream.py - 백엔드 STT 전용 WebSocket API
  */
 import { ref, computed, onUnmounted } from 'vue'
-import { createMultiLangSTTStream } from '../services/voiceService'
+import { createSTTOnlyStream } from '../services/voiceService'
 
 export function useRealtimeSTT() {
   // 상태
@@ -126,10 +127,10 @@ export function useRealtimeSTT() {
       sourceNode = audioContext.createMediaStreamSource(audioStream)
       sourceNode.connect(audioWorkletNode)
 
-      // 6. WebSocket 연결 (단일 언어)
-      wsConnection = createMultiLangSTTStream(language, {
+      // 6. WebSocket 연결 (단일 언어 STT 전용 - 번역 없음)
+      wsConnection = createSTTOnlyStream(language, {
         onConnected: () => {
-          console.log('✅ Realtime STT connected')
+          console.log('✅ [STT-Only] Realtime STT connected')
 
           setTimeout(() => {
             if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
