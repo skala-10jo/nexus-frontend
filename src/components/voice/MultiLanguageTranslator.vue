@@ -9,12 +9,21 @@
     </div>
 
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-      <!-- Left Panel: Language Selection -->
-      <div class="w-full md:w-64 h-auto md:h-full border-r-0 md:border-r border-b md:border-b-0 border-gray-200 bg-gray-50 flex flex-col p-4 md:p-6 overflow-y-auto md:overflow-visible shrink-0">
-        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Select Languages</h3>
+      <div class="w-full md:w-64 h-auto md:h-full border-r-0 md:border-r border-b md:border-b-0 border-gray-200 bg-gray-50 flex flex-col p-4 md:p-6 overflow-y-auto md:overflow-visible shrink-0 transition-all duration-300">
+        <div 
+          class="flex items-center justify-between cursor-pointer md:cursor-default mb-4 md:mb-6"
+          @click="toggleLanguagePanel"
+        >
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Languages</h3>
+          <ChevronDownIcon 
+            class="w-5 h-5 text-gray-400 transition-transform duration-200 md:hidden"
+            :class="{ 'rotate-180': isLanguagePanelExpanded }"
+          />
+        </div>
 
-        <!-- Language Buttons (Vertical) -->
-        <div class="grid grid-cols-2 md:flex md:flex-col gap-2 mb-4 md:mb-6">
+        <div :class="[isLanguagePanelExpanded ? 'block' : 'hidden', 'md:block']">
+          <!-- Language Buttons (Vertical) -->
+          <div class="grid grid-cols-2 md:flex md:flex-col gap-2 mb-4 md:mb-6">
           <button
             v-for="lang in languageOptions"
             :key="lang.value"
@@ -53,6 +62,7 @@
         <div v-if="error" class="mt-auto px-3 py-2 bg-red-50 text-red-600 text-xs rounded-lg flex items-center gap-2">
           <ExclamationCircleIcon class="w-4 h-4" />
           {{ error }}
+        </div>
         </div>
       </div>
 
@@ -190,7 +200,8 @@ import {
   StopIcon,
   TrashIcon,
   ExclamationCircleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/solid'
 
 // 언어 옵션 (BCP-47 코드 + 플래그)
@@ -213,6 +224,13 @@ const languageLabels = {
 
 // 선택된 언어 (기본: 한국어, 영어)
 const selectedLanguages = ref(['ko-KR', 'en-US'])
+
+// 언어 패널 확장 상태 (모바일용)
+const isLanguagePanelExpanded = ref(true)
+
+function toggleLanguagePanel() {
+  isLanguagePanelExpanded.value = !isLanguagePanelExpanded.value
+}
 
 // 결과 컨테이너 참조
 const resultsContainer = ref(null)
