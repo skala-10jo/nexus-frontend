@@ -1,210 +1,98 @@
 <template>
   <div class="min-h-full md:h-full flex flex-col bg-gray-50/50 pb-24 md:pb-0 md:overflow-hidden">
-    <!-- Header -->
-    <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">영상 번역</h1>
-          <p class="text-sm text-gray-500 font-medium mt-0.5">AI 기반 자막 번역 및 용어집 지원</p>
+    <!-- ==================== LIST VIEW ==================== -->
+    <template v-if="currentView === 'list'">
+      <!-- Header -->
+      <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              영상 번역
+              <span v-if="videos.length > 0" class="px-2.5 py-0.5 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
+                {{ videos.length }}
+              </span>
+            </h1>
+            <p class="text-sm text-gray-500 font-medium mt-0.5">업로드한 영상의 자막을 추출하고 번역하세요</p>
+          </div>
+          <button
+            @click="showUploadModal = true"
+            class="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg"
+          >
+            <PlusIcon class="w-5 h-5" />
+            영상 업로드
+          </button>
         </div>
       </div>
-    </div>
 
-    <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
-      <div class="max-w-7xl mx-auto space-y-6">
-
-        <!-- Upload Area -->
-        <div
-          v-if="!uploadedVideo"
-            class="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 md:p-12 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group"
-            :class="{ 'border-blue-500 bg-blue-50/50': isDragOver }"
-            @dragover.prevent="isDragOver = true"
-            @dragleave.prevent="isDragOver = false"
-            @drop.prevent="handleDrop"
-            @click="triggerFileInput"
-          >
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="video/mp4,video/avi,video/mov,video/mkv"
-              @change="handleFileSelect"
-              class="hidden"
-            />
-
-            <div class="flex flex-col items-center gap-3 md:gap-4">
-              <div class="w-14 h-14 md:w-20 md:h-20 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CloudArrowUpIcon class="w-7 h-7 md:w-10 md:h-10 text-blue-600" />
-              </div>
-              <div>
-                <h3 class="text-lg md:text-xl font-bold text-gray-900">영상 업로드</h3>
-                <p class="text-gray-500 text-sm md:text-base mt-0.5 md:mt-1">드래그 & 드롭 또는 클릭하여 선택</p>
-                <p class="text-xs text-gray-400 mt-1 md:mt-2">MP4, AVI, MOV, MKV (최대 500MB)</p>
-              </div>
-            </div>
-
-            <!-- Progress -->
-            <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-4 md:mt-8 max-w-md mx-auto">
-              <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-600 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
-              </div>
-              <p class="text-sm text-gray-500 mt-2">{{ uploadProgress }}% 업로드 중...</p>
-            </div>
-
-            <!-- Language Config (업로드 전 표시) -->
-            <div class="mt-6 bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
-              <div class="flex items-end justify-center gap-3 md:gap-8">
-                <!-- Source Language -->
-                <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                  <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">원본</label>
-                  <div class="relative" ref="sourceDropdownRef">
-                    <button
-                      @click="toggleSourceDropdown"
-                      type="button"
-                      class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
-                      :class="{ 'border-blue-500 ring-2 ring-blue-100': isSourceDropdownOpen }"
-                    >
-                      <div class="flex items-center gap-2 md:gap-3">
-                        <span class="text-lg md:text-xl">{{ getLanguageFlag(sourceLang) }}</span>
-                        <span class="text-gray-900 truncate">{{ getLanguageName(sourceLang) }}</span>
-                      </div>
-                      <ChevronDownIcon
-                        class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
-                        :class="{ 'rotate-180': isSourceDropdownOpen }"
-                      />
-                    </button>
-
-                    <!-- Source Dropdown -->
-                    <Transition
-                      enter-active-class="transition duration-100 ease-out"
-                      enter-from-class="transform scale-95 opacity-0"
-                      enter-to-class="transform scale-100 opacity-100"
-                      leave-active-class="transition duration-75 ease-in"
-                      leave-from-class="transform scale-100 opacity-100"
-                      leave-to-class="transform scale-95 opacity-0"
-                    >
-                      <div
-                        v-if="isSourceDropdownOpen"
-                        class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                      >
-                        <ul class="py-1">
-                          <li v-for="lang in languageOptions" :key="`source-${lang.code}`">
-                            <button
-                              @click="selectSourceLanguage(lang.code)"
-                              type="button"
-                              class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
-                              :class="sourceLang === lang.code ? 'bg-blue-50/50' : ''"
-                              :disabled="lang.code === targetLang"
-                            >
-                              <div class="flex items-center gap-2 md:gap-3" :class="lang.code === targetLang ? 'opacity-40' : ''">
-                                <span class="text-lg md:text-xl">{{ lang.flag }}</span>
-                                <span class="font-bold" :class="sourceLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
-                              </div>
-                              <svg v-if="sourceLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
-                    </Transition>
-                  </div>
-                </div>
-
-                <!-- Swap Button -->
-                <button
-                  @click="swapLanguages"
-                  type="button"
-                  class="pb-2.5 md:pb-3 p-2 rounded-lg hover:bg-blue-50 hover:scale-110 transition-all group"
-                  title="언어 교환"
-                >
-                  <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                </button>
-
-                <!-- Target Language -->
-                <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                  <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">번역</label>
-                  <div class="relative" ref="targetDropdownRef">
-                    <button
-                      @click="toggleTargetDropdown"
-                      type="button"
-                      class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
-                      :class="{ 'border-blue-500 ring-2 ring-blue-100': isTargetDropdownOpen }"
-                    >
-                      <div class="flex items-center gap-2 md:gap-3">
-                        <span class="text-lg md:text-xl">{{ getLanguageFlag(targetLang) }}</span>
-                        <span class="text-gray-900 truncate">{{ getLanguageName(targetLang) }}</span>
-                      </div>
-                      <ChevronDownIcon
-                        class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
-                        :class="{ 'rotate-180': isTargetDropdownOpen }"
-                      />
-                    </button>
-
-                    <!-- Target Dropdown -->
-                    <Transition
-                      enter-active-class="transition duration-100 ease-out"
-                      enter-from-class="transform scale-95 opacity-0"
-                      enter-to-class="transform scale-100 opacity-100"
-                      leave-active-class="transition duration-75 ease-in"
-                      leave-from-class="transform scale-100 opacity-100"
-                      leave-to-class="transform scale-95 opacity-0"
-                    >
-                      <div
-                        v-if="isTargetDropdownOpen"
-                        class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                      >
-                        <ul class="py-1">
-                          <li v-for="lang in languageOptions" :key="`target-${lang.code}`">
-                            <button
-                              @click="selectTargetLanguage(lang.code)"
-                              type="button"
-                              class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
-                              :class="targetLang === lang.code ? 'bg-blue-50/50' : ''"
-                              :disabled="lang.code === sourceLang"
-                            >
-                              <div class="flex items-center gap-2 md:gap-3" :class="lang.code === sourceLang ? 'opacity-40' : ''">
-                                <span class="text-lg md:text-xl">{{ lang.flag }}</span>
-                                <span class="font-bold" :class="targetLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
-                              </div>
-                              <svg v-if="targetLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
-                    </Transition>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-4 md:p-8">
+        <div class="max-w-7xl mx-auto">
+          <!-- Loading State -->
+          <div v-if="isLoadingVideos" class="flex items-center justify-center py-20">
+            <ArrowPathIcon class="w-8 h-8 text-blue-600 animate-spin" />
           </div>
 
-        <!-- Video Info & Controls -->
-        <div v-if="uploadedVideo" class="space-y-6">
-          <!-- Info Card -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                <VideoCameraIcon class="w-6 h-6" />
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-gray-900">{{ uploadedVideo.filename }}</h3>
-                <div class="flex items-center gap-3 mt-1">
-                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ formatFileSize(uploadedVideo.fileSize) }}</span>
-                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ uploadedVideo.duration || 'N/A' }}</span>
-                  <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
-                </div>
-              </div>
+          <!-- Video Grid -->
+          <div v-else-if="videos.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <VideoCard
+              v-for="video in videos"
+              :key="video.id"
+              :video="video"
+              @click="selectVideo"
+              @delete="handleDeleteVideo"
+            />
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="text-center py-20">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <VideoCameraIcon class="w-10 h-10 text-gray-300" />
             </div>
-            <button @click="resetVideo" class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl transition-all">
-              <TrashIcon class="w-4 h-4" />
-              초기화
+            <h3 class="text-xl font-bold text-gray-700 mb-2">업로드된 영상이 없습니다</h3>
+            <p class="text-gray-500 mb-8">영상을 업로드하여 자막 추출 및 번역을 시작하세요</p>
+            <button
+              @click="showUploadModal = true"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg"
+            >
+              <PlusIcon class="w-5 h-5" />
+              첫 영상 업로드
             </button>
           </div>
+        </div>
+      </div>
+    </template>
 
+    <!-- ==================== DETAIL VIEW ==================== -->
+    <template v-else-if="currentView === 'detail' && selectedVideo">
+      <!-- Header -->
+      <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <button
+              @click="goBackToList"
+              class="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-medium transition-colors"
+            >
+              <ArrowLeftIcon class="w-5 h-5" />
+              목록으로
+            </button>
+            <div class="h-6 w-px bg-gray-200"></div>
+            <div>
+              <h1 class="text-lg font-bold text-gray-900 line-clamp-1">{{ selectedVideo.originalFilename || selectedVideo.fileName }}</h1>
+              <div class="flex items-center gap-3 mt-0.5">
+                <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ formatFileSize(selectedVideo.fileSize) }}</span>
+                <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
+              </div>
+            </div>
+          </div>
+          <button @click="handleDeleteVideo(selectedVideo.id)" class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl transition-all">
+            <TrashIcon class="w-4 h-4" />
+            삭제
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
+        <div class="max-w-7xl mx-auto space-y-6">
           <!-- Language Config (자막 추출 전까지 표시) -->
           <div v-if="!subtitles.length" class="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
             <div class="flex items-end justify-center gap-3 md:gap-8">
@@ -336,17 +224,17 @@
             </div>
           </div>
 
-          <!-- Glossary Selection -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <button @click="glossaryExpanded = !glossaryExpanded" class="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
+          <!-- Project Context Selection (Text.vue 방식과 동일) -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <button @click="glossaryExpanded = !glossaryExpanded" class="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors rounded-t-2xl">
               <div class="flex items-center gap-3">
                 <BookOpenIcon class="w-5 h-5 text-gray-400" />
-                <span class="font-bold text-gray-700">용어집 선택</span>
-                <span v-if="selectedDocuments.length > 0" class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                  {{ selectedDocuments.length }}개 선택됨
+                <span class="font-bold text-gray-700">프로젝트 전문용어사전 선택</span>
+                <span v-if="selectedProjectId && contextInfo" class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                  {{ contextInfo.termsCount }}개 용어
                 </span>
               </div>
-              <ChevronDownIcon 
+              <ChevronDownIcon
                 class="w-5 h-5 text-gray-400 transition-transform duration-200"
                 :class="{ 'rotate-180': glossaryExpanded }"
               />
@@ -356,30 +244,19 @@
               <ProjectSelector
                 v-model="selectedProjectId"
                 :projects="projects"
+                :context-info="contextInfo"
                 @change="onProjectChange"
-                class="mb-6"
               />
 
-              <div v-if="selectedProjectId && projectDocuments.length > 0">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">문서 선택</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <label
-                    v-for="doc in projectDocuments"
-                    :key="doc.id"
-                    class="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all"
-                    :class="{ 'border-blue-500 bg-blue-50/30': selectedDocuments.includes(doc.id) }"
-                  >
-                    <input
-                      type="checkbox"
-                      :value="doc.id"
-                      v-model="selectedDocuments"
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <div>
-                      <p class="text-sm font-bold text-gray-900">{{ doc.title }}</p>
-                      <p class="text-xs text-gray-500">{{ doc.termCount || 0 }}개 용어</p>
-                    </div>
-                  </label>
+              <!-- 프로젝트 선택 시 컨텍스트 정보 표시 -->
+              <div v-if="selectedProjectId && contextInfo" class="mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div class="flex items-center gap-2 text-blue-700">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-medium">
+                    프로젝트의 {{ contextInfo.documentsCount }}개 문서에서 {{ contextInfo.termsCount }}개 용어가 번역에 반영됩니다.
+                  </span>
                 </div>
               </div>
             </div>
@@ -415,7 +292,7 @@
                 class="w-full h-full object-contain"
                 controls
               ></video>
-              
+
               <div v-if="currentSubtitle" class="absolute bottom-16 left-1/2 -translate-x-1/2 max-w-[90%] px-6 py-3 bg-black/80 backdrop-blur-sm rounded-xl text-white text-center font-medium text-lg pointer-events-none">
                 {{ currentSubtitle.displayText || currentSubtitle.text }}
               </div>
@@ -427,7 +304,7 @@
                 <h3 class="font-bold text-gray-900">자막</h3>
                 <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ displaySubtitles.length }}</span>
               </div>
-              
+
               <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                 <div
                   v-for="subtitle in displaySubtitles"
@@ -441,7 +318,7 @@
                   <p v-if="currentLanguage !== subtitleData.originalLanguage" class="text-sm font-bold text-gray-900">
                     {{ subtitle.displayText }}
                   </p>
-                  
+
                   <div v-if="subtitle.detectedTerms?.length > 0" class="flex flex-wrap gap-2 mt-2">
                     <span
                       v-for="(term, idx) in subtitle.detectedTerms"
@@ -471,7 +348,7 @@
             </button>
 
             <div v-if="isTranslated" class="relative">
-              <button 
+              <button
                 @click="downloadDropdownOpen = !downloadDropdownOpen"
                 class="px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
               >
@@ -494,9 +371,18 @@
           </div>
         </div>
       </div>
-    </div>
+    </template>
 
-    <!-- Modals & Toasts -->
+    <!-- ==================== MODALS ==================== -->
+    <!-- Upload Modal -->
+    <VideoUploadModal
+      ref="uploadModalRef"
+      :show="showUploadModal"
+      @close="showUploadModal = false"
+      @upload="handleVideoUpload"
+    />
+
+    <!-- Add Translation Modal -->
     <AddTranslationModal
       :show="showAddTranslationModal"
       :available-languages="subtitleData.availableLanguages"
@@ -506,6 +392,7 @@
       @translate="handleAddTranslation"
     />
 
+    <!-- Toast -->
     <Transition
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="transform translate-y-4 opacity-0"
@@ -529,7 +416,11 @@ import { useRouter } from 'vue-router'
 import ProjectSelector from '@/components/translation/ProjectSelector.vue'
 import LanguageSelector from '@/components/translation/LanguageSelector.vue'
 import AddTranslationModal from '@/components/translation/AddTranslationModal.vue'
+import VideoUploadModal from '@/components/translation/VideoUploadModal.vue'
+import VideoCard from '@/components/translation/VideoCard.vue'
 import {
+  getVideos,
+  deleteVideo,
   uploadVideo,
   extractSubtitles,
   translateSubtitles,
@@ -538,7 +429,6 @@ import {
 } from '@/services/videoService'
 import { getUserProjects } from '@/services/projectService'
 import {
-  CloudArrowUpIcon,
   VideoCameraIcon,
   TrashIcon,
   BookOpenIcon,
@@ -550,16 +440,23 @@ import {
   DocumentTextIcon,
   LanguageIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ArrowLeftIcon
 } from '@heroicons/vue/24/solid'
 
 const router = useRouter()
 
-// Upload State
-const fileInputRef = ref(null)
-const isDragOver = ref(false)
-const uploadedVideo = ref(null)
-const uploadProgress = ref(0)
+// ==================== VIEW STATE ====================
+const currentView = ref('list') // 'list' | 'detail'
+const selectedVideo = ref(null)
+
+// ==================== LIST VIEW STATE ====================
+const videos = ref([])
+const isLoadingVideos = ref(false)
+const showUploadModal = ref(false)
+const uploadModalRef = ref(null)
+
+// ==================== DETAIL VIEW STATE ====================
 const videoUrl = ref(null)
 
 // Language State
@@ -578,19 +475,18 @@ const isTargetDropdownOpen = ref(false)
 const sourceDropdownRef = ref(null)
 const targetDropdownRef = ref(null)
 
-// Glossary State
+// Glossary State (Text.vue 방식과 동일)
 const glossaryExpanded = ref(false)
 const selectedProjectId = ref(null)
 const projects = ref([])
-const projectDocuments = ref([])
-const selectedDocuments = ref([])
+const contextInfo = ref(null)
 
 // Video Player State
 const videoPlayerRef = ref(null)
 const videoDuration = ref(0)
 const currentTime = ref(0)
 
-// 다국어 자막 상태 (새로 추가)
+// 다국어 자막 상태
 const subtitleData = ref({
   originalLanguage: 'ko',
   availableLanguages: [],
@@ -598,7 +494,7 @@ const subtitleData = ref({
 })
 const currentLanguage = ref('ko')
 
-// 레거시 호환성 (기존 코드 유지)
+// 레거시 호환성
 const subtitles = ref([])
 const currentSubtitle = ref(null)
 
@@ -615,11 +511,9 @@ const toast = ref({
   type: 'success'
 })
 
-// Computed
+// ==================== COMPUTED ====================
 const totalTermsCount = computed(() => {
-  return projectDocuments.value
-    .filter((doc) => selectedDocuments.value.includes(doc.id))
-    .reduce((sum, doc) => sum + (doc.termCount || 0), 0)
+  return contextInfo.value?.termsCount || 0
 })
 
 // 선택한 언어의 자막만 표시
@@ -635,9 +529,171 @@ const displaySubtitles = computed(() => {
   }))
 })
 
-// Methods
+// ==================== LIST VIEW METHODS ====================
 
-// Language Dropdown Functions
+async function loadVideos() {
+  isLoadingVideos.value = true
+  try {
+    const response = await getVideos()
+    videos.value = response.data?.content || []
+  } catch (error) {
+    console.error('Failed to load videos:', error)
+    showToast('영상 목록을 불러오는데 실패했습니다.', 'error')
+  } finally {
+    isLoadingVideos.value = false
+  }
+}
+
+async function selectVideo(video) {
+  selectedVideo.value = video
+  currentView.value = 'detail'
+
+  // Set languages from video metadata
+  if (video.originalLanguage) {
+    sourceLang.value = video.originalLanguage
+  }
+
+  // Load video URL
+  try {
+    // Create video URL from server with token for authentication
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const token = localStorage.getItem('token')
+    videoUrl.value = `${API_URL}/videos/${video.id}/stream?token=${token}`
+
+    // Load existing subtitles if available
+    // Support both hasSubtitles field and sttStatus fallback
+    const hasSubtitles = video.hasSubtitles || video.sttStatus === 'completed'
+    if (hasSubtitles) {
+      await loadExistingSubtitles(video.id)
+    }
+  } catch (error) {
+    console.error('Failed to load video:', error)
+    showToast('영상을 불러오는데 실패했습니다.', 'error')
+  }
+}
+
+async function loadExistingSubtitles(videoId) {
+  try {
+    const result = await getMultilingualSubtitles(videoId)
+
+    subtitleData.value = {
+      originalLanguage: result.originalLanguage,
+      availableLanguages: result.availableLanguages,
+      subtitles: result.subtitles
+    }
+
+    currentLanguage.value = result.originalLanguage
+    subtitles.value = result.subtitles
+    isTranslated.value = result.availableLanguages.length > 1
+  } catch (error) {
+    console.error('Failed to load subtitles:', error)
+  }
+}
+
+function goBackToList() {
+  currentView.value = 'list'
+  resetDetailView()
+  loadVideos() // Refresh list
+}
+
+function resetDetailView() {
+  selectedVideo.value = null
+  videoUrl.value = null
+  subtitles.value = []
+  currentSubtitle.value = null
+  isTranslated.value = false
+  selectedProjectId.value = null
+  contextInfo.value = null
+  subtitleData.value = {
+    originalLanguage: 'ko',
+    availableLanguages: [],
+    subtitles: []
+  }
+}
+
+async function handleVideoUpload({ file, sourceLanguage, targetLanguage }) {
+  try {
+    // Update modal state
+    uploadModalRef.value?.setProgress(10)
+    uploadModalRef.value?.setUploading(true)
+
+    // Create FormData
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // Add request metadata as JSON
+    const request = {
+      sourceLanguage: sourceLanguage,
+      targetLanguage: targetLanguage,
+      projectId: selectedProjectId.value
+    }
+    formData.append('request', JSON.stringify(request))
+
+    // Get user ID
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!user.id) {
+      showToast('로그인이 필요합니다.', 'error')
+      router.push('/login')
+      return
+    }
+
+    uploadModalRef.value?.setProgress(30)
+
+    // Upload to Java Backend
+    const response = await uploadVideo(formData)
+
+    uploadModalRef.value?.setProgress(100)
+
+    // Close modal and refresh
+    showUploadModal.value = false
+    uploadModalRef.value?.resetState()
+
+    showToast('영상 업로드가 완료되었습니다!', 'success')
+
+    // Set languages for detail view
+    sourceLang.value = sourceLanguage
+    targetLang.value = targetLanguage
+
+    // Select the uploaded video to go to detail view
+    selectVideo({
+      id: response.id,
+      originalFilename: file.name,
+      fileName: file.name,
+      fileSize: file.size,
+      originalLanguage: sourceLanguage,
+      hasSubtitles: false
+    })
+
+    // Create local video URL for immediate playback
+    videoUrl.value = URL.createObjectURL(file)
+
+  } catch (error) {
+    console.error('Video upload error:', error)
+    showToast('영상 업로드에 실패했습니다.', 'error')
+    uploadModalRef.value?.setUploading(false)
+  }
+}
+
+async function handleDeleteVideo(videoId) {
+  if (!confirm('이 영상을 삭제하시겠습니까?')) return
+
+  try {
+    await deleteVideo(videoId)
+    showToast('영상이 삭제되었습니다.', 'success')
+
+    if (currentView.value === 'detail') {
+      goBackToList()
+    } else {
+      loadVideos()
+    }
+  } catch (error) {
+    console.error('Failed to delete video:', error)
+    showToast('영상 삭제에 실패했습니다.', 'error')
+  }
+}
+
+// ==================== LANGUAGE METHODS ====================
+
 function getLanguageFlag(code) {
   return languageOptions.find(l => l.code === code)?.flag || ''
 }
@@ -685,6 +741,8 @@ function handleDropdownClickOutside(event) {
   }
 }
 
+// ==================== PROJECT METHODS ====================
+
 async function loadProjects() {
   try {
     const response = await getUserProjects()
@@ -695,134 +753,48 @@ async function loadProjects() {
   }
 }
 
-function triggerFileInput() {
-  fileInputRef.value?.click()
-}
-
-function handleFileSelect(event) {
-  const file = event.target.files[0]
-  if (file) {
-    handleVideoFile(file)
-  }
-}
-
-function handleDrop(event) {
-  isDragOver.value = false
-  const file = event.dataTransfer.files[0]
-  if (file && file.type.startsWith('video/')) {
-    handleVideoFile(file)
-  } else {
-    showToast('영상 파일만 업로드 가능합니다.', 'error')
-  }
-}
-
-async function handleVideoFile(file) {
-  // Validate file size (500MB limit)
-  const maxSize = 500 * 1024 * 1024
-  if (file.size > maxSize) {
-    showToast('파일 크기는 500MB를 초과할 수 없습니다.', 'error')
-    return
-  }
-
-  try {
-    uploadProgress.value = 1
-
-    // Create FormData
-    const formData = new FormData()
-    formData.append('file', file)
-
-    // Add request metadata as JSON
-    const request = {
-      sourceLanguage: sourceLang.value,
-      targetLanguage: targetLang.value,
-      documentIds: selectedDocuments.value
-    }
-    formData.append('request', JSON.stringify(request))
-
-    // Get user ID
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (!user.id) {
-      showToast('로그인이 필요합니다.', 'error')
-      router.push('/login')
-      return
-    }
-
-    // Upload to Java Backend
-    const response = await uploadVideo(formData)
-
-    uploadedVideo.value = {
-      id: response.id,
-      filename: file.name,
-      fileSize: file.size,
-      duration: null
-    }
-
-    // Create local video URL
-    videoUrl.value = URL.createObjectURL(file)
-
-    uploadProgress.value = 100
-    showToast('영상 업로드가 완료되었습니다!', 'success')
-
-    // Reset progress after delay
-    setTimeout(() => {
-      uploadProgress.value = 0
-    }, 1000)
-  } catch (error) {
-    console.error('Video upload error:', error)
-    showToast('영상 업로드에 실패했습니다.', 'error')
-    uploadProgress.value = 0
-  }
-}
-
-function resetVideo() {
-  uploadedVideo.value = null
-  videoUrl.value = null
-  subtitles.value = []
-  currentSubtitle.value = null
-  isTranslated.value = false
-  selectedDocuments.value = []
-  uploadProgress.value = 0
-}
-
-async function onProjectChange(projectId) {
+function onProjectChange(projectId) {
   if (projectId) {
-    // TODO: Load project documents from API
-    // For now, using mock data
-    projectDocuments.value = []
-    selectedDocuments.value = []
+    const project = projects.value.find(p => p.id === projectId)
+    if (project) {
+      contextInfo.value = {
+        documentsCount: project.documentCount || 0,
+        termsCount: project.termCount || 0
+      }
+    }
   } else {
-    projectDocuments.value = []
-    selectedDocuments.value = []
+    contextInfo.value = null
   }
 }
+
+// ==================== SUBTITLE METHODS ====================
 
 async function handleExtractSubtitles() {
-  if (!uploadedVideo.value) return
+  if (!selectedVideo.value) return
 
-  console.log('🎬 Uploaded Video:', uploadedVideo.value)
-  console.log('📄 Video File ID:', uploadedVideo.value.id)
+  console.log('Video File ID:', selectedVideo.value.id)
 
   isExtracting.value = true
 
   try {
     // Step 1: STT 처리 (원본 언어)
     await extractSubtitles({
-      videoDocumentId: uploadedVideo.value.id,
+      videoDocumentId: selectedVideo.value.id,
       sourceLanguage: sourceLang.value
     })
 
     // Step 2: 자동 번역 (목표 언어가 있고 원본과 다르면)
     if (targetLang.value && targetLang.value !== sourceLang.value) {
       await translateSubtitles({
-        videoDocumentId: uploadedVideo.value.id,
-        documentIds: selectedDocuments.value,
+        videoDocumentId: selectedVideo.value.id,
+        projectId: selectedProjectId.value,
         sourceLanguage: sourceLang.value,
         targetLanguage: targetLang.value
       })
     }
 
     // Step 3: 다국어 자막 조회
-    const result = await getMultilingualSubtitles(uploadedVideo.value.id)
+    const result = await getMultilingualSubtitles(selectedVideo.value.id)
 
     // Step 4: 상태 업데이트
     subtitleData.value = {
@@ -832,8 +804,6 @@ async function handleExtractSubtitles() {
     }
 
     currentLanguage.value = result.originalLanguage
-
-    // 레거시 호환성
     subtitles.value = result.subtitles
     isTranslated.value = result.availableLanguages.length > 1
 
@@ -850,42 +820,34 @@ async function handleExtractSubtitles() {
   }
 }
 
-// 언어 선택 변경
 function handleLanguageChange(lang) {
   currentLanguage.value = lang
-  console.log(`🌐 언어 변경: ${lang}`)
+  console.log(`Language changed: ${lang}`)
 }
 
-// 번역 추가 (모달에서 호출)
-async function handleAddTranslation({ targetLanguage, documentIds }) {
-  if (!uploadedVideo.value) return
+async function handleAddTranslation({ targetLanguage, projectId: modalProjectId }) {
+  if (!selectedVideo.value) return
 
   isExtracting.value = true
 
   try {
-    // Step 1: 번역 처리
     await translateSubtitles({
-      videoDocumentId: uploadedVideo.value.id,
-      documentIds: documentIds,
+      videoDocumentId: selectedVideo.value.id,
+      projectId: modalProjectId || selectedProjectId.value,
       sourceLanguage: subtitleData.value.originalLanguage,
       targetLanguage: targetLanguage
     })
 
-    // Step 2: 다국어 자막 다시 조회
-    const updatedData = await getMultilingualSubtitles(uploadedVideo.value.id)
+    const updatedData = await getMultilingualSubtitles(selectedVideo.value.id)
 
-    // Step 3: 상태 업데이트
     subtitleData.value = {
       originalLanguage: updatedData.originalLanguage,
       availableLanguages: updatedData.availableLanguages,
       subtitles: updatedData.subtitles
     }
 
-    // 레거시 호환성
     subtitles.value = updatedData.subtitles
     isTranslated.value = updatedData.availableLanguages.length > 1
-
-    // Step 4: 새로 번역된 언어로 자동 전환
     currentLanguage.value = targetLanguage
 
     showToast(`${targetLanguage.toUpperCase()} 번역이 완료되었습니다!`, 'success')
@@ -900,14 +862,15 @@ async function handleAddTranslation({ targetLanguage, documentIds }) {
 async function downloadSubtitle(language) {
   try {
     const blob = await downloadSubtitles({
-      videoDocumentId: uploadedVideo.value.id,
+      videoDocumentId: selectedVideo.value.id,
       language: language
     })
 
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${uploadedVideo.value.filename.replace(/\.[^/.]+$/, '')}_${language}.srt`
+    const filename = selectedVideo.value.originalFilename || selectedVideo.value.fileName || 'video'
+    a.download = `${filename.replace(/\.[^/.]+$/, '')}_${language}.srt`
     a.click()
     URL.revokeObjectURL(url)
 
@@ -919,10 +882,11 @@ async function downloadSubtitle(language) {
   }
 }
 
+// ==================== VIDEO PLAYER METHODS ====================
+
 function handleTimeUpdate(event) {
   currentTime.value = event.target.currentTime
 
-  // Find current subtitle (displaySubtitles 사용)
   const current = displaySubtitles.value.find(
     (sub) => currentTime.value >= sub.startTime && currentTime.value <= sub.endTime
   )
@@ -939,6 +903,8 @@ function seekToSubtitle(subtitle) {
     videoPlayerRef.value.play()
   }
 }
+
+// ==================== UTILITY METHODS ====================
 
 function formatTime(seconds) {
   const h = Math.floor(seconds / 3600)
@@ -967,11 +933,12 @@ function showToast(message, type = 'success') {
   }, 3000)
 }
 
-// Lifecycle
+// ==================== LIFECYCLE ====================
+
 onMounted(() => {
+  loadVideos()
   loadProjects()
 
-  // Close dropdown on outside click
   document.addEventListener('click', handleDropdownClickOutside)
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.relative')) {
@@ -982,7 +949,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleDropdownClickOutside)
-  if (videoUrl.value) {
+  if (videoUrl.value && videoUrl.value.startsWith('blob:')) {
     URL.revokeObjectURL(videoUrl.value)
   }
 })

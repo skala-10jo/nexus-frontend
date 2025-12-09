@@ -39,46 +39,23 @@
             </select>
           </div>
 
-          <!-- 전문용어사전 선택 (선택사항) -->
+          <!-- 프로젝트 컨텍스트 선택 (Text.vue 방식과 동일) -->
           <div class="form-group">
             <label class="form-label">
-              전문용어사전 (선택사항)
-              <span class="label-optional">선택하면 번역 품질이 향상됩니다</span>
+              프로젝트 컨텍스트 (선택사항)
+              <span class="label-optional">선택하면 전문용어가 반영됩니다</span>
             </label>
             <ProjectSelector
               v-model="selectedProjectId"
               :projects="projects"
+              :context-info="contextInfo"
               @change="onProjectChange"
             />
           </div>
 
-          <!-- 문서 선택 -->
-          <div v-if="selectedProjectId && projectDocuments.length > 0" class="form-group">
-            <label class="form-label">문서 선택</label>
-            <div class="documents-grid">
-              <label
-                v-for="doc in projectDocuments"
-                :key="doc.id"
-                class="document-item"
-                :class="{ selected: selectedDocuments.includes(doc.id) }"
-              >
-                <input
-                  type="checkbox"
-                  :value="doc.id"
-                  v-model="selectedDocuments"
-                  class="document-checkbox"
-                />
-                <div class="document-info">
-                  <span class="document-name">{{ doc.title }}</span>
-                  <span class="document-terms">{{ doc.termCount || 0 }}개 용어</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- 선택 요약 -->
-          <div v-if="selectedDocuments.length > 0" class="selection-summary">
-            총 {{ selectedDocuments.length }}개 문서 선택됨
+          <!-- 프로젝트 선택 시 컨텍스트 정보 표시 -->
+          <div v-if="selectedProjectId && contextInfo" class="selection-summary">
+            프로젝트의 {{ contextInfo.documentsCount }}개 문서에서 {{ contextInfo.termsCount }}개 용어가 번역에 반영됩니다.
           </div>
         </div>
 
@@ -139,11 +116,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'translate'])
 
-// State
+// State (Text.vue 방식과 동일)
 const targetLanguage = ref('')
 const selectedProjectId = ref(null)
-const projectDocuments = ref([])
-const selectedDocuments = ref([])
+const contextInfo = ref(null)
 const isTranslating = ref(false)
 
 // 모든 지원 언어
@@ -162,14 +138,18 @@ const availableTargetLanguages = computed(() => {
   )
 })
 
+// Text.vue와 동일한 방식: projectId로 프로젝트 정보만 표시
 function onProjectChange(projectId) {
   if (projectId) {
-    // TODO: API로 프로젝트의 문서 목록 조회
-    projectDocuments.value = []
-    selectedDocuments.value = []
+    const project = props.projects.find(p => p.id === projectId)
+    if (project) {
+      contextInfo.value = {
+        documentsCount: project.documentCount || 0,
+        termsCount: project.termCount || 0
+      }
+    }
   } else {
-    projectDocuments.value = []
-    selectedDocuments.value = []
+    contextInfo.value = null
   }
 }
 
@@ -177,8 +157,7 @@ function closeModal() {
   // 상태 초기화
   targetLanguage.value = ''
   selectedProjectId.value = null
-  projectDocuments.value = []
-  selectedDocuments.value = []
+  contextInfo.value = null
   isTranslating.value = false
 
   emit('close')
@@ -190,9 +169,10 @@ async function startTranslation() {
   isTranslating.value = true
 
   try {
+    // projectId 전달 (Text.vue 방식)
     await emit('translate', {
       targetLanguage: targetLanguage.value,
-      documentIds: selectedDocuments.value
+      projectId: selectedProjectId.value
     })
 
     // 성공 시 모달 닫기
