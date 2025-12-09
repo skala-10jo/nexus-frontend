@@ -13,10 +13,9 @@
     <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
       <div class="max-w-7xl mx-auto space-y-6">
 
-        <!-- Upload Section -->
-        <div v-if="!uploadedVideo" class="flex flex-col gap-4 md:gap-6">
-          <!-- Upload Area - Compact on Mobile -->
-          <div
+        <!-- Upload Area -->
+        <div
+          v-if="!uploadedVideo"
             class="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 md:p-12 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group"
             :class="{ 'border-blue-500 bg-blue-50/50': isDragOver }"
             @dragover.prevent="isDragOver = true"
@@ -37,9 +36,9 @@
                 <CloudArrowUpIcon class="w-7 h-7 md:w-10 md:h-10 text-blue-600" />
               </div>
               <div>
-                <h3 class="text-lg md:text-xl font-bold text-gray-900">Upload Video</h3>
-                <p class="text-gray-500 text-sm md:text-base mt-0.5 md:mt-1">Drag & drop or click to browse</p>
-                <p class="text-xs text-gray-400 mt-1 md:mt-2">MP4, AVI, MOV, MKV (Max 500MB)</p>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900">영상 업로드</h3>
+                <p class="text-gray-500 text-sm md:text-base mt-0.5 md:mt-1">드래그 & 드롭 또는 클릭하여 선택</p>
+                <p class="text-xs text-gray-400 mt-1 md:mt-2">MP4, AVI, MOV, MKV (최대 500MB)</p>
               </div>
             </div>
 
@@ -48,16 +47,170 @@
               <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-full bg-blue-600 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
               </div>
-              <p class="text-sm text-gray-500 mt-2">{{ uploadProgress }}% Uploading...</p>
+              <p class="text-sm text-gray-500 mt-2">{{ uploadProgress }}% 업로드 중...</p>
+            </div>
+
+            <!-- Language Config (업로드 전 표시) -->
+            <div class="mt-6 bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
+              <div class="flex items-end justify-center gap-3 md:gap-8">
+                <!-- Source Language -->
+                <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
+                  <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">원본</label>
+                  <div class="relative" ref="sourceDropdownRef">
+                    <button
+                      @click="toggleSourceDropdown"
+                      type="button"
+                      class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
+                      :class="{ 'border-blue-500 ring-2 ring-blue-100': isSourceDropdownOpen }"
+                    >
+                      <div class="flex items-center gap-2 md:gap-3">
+                        <span class="text-lg md:text-xl">{{ getLanguageFlag(sourceLang) }}</span>
+                        <span class="text-gray-900 truncate">{{ getLanguageName(sourceLang) }}</span>
+                      </div>
+                      <ChevronDownIcon
+                        class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
+                        :class="{ 'rotate-180': isSourceDropdownOpen }"
+                      />
+                    </button>
+
+                    <!-- Source Dropdown -->
+                    <Transition
+                      enter-active-class="transition duration-100 ease-out"
+                      enter-from-class="transform scale-95 opacity-0"
+                      enter-to-class="transform scale-100 opacity-100"
+                      leave-active-class="transition duration-75 ease-in"
+                      leave-from-class="transform scale-100 opacity-100"
+                      leave-to-class="transform scale-95 opacity-0"
+                    >
+                      <div
+                        v-if="isSourceDropdownOpen"
+                        class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                      >
+                        <ul class="py-1">
+                          <li v-for="lang in languageOptions" :key="`source-${lang.code}`">
+                            <button
+                              @click="selectSourceLanguage(lang.code)"
+                              type="button"
+                              class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
+                              :class="sourceLang === lang.code ? 'bg-blue-50/50' : ''"
+                              :disabled="lang.code === targetLang"
+                            >
+                              <div class="flex items-center gap-2 md:gap-3" :class="lang.code === targetLang ? 'opacity-40' : ''">
+                                <span class="text-lg md:text-xl">{{ lang.flag }}</span>
+                                <span class="font-bold" :class="sourceLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
+                              </div>
+                              <svg v-if="sourceLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </Transition>
+                  </div>
+                </div>
+
+                <!-- Swap Button -->
+                <button
+                  @click="swapLanguages"
+                  type="button"
+                  class="pb-2.5 md:pb-3 p-2 rounded-lg hover:bg-blue-50 hover:scale-110 transition-all group"
+                  title="언어 교환"
+                >
+                  <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </button>
+
+                <!-- Target Language -->
+                <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
+                  <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">번역</label>
+                  <div class="relative" ref="targetDropdownRef">
+                    <button
+                      @click="toggleTargetDropdown"
+                      type="button"
+                      class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
+                      :class="{ 'border-blue-500 ring-2 ring-blue-100': isTargetDropdownOpen }"
+                    >
+                      <div class="flex items-center gap-2 md:gap-3">
+                        <span class="text-lg md:text-xl">{{ getLanguageFlag(targetLang) }}</span>
+                        <span class="text-gray-900 truncate">{{ getLanguageName(targetLang) }}</span>
+                      </div>
+                      <ChevronDownIcon
+                        class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
+                        :class="{ 'rotate-180': isTargetDropdownOpen }"
+                      />
+                    </button>
+
+                    <!-- Target Dropdown -->
+                    <Transition
+                      enter-active-class="transition duration-100 ease-out"
+                      enter-from-class="transform scale-95 opacity-0"
+                      enter-to-class="transform scale-100 opacity-100"
+                      leave-active-class="transition duration-75 ease-in"
+                      leave-from-class="transform scale-100 opacity-100"
+                      leave-to-class="transform scale-95 opacity-0"
+                    >
+                      <div
+                        v-if="isTargetDropdownOpen"
+                        class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                      >
+                        <ul class="py-1">
+                          <li v-for="lang in languageOptions" :key="`target-${lang.code}`">
+                            <button
+                              @click="selectTargetLanguage(lang.code)"
+                              type="button"
+                              class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
+                              :class="targetLang === lang.code ? 'bg-blue-50/50' : ''"
+                              :disabled="lang.code === sourceLang"
+                            >
+                              <div class="flex items-center gap-2 md:gap-3" :class="lang.code === sourceLang ? 'opacity-40' : ''">
+                                <span class="text-lg md:text-xl">{{ lang.flag }}</span>
+                                <span class="font-bold" :class="targetLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
+                              </div>
+                              <svg v-if="targetLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </Transition>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Language Config - Horizontal Layout -->
-          <div class="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
+        <!-- Video Info & Controls -->
+        <div v-if="uploadedVideo" class="space-y-6">
+          <!-- Info Card -->
+          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                <VideoCameraIcon class="w-6 h-6" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">{{ uploadedVideo.filename }}</h3>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ formatFileSize(uploadedVideo.fileSize) }}</span>
+                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ uploadedVideo.duration || 'N/A' }}</span>
+                  <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
+                </div>
+              </div>
+            </div>
+            <button @click="resetVideo" class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl transition-all">
+              <TrashIcon class="w-4 h-4" />
+              초기화
+            </button>
+          </div>
+
+          <!-- Language Config (자막 추출 전까지 표시) -->
+          <div v-if="!subtitles.length" class="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
             <div class="flex items-end justify-center gap-3 md:gap-8">
               <!-- Source Language -->
               <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Source</label>
+                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">원본</label>
                 <div class="relative" ref="sourceDropdownRef">
                   <button
                     @click="toggleSourceDropdown"
@@ -75,7 +228,7 @@
                     />
                   </button>
 
-                  <!-- Source Dropdown - Opens Upward -->
+                  <!-- Source Dropdown -->
                   <Transition
                     enter-active-class="transition duration-100 ease-out"
                     enter-from-class="transform scale-95 opacity-0"
@@ -117,7 +270,7 @@
                 @click="swapLanguages"
                 type="button"
                 class="pb-2.5 md:pb-3 p-2 rounded-lg hover:bg-blue-50 hover:scale-110 transition-all group"
-                title="Swap Languages"
+                title="언어 교환"
               >
                 <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -126,7 +279,7 @@
 
               <!-- Target Language -->
               <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Target</label>
+                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">번역</label>
                 <div class="relative" ref="targetDropdownRef">
                   <button
                     @click="toggleTargetDropdown"
@@ -144,7 +297,7 @@
                     />
                   </button>
 
-                  <!-- Target Dropdown - Opens Upward -->
+                  <!-- Target Dropdown -->
                   <Transition
                     enter-active-class="transition duration-100 ease-out"
                     enter-from-class="transform scale-95 opacity-0"
@@ -182,39 +335,15 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Video Info & Controls -->
-        <div v-if="uploadedVideo" class="space-y-6">
-          <!-- Info Card -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                <VideoCameraIcon class="w-6 h-6" />
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-gray-900">{{ uploadedVideo.filename }}</h3>
-                <div class="flex items-center gap-3 mt-1">
-                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ formatFileSize(uploadedVideo.fileSize) }}</span>
-                  <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ uploadedVideo.duration || 'N/A' }}</span>
-                  <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">{{ sourceLang.toUpperCase() }} → {{ targetLang.toUpperCase() }}</span>
-                </div>
-              </div>
-            </div>
-            <button @click="resetVideo" class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl transition-all">
-              <TrashIcon class="w-4 h-4" />
-              Reset
-            </button>
-          </div>
 
           <!-- Glossary Selection -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <button @click="glossaryExpanded = !glossaryExpanded" class="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
               <div class="flex items-center gap-3">
                 <BookOpenIcon class="w-5 h-5 text-gray-400" />
-                <span class="font-bold text-gray-700">Glossary Selection</span>
+                <span class="font-bold text-gray-700">용어집 선택</span>
                 <span v-if="selectedDocuments.length > 0" class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                  {{ selectedDocuments.length }} selected
+                  {{ selectedDocuments.length }}개 선택됨
                 </span>
               </div>
               <ChevronDownIcon 
@@ -232,7 +361,7 @@
               />
 
               <div v-if="selectedProjectId && projectDocuments.length > 0">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Select Documents</h4>
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">문서 선택</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <label
                     v-for="doc in projectDocuments"
@@ -248,7 +377,7 @@
                     />
                     <div>
                       <p class="text-sm font-bold text-gray-900">{{ doc.title }}</p>
-                      <p class="text-xs text-gray-500">{{ doc.termCount || 0 }} terms</p>
+                      <p class="text-xs text-gray-500">{{ doc.termCount || 0 }}개 용어</p>
                     </div>
                   </label>
                 </div>
@@ -269,7 +398,7 @@
                 class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-200"
               >
                 <PlusIcon class="w-4 h-4" />
-                Add Language
+                언어 추가
               </button>
             </template>
           </LanguageSelector>
@@ -295,7 +424,7 @@
             <!-- Subtitle List -->
             <div class="w-full lg:w-96 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
               <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h3 class="font-bold text-gray-900">Subtitles</h3>
+                <h3 class="font-bold text-gray-900">자막</h3>
                 <span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{{ displaySubtitles.length }}</span>
               </div>
               
@@ -338,7 +467,7 @@
             >
               <ArrowPathIcon v-if="isExtracting" class="w-5 h-5 animate-spin" />
               <SparklesIcon v-else class="w-5 h-5" />
-              {{ isExtracting ? 'Processing...' : 'Extract Subtitles' }}
+              {{ isExtracting ? '처리 중...' : '자막 추출' }}
             </button>
 
             <div v-if="isTranslated" class="relative">
@@ -347,18 +476,18 @@
                 class="px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
               >
                 <ArrowDownTrayIcon class="w-5 h-5" />
-                Download
+                다운로드
                 <ChevronDownIcon class="w-4 h-4 ml-1" />
               </button>
 
               <div v-if="downloadDropdownOpen" class="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden z-10">
                 <button @click="downloadSubtitle('original')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
                   <DocumentTextIcon class="w-4 h-4" />
-                  Original (SRT)
+                  원본 (SRT)
                 </button>
                 <button @click="downloadSubtitle('translated')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
                   <LanguageIcon class="w-4 h-4" />
-                  Translated (SRT)
+                  번역본 (SRT)
                 </button>
               </div>
             </div>
