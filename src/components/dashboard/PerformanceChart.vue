@@ -52,8 +52,8 @@
         </div>
 
         <!-- SVG Chart -->
-        <svg class="absolute inset-x-0 top-0 bottom-10 w-full overflow-visible" preserveAspectRatio="none"
-          :viewBox="`0 0 ${chartWidth} ${chartHeight}`">
+        <svg ref="svgRef" class="absolute inset-x-0 top-0 bottom-10 w-full h-[calc(100%-2.5rem)] overflow-visible"
+          :viewBox="`0 0 ${svgWidth} ${svgHeight}`">
 
           <!-- Bar Chart (Correct Count) -->
           <g class="bars">
@@ -119,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useExpressionDailyStats } from '@/composables/dashboard/useExpressionDailyStats'
 
 // Composable
@@ -136,33 +136,54 @@ const selectedDays = ref(7)
 const hoveredIndex = ref(null)
 const tooltipPos = ref({ x: 0, y: 0 })
 
-// Chart dimensions (SVG viewBox)
-const chartWidth = 300
-const chartHeight = 150
+// SVG ref and dynamic dimensions
+const svgRef = ref(null)
+const svgWidth = ref(300)
+const svgHeight = ref(150)
+let resizeObserver = null
+
+// Setup ResizeObserver to track SVG container size
+const setupResizeObserver = () => {
+  if (!svgRef.value) return
+
+  resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect
+      if (width > 0 && height > 0) {
+        svgWidth.value = width
+        svgHeight.value = height
+      }
+    }
+  })
+
+  resizeObserver.observe(svgRef.value)
+}
+
+// Chart dimensions (now reactive based on SVG size)
 const barWidth = computed(() => {
   const count = chartData.value.length || 1
-  const totalBarSpace = chartWidth * 0.6
+  const totalBarSpace = svgWidth.value * 0.6
   return Math.min(totalBarSpace / count, 30)
 })
 
 // Calculate bar X position
 const getBarX = (index) => {
   const count = chartData.value.length || 1
-  const spacing = chartWidth / count
+  const spacing = svgWidth.value / count
   return spacing * index + (spacing - barWidth.value) / 2
 }
 
 // Calculate bar Y position (top of bar)
 const getBarY = (value) => {
   const max = maxCorrectCount.value || 10
-  const height = (value / max) * chartHeight
-  return chartHeight - height
+  const height = (value / max) * svgHeight.value
+  return svgHeight.value - height
 }
 
 // Calculate bar height
 const getBarHeight = (value) => {
   const max = maxCorrectCount.value || 10
-  return (value / max) * chartHeight
+  return (value / max) * svgHeight.value
 }
 
 // Calculate point X position (center of bar)
@@ -172,7 +193,7 @@ const getPointX = (index) => {
 
 // Calculate line Y position (accuracy rate 0-100%)
 const getLineY = (rate) => {
-  return chartHeight - (rate / 100) * chartHeight
+  return svgHeight.value - (rate / 100) * svgHeight.value
 }
 
 // Generate line path
@@ -182,8 +203,6 @@ const linePath = computed(() => {
   const points = chartData.value.map((item, index) => {
     const x = getPointX(index)
     const y = getLineY(item.accuracyRate)
-    // Debug: 라인 좌표 확인
-    console.log(`[LineChart] ${item.label}: accuracyRate=${item.accuracyRate}%, Y=${y} (viewBox 0-${chartHeight})`)
     return `${x},${y}`
   })
 
@@ -199,49 +218,16 @@ const onDaysChange = () => {
 
 const onHover = (index, event) => {
   hoveredIndex.value = index
-  // Calculate position relative to the chart container
-  // We can use the event target or calculated positions
-  // Let's use the calculated positions for stability
-  const x = getPointX(index)
-  // Convert SVG coordinates to percentage or pixels relative to container
-  // Since SVG is 100% width/height, we need to map viewBox to pixels
-  // But wait, the tooltip is inside the container div which has relative positioning
-  // The SVG viewBox is 0 0 300 150.
-  // We need to map 300 -> 100% width, 150 -> 100% height (minus bottom padding)
 
-  // Actually, simpler to just use the event target's bounding rect relative to container
-  // But event target might be small.
-  // Let's try mapping:
-  const container = event.target.closest('.relative')
-  if (container) {
-    const rect = container.getBoundingClientRect()
-    // x in viewBox is getPointX(index)
-    // y in viewBox is roughly chartHeight / 2 (center)
-    // We want tooltip above the bar/point.
-    // Let's put it above the higher of the two (bar top or point)
-    const barY = getBarY(chartData.value[index].correctCount)
-    const pointY = getLineY(chartData.value[index].accuracyRate)
-    const targetY = Math.min(barY, pointY)
+  // Get tooltip position based on SVG coordinates
+  // viewBox matches actual SVG size, so coordinates map 1:1 to pixels
+  const barY = getBarY(chartData.value[index].correctCount)
+  const pointY = getLineY(chartData.value[index].accuracyRate)
+  const targetY = Math.min(barY, pointY)
 
-    // Map to percentage
-    const xPct = (getPointX(index) / chartWidth) * 100
-    const yPct = (targetY / chartHeight) * 100
-
-    // The container height includes the bottom padding (bottom-10 = 40px)
-    // SVG height is calc(100% - 40px).
-    // This is getting complicated.
-    // Let's just use a simple approximation or the mouse event?
-    // Mouse event is easiest but might flicker.
-    // Let's use the computed X and a fixed Y or dynamic Y based on data.
-
-    // Re-evaluating: The tooltip is inside the div with `absolute left-8 right-10 top-0 bottom-0`.
-    // Its width is dynamic.
-    // `left` style should be pixels or %.
-    // Let's use %.
-    tooltipPos.value = {
-      x: (getPointX(index) / chartWidth) * container.offsetWidth,
-      y: (targetY / chartHeight) * (container.offsetHeight - 40) - 10 // -40 for bottom-10, -10 for spacing
-    }
+  tooltipPos.value = {
+    x: getPointX(index),
+    y: targetY - 10 // 10px above the highest point
   }
 }
 
@@ -252,5 +238,16 @@ const onLeave = () => {
 // Lifecycle
 onMounted(() => {
   fetchDailyStats(selectedDays.value)
+  // Setup resize observer after next tick to ensure SVG is rendered
+  setTimeout(() => {
+    setupResizeObserver()
+  }, 0)
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 </script>

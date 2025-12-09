@@ -90,7 +90,8 @@ export const userAPI = {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
-  })
+  }),
+  updatePreferredLanguage: (id, language) => api.patch(`/users/${id}/preferred-language`, { language })
 };
 
 // Schedule API
