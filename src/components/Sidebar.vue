@@ -189,11 +189,17 @@
 
         <!-- Management Submenu -->
         <template v-if="mobileOpenMenu === 'management'">
-          <router-link to="/management/schedule"
+          <router-link to="/management/schedule?tab=projects"
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
-            :class="isSubActive('/management/schedule') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
+            :class="isSubActive('/management/schedule') && route.query.tab !== 'schedule' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
             @click="mobileOpenMenu = null">
-            프로젝트•일정
+            프로젝트
+          </router-link>
+          <router-link to="/management/schedule?tab=schedule"
+            class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
+            :class="isSubActive('/management/schedule') && route.query.tab === 'schedule' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
+            @click="mobileOpenMenu = null">
+            일정
           </router-link>
           <router-link to="/management/glossary"
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"

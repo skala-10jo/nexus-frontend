@@ -59,7 +59,7 @@ const getProjectEvents = (projectId, allEvents) => {
 </script>
 
 <template>
-  <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
+  <div class="w-full md:w-1/4 md:min-w-[280px] md:max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
     <!-- Header -->
     <div class="p-5 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>

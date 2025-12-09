@@ -20,8 +20,14 @@ export function useScheduleCalendar() {
     return {
       plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
       initialView: 'dayGridMonth',
+      customButtons: {
+        addEvent: {
+          text: '추가',
+          click: handlers.onCreateClick || (() => {})
+        }
+      },
       headerToolbar: {
-        left: 'prev,next today',
+        left: 'prev,next today addEvent',
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
       },
@@ -38,6 +44,8 @@ export function useScheduleCalendar() {
       selectMirror: true,
       dayMaxEvents: true,
       weekends: true,
+      fixedWeekCount: false,
+      showNonCurrentDates: false,
       events: handlers.loadEvents || (() => []),
       select: handlers.onDateSelect || (() => { }),
       eventClick: handlers.onEventClick || (() => { }),
