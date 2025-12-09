@@ -1,10 +1,14 @@
 /**
- * Multi-language STT Composable (로그 제거 버전)
+ * Multi-language STT Composable
  *
- * 다국어 실시간 음성 인식 및 번역 기능
+ * 음성번역 페이지용 다국어 실시간 음성 인식 및 번역 기능
+ * 자동 언어 감지 후 선택된 다른 언어들로 번역
+ *
+ * @see createTranslationStream - 번역 포함 WebSocket
+ * @see voice_realtime.py - 백엔드 번역 WebSocket API
  */
 import { ref, onUnmounted } from 'vue'
-import { createMultiLangSTTStream } from '../services/voiceService'
+import { createTranslationStream } from '../services/voiceService'
 
 export function useMultiLanguageSTT() {
   const isRecording = ref(false)
@@ -55,8 +59,8 @@ export function useMultiLanguageSTT() {
       sourceNode = audioContext.createMediaStreamSource(audioStream)
       sourceNode.connect(audioWorkletNode)
 
-      // 6. WebSocket 연결
-      wsConnection = createMultiLangSTTStream(selectedLanguages, {
+      // 6. WebSocket 연결 (다국어 자동 감지 + 번역)
+      wsConnection = createTranslationStream(selectedLanguages, {
         onConnected: () => {
           setTimeout(() => {
             if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {

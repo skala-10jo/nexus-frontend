@@ -1065,6 +1065,7 @@ const runAnimation = () => {
     createRipples(195, 235)
   }, 3.0)
 
+  // Phase 2: Analyzing (3.5s - 6s)
   timeline.add(() => {
     isButtonPressed.value = false
   }, 3.3)

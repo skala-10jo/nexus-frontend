@@ -60,12 +60,12 @@
           :key="idx"
           class="bg-gray-50 rounded-xl p-4 border border-gray-200"
         >
-          <div class="flex items-start justify-between gap-4">
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <p class="text-base font-medium text-gray-900 mb-1" v-html="highlightExpression(example.text, expression.expression)"></p>
+              <p class="text-base font-medium text-gray-900 mb-1" v-html="highlightExpression(example.text, expression.expression, expression.id, idx)"></p>
               <p class="text-gray-600 text-base">{{ example.translation }}</p>
             </div>
-            <div class="flex gap-2 flex-shrink-0">
+            <div class="flex gap-2 flex-shrink-0 w-full md:w-auto justify-end md:justify-start">
               <button
                 @click="$emit('play-tts', example.text)"
                 :disabled="ttsLoading"

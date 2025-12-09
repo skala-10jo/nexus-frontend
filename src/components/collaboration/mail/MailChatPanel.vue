@@ -81,11 +81,13 @@ const handleKeyEnter = () => {
 
           <!-- AI Response -->
           <div v-else class="flex justify-start items-start gap-3">
-             <!-- AI Avatar for message -->
-             <div class="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+             <!-- AI Avatar for message (Bear Icon) -->
+             <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
+                  alt="Bear"
+                  class="w-7 h-7 object-contain"
+                />
              </div>
             <div class="bg-white text-gray-800 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[90%] shadow-sm border border-gray-100 text-[15px] leading-relaxed">
               <div v-if="msg.queryType !== 'draft' && msg.queryType !== 'translate'" class="whitespace-pre-wrap">{{ msg.content }}</div>
@@ -105,6 +107,24 @@ const handleKeyEnter = () => {
                             <span class="ml-2 text-gray-900 font-medium">{{ msg.subject }}</span>
                         </div>
                         <div class="text-gray-700 whitespace-pre-wrap font-sans text-sm bg-white p-3 rounded-lg border border-blue-50 shadow-sm">{{ msg.emailDraft }}</div>
+                        <!-- RAG Sections (참고한 BizGuide 섹션) -->
+                        <div v-if="msg.ragSections && msg.ragSections.length > 0" class="mt-3 pt-3 border-t border-blue-100">
+                            <div class="flex items-center gap-1.5 mb-2">
+                                <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <span class="text-xs font-semibold text-blue-600">참고한 BizGuide</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="(section, idx) in msg.ragSections"
+                                    :key="idx"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                                >
+                                    {{ section }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
               </div>
@@ -118,8 +138,26 @@ const handleKeyEnter = () => {
                         </svg>
                         <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Translation</span>
                     </div>
-                    <div class="p-4">
+                    <div class="p-4 space-y-3">
                         <div class="text-gray-700 whitespace-pre-wrap font-sans text-sm bg-white p-3 rounded-lg border border-emerald-50 shadow-sm">{{ msg.translatedEmail }}</div>
+                        <!-- RAG Sections (참고한 BizGuide 섹션) -->
+                        <div v-if="msg.ragSections && msg.ragSections.length > 0" class="mt-3 pt-3 border-t border-emerald-100">
+                            <div class="flex items-center gap-1.5 mb-2">
+                                <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <span class="text-xs font-semibold text-emerald-600">참고한 BizGuide</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="(section, idx) in msg.ragSections"
+                                    :key="idx"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700"
+                                >
+                                    {{ section }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                  </div>
               </div>
@@ -146,10 +184,12 @@ const handleKeyEnter = () => {
 
         <!-- Loading Indicator -->
         <div v-if="loading" class="flex justify-start items-center gap-3">
-           <div class="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+           <div class="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
+                  alt="Bear"
+                  class="w-7 h-7 object-contain"
+                />
            </div>
           <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
             <div class="flex gap-1.5">

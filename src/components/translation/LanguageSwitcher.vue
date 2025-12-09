@@ -34,7 +34,8 @@
       >
         <div
           v-if="isSourceOpen"
-          class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+          class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[100]"
+          style="top: 100%;"
         >
           <ul class="py-1">
             <li v-for="lang in languages" :key="`source-${lang.code}`">
@@ -99,7 +100,8 @@
       >
         <div
           v-if="isTargetOpen"
-          class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+          class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[100]"
+          style="top: 100%;"
         >
           <ul class="py-1">
             <li v-for="lang in languages" :key="`target-${lang.code}`">

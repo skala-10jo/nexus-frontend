@@ -69,6 +69,7 @@ function selectLanguage(lang) {
 
 <style scoped>
 .language-selector {
+  position: relative;
   background-color: #FFFFFF;
   border-radius: 1rem;
   padding: 1.5rem;
@@ -150,12 +151,23 @@ function selectLanguage(lang) {
 /* Responsive */
 @media (max-width: 768px) {
   .language-buttons {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
   }
 
   .lang-btn {
-    width: 100%;
-    min-width: auto;
+    width: auto;
+    min-width: 0;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .lang-name {
+    flex: 0 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 </style>

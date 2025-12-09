@@ -8,13 +8,22 @@
       </div>
     </div>
 
-    <div class="flex-1 flex overflow-hidden">
-      <!-- Left Panel: Language Selection -->
-      <div class="w-64 border-r border-gray-200 bg-gray-50 flex flex-col p-6">
-        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Select Languages</h3>
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div class="w-full md:w-64 h-auto md:h-full border-r-0 md:border-r border-b md:border-b-0 border-gray-200 bg-gray-50 flex flex-col p-4 md:p-6 overflow-y-auto md:overflow-visible shrink-0 transition-all duration-300">
+        <div 
+          class="flex items-center justify-between cursor-pointer md:cursor-default mb-4 md:mb-6"
+          @click="toggleLanguagePanel"
+        >
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Languages</h3>
+          <ChevronDownIcon 
+            class="w-5 h-5 text-gray-400 transition-transform duration-200 md:hidden"
+            :class="{ 'rotate-180': isLanguagePanelExpanded }"
+          />
+        </div>
 
-        <!-- Language Buttons (Vertical) -->
-        <div class="flex flex-col gap-2 mb-6">
+        <div :class="[isLanguagePanelExpanded ? 'block' : 'hidden', 'md:block']">
+          <!-- Language Buttons (Vertical) -->
+          <div class="grid grid-cols-2 md:flex md:flex-col gap-2 mb-4 md:mb-6">
           <button
             v-for="lang in languageOptions"
             :key="lang.value"
@@ -54,10 +63,11 @@
           <ExclamationCircleIcon class="w-4 h-4" />
           {{ error }}
         </div>
+        </div>
       </div>
 
       <!-- Right Panel: Messages -->
-      <div class="flex-1 flex flex-col bg-white relative overflow-hidden">
+      <div class="flex-1 flex flex-col bg-white relative overflow-hidden min-h-0">
         <!-- Results Header -->
         <div class="h-14 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-200 bg-white">
           <div class="flex items-center gap-4">
@@ -151,7 +161,7 @@
         </div>
 
         <!-- Microphone Button - 하단 고정 -->
-        <div class="flex-shrink-0 flex justify-center pt-7 pb-14 border-t border-gray-200 bg-white">
+        <div class="flex-shrink-0 flex justify-center pt-7 pb-24 md:pb-14 border-t border-gray-200 bg-white">
           <button
             @click="toggleRecording"
             :disabled="selectedLanguages.length < 2 || selectedLanguages.length > 4"
@@ -190,7 +200,8 @@ import {
   StopIcon,
   TrashIcon,
   ExclamationCircleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/solid'
 
 // 언어 옵션 (BCP-47 코드 + 플래그)
@@ -213,6 +224,13 @@ const languageLabels = {
 
 // 선택된 언어 (기본: 한국어, 영어)
 const selectedLanguages = ref(['ko-KR', 'en-US'])
+
+// 언어 패널 확장 상태 (모바일용)
+const isLanguagePanelExpanded = ref(true)
+
+function toggleLanguagePanel() {
+  isLanguagePanelExpanded.value = !isLanguagePanelExpanded.value
+}
 
 // 결과 컨테이너 참조
 const resultsContainer = ref(null)

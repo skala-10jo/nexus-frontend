@@ -1,8 +1,8 @@
 <template>
   <div ref="containerRef" class="w-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none"
-       style="height: 100%; min-height: 550px;"
+       :style="{ height: '100%', minHeight: minContainerHeight + 'px' }"
        @mousedown="onMouseDown" @touchstart="onTouchStart" @wheel="onWheel">
-    <div class="w-full h-full relative flex items-center justify-center perspective-container" style="min-height: 550px;">
+    <div class="w-full h-full relative flex items-center justify-center perspective-container" :style="{ minHeight: minContainerHeight + 'px' }">
       <div v-for="(item, index) in renderedItems" 
            :key="`${item.originalIndex}-${index}`"
            class="absolute left-1/2 top-1/2 will-change-transform"
@@ -14,7 +14,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, shallowRef } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, shallowRef } from 'vue';
 
 const props = defineProps({
   items: {
@@ -61,6 +61,13 @@ const containerRef = ref(null);
 const activeIndex = ref(0);
 const renderedItems = shallowRef([]);
 let app = null;
+
+// Responsive min-height based on itemWidth (assuming card height is roughly itemWidth * 1.24)
+const minContainerHeight = computed(() => {
+  // For smaller cards, need less container height
+  const estimatedCardHeight = props.itemWidth * 1.24;
+  return Math.max(400, estimatedCardHeight + 50); // Add some padding
+});
 
 function lerp(p1, p2, t) {
   return p1 + (p2 - p1) * t;
@@ -362,6 +369,44 @@ watch(() => props.items, (newItems) => {
     });
   }
 }, { deep: true });
+
+// Watch for itemWidth changes (responsive)
+watch(() => props.itemWidth, (newWidth) => {
+  console.log('CircularGallery itemWidth updated:', newWidth);
+  if (app && containerRef.value) {
+    app.destroy();
+    app = new App(containerRef.value, {
+      items: props.items,
+      bend: props.bend,
+      scrollSpeed: props.scrollSpeed,
+      scrollEase: props.scrollEase,
+      itemWidth: newWidth,
+      gap: props.gap
+    });
+  }
+});
+
+// Watch for gap changes (responsive)
+watch(() => props.gap, (newGap) => {
+  if (app && containerRef.value) {
+    app.destroy();
+    app = new App(containerRef.value, {
+      items: props.items,
+      bend: props.bend,
+      scrollSpeed: props.scrollSpeed,
+      scrollEase: props.scrollEase,
+      itemWidth: props.itemWidth,
+      gap: newGap
+    });
+  }
+});
+
+// Watch for bend changes (responsive)
+watch(() => props.bend, (newBend) => {
+  if (app) {
+    app.config.bend = newBend;
+  }
+});
 </script>
 
 <style scoped>

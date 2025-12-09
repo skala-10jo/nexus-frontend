@@ -43,52 +43,85 @@ const emit = defineEmits([
   'open-category-manager'
 ])
 
-// Local form state (two-way binding)
+// 로컬 폼 상태
 const form = ref({ ...props.modelValue })
 
-// Watch for external changes
+// textarea ref
+const descriptionTextarea = ref(null)
+
+// props → form 동기화 중인지 표시 (재귀 방지용)
+const syncingFromProps = ref(false)
+
+// textarea auto-resize
+const autoResize = () => {
+  const el = descriptionTextarea.value
+  if (!el) return
+
+  el.style.height = 'auto'
+  el.style.overflowY = 'hidden'
+
+  const scrollHeight = el.scrollHeight
+  el.style.height = Math.max(scrollHeight, 80) + 'px'
+
+  // 디버깅 필요 시 주석 해제
+  // console.log('[autoResize]', {
+  //   length: el.value.length,
+  //   scrollHeight,
+  //   clientHeight: el.clientHeight,
+  //   finalHeight: el.style.height
+  // })
+}
+
+// 1) 부모에서 modelValue 변경 시 → 로컬 폼 동기화 + 리사이즈
 watch(
   () => props.modelValue,
   async (newVal) => {
+    syncingFromProps.value = true
     form.value = { ...newVal }
     await nextTick()
     autoResize()
+    syncingFromProps.value = false
   },
-  { deep: true }
+  { deep: true, immediate: true }
 )
 
-// Emit changes back to parent
+// 2) 로컬 폼 변경 시 → 부모로 emit (props 동기화로 인한 변경은 건너뜀)
 watch(
   form,
   (newVal) => {
+    if (syncingFromProps.value) return
     emit('update:modelValue', { ...newVal })
   },
   { deep: true }
 )
 
-// Textarea auto-resize
-const descriptionTextarea = ref(null)
-
-const autoResize = () => {
-  const element = descriptionTextarea.value
-  if (element) {
-    element.style.height = 'auto'
-    element.style.height = element.scrollHeight + 'px'
-  }
-}
-
-// Watch for modal open to resize textarea
+// 3) 모달이 열릴 때마다 textarea 높이 재계산
 watch(
   () => props.show,
   async (newVal) => {
     if (newVal) {
       await nextTick()
       autoResize()
+      // transition, 폰트 로딩 등 오차를 위해 한 번 더
+      setTimeout(() => {
+        autoResize()
+      }, 50)
     }
   }
 )
 
+// 4) 설명 내용이 바뀔 때마다 재계산
+watch(
+  () => form.value.description,
+  async () => {
+    await nextTick()
+    autoResize()
+  }
+)
+
 const handleSubmit = () => {
+  // form 값은 이미 update:modelValue 로 부모에 동기화되고 있으므로
+  // 여기서는 save 트리거만 주면 됨
   emit('save')
 }
 
@@ -107,7 +140,9 @@ const handleClose = () => {
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
     @click.self="handleClose"
   >
-    <div class="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-blue-900/20 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/50 transform transition-all scale-100">
+    <div
+      class="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-blue-900/20 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/50 transform transition-all scale-100"
+    >
       <!-- Modal Header -->
       <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white">
         <h2 class="text-xl font-bold text-gray-900">
@@ -142,8 +177,8 @@ const handleClose = () => {
             <textarea
               ref="descriptionTextarea"
               v-model="form.description"
-              rows="3"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white overflow-hidden"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none bg-gray-50 focus:bg-white"
+              style="min-height: 80px; overflow-y: hidden;"
               placeholder="일정 설명을 입력하세요"
               @input="autoResize"
             ></textarea>
@@ -151,7 +186,9 @@ const handleClose = () => {
 
           <!-- All Day Toggle -->
           <div>
-            <label class="flex items-center p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+            <label
+              class="flex items-center p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+            >
               <input
                 v-model="form.allDay"
                 type="checkbox"

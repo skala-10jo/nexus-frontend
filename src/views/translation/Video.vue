@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50/50">
+  <div class="min-h-full md:h-full flex flex-col bg-gray-50/50 pb-24 md:pb-0 md:overflow-hidden">
     <!-- Header -->
     <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <div class="flex items-center justify-between">
@@ -10,13 +10,14 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-8">
+    <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
       <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Upload Section -->
-        <div v-if="!uploadedVideo" class="flex flex-col gap-6">
+        <div v-if="!uploadedVideo" class="flex flex-col gap-4 md:gap-6">
+          <!-- Upload Area - Compact on Mobile -->
           <div
-            class="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group"
+            class="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 md:p-12 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group"
             :class="{ 'border-blue-500 bg-blue-50/50': isDragOver }"
             @dragover.prevent="isDragOver = true"
             @dragleave.prevent="isDragOver = false"
@@ -30,20 +31,20 @@
               @change="handleFileSelect"
               class="hidden"
             />
-            
-            <div class="flex flex-col items-center gap-4">
-              <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CloudArrowUpIcon class="w-10 h-10 text-blue-600" />
+
+            <div class="flex flex-col items-center gap-3 md:gap-4">
+              <div class="w-14 h-14 md:w-20 md:h-20 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CloudArrowUpIcon class="w-7 h-7 md:w-10 md:h-10 text-blue-600" />
               </div>
               <div>
-                <h3 class="text-xl font-bold text-gray-900">Upload Video</h3>
-                <p class="text-gray-500 mt-1">Drag & drop or click to browse</p>
-                <p class="text-xs text-gray-400 mt-2">MP4, AVI, MOV, MKV (Max 500MB)</p>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900">Upload Video</h3>
+                <p class="text-gray-500 text-sm md:text-base mt-0.5 md:mt-1">Drag & drop or click to browse</p>
+                <p class="text-xs text-gray-400 mt-1 md:mt-2">MP4, AVI, MOV, MKV (Max 500MB)</p>
               </div>
             </div>
 
             <!-- Progress -->
-            <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-8 max-w-md mx-auto">
+            <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-4 md:mt-8 max-w-md mx-auto">
               <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-full bg-blue-600 transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
               </div>
@@ -51,29 +52,133 @@
             </div>
           </div>
 
-          <!-- Language Config -->
-          <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
-              <div class="flex-1 w-full max-w-xs space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Source Language</label>
-                <select v-model="sourceLang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
-                  <option value="ko">Korean</option>
-                  <option value="en">English</option>
-                  <option value="ja">Japanese</option>
-                  <option value="vi">Vietnamese</option>
-                </select>
-              </div>
-              
-              <ArrowRightIcon class="w-6 h-6 text-gray-300 rotate-90 md:rotate-0" />
+          <!-- Language Config - Horizontal Layout -->
+          <div class="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
+            <div class="flex items-end justify-center gap-3 md:gap-8">
+              <!-- Source Language -->
+              <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
+                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Source</label>
+                <div class="relative" ref="sourceDropdownRef">
+                  <button
+                    @click="toggleSourceDropdown"
+                    type="button"
+                    class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
+                    :class="{ 'border-blue-500 ring-2 ring-blue-100': isSourceDropdownOpen }"
+                  >
+                    <div class="flex items-center gap-2 md:gap-3">
+                      <span class="text-lg md:text-xl">{{ getLanguageFlag(sourceLang) }}</span>
+                      <span class="text-gray-900 truncate">{{ getLanguageName(sourceLang) }}</span>
+                    </div>
+                    <ChevronDownIcon
+                      class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
+                      :class="{ 'rotate-180': isSourceDropdownOpen }"
+                    />
+                  </button>
 
-              <div class="flex-1 w-full max-w-xs space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Target Language</label>
-                <select v-model="targetLang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
-                  <option value="en">English</option>
-                  <option value="ko">Korean</option>
-                  <option value="ja">Japanese</option>
-                  <option value="vi">Vietnamese</option>
-                </select>
+                  <!-- Source Dropdown - Opens Upward -->
+                  <Transition
+                    enter-active-class="transition duration-100 ease-out"
+                    enter-from-class="transform scale-95 opacity-0"
+                    enter-to-class="transform scale-100 opacity-100"
+                    leave-active-class="transition duration-75 ease-in"
+                    leave-from-class="transform scale-100 opacity-100"
+                    leave-to-class="transform scale-95 opacity-0"
+                  >
+                    <div
+                      v-if="isSourceDropdownOpen"
+                      class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    >
+                      <ul class="py-1">
+                        <li v-for="lang in languageOptions" :key="`source-${lang.code}`">
+                          <button
+                            @click="selectSourceLanguage(lang.code)"
+                            type="button"
+                            class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
+                            :class="sourceLang === lang.code ? 'bg-blue-50/50' : ''"
+                            :disabled="lang.code === targetLang"
+                          >
+                            <div class="flex items-center gap-2 md:gap-3" :class="lang.code === targetLang ? 'opacity-40' : ''">
+                              <span class="text-lg md:text-xl">{{ lang.flag }}</span>
+                              <span class="font-bold" :class="sourceLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
+                            </div>
+                            <svg v-if="sourceLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+
+              <!-- Swap Button -->
+              <button
+                @click="swapLanguages"
+                type="button"
+                class="pb-2.5 md:pb-3 p-2 rounded-lg hover:bg-blue-50 hover:scale-110 transition-all group"
+                title="Swap Languages"
+              >
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </button>
+
+              <!-- Target Language -->
+              <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
+                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">Target</label>
+                <div class="relative" ref="targetDropdownRef">
+                  <button
+                    @click="toggleTargetDropdown"
+                    type="button"
+                    class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
+                    :class="{ 'border-blue-500 ring-2 ring-blue-100': isTargetDropdownOpen }"
+                  >
+                    <div class="flex items-center gap-2 md:gap-3">
+                      <span class="text-lg md:text-xl">{{ getLanguageFlag(targetLang) }}</span>
+                      <span class="text-gray-900 truncate">{{ getLanguageName(targetLang) }}</span>
+                    </div>
+                    <ChevronDownIcon
+                      class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
+                      :class="{ 'rotate-180': isTargetDropdownOpen }"
+                    />
+                  </button>
+
+                  <!-- Target Dropdown - Opens Upward -->
+                  <Transition
+                    enter-active-class="transition duration-100 ease-out"
+                    enter-from-class="transform scale-95 opacity-0"
+                    enter-to-class="transform scale-100 opacity-100"
+                    leave-active-class="transition duration-75 ease-in"
+                    leave-from-class="transform scale-100 opacity-100"
+                    leave-to-class="transform scale-95 opacity-0"
+                  >
+                    <div
+                      v-if="isTargetDropdownOpen"
+                      class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    >
+                      <ul class="py-1">
+                        <li v-for="lang in languageOptions" :key="`target-${lang.code}`">
+                          <button
+                            @click="selectTargetLanguage(lang.code)"
+                            type="button"
+                            class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
+                            :class="targetLang === lang.code ? 'bg-blue-50/50' : ''"
+                            :disabled="lang.code === sourceLang"
+                          >
+                            <div class="flex items-center gap-2 md:gap-3" :class="lang.code === sourceLang ? 'opacity-40' : ''">
+                              <span class="text-lg md:text-xl">{{ lang.flag }}</span>
+                              <span class="font-bold" :class="targetLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
+                            </div>
+                            <svg v-if="targetLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </Transition>
+                </div>
               </div>
             </div>
           </div>
@@ -170,7 +275,7 @@
           </LanguageSelector>
 
           <!-- Player & Subtitles -->
-          <div v-if="displaySubtitles.length > 0" class="flex flex-col lg:flex-row gap-6 h-[600px]">
+          <div v-if="displaySubtitles.length > 0" class="flex flex-col lg:flex-row gap-6 h-auto lg:h-[600px]">
             <!-- Player -->
             <div class="flex-1 bg-black rounded-2xl overflow-hidden relative group">
               <video
@@ -305,7 +410,6 @@ import {
 import { getUserProjects } from '@/services/projectService'
 import {
   CloudArrowUpIcon,
-  ArrowRightIcon,
   VideoCameraIcon,
   TrashIcon,
   BookOpenIcon,
@@ -330,8 +434,20 @@ const uploadProgress = ref(0)
 const videoUrl = ref(null)
 
 // Language State
-const sourceLang = ref('ko')
-const targetLang = ref('en')
+const sourceLang = ref('en')
+const targetLang = ref('ko')
+
+// Language Dropdown State
+const languageOptions = [
+  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
+  { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' }
+]
+const isSourceDropdownOpen = ref(false)
+const isTargetDropdownOpen = ref(false)
+const sourceDropdownRef = ref(null)
+const targetDropdownRef = ref(null)
 
 // Glossary State
 const glossaryExpanded = ref(false)
@@ -391,6 +507,55 @@ const displaySubtitles = computed(() => {
 })
 
 // Methods
+
+// Language Dropdown Functions
+function getLanguageFlag(code) {
+  return languageOptions.find(l => l.code === code)?.flag || ''
+}
+
+function getLanguageName(code) {
+  return languageOptions.find(l => l.code === code)?.name || code
+}
+
+function toggleSourceDropdown() {
+  isSourceDropdownOpen.value = !isSourceDropdownOpen.value
+  isTargetDropdownOpen.value = false
+}
+
+function toggleTargetDropdown() {
+  isTargetDropdownOpen.value = !isTargetDropdownOpen.value
+  isSourceDropdownOpen.value = false
+}
+
+function selectSourceLanguage(code) {
+  if (code !== targetLang.value) {
+    sourceLang.value = code
+    isSourceDropdownOpen.value = false
+  }
+}
+
+function selectTargetLanguage(code) {
+  if (code !== sourceLang.value) {
+    targetLang.value = code
+    isTargetDropdownOpen.value = false
+  }
+}
+
+function swapLanguages() {
+  const temp = sourceLang.value
+  sourceLang.value = targetLang.value
+  targetLang.value = temp
+}
+
+function handleDropdownClickOutside(event) {
+  if (sourceDropdownRef.value && !sourceDropdownRef.value.contains(event.target)) {
+    isSourceDropdownOpen.value = false
+  }
+  if (targetDropdownRef.value && !targetDropdownRef.value.contains(event.target)) {
+    isTargetDropdownOpen.value = false
+  }
+}
+
 async function loadProjects() {
   try {
     const response = await getUserProjects()
@@ -678,6 +843,7 @@ onMounted(() => {
   loadProjects()
 
   // Close dropdown on outside click
+  document.addEventListener('click', handleDropdownClickOutside)
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.relative')) {
       downloadDropdownOpen.value = false
@@ -686,6 +852,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('click', handleDropdownClickOutside)
   if (videoUrl.value) {
     URL.revokeObjectURL(videoUrl.value)
   }
