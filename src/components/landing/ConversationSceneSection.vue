@@ -1,5 +1,5 @@
 <template>
-  <section class="relative bg-gray-50 pt-48">
+  <section ref="sectionRef" class="relative bg-gray-50 pt-30">
     <div class="max-w-7xl mx-auto px-6">
       <!-- Main Content: 클로바노트 스타일 -->
       <div class="flex">
@@ -9,7 +9,8 @@
             v-for="(scene, index) in scenes"
             :key="index"
             :ref="el => triggerRefs[index] = el"
-            class="h-screen flex items-start pt-32"
+            class="h-screen flex items-start pt-20"
+
             :data-scene="index"
           >
             <div
@@ -30,7 +31,7 @@
               </h3>
 
               <!-- Description -->
-              <p class="text-lg text-gray-600 leading-relaxed mb-8">
+              <p class="text-lg text-gray-600 leading-relaxed mb-8 whitespace-pre-line">
                 {{ scene.description }}
               </p>
 
@@ -50,12 +51,11 @@
 
         <!-- Right: Sticky MockUI 영역 -->
         <div class="w-[55%] relative">
-          <div class="sticky top-24 flex justify-center h-fit">
+          <div class="sticky top-[20vh] flex justify-center h-fit">
             <!-- Scene Components (stacked, one visible) -->
             <div class="relative">
               <template v-for="(component, index) in sceneComponents" :key="index">
                 <div
-                  class="transition-all duration-700 ease-out"
                   :class="getSceneClass(index)"
                   :style="getSceneStyle(index)"
                 >
@@ -87,14 +87,14 @@ const scenes = [
     icon: markRaw(CalendarDaysIcon),
     subtitle: '통합 프로젝트 관리',
     title: '프로젝트 · 일정 관리',
-    description: '프로젝트를 생성하고 문서를 연결하여 일정을 효율적으로 관리하세요. 각 일정마다 "회화 연습" 버튼으로 실무 영어를 준비할 수 있습니다.',
+    description: '프로젝트를 생성하고 문서를 연결하여 일정을 효율적으로 관리하세요.\n각 일정에서 "회화 연습" 버튼을 클릭하면\nAI가 실무 기반 시나리오를 자동으로 생성합니다.',
     route: '/management/schedule'
   },
   {
     icon: markRaw(SparklesIcon),
     subtitle: 'AI 시나리오 생성',
     title: '실무 기반\n시나리오 자동 생성',
-    description: 'AI가 일정과 프로젝트 정보를 분석하여 실제 업무 상황에 맞는 비즈니스 영어 회화 시나리오를 자동으로 생성합니다.',
+    description: '일정과 프로젝트 정보를 분석하여 실제 업무 상황에 맞는\n비즈니스 영어 회화 시나리오를 자동으로 생성합니다.',
     route: '/conversation/scenario'
   },
   {
@@ -114,19 +114,20 @@ const sceneComponents = [
 ]
 
 // State
+const sectionRef = ref(null)
 const currentScene = ref(0)
 const triggerRefs = ref([])
 const sceneRefs = ref([])
+const wasOutOfView = ref(false) // 섹션이 뷰포트 밖에 있었는지 추적
 let observer = null
+let sectionObserver = null
 
-// Get class for scene transition
+// Get class for scene transition (no animation)
 const getSceneClass = (index) => {
   if (index === currentScene.value) {
-    return 'opacity-100 scale-100 z-10'
-  } else if (index < currentScene.value) {
-    return 'opacity-0 scale-95 z-0 pointer-events-none absolute inset-0'
+    return 'visible z-10'
   } else {
-    return 'opacity-0 scale-105 z-0 pointer-events-none absolute inset-0'
+    return 'invisible z-0 pointer-events-none absolute inset-0'
   }
 }
 
@@ -140,20 +141,45 @@ const getSceneStyle = (index) => {
 
 // Watch scene changes to restart animations
 watch(currentScene, (newScene, oldScene) => {
-  if (newScene !== oldScene) {
-    nextTick(() => {
-      const sceneComponent = sceneRefs.value[newScene]
-      if (sceneComponent && sceneComponent.restartAnimation) {
-        sceneComponent.restartAnimation()
-      }
-    })
-  }
+  // 항상 새로운 scene의 애니메이션 재시작
+  nextTick(() => {
+    const sceneComponent = sceneRefs.value[newScene]
+    if (sceneComponent && sceneComponent.restartAnimation) {
+      sceneComponent.restartAnimation()
+    }
+  })
 })
 
 onMounted(() => {
   // nextTick to ensure refs are populated
   nextTick(() => {
-    // Create Intersection Observer
+    // Section Observer: 섹션 전체가 뷰포트를 벗어났다가 다시 들어오면 애니메이션 재시작
+    sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            // 섹션이 뷰포트를 벗어남
+            wasOutOfView.value = true
+          } else if (wasOutOfView.value && entry.isIntersecting) {
+            // 섹션이 다시 뷰포트에 들어옴 - 현재 scene 애니메이션 재시작
+            wasOutOfView.value = false
+            const sceneComponent = sceneRefs.value[currentScene.value]
+            if (sceneComponent && sceneComponent.restartAnimation) {
+              sceneComponent.restartAnimation()
+            }
+          }
+        })
+      },
+      {
+        threshold: 0.1
+      }
+    )
+
+    if (sectionRef.value) {
+      sectionObserver.observe(sectionRef.value)
+    }
+
+    // Create Intersection Observer for individual scenes
     observer = new IntersectionObserver(
       (entries) => {
         // Find the most visible entry
@@ -190,6 +216,9 @@ onMounted(() => {
 onUnmounted(() => {
   if (observer) {
     observer.disconnect()
+  }
+  if (sectionObserver) {
+    sectionObserver.disconnect()
   }
 })
 </script>

@@ -57,7 +57,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <span class="text-xs font-bold text-gray-900 truncate block">{{ project.name }}</span>
-                  <p class="text-[10px] text-gray-400 truncate">{{ project.description }}</p>
+                  <p class="text-[10px] text-gray-400 line-clamp-2">{{ project.description }}</p>
                 </div>
                 <span
                   v-if="getProjectEventCount(project.id) > 0"
@@ -73,25 +73,25 @@
             <div
               v-if="selectedProjectId === project.id && getProjectEventCount(project.id) > 0"
               ref="subListRef"
-              class="ml-5 pl-3 border-l border-gray-200 space-y-1"
+              class="ml-4 pl-2 border-l border-gray-200 space-y-0.5"
               :style="{ opacity: 0 }"
             >
               <div
                 v-for="event in getProjectEvents(project.id)"
                 :key="event.id"
-                class="text-[11px] py-1.5 px-2 rounded hover:bg-gray-50 text-gray-600 flex items-center gap-2 transition-colors group/event"
+                class="text-[10px] py-1 px-1.5 rounded hover:bg-gray-50 text-gray-600 flex items-center gap-1.5 transition-colors group/event"
               >
                 <div
-                  class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  class="w-1 h-1 rounded-full flex-shrink-0"
                   :style="{ backgroundColor: getEventColor(event.color) }"
                 ></div>
-                <span class="font-medium text-gray-400 w-10 flex-shrink-0 tabular-nums">
+                <span class="font-medium text-gray-400 w-8 flex-shrink-0 tabular-nums">
                   {{ formatEventDate(event.startDate) }}
                 </span>
                 <span class="truncate text-gray-700 font-medium flex-1">{{ event.title }}</span>
                 <!-- 회화 연습 버튼 -->
                 <button
-                  class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-semibold transition-colors flex-shrink-0"
+                  class="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 text-[9px] font-semibold transition-colors flex-shrink-0"
                 >
                   회화 연습
                 </button>
@@ -234,8 +234,8 @@
                   ref="descriptionInputRef"
                   :value="typedDescription"
                   readonly
-                  rows="2"
-                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm resize-none bg-gray-50"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm resize-none bg-gray-50 h-[72px]"
                   placeholder="프로젝트 설명"
                 ></textarea>
                 <span
@@ -319,7 +319,7 @@ const initialProjects = [
   { id: 1, name: '베트남 출장 준비', description: '2월 베트남 파트너 미팅', status: 'ACTIVE' }
 ]
 
-const newProject = { id: 2, name: '글로벌 마케팅 캠페인', description: 'Nexus 플랫폼 기반 다국어 콘텐츠 제작 및 현지화 프로젝트. Q1 동남아 5개국 시장 확장.', status: 'ACTIVE' }
+const newProject = { id: 2, name: '글로벌 SaaS 플랫폼 런칭', description: '북미/유럽 시장 진출을 위한 B2B SaaS 플랫폼 현지화 프로젝트입니다. 글로벌 파트너사와의 기술 미팅 및 제품 데모가 예정되어 있습니다.', status: 'ACTIVE' }
 
 const documents = [
   { id: 1, name: '요구사항_정의서_v1.2.pdf' },

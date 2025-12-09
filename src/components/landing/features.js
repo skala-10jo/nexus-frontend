@@ -3,31 +3,13 @@
  */
 export const features = [
   {
-    id: 'glossary',
-    title: '문서 · 전문용어 사전',
-    subtitle: 'AI 기반 전문 용어 추출',
-    description: '문서를 업로드하면 AI가 자동으로 전문 용어를 추출하고 다국어 번역을 제공합니다.',
-    video: '/videos/glossary-demo.mp4',
-    route: '/management/glossary',
-    icon: 'BookOpenIcon'
-  },
-  {
-    id: 'project-schedule',
-    title: '프로젝트 · 일정',
-    subtitle: '통합 프로젝트 관리',
-    description: '프로젝트를 생성하고 문서를 연결하여 일정을 효율적으로 관리할 수 있습니다.',
-    video: '/videos/project-schedule-demo.mp4',
-    route: '/management/schedule',
-    icon: 'CalendarDaysIcon'
-  },
-  {
-    id: 'scenario',
-    title: '시나리오 회화 연습',
-    subtitle: 'AI와 함께하는 비즈니스 회화',
-    description: '실제 업무 상황을 시뮬레이션하며 외국어 회화를 연습할 수 있습니다.',
-    video: '/videos/scenario-demo.mp4',
-    route: '/conversation/scenario',
-    icon: 'ChatBubbleLeftRightIcon'
+    id: 'translation',
+    title: '전문용어 사전 + 프로젝트 문서 기반 번역',
+    subtitle: 'AI 기반 번역',
+    description: '텍스트/음성/영상을 프로젝트에 등록된 전문용어와 문서를 기반으로 정확하게 번역합니다.',
+    video: '/videos/translation-demo.mp4',
+    route: '/translation',
+    icon: 'LanguageIcon'
   },
   {
     id: 'voice-translation',
