@@ -22,7 +22,7 @@ export const features = [
   },
   {
     id: 'scenario',
-    title: '시나리오 회화 연습',
+    title: '실무 시나리오 회화연습',
     subtitle: 'AI와 함께하는 비즈니스 회화',
     description: '실제 업무 상황을 시뮬레이션하며 외국어 회화를 연습할 수 있습니다.',
     video: '/videos/scenario-demo.mp4',

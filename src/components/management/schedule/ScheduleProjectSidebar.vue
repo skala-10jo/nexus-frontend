@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 /**
- * 시나리오 회화 연습 페이지로 이동
+ * 실무 시나리오 회화연습 페이지로 이동
  */
 const goToScenarioPractice = (event) => {
   router.push({
@@ -150,7 +150,7 @@ const getProjectEvents = (projectId, allEvents) => {
             <span class="truncate text-gray-700 font-medium group-hover/event:text-gray-900 flex-1">
               {{ event.title }}
             </span>
-            <!-- 시나리오 회화 연습 버튼 -->
+            <!-- 실무 시나리오 회화연습 버튼 -->
             <button
               class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-semibold transition-colors flex-shrink-0"
               @click.stop="goToScenarioPractice(event)"

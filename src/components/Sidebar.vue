@@ -86,11 +86,11 @@
         </button>
         <div v-show="openMenus.has('conversation') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/conversation/scenario" class="block px-4 py-2 text-sm rounded-xl transition border"
-            :class="isSubActive('/conversation/scenario') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">시나리오
-            회화 연습</router-link>
+            :class="isSubActive('/conversation/scenario') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">실무
+            시나리오 회화연습</router-link>
           <router-link to="/conversation/speaking-tutor" class="block px-4 py-2 text-sm rounded-xl transition border"
             :class="isSubActive('/conversation/speaking-tutor') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">AI
-            스피킹 튜터</router-link>
+            실전 회화 피드백</router-link>
           <router-link to="/conversation/expression" class="block px-4 py-2 text-sm rounded-xl transition border"
             :class="isSubActive('/conversation/expression') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">Biz
             표현 학습</router-link>
@@ -209,13 +209,13 @@
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
             :class="isSubActive('/conversation/scenario') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
             @click="mobileOpenMenu = null">
-            시나리오 회화
+            실무 시나리오 회화연습
           </router-link>
           <router-link to="/conversation/speaking-tutor"
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"
             :class="isSubActive('/conversation/speaking-tutor') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'"
             @click="mobileOpenMenu = null">
-            AI 스피킹 튜터
+            AI 실전 회화 피드백
           </router-link>
           <router-link to="/conversation/expression"
             class="flex-shrink-0 px-4 py-2 text-sm font-medium rounded-full transition-colors"

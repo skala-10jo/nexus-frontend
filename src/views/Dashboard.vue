@@ -492,7 +492,7 @@ const scheduleMessage = computed(() => {
 
   // 일정이 아예 없음
   return {
-    text: '일정을 등록하고 시나리오 회화 연습해보는건 어때요? ',
+    text: '일정을 등록하고 실무 시나리오 회화연습 해보는건 어때요? ',
     hasSchedule: false,
     eventTitle: '',
     link: '/management/schedule'

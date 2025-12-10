@@ -6,7 +6,7 @@
             </div>
             <h2 class="text-xl font-bold text-gray-900 mb-3">회화 피드백 노트</h2>
             <p class="text-gray-500 mb-8">
-                시나리오 회화 연습에서 받은 피드백을 모아볼 수 있는 공간입니다.<br>
+                실무 시나리오 회화연습에서 받은 피드백을 모아볼 수 있는 공간입니다.<br>
                 아직 준비 중인 기능입니다.
             </p>
             <button disabled class="px-6 py-3 bg-gray-100 text-gray-400 rounded-xl font-medium cursor-not-allowed">

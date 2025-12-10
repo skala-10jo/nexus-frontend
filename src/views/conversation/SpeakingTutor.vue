@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-bold text-gray-900">AI 스피킹 튜터</h1>
+            <h1 class="text-2xl font-bold text-gray-900">AI 실전 회화 피드백</h1>
             <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ sessions.length }}</span>
           </div>
           <p class="text-sm text-gray-500 font-medium mt-0.5">실제 대화를 분석하고, AI와 함께 더 나은 표현을 배워보세요</p>
