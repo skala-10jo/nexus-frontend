@@ -1,31 +1,34 @@
 <template>
-  <section id="features" class="py-40 bg-gray-50">
+  <section id="features" class="pb-40 bg-gray-50">
+    <!-- 실시간 회의 AI 피드백 (첫 번째) -->
     <div class="max-w-7xl mx-auto px-6">
-      <!-- Section Title -->
-      <div class="text-center mb-44">
-        <span class="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-          Features
-        </span>
-        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">주요 기능</h2>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          AI 기반의 강력한 번역, 회화, 협업 기능으로 글로벌 비즈니스를 지원합니다
-        </p>
-      </div>
+      <FeatureItem
+        v-if="meetingFeature"
+        :feature="meetingFeature"
+        :reverse="false"
+      />
+    </div>
 
-      <!-- Feature Items -->
-      <div class="space-y-48">
-        <FeatureItem
-          v-for="(feature, index) in features"
-          :key="feature.id"
-          :feature="feature"
-          :reverse="index % 2 === 1"
-        />
-      </div>
+    <!-- 번역 통합 섹션 (실시간 회의와 메일 사이) -->
+    <TranslationFeatureSection />
+
+    <!-- 메일 도우미 (마지막) -->
+    <div class="max-w-7xl mx-auto px-6 mt-32">
+      <FeatureItem
+        v-if="mailFeature"
+        :feature="mailFeature"
+        :reverse="false"
+      />
     </div>
   </section>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { features } from './features'
 import FeatureItem from './FeatureItem.vue'
+import TranslationFeatureSection from './TranslationFeatureSection.vue'
+
+const meetingFeature = computed(() => features.find(f => f.id === 'realtime-meeting'))
+const mailFeature = computed(() => features.find(f => f.id === 'mail'))
 </script>

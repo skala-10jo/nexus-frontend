@@ -262,21 +262,24 @@ export function useRealtimeSTT() {
                 }
               }
 
-              isRecording.value = true
-              isConnected.value = true
-              isConnecting.value = false
+            isRecording.value = true
+            isConnected.value = true
+            isConnecting.value = false
 
-              // 녹음 시간 타이머 시작
-              recordingInterval = setInterval(() => {
-                recordingTime.value++
-              }, 1000)
-            } else {
-              error.value = 'WebSocket 연결이 불안정합니다'
-              isConnecting.value = false
-              cleanup()
-            }
-          }, 200)
-        },
+            // 녹음 시간 타이머 시작
+            recordingInterval = setInterval(() => {
+              recordingTime.value++
+            }, 1000)
+
+            console.log('✅ [STT-Only] Audio streaming started')
+          } else {
+            console.warn('⚠️ [STT-Only] WebSocket not in OPEN state after onConnected')
+            error.value = 'WebSocket 연결에 실패했습니다. 다시 시도해주세요.'
+            isConnecting.value = false
+            cleanup()
+          }
+        }, 200)
+      },
 
         onRecognizing: (message) => {
           // 중간 인식 결과

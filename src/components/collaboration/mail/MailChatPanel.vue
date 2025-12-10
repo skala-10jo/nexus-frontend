@@ -39,53 +39,100 @@ const handleKeyEnter = () => {
 </script>
 
 <template>
-  <transition name="slide-left">
+  <!-- Desktop: slide from right, Mobile: slide from bottom -->
+  <transition name="chat-panel">
     <div
       v-if="show"
-      class="fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl flex flex-col border-l border-gray-100 z-50 font-sans"
+      class="fixed bg-white shadow-2xl flex flex-col z-50 font-sans
+        inset-x-0 bottom-0 h-[85vh] rounded-t-3xl border-t border-gray-200
+        md:inset-x-auto md:top-0 md:right-0 md:bottom-0 md:h-full md:w-[400px] md:border-l md:border-gray-100 md:rounded-none md:border-t-0"
     >
+      <!-- Mobile drag handle -->
+      <div class="md:hidden flex justify-center pt-3 pb-1">
+        <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+      </div>
+
       <!-- Header -->
-      <div class="p-5 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 flex items-center justify-center">
+      <div class="px-4 py-3 md:p-5 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-2 md:gap-3">
+          <div class="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center">
             <img
               src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
               alt="Bear"
-              class="w-10 h-10 object-contain"
+              class="w-8 h-8 md:w-10 md:h-10 object-contain"
             />
           </div>
           <div>
-            <h3 class="font-bold text-gray-900 text-lg leading-tight tracking-tight">AI Assistant</h3>
-            <p class="text-xs text-gray-500 font-medium">메일을 검색하고 초안 작성을 부탁해보세요</p>
+            <h3 class="font-bold text-gray-900 text-base md:text-lg leading-tight tracking-tight">AI Assistant</h3>
+            <p class="text-xs text-gray-500 font-medium hidden md:block">메일을 검색하고 초안 작성을 부탁해보세요</p>
           </div>
         </div>
-        <button 
-          @click="emit('close')" 
+        <button
+          @click="emit('close')"
           class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl active:scale-95"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
       <!-- Messages -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-6 bg-gray-50/50 scroll-smooth">
+      <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-6 bg-gray-50/50 scroll-smooth">
+        <!-- Empty State -->
+        <div v-if="messages.length === 0 && !loading" class="h-full flex flex-col items-center justify-center text-center px-4 md:px-6">
+          <div class="w-16 h-16 md:w-20 md:h-20 mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h4 class="font-bold text-gray-700 mb-2">메일 작성을 도와드릴게요</h4>
+          <p class="text-sm text-gray-500 mb-5">
+            메일 검색, 초안 작성 등<br/>
+            무엇이든 물어보세요!
+          </p>
+          <div class="space-y-2 text-left w-full">
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">이런 것들을 할 수 있어요</p>
+            <div class="space-y-1.5">
+              <button
+                @click="emit('update:inputValue', '최근 받은 메일 중에서 회의 관련 메일 찾아줘')"
+                class="w-full text-left px-3 py-2.5 bg-white rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:bg-blue-50 transition"
+              >
+                <span class="mr-2">🔍</span> 메일 검색하기
+              </button>
+              <button
+                @click="emit('update:inputValue', '회의 일정 조율 요청하는 한국어 메일 초안 작성해줘')"
+                class="w-full text-left px-3 py-2.5 bg-white rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:bg-blue-50 transition"
+              >
+                <span class="mr-2">🇰🇷</span> 비즈니스 한국어 초안 작성
+              </button>
+              <button
+                @click="emit('update:inputValue', '프로젝트 진행 상황 보고하는 영어 메일 초안 작성해줘')"
+                class="w-full text-left px-3 py-2.5 bg-white rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:bg-blue-50 transition"
+              >
+                <span class="mr-2">🇺🇸</span> 비즈니스 영어 초안 작성
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div v-for="(msg, idx) in messages" :key="idx">
           <!-- User Message -->
           <div v-if="msg.role === 'user'" class="flex justify-end">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm px-5 py-3.5 max-w-[85%] shadow-md shadow-blue-500/10 text-[15px] leading-relaxed">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm px-4 md:px-5 py-3 md:py-3.5 max-w-[85%] shadow-md shadow-blue-500/10 text-sm md:text-[15px] leading-relaxed">
               {{ msg.content }}
             </div>
           </div>
 
           <!-- AI Response -->
           <div v-else class="flex justify-start items-start gap-3">
-             <!-- AI Avatar for message -->
-             <div class="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+             <!-- AI Avatar for message (Bear Icon) -->
+             <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
+                  alt="Bear"
+                  class="w-7 h-7 object-contain"
+                />
              </div>
             <div class="bg-white text-gray-800 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[90%] shadow-sm border border-gray-100 text-[15px] leading-relaxed">
               <div v-if="msg.queryType !== 'draft' && msg.queryType !== 'translate'" class="whitespace-pre-wrap">{{ msg.content }}</div>
@@ -105,6 +152,24 @@ const handleKeyEnter = () => {
                             <span class="ml-2 text-gray-900 font-medium">{{ msg.subject }}</span>
                         </div>
                         <div class="text-gray-700 whitespace-pre-wrap font-sans text-sm bg-white p-3 rounded-lg border border-blue-50 shadow-sm">{{ msg.emailDraft }}</div>
+                        <!-- RAG Sections (참고한 BizGuide 섹션) -->
+                        <div v-if="msg.ragSections && msg.ragSections.length > 0" class="mt-3 pt-3 border-t border-blue-100">
+                            <div class="flex items-center gap-1.5 mb-2">
+                                <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <span class="text-xs font-semibold text-blue-600">참고한 BizGuide</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="(section, idx) in msg.ragSections"
+                                    :key="idx"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                                >
+                                    {{ section }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
               </div>
@@ -118,8 +183,26 @@ const handleKeyEnter = () => {
                         </svg>
                         <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Translation</span>
                     </div>
-                    <div class="p-4">
+                    <div class="p-4 space-y-3">
                         <div class="text-gray-700 whitespace-pre-wrap font-sans text-sm bg-white p-3 rounded-lg border border-emerald-50 shadow-sm">{{ msg.translatedEmail }}</div>
+                        <!-- RAG Sections (참고한 BizGuide 섹션) -->
+                        <div v-if="msg.ragSections && msg.ragSections.length > 0" class="mt-3 pt-3 border-t border-emerald-100">
+                            <div class="flex items-center gap-1.5 mb-2">
+                                <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <span class="text-xs font-semibold text-emerald-600">참고한 BizGuide</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="(section, idx) in msg.ragSections"
+                                    :key="idx"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700"
+                                >
+                                    {{ section }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                  </div>
               </div>
@@ -146,10 +229,12 @@ const handleKeyEnter = () => {
 
         <!-- Loading Indicator -->
         <div v-if="loading" class="flex justify-start items-center gap-3">
-           <div class="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+           <div class="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
+                  alt="Bear"
+                  class="w-7 h-7 object-contain"
+                />
            </div>
           <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
             <div class="flex gap-1.5">
@@ -188,16 +273,28 @@ const handleKeyEnter = () => {
 </template>
 
 <style scoped>
-.slide-left-enter-active,
-.slide-left-leave-active {
+/* Chat panel animation */
+.chat-panel-enter-active,
+.chat-panel-leave-active {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-left-enter-from {
-  transform: translateX(100%);
+/* Mobile: slide from bottom */
+.chat-panel-enter-from,
+.chat-panel-leave-to {
+  transform: translateY(100%);
 }
 
-.slide-left-leave-to {
-  transform: translateX(100%);
+/* Desktop: no slide animation (main content margin handles the transition) */
+@media (min-width: 768px) {
+  .chat-panel-enter-active,
+  .chat-panel-leave-active {
+    transition: none;
+  }
+
+  .chat-panel-enter-from,
+  .chat-panel-leave-to {
+    transform: none;
+  }
 }
 </style>

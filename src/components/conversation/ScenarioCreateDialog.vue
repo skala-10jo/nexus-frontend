@@ -53,13 +53,14 @@
                   :key="lang.value"
                   @click="generateOptions.language = lang.value"
                   :class="[
-                    'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all',
+                    'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-1.5',
                     generateOptions.language === lang.value
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-500 hover:text-gray-900'
                   ]"
                 >
-                  {{ lang.label }}
+                  <span class="text-base">{{ lang.flag }}</span>
+                  <span class="hidden sm:inline">{{ lang.label }}</span>
                 </button>
               </div>
             </div>
@@ -75,7 +76,7 @@
                   :class="[
                     'flex-1 py-2.5 rounded-lg text-sm font-bold transition-all',
                     generateOptions.difficulty === diff.value
-                      ? 'bg-white text-gray-900 shadow-sm'
+                      ? diff.activeClass + ' shadow-sm'
                       : 'text-gray-500 hover:text-gray-900'
                   ]"
                 >
@@ -354,17 +355,17 @@ const emit = defineEmits(['close', 'created'])
 
 // Constants
 const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'zh', label: '中文' },
-  { value: 'ja', label: '日本語' },
-  { value: 'vi', label: 'Tiếng Việt' },
-  { value: 'ko', label: '한국어' }
+  { value: 'en', label: 'English', flag: '🇺🇸' },
+  { value: 'zh', label: '中文', flag: '🇨🇳' },
+  { value: 'ja', label: '日本語', flag: '🇯🇵' },
+  { value: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+  { value: 'ko', label: '한국어', flag: '🇰🇷' }
 ]
 
 const difficultyOptions = [
-  { value: 'beginner', label: '초급' },
-  { value: 'intermediate', label: '중급' },
-  { value: 'advanced', label: '고급' }
+  { value: 'beginner', label: '초급', activeClass: 'bg-green-100 text-green-700' },
+  { value: 'intermediate', label: '중급', activeClass: 'bg-yellow-100 text-yellow-700' },
+  { value: 'advanced', label: '고급', activeClass: 'bg-red-100 text-red-700' }
 ]
 
 // Form State

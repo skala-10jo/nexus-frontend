@@ -13,12 +13,15 @@
     </div>
 
     <div class="flex-1 flex overflow-hidden bg-gray-50/50">
-      <div class="w-full h-full overflow-y-auto px-4 py-4 md:px-8 md:py-8 pb-24 md:pb-8">
+      <!-- 모바일에서는 스크롤 허용, 데스크톱(md↑)에서는 숨김 -->
+      <div
+        class="w-full h-full overflow-y-auto md:overflow-hidden
+              px-4 pt-4 pb-16 md:px-8 md:pt-6 md:pb-6">
         <div class="max-w-[1920px] mx-auto">
 
           <!-- Progress Indicator -->
           <div v-if="currentView !== 'selection'"
-            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
+            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 md:p-4 mb-3 md:mb-4">
             <div class="flex items-center gap-4">
               <button @click="handleBackButton" class="flex-shrink-0 text-gray-600 hover:text-gray-800 transition">
                 <ChevronLeftIcon class="w-5 h-5" />
@@ -71,21 +74,37 @@
             @start-session="handleStartSession" />
 
           <!-- View: Pronunciation Practice -->
-          <ExpressionPracticeCard v-else-if="currentView === 'practice'" :expression="currentExpression"
-            :current-index="currentExpressionIndex" :total-count="currentSessionExpressions.length"
-            :practice-completed="practiceCompletedForCurrent" :all-practice-completed="allPracticeCompleted"
-            :is-last-expression="currentExpressionIndex === currentSessionExpressions.length - 1"
-            :tts-loading="ttsLoading" :is-recording="isRecording" :format-meaning="formatMeaning"
-            :highlight-expression="(text) => highlightExpression(text, currentExpression.expression)"
-            @play-tts="playTTS" @start-practice="handleStartPractice" @prev="prevExpression" @next="nextExpression"
-            @go-to-quiz="handleGoToQuiz" />
+          <div v-else-if="currentView === 'practice'" class="relative">
+            <!-- 매칭 사전 계산 로딩 오버레이 -->
+            <div v-if="isPrecomputingMatches" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-2xl">
+              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-3"></div>
+              <p class="text-gray-700 font-medium">예문 하이라이트 준비 중...</p>
+              <p class="text-gray-500 text-sm mt-1">{{ precomputeProgress }}%</p>
+            </div>
+            <ExpressionPracticeCard :expression="currentExpression"
+              :current-index="currentExpressionIndex" :total-count="currentSessionExpressions.length"
+              :practice-completed="practiceCompletedForCurrent" :all-practice-completed="allPracticeCompleted"
+              :is-last-expression="currentExpressionIndex === currentSessionExpressions.length - 1"
+              :tts-loading="ttsLoading" :is-recording="isRecording" :format-meaning="formatMeaning"
+              :highlight-expression="highlightExpression"
+              @play-tts="playTTS" @start-practice="handleStartPractice" @prev="prevExpression" @next="nextExpression"
+              @go-to-quiz="handleGoToQuiz" />
+          </div>
 
           <!-- View: Quiz -->
-          <ExpressionQuizCard v-else-if="currentView === 'quiz'" :question="currentQuizQuestion"
-            :current-index="currentQuizIndex" :total-count="quizQuestions.length" :correct-count="quizCorrectCount"
-            v-model:user-answer="userAnswer" :answer-status="answerStatus" :show-hint="showHint"
-            :is-last-question="currentQuizIndex >= quizQuestions.length - 1" @check-answer="checkAnswer"
-            @next-quiz="nextQuiz" @complete-session="handleCompleteSession" @toggle-hint="showHint = !showHint" />
+          <div v-else-if="currentView === 'quiz'" class="relative">
+            <!-- 퀴즈 생성 로딩 오버레이 -->
+            <div v-if="isGeneratingQuiz" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center">
+              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-3"></div>
+              <p class="text-gray-700 font-medium">퀴즈 생성 중...</p>
+              <p class="text-gray-500 text-sm mt-1">AI가 문제를 분석하고 있습니다</p>
+            </div>
+            <ExpressionQuizCard v-else :question="currentQuizQuestion"
+              :current-index="currentQuizIndex" :total-count="quizQuestions.length" :correct-count="quizCorrectCount"
+              v-model:user-answer="userAnswer" :answer-status="answerStatus" :show-hint="showHint"
+              :is-last-question="currentQuizIndex >= quizQuestions.length - 1" @check-answer="checkAnswer"
+              @next-quiz="nextQuiz" @complete-session="handleCompleteSession" @toggle-hint="showHint = !showHint" />
+          </div>
 
           <!-- Session Complete Modal -->
           <ExpressionCompletionModal :show="showCompletionModal" :session-index="currentSessionIndex"
@@ -143,6 +162,8 @@ const {
   currentExpression,
   allSessionsCompleted,
   hasNextSession,
+  isPrecomputingMatches,
+  precomputeProgress,
   fetchUnits,
   selectChapterDirect,
   startSession,
@@ -178,6 +199,7 @@ const {
   showHint,
   quizCorrectCount,
   showCompletionModal,
+  isGeneratingQuiz,
   currentQuizQuestion,
   goToQuiz,
   checkAnswer,

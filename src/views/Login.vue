@@ -32,14 +32,14 @@
             :to="{ opacity: 1, y: 0, rotateX: 0 }"
             :auto-play="true"
             text-align="center"
-            style="font-family: 'Inter', sans-serif !important; text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);"
+            style="font-family: 'Orbitron', sans-serif !important; text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);"
           />
         </div>
 
         <!-- Slogan with TextType -->
         <div class="w-full flex justify-center">
           <TextType
-            :text="['Collaborate Beyond Language']"
+            :text="['Collaborate Beyond Languages']"
             :typingSpeed="50"
             :pauseDuration="3000"
             :showCursor="true"

@@ -1,22 +1,22 @@
 <template>
-  <!-- 고정 높이 컨테이너 -->
-  <div ref="sectionRef" class="h-[600px] flex flex-col">
-    <!-- Content Area - flex-none으로 고정 -->
+  <!-- Feature Item 컨테이너 -->
+  <div ref="sectionRef" class="py-16">
+    <!-- Content Area -->
     <div
-      class="flex-none flex flex-col lg:flex-row items-center gap-12 lg:gap-16"
+      class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16"
       :class="reverse ? 'lg:flex-row-reverse' : ''"
     >
       <!-- Mock UI -->
       <div
-        class="flex-1 w-full transition-all duration-1000"
+        class="flex-1 w-full max-w-[600px] transition-all duration-1000"
         :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
       >
         <component :is="mockUIComponent" :isVisible="isVisible" />
       </div>
 
-      <!-- Text - sticky로 중앙 고정 -->
+      <!-- Text -->
       <div
-        class="flex-1 lg:sticky lg:top-1/2 lg:-translate-y-1/2 transition-all duration-1000 delay-300"
+        class="flex-1 transition-all duration-1000 delay-300 lg:self-start lg:pt-32"
         :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
       >
         <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
@@ -36,9 +36,6 @@
         </router-link>
       </div>
     </div>
-
-    <!-- Spacer - 완충 영역 (Mock UI가 커지면 줄어듦) -->
-    <div class="flex-1 min-h-[80px]"></div>
   </div>
 </template>
 
@@ -51,7 +48,9 @@ import {
   DocumentTextIcon,
   FilmIcon,
   EnvelopeIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  UsersIcon,
+  LanguageIcon
 } from '@heroicons/vue/24/outline'
 
 // Mock UI components
@@ -62,6 +61,8 @@ import VoiceTranslationMockUI from './mockui/VoiceTranslationMockUI.vue'
 import TextTranslationMockUI from './mockui/TextTranslationMockUI.vue'
 import VideoTranslationMockUI from './mockui/VideoTranslationMockUI.vue'
 import MailMockUI from './mockui/MailMockUI.vue'
+import RealtimeMeetingMockUI from './mockui/RealtimeMeetingMockUI.vue'
+import UnifiedTranslationMockUI from './mockui/UnifiedTranslationMockUI.vue'
 
 const props = defineProps({
   feature: {
@@ -86,7 +87,9 @@ const iconMap = {
   MicrophoneIcon: markRaw(MicrophoneIcon),
   DocumentTextIcon: markRaw(DocumentTextIcon),
   FilmIcon: markRaw(FilmIcon),
-  EnvelopeIcon: markRaw(EnvelopeIcon)
+  EnvelopeIcon: markRaw(EnvelopeIcon),
+  UsersIcon: markRaw(UsersIcon),
+  LanguageIcon: markRaw(LanguageIcon)
 }
 
 // Mock UI mapping
@@ -97,7 +100,9 @@ const mockUIMap = {
   'voice-translation': markRaw(VoiceTranslationMockUI),
   'text-translation': markRaw(TextTranslationMockUI),
   'video-translation': markRaw(VideoTranslationMockUI),
-  mail: markRaw(MailMockUI)
+  mail: markRaw(MailMockUI),
+  'realtime-meeting': markRaw(RealtimeMeetingMockUI),
+  'unified-translation': markRaw(UnifiedTranslationMockUI)
 }
 
 const iconComponent = computed(() => iconMap[props.feature.icon] || BookOpenIcon)
@@ -109,9 +114,8 @@ onMounted(() => {
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          isVisible.value = true
-        }
+        // 뷰포트 진입/이탈 시 isVisible 업데이트
+        isVisible.value = entry.isIntersecting
       })
     },
     { threshold: 0.2, rootMargin: '0px 0px -50px 0px' }

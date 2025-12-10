@@ -149,28 +149,36 @@ export function useMessengerPage() {
     const wsMessages = wsConnection.value.messages
 
     stopMessageWatch = watch(wsMessages, (newMessages) => {
-      console.log('[MessageWatch] WebSocket messages updated:', newMessages?.length)
-
       if (newMessages && newMessages.length > 0) {
         // Process all new messages that aren't in the store yet
         newMessages.forEach(wsMsg => {
           const wsMsgEpoch = parseTimestampToEpoch(wsMsg.timestamp || wsMsg.ts)
 
-          const exists = messages.value.some(m => {
-            // Check exact timestamp match
-            if (m.timestamp === wsMsg.timestamp || m.ts === wsMsg.ts) return true
+          // Find if message already exists (including optimistic messages)
+          const existingIndex = messages.value.findIndex(m => {
+            // Check exact timestamp match (only if both have values)
+            const timestampMatch = (m.timestamp && wsMsg.timestamp && m.timestamp === wsMsg.timestamp) ||
+                                   (m.ts && wsMsg.ts && m.ts === wsMsg.ts)
+            if (timestampMatch) return true
 
             // Check similar timestamp (within 2 seconds) with same text
             const mEpoch = parseTimestampToEpoch(m.timestamp || m.ts)
             if (m.text === wsMsg.text && Math.abs(mEpoch - wsMsgEpoch) < 2) return true
 
+            // Check if this is an optimistic message with same text (within 10 seconds)
+            if (m._optimistic && m.text === wsMsg.text && Math.abs(mEpoch - wsMsgEpoch) < 10) return true
+
             return false
           })
 
-          if (!exists) {
-            console.log('[MessageWatch] Adding new message:', wsMsg.text?.substring(0, 50))
+          if (existingIndex === -1) {
+            // Message doesn't exist, add it
             messages.value.push(wsMsg)
+          } else if (messages.value[existingIndex]._optimistic) {
+            // Replace optimistic message with real server message
+            messages.value[existingIndex] = wsMsg
           }
+          // else: Message already exists (duplicate), skip
         })
       }
     }, { deep: true, immediate: true })
@@ -193,11 +201,30 @@ export function useMessengerPage() {
     setupMessageWatch()
   }
 
-  // Send Message
+  // Send Message (with optimistic UI update)
   const sendSlackMessage = async () => {
     if (!messageText.value.trim() || !selectedChannel.value) {
       return
     }
+
+    const textToSend = messageText.value.trim()
+    // Use seconds (not milliseconds) to match Slack's timestamp format
+    const tempTimestamp = (Date.now() / 1000).toFixed(6) // e.g., "1733750400.123456"
+
+    // Optimistic UI update - show message immediately
+    const optimisticMessage = {
+      text: textToSend,
+      channelId: selectedChannel.value.id,
+      userId: currentUser.value?.id?.toString(),
+      username: currentUser.value?.username || 'Me',
+      timestamp: tempTimestamp,
+      type: 'text',
+      _optimistic: true // Mark as optimistic for potential rollback
+    }
+
+    // Add to messages immediately
+    messages.value.push(optimisticMessage)
+    messageText.value = '' // Clear input immediately for better UX
 
     try {
       // Check WebSocket connection - need to access .value of the ref
@@ -205,19 +232,28 @@ export function useMessengerPage() {
 
       if (isWsConnected) {
         console.log('[SendMessage] Using WebSocket')
-        wsConnection.value.sendMessage(messageText.value)
+        wsConnection.value.sendMessage(textToSend)
       } else {
         // Fallback to REST API
         console.log('[SendMessage] Using REST API (WebSocket not connected)')
         await slackStore.sendMessage(
           selectedChannel.value.id,
-          messageText.value
+          textToSend
         )
       }
 
-      messageText.value = ''
+      // Remove optimistic marker on success (message will be replaced by server response)
+      // We keep the optimistic message as the server will broadcast the real one
+      // The duplicate detection in setupMessageWatch will handle this
+
     } catch (err) {
       console.error('Failed to send message:', err)
+      // Rollback optimistic update on error
+      const index = messages.value.findIndex(m => m.timestamp === tempTimestamp && m._optimistic)
+      if (index !== -1) {
+        messages.value.splice(index, 1)
+      }
+      messageText.value = textToSend // Restore the message text
       alert('메시지 전송에 실패했습니다.')
     }
   }

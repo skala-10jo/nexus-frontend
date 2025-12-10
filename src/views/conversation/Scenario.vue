@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-bold text-gray-900">시나리오 회화 연습</h1>
+            <h1 class="text-2xl font-bold text-gray-900">실무 시나리오 회화연습</h1>
             <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ scenarios.length }}</span>
           </div>
           <p class="text-sm text-gray-500 font-medium mt-0.5">
