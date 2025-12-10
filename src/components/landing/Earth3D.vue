@@ -27,7 +27,7 @@
         <!-- Tagline with TextType Animation -->
         <div class="w-full flex justify-center mb-24 pointer-events-auto">
           <TextType
-            :text="['Collaborate Beyond Language']"
+            :text="['Collaborate Beyond Languages']"
             :typingSpeed="50"
             :pauseDuration="3000"
             :showCursor="true"

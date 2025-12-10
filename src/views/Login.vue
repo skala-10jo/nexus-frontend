@@ -39,7 +39,7 @@
         <!-- Slogan with TextType -->
         <div class="w-full flex justify-center">
           <TextType
-            :text="['Collaborate Beyond Language']"
+            :text="['Collaborate Beyond Languages']"
             :typingSpeed="50"
             :pauseDuration="3000"
             :showCursor="true"
