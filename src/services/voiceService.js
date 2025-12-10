@@ -71,13 +71,17 @@ export async function speechToText(audioFile, language = 'ko-KR') {
  * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백 ({ text, language })
  * @param {Function} callbacks.onError - 에러 콜백
  * @param {Function} callbacks.onEnd - 종료 콜백
+ * @param {Object} options - 추가 옵션
+ * @param {boolean} options.autoSegment - 자동 분절 모드 (기본: false, true면 침묵 감지로 자동 문장 분리)
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
-export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
+export function createSTTOnlyStream(language = 'en-US', callbacks = {}, options = {}) {
   const wsUrl = `${getWebSocketProtocol()}//${getWebSocketHost()}/api/ai/voice/stt-stream`
+  const autoSegment = options.autoSegment || false
 
   console.log('🎤 [STT-Only] WebSocket URL:', wsUrl)
   console.log('🎤 [STT-Only] Language:', language)
+  console.log('🎤 [STT-Only] Auto-segment:', autoSegment)
 
   // 언어가 배열이면 첫 번째 요소 사용 (하위 호환)
   const singleLanguage = Array.isArray(language) ? language[0] : language
@@ -90,7 +94,7 @@ export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
 
   ws.onopen = () => {
     console.log('✅ [STT-Only] WebSocket connected')
-    ws.send(JSON.stringify({ language: singleLanguage }))
+    ws.send(JSON.stringify({ language: singleLanguage, auto_segment: autoSegment }))
 
     if (callbacks.onConnected) {
       callbacks.onConnected()

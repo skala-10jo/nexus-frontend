@@ -65,9 +65,11 @@
           :interim-text="voice.interimText.value"
           :avatar-enabled="voice.avatarEnabled.value"
           :is-avatar-initializing="voice.isAvatarInitializing.value"
+          :stt-mode="voice.sttMode.value"
           @update:user-input="updateUserInput"
           @toggle-input-mode="voice.toggleInputMode"
           @toggle-avatar="voice.toggleAvatar"
+          @toggle-s-t-t-mode="voice.toggleSTTMode"
           @start-recording="handleStartRecording"
           @stop-recording="handleStopRecording"
           @send-message="handleSendMessage"
@@ -169,6 +171,7 @@ const conversation = usePracticeConversation({
   // 음성 모드에서 발음 평가를 위한 오디오 blob 가져오기
   getAudioBlob: () => {
     const blob = voice.lastAudioBlob.value
+    console.log('🔍 [DEBUG] getAudioBlob called, blob:', blob ? `${blob.size} bytes` : 'null')
     // 사용 후 초기화 (한 번만 사용)
     if (blob) {
       voice.lastAudioBlob.value = null
@@ -324,6 +327,17 @@ const handleInputAreaResized = async () => {
 // ============================================
 // Watchers
 // ============================================
+
+/**
+ * TTS 재생 상태 동기화 (에코 방지)
+ * TTS 재생 중에는 STT 인식 결과를 무시하여 스피커 에코 방지
+ */
+watch(
+  () => tts.isSpeaking.value,
+  (isSpeaking) => {
+    voice.setTTSPlaying(isSpeaking)
+  }
+)
 
 /**
  * AI 응답 시 자동 TTS 재생

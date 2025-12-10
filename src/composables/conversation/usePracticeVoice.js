@@ -35,7 +35,9 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
     recordingTime: sttRecordingTime,
     startRecording: startRealtimeSTT,
     stopRecording: stopRealtimeSTT,
-    clearResults: clearSTTResults
+    clearResults: clearSTTResults,
+    setOnAutoRecognized,
+    setTTSPlaying
   } = useRealtimeSTT()
 
   // ============================================
@@ -45,6 +47,9 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
   const isProcessingVoice = ref(false)
   const recognizedText = ref('')
   const lastAudioBlob = ref(null)  // 마지막 녹음된 오디오 (발음 평가용)
+
+  // STT 모드: 'manual' (수동 종료) | 'auto' (자동 분절 - 침묵 감지)
+  const sttMode = ref('manual')
 
   // Avatar
   const avatarEnabled = ref(false)
@@ -101,6 +106,42 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
   }
 
   /**
+   * STT 모드 토글 (수동 ↔ 자동)
+   */
+  const toggleSTTMode = () => {
+    sttMode.value = sttMode.value === 'manual' ? 'auto' : 'manual'
+    console.log(`STT mode changed to: ${sttMode.value}`)
+  }
+
+  /**
+   * 자동 모드에서 인식 완료 시 메시지 전송 (녹음은 계속 유지)
+   * @param {string} text - 인식된 텍스트
+   * @param {Blob|null} audioBlob - 해당 세그먼트의 오디오 Blob (발음 평가용)
+   */
+  const handleAutoRecognized = async (text, audioBlob = null) => {
+    // 인식된 텍스트를 입력에 설정
+    recognizedText.value = text
+    userInput.value = text
+
+    // 오디오 저장 (발음 평가용)
+    if (audioBlob) {
+      lastAudioBlob.value = audioBlob
+    }
+
+    // 녹음은 중지하지 않음! (자동 모드에서는 계속 녹음 유지)
+    // 사용자가 Stop 버튼을 누를 때까지 계속 대화 가능
+
+    // 메시지 전송
+    if (onSendMessage) {
+      await onSendMessage()
+    }
+
+    // 다음 발화를 위해 상태 초기화
+    recognizedText.value = ''
+    clearSTTResults()
+  }
+
+  /**
    * 녹음 시작
    * 시나리오에 지정된 언어로 STT 수행 (언어 감지 없이 단일 언어)
    */
@@ -112,8 +153,19 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
       // 시나리오 언어를 BCP-47 형식으로 변환
       const rawLang = scenario?.value?.language || 'en'
       const language = toBCP47(rawLang)
-      await startRealtimeSTT(language)
-      console.log(`Recording started with language: ${language} (from: ${rawLang})`)
+
+      // STT 모드에 따라 autoSegment 옵션 설정
+      const autoSegment = sttMode.value === 'auto'
+
+      // 자동 모드일 때 콜백 설정
+      if (autoSegment) {
+        setOnAutoRecognized(handleAutoRecognized)
+      } else {
+        setOnAutoRecognized(null)
+      }
+
+      await startRealtimeSTT(language, { autoSegment })
+      console.log(`Recording started with language: ${language} (from: ${rawLang}), autoSegment: ${autoSegment}`)
     } catch (err) {
       console.error('Failed to start recording:', err)
       throw new Error(sttError.value || '마이크 권한을 허용해주세요.')
@@ -180,6 +232,7 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
     isProcessingVoice,
     recognizedText,
     lastAudioBlob,  // 마지막 녹음된 오디오 (발음 평가용)
+    sttMode,        // STT 모드: 'manual' | 'auto'
     avatarEnabled,
     isAvatarInitializing,
     avatarVideoElement,
@@ -193,8 +246,10 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
 
     // Actions
     toggleInputMode,
+    toggleSTTMode,  // STT 모드 토글 (수동 ↔ 자동)
     startRecording,
     stopRecording,
-    toggleAvatar
+    toggleAvatar,
+    setTTSPlaying   // TTS 재생 상태 설정 (에코 방지용)
   }
 }

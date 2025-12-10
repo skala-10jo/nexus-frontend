@@ -42,6 +42,14 @@ export function useRealtimeSTT() {
   let mediaRecorder = null          // MediaRecorder for audio capture
   let audioChunks = []              // 녹음된 오디오 청크
 
+  // 자동 모드용 PCM 버퍼 (세그먼트별 오디오 캡처)
+  let pcmBuffer = []                // PCM 데이터 버퍼 (Int16Array 청크들)
+  let segmentPcmStart = 0           // 현재 세그먼트 시작 위치
+  let isNewSegmentStarted = false   // 새 세그먼트가 시작되었는지 (onRecognizing 최초 감지용)
+
+  // TTS 에코 방지: TTS 재생 중에는 STT 결과 무시
+  let isTTSPlaying = false          // TTS 재생 중 플래그 (외부에서 설정)
+
   /**
    * 전체 인식된 텍스트 (최종 텍스트 + 중간 텍스트)
    */
@@ -51,12 +59,115 @@ export function useRealtimeSTT() {
     return interim ? `${finals} ${interim}`.trim() : finals
   })
 
+  // 자동 분절 모드에서 recognized 이벤트 콜백 (외부에서 설정)
+  let onAutoRecognizedCallback = null
+
+  /**
+   * 자동 분절 모드에서 recognized 이벤트 콜백 설정
+   * @param {Function} callback - 콜백 함수 (text: string, audioBlob: Blob|null) => void
+   */
+  function setOnAutoRecognized(callback) {
+    onAutoRecognizedCallback = callback
+  }
+
+  /**
+   * TTS 재생 상태 설정 (에코 방지용)
+   * TTS 재생 중에는 STT 인식 결과를 무시하여 에코 방지
+   * @param {boolean} isPlaying - TTS 재생 중 여부
+   */
+  function setTTSPlaying(isPlaying) {
+    isTTSPlaying = isPlaying
+    if (isPlaying) {
+      // TTS 시작 시: 현재 세그먼트 상태 리셋
+      isNewSegmentStarted = false
+    } else {
+      // TTS 종료 시: PCM 버퍼 시작점을 현재 위치로 리셋 (에코 오디오 버림)
+      segmentPcmStart = pcmBuffer.length
+      isNewSegmentStarted = false
+    }
+  }
+
+  /**
+   * PCM 데이터를 WAV Blob으로 변환
+   * @param {Int16Array} pcmData - PCM 데이터 (16bit, 16kHz, mono)
+   * @returns {Blob} WAV 형식 Blob
+   */
+  function pcmToWav(pcmData) {
+    const sampleRate = 16000
+    const numChannels = 1
+    const bitsPerSample = 16
+    const byteRate = sampleRate * numChannels * bitsPerSample / 8
+    const blockAlign = numChannels * bitsPerSample / 8
+    const dataSize = pcmData.length * 2 // 16bit = 2 bytes per sample
+
+    const buffer = new ArrayBuffer(44 + dataSize)
+    const view = new DataView(buffer)
+
+    // WAV 헤더 작성
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i))
+      }
+    }
+
+    writeString(0, 'RIFF')
+    view.setUint32(4, 36 + dataSize, true)
+    writeString(8, 'WAVE')
+    writeString(12, 'fmt ')
+    view.setUint32(16, 16, true) // fmt chunk size
+    view.setUint16(20, 1, true)  // PCM format
+    view.setUint16(22, numChannels, true)
+    view.setUint32(24, sampleRate, true)
+    view.setUint32(28, byteRate, true)
+    view.setUint16(32, blockAlign, true)
+    view.setUint16(34, bitsPerSample, true)
+    writeString(36, 'data')
+    view.setUint32(40, dataSize, true)
+
+    // PCM 데이터 복사
+    const pcmView = new Int16Array(buffer, 44)
+    pcmView.set(pcmData)
+
+    return new Blob([buffer], { type: 'audio/wav' })
+  }
+
+  /**
+   * 현재 세그먼트의 PCM 데이터를 WAV로 변환하여 반환
+   * @returns {Blob|null} WAV Blob 또는 null
+   */
+  function captureSegmentAudio() {
+    // 현재 세그먼트의 끝 위치를 먼저 캡처 (호출 시점 기준)
+    const segmentPcmEnd = pcmBuffer.length
+
+    // 현재 세그먼트의 PCM 데이터만 추출 (start ~ end)
+    const segmentPcmChunks = pcmBuffer.slice(segmentPcmStart, segmentPcmEnd)
+
+    if (segmentPcmChunks.length === 0) {
+      return null
+    }
+
+    // 모든 청크를 하나의 Int16Array로 합치기
+    const totalLength = segmentPcmChunks.reduce((sum, chunk) => sum + chunk.length, 0)
+    const combinedPcm = new Int16Array(totalLength)
+    let offset = 0
+    for (const chunk of segmentPcmChunks) {
+      combinedPcm.set(chunk, offset)
+      offset += chunk.length
+    }
+
+    // WAV로 변환
+    return pcmToWav(combinedPcm)
+  }
+
   /**
    * 실시간 STT 녹음 시작
    *
    * @param {string} language - 인식 언어 (BCP-47 코드, 예: 'en-US')
+   * @param {Object} options - 추가 옵션
+   * @param {boolean} options.autoSegment - 자동 분절 모드 (기본: false, true면 침묵 감지로 자동 문장 분리)
    */
-  async function startRecording(language = 'en-US') {
+  async function startRecording(language = 'en-US', options = {}) {
+    const autoSegment = options.autoSegment || false
     if (isRecording.value || isConnecting.value) {
       console.warn('⚠️ Already recording or connecting')
       return
@@ -70,6 +181,9 @@ export function useRealtimeSTT() {
       recordingTime.value = 0
       audioBlob.value = null
       audioChunks = []
+      pcmBuffer = []
+      segmentPcmStart = 0
+      isNewSegmentStarted = false
 
       // 1. 마이크 권한 요청
       audioStream = await navigator.mediaDevices.getUserMedia({
@@ -130,14 +244,21 @@ export function useRealtimeSTT() {
       // 6. WebSocket 연결 (단일 언어 STT 전용 - 번역 없음)
       wsConnection = createSTTOnlyStream(language, {
         onConnected: () => {
-          console.log('✅ [STT-Only] Realtime STT connected')
+          console.log(`✅ [STT-Only] Realtime STT connected (autoSegment: ${autoSegment})`)
 
           setTimeout(() => {
             if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
-              // PCM 데이터 전송 시작
+              // PCM 데이터 전송 시작 + 자동 모드용 버퍼 저장
               audioWorkletNode.port.onmessage = (event) => {
                 if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
                   wsConnection.ws.send(event.data)
+
+                  // 자동 모드: PCM 데이터를 버퍼에 저장 (발음 평가용)
+                  if (autoSegment) {
+                    // ArrayBuffer를 Int16Array로 변환하여 저장
+                    const pcmChunk = new Int16Array(event.data)
+                    pcmBuffer.push(pcmChunk)
+                  }
                 }
               }
 
@@ -160,15 +281,39 @@ export function useRealtimeSTT() {
         onRecognizing: (message) => {
           // 중간 인식 결과
           interimText.value = message.text || ''
+
+          // 자동 분절 모드: 새 세그먼트 시작 감지
+          if (autoSegment && !isNewSegmentStarted) {
+            isNewSegmentStarted = true
+            // 현재 버퍼 위치에서 약 1.5초(24청크) 전으로 시작점 설정
+            const backtrackChunks = 24
+            segmentPcmStart = Math.max(segmentPcmStart, pcmBuffer.length - backtrackChunks)
+          }
         },
 
         onRecognized: (message) => {
-          // 최종 인식 결과 - 번역은 무시하고 인식된 텍스트만 사용
+          // 최종 인식 결과
           const text = message.text?.trim()
           if (text) {
+            // TTS 재생 중에는 에코 방지를 위해 결과 무시
+            if (isTTSPlaying) {
+              segmentPcmStart = pcmBuffer.length
+              isNewSegmentStarted = false
+              return
+            }
+
             finalTexts.value.push(text)
             interimText.value = ''
-            console.log('🎤 Recognized:', text)
+
+            // 자동 분절 모드에서 콜백 호출 (메시지 자동 전송용)
+            if (autoSegment && onAutoRecognizedCallback) {
+              const segmentAudioBlob = captureSegmentAudio()
+              onAutoRecognizedCallback(text, segmentAudioBlob)
+
+              // 다음 세그먼트를 위해 상태 리셋
+              segmentPcmStart = pcmBuffer.length
+              isNewSegmentStarted = false
+            }
           }
         },
 
@@ -181,7 +326,7 @@ export function useRealtimeSTT() {
           console.log('🔚 Realtime STT ended')
           isConnected.value = false
         }
-      })
+      }, { autoSegment })
 
     } catch (err) {
       console.error('❌ Failed to start realtime STT:', err)
@@ -284,6 +429,8 @@ export function useRealtimeSTT() {
 
   /**
    * 결과 초기화
+   * 주의: audioChunks는 여기서 비우지 않음 (녹음이 계속 진행 중일 수 있음)
+   * 자동 모드에서는 captureSegmentAudio()가 청크를 관리함
    */
   function clearResults() {
     interimText.value = ''
@@ -291,7 +438,7 @@ export function useRealtimeSTT() {
     recordingTime.value = 0
     error.value = null
     audioBlob.value = null
-    audioChunks = []
+    // audioChunks는 비우지 않음 - 녹음이 계속 진행 중일 수 있음
   }
 
   // 컴포넌트 언마운트 시 정리
@@ -319,6 +466,8 @@ export function useRealtimeSTT() {
     // 메서드
     startRecording,
     stopRecording,
-    clearResults
+    clearResults,
+    setOnAutoRecognized,  // 자동 분절 모드 콜백 설정
+    setTTSPlaying         // TTS 재생 상태 설정 (에코 방지용)
   }
 }

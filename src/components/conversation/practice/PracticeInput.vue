@@ -10,7 +10,8 @@ import {
   StopIcon,
   PaperAirplaneIcon,
   UserCircleIcon,
-  CommandLineIcon
+  CommandLineIcon,
+  SignalIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -73,6 +74,11 @@ const props = defineProps({
   isAvatarInitializing: {
     type: Boolean,
     default: false
+  },
+  /** STT 모드 ('manual' | 'auto') */
+  sttMode: {
+    type: String,
+    default: 'manual'
   }
 })
 
@@ -82,6 +88,7 @@ const emit = defineEmits([
   'update:userInput',
   'toggleInputMode',
   'toggleAvatar',
+  'toggleSTTMode',
   'startRecording',
   'stopRecording',
   'sendMessage',
@@ -207,6 +214,22 @@ const userInputValue = computed(() => {
         >
           <ArrowPathIcon v-if="isAvatarInitializing" class="w-6 h-6 animate-spin" />
           <UserCircleIcon v-else class="w-6 h-6" />
+        </button>
+
+        <!-- STT Mode Toggle (Voice Mode Only) -->
+        <button
+          v-if="inputMode === 'voice'"
+          @click="emit('toggleSTTMode')"
+          class="p-3 rounded-xl transition-all border"
+          :class="[
+            sttMode === 'auto'
+              ? 'bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100'
+              : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+          ]"
+          :disabled="isRecording"
+          :title="sttMode === 'auto' ? 'Auto Mode (침묵 감지)' : 'Manual Mode (수동 종료)'"
+        >
+          <SignalIcon class="w-6 h-6" />
         </button>
 
         <!-- Input Field (Text Mode) -->
