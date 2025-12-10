@@ -13,12 +13,15 @@
     </div>
 
     <div class="flex-1 flex overflow-hidden bg-gray-50/50">
-      <div class="w-full h-full overflow-y-auto px-4 py-4 md:px-8 md:py-8 pb-24 md:pb-8">
+      <!-- 모바일에서는 스크롤 허용, 데스크톱(md↑)에서는 숨김 -->
+      <div
+        class="w-full h-full overflow-y-auto md:overflow-hidden
+              px-4 pt-4 pb-16 md:px-8 md:pt-6 md:pb-6">
         <div class="max-w-[1920px] mx-auto">
 
           <!-- Progress Indicator -->
           <div v-if="currentView !== 'selection'"
-            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
+            class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 md:p-4 mb-3 md:mb-4">
             <div class="flex items-center gap-4">
               <button @click="handleBackButton" class="flex-shrink-0 text-gray-600 hover:text-gray-800 transition">
                 <ChevronLeftIcon class="w-5 h-5" />
