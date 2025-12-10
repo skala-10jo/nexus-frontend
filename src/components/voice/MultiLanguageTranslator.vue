@@ -22,6 +22,20 @@
         </div>
 
         <div :class="[isLanguagePanelExpanded ? 'block' : 'hidden', 'md:block']">
+          <!-- Project Selector (용어집 적용) -->
+          <div class="mb-6">
+            <ProjectSelector
+              v-model="selectedProjectId"
+              :projects="projects"
+              @change="onProjectChange"
+            />
+            <!-- 용어집 적용 상태 표시 -->
+            <div v-if="selectedProjectId" class="mt-2 flex items-center gap-1.5 text-xs text-green-600">
+              <BookOpenIcon class="w-3.5 h-3.5" />
+              <span class="font-medium">전문용어사전 적용</span>
+            </div>
+          </div>
+
           <!-- Language Buttons (Vertical) -->
           <div class="grid grid-cols-2 md:flex md:flex-col gap-2 mb-4 md:mb-6">
           <button
@@ -195,13 +209,16 @@
 <script setup>
 import { ref, nextTick, watch, onMounted } from 'vue'
 import { useAzureSTT } from '@/composables/useAzureSTT'
+import { projectService } from '@/services/projectService'
+import ProjectSelector from '@/components/translation/ProjectSelector.vue'
 import {
   MicrophoneIcon,
   StopIcon,
   TrashIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  BookOpenIcon
 } from '@heroicons/vue/24/solid'
 
 // 언어 옵션 (BCP-47 코드 + 플래그)
@@ -225,11 +242,37 @@ const languageLabels = {
 // 선택된 언어 (기본: 한국어, 영어)
 const selectedLanguages = ref(['ko-KR', 'en-US'])
 
+// 프로젝트 관련 상태
+const projects = ref([])
+const selectedProjectId = ref(null)
+const isLoadingProjects = ref(false)
+
 // 언어 패널 확장 상태 (모바일용)
 const isLanguagePanelExpanded = ref(true)
 
 function toggleLanguagePanel() {
   isLanguagePanelExpanded.value = !isLanguagePanelExpanded.value
+}
+
+// 프로젝트 목록 로드
+async function loadProjects() {
+  isLoadingProjects.value = true
+  try {
+    const response = await projectService.getAll()
+    projects.value = response.data.data || []
+    console.log('📚 프로젝트 목록 로드:', projects.value.length, '개')
+  } catch (err) {
+    console.error('프로젝트 목록 로드 실패:', err)
+    projects.value = []
+  } finally {
+    isLoadingProjects.value = false
+  }
+}
+
+// 프로젝트 선택 핸들러
+function onProjectChange(projectId) {
+  selectedProjectId.value = projectId
+  console.log('📚 프로젝트 선택:', projectId || 'None (용어집 미사용)')
 }
 
 // 결과 컨테이너 참조
@@ -286,7 +329,8 @@ async function toggleRecording() {
     if (selectedLanguages.value.length < 2) return
 
     try {
-      await startRecording(selectedLanguages.value)
+      // 프로젝트 ID를 전달하여 용어집 적용 여부 결정
+      await startRecording(selectedLanguages.value, selectedProjectId.value)
     } catch (err) {
       console.error('Recording failed:', err)
     }
@@ -302,9 +346,10 @@ function scrollToBottom() {
   })
 }
 
-// 컴포넌트 마운트 시 맨 아래로 스크롤
+// 컴포넌트 마운트 시 초기화
 onMounted(() => {
   scrollToBottom()
+  loadProjects()
 })
 
 // 카드 추가 시 자동 스크롤
