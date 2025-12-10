@@ -89,7 +89,7 @@ const scenes = [
     icon: markRaw(CalendarDaysIcon),
     subtitle: '통합 프로젝트 관리',
     title: '프로젝트 · 일정 관리',
-    description: '프로젝트를 생성하고 문서를 연결하여 일정을 효율적으로 관리하세요.\n각 일정에서 "회화 연습" 버튼을 클릭하면\nAI가 실무 기반 시나리오를 자동으로 생성합니다.',
+    description: '문서, 프로젝트, 일정을 연동하여 효율적으로 관리하세요.',
     route: '/management/schedule'
   },
   {
@@ -103,7 +103,7 @@ const scenes = [
     icon: markRaw(UserCircleIcon),
     subtitle: '1:1 AI 회화',
     title: '아바타와 함께하는\n1:1 회화 연습',
-    description: '생성된 시나리오를 바탕으로 AI 아바타와 영어 회화를 연습하고, 실시간 피드백과 평가를 받아보세요.',
+    description: '생성된 시나리오를 바탕으로 AI 아바타와 영어 회화를 연습하고, \n실시간 피드백과 평가를 받아보세요.',
     route: '/conversation/practice'
   }
 ]

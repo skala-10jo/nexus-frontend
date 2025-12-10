@@ -1,5 +1,5 @@
 <template>
-  <section class="pt-60 pb-48 bg-gray-50">
+  <section id="features" class="pt-60 pb-48 bg-gray-50">
     <div class="max-w-7xl mx-auto px-6">
       <!-- Section Title -->
       <div class="text-center mb-44">
@@ -25,7 +25,7 @@ const glossaryFeature = {
   id: 'glossary',
   title: '문서 · 전문용어 사전',
   subtitle: 'AI 기반 전문 용어 추출',
-  description: '문서를 업로드하면 AI가 자동으로 전문 용어를 추출하고 다국어 번역을 제공합니다.',
+  description: '문서를 업로드하면 AI가 자동으로 전문 용어를 추출하고 다국어로 제공합니다.',
   video: '/videos/glossary-demo.mp4',
   route: '/management/glossary',
   icon: 'BookOpenIcon'

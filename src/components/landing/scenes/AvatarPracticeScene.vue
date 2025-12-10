@@ -334,6 +334,9 @@
 import { ref, watch, onUnmounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 
+// 공유 데이터 import
+import { scenarios } from '../data/scenarioData'
+
 const props = defineProps({
   isActive: {
     type: Boolean,
@@ -349,63 +352,7 @@ const avatarVideoRef = ref(null)
 const firstCardRef = ref(null)
 const startButtonRef = ref(null)
 
-// Scenarios (from ScenarioGenerationScene)
-const scenarios = [
-  {
-    flag: '🇺🇸',
-    difficultyLabel: '중급',
-    difficultyClass: 'bg-amber-100 text-amber-700',
-    title: '프로젝트 요구사항 협의',
-    description: '베트남 파트너와 요구사항 논의',
-    userRole: 'PM',
-    aiRole: '파트너'
-  },
-  {
-    flag: '🇻🇳',
-    difficultyLabel: '초급',
-    difficultyClass: 'bg-emerald-100 text-emerald-700',
-    title: '일정 조율 회의',
-    description: '마일스톤 및 일정 조율',
-    userRole: '개발자',
-    aiRole: 'PM'
-  },
-  {
-    flag: '🇺🇸',
-    difficultyLabel: '고급',
-    difficultyClass: 'bg-rose-100 text-rose-700',
-    title: '기술 스펙 리뷰',
-    description: '상세 기술 사양 검토',
-    userRole: 'Tech Lead',
-    aiRole: 'Engineer'
-  },
-  {
-    flag: '🇯🇵',
-    difficultyLabel: '중급',
-    difficultyClass: 'bg-amber-100 text-amber-700',
-    title: '파트너사 미팅',
-    description: '일본 파트너사와 협력 논의',
-    userRole: 'BD Manager',
-    aiRole: '파트너'
-  },
-  {
-    flag: '🇨🇳',
-    difficultyLabel: '초급',
-    difficultyClass: 'bg-emerald-100 text-emerald-700',
-    title: '제품 데모',
-    description: '신규 기능 시연 및 설명',
-    userRole: '세일즈',
-    aiRole: '고객'
-  },
-  {
-    flag: '🇺🇸',
-    difficultyLabel: '고급',
-    difficultyClass: 'bg-rose-100 text-rose-700',
-    title: '계약 협상 회의',
-    description: '글로벌 계약 조건 협상',
-    userRole: 'Legal',
-    aiRole: '변호사'
-  }
-]
+// scenarios는 scenarioData.js에서 import됨
 
 // Messages
 const messages = [

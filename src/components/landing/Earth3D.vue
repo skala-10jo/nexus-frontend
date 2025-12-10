@@ -7,15 +7,37 @@
     <!-- UI Overlay -->
     <div class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
       <div class="text-center px-6 w-full max-w-4xl mx-auto">
-        <!-- Logo -->
-        <h1 class="text-8xl md:text-9xl font-thin text-white mb-4 tracking-widest font-sans pointer-events-auto" style="font-family: 'Inter', sans-serif; text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);">
-          NexUS
-        </h1>
+        <!-- Logo with SplitText Animation -->
+        <div class="w-full flex justify-center mb-4 pointer-events-auto">
+          <SplitText
+            text="NexUS"
+            class="text-8xl md:text-9xl font-thin text-white tracking-widest"
+            :delay="80"
+            :duration="2.8"
+            ease="power3.out"
+            split-type="chars"
+            :from="{ opacity: 0, y: 50, rotateX: -90 }"
+            :to="{ opacity: 1, y: 0, rotateX: 0 }"
+            :auto-play="true"
+            text-align="center"
+            style="font-family: 'Orbitron', sans-serif !important; text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);"
+          />
+        </div>
 
-        <!-- Tagline -->
-        <p class="text-xl md:text-3xl text-gray-200 mb-24 max-w-3xl mx-auto font-light tracking-wide pointer-events-auto" style="text-shadow: 0 0 20px rgba(0,0,0,0.8);">
-          Collaborate Beyond Language
-        </p>
+        <!-- Tagline with TextType Animation -->
+        <div class="w-full flex justify-center mb-24 pointer-events-auto">
+          <TextType
+            :text="['Collaborate Beyond Language']"
+            :typingSpeed="50"
+            :pauseDuration="3000"
+            :showCursor="true"
+            cursorCharacter="|"
+            :loop="false"
+            :initialDelay="800"
+            class="text-xl md:text-3xl text-gray-200 font-light tracking-wide"
+            style="font-family: 'Inter', sans-serif !important; text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);"
+          />
+        </div>
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row gap-6 justify-center pointer-events-auto mt-12">
@@ -41,6 +63,8 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import SplitText from '@/components/common/effects/SplitText.vue'
+import TextType from '@/components/common/effects/TextType.vue'
 
 const containerRef = ref(null)
 const isLoading = ref(true)
