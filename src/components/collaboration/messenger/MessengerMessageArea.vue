@@ -202,14 +202,16 @@
         <div class="flex gap-2">
           <div class="flex-1 flex flex-col gap-1 md:gap-2">
             <textarea
+              ref="textareaRef"
               :value="messageText"
-              @input="$emit('update:messageText', $event.target.value)"
+              @input="handleTextareaInput"
               @keydown.ctrl.enter.prevent="handleCtrlEnterSend"
               @compositionstart="isComposing = true"
               @compositionend="isComposing = false"
               placeholder="메시지를 입력하세요..."
-              rows="2"
-              class="w-full px-3 md:px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-sm md:text-base"
+              rows="1"
+              class="w-full px-3 md:px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-sm md:text-base overflow-hidden"
+              :style="{ height: textareaHeight + 'px', maxHeight: maxTextareaHeight + 'px', overflowY: textareaHeight >= maxTextareaHeight ? 'auto' : 'hidden' }"
             ></textarea>
             <!-- Hint (hidden on mobile) -->
             <div class="hidden md:flex justify-end">
@@ -273,7 +275,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick, onMounted } from 'vue'
 import { useSlackAgent, SUPPORTED_LANGUAGES } from '@/composables/collaboration/messenger/useSlackAgent'
 
 const props = defineProps({
@@ -330,11 +332,71 @@ const {
 // Check if using temporary language
 const isUsingTemporary = computed(() => temporaryLanguage.value !== null)
 
+// Refs
+const messageContainer = ref(null)
+const textareaRef = ref(null)
+
 // Local state
 const selectedLanguage = ref(activeLanguage.value)
 const translatingMessageId = ref(null)
 const isComposing = ref(false)  // Korean IME composition state
 const showMobileDropdown = ref(false)  // Mobile custom dropdown state
+
+// Textarea auto-resize
+const textareaHeight = ref(44)  // Initial height (approx 1 line)
+const minTextareaHeight = 44
+const maxTextareaHeight = 100  // Approx 3 lines
+
+// Auto-resize textarea based on content
+const adjustTextareaHeight = () => {
+  if (!textareaRef.value) return
+
+  // Reset height to auto to get the correct scrollHeight
+  textareaRef.value.style.height = 'auto'
+  const scrollHeight = textareaRef.value.scrollHeight
+
+  // Clamp between min and max
+  textareaHeight.value = Math.min(Math.max(scrollHeight, minTextareaHeight), maxTextareaHeight)
+  textareaRef.value.style.height = textareaHeight.value + 'px'
+}
+
+// Handle textarea input with auto-resize
+const handleTextareaInput = (event) => {
+  emit('update:messageText', event.target.value)
+  nextTick(() => adjustTextareaHeight())
+}
+
+// Reset textarea height when message is sent
+watch(() => props.messageText, (newVal) => {
+  if (!newVal) {
+    textareaHeight.value = minTextareaHeight
+    if (textareaRef.value) {
+      textareaRef.value.style.height = minTextareaHeight + 'px'
+    }
+  }
+})
+
+// Auto-scroll to bottom
+const scrollToBottom = async () => {
+  await nextTick()
+  if (messageContainer.value) {
+    messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+  }
+}
+
+// Watch for channel changes - scroll to bottom
+watch(() => props.selectedChannel, async (newChannel) => {
+  if (newChannel) {
+    await nextTick()
+    // Small delay to ensure messages are rendered
+    setTimeout(scrollToBottom, 100)
+  }
+})
+
+// Watch for new messages - scroll to bottom
+watch(() => props.messages.length, async () => {
+  await scrollToBottom()
+})
 
 // Computed for current language display
 const getCurrentLanguageFlag = computed(() => {
