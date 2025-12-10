@@ -132,29 +132,31 @@ export function useRealtimeSTT() {
         onConnected: () => {
           console.log('✅ [STT-Only] Realtime STT connected')
 
-          setTimeout(() => {
-            if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
-              // PCM 데이터 전송 시작
-              audioWorkletNode.port.onmessage = (event) => {
-                if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
-                  wsConnection.ws.send(event.data)
-                }
+          // 연결 즉시 상태 확인 (200ms 딜레이 제거 - race condition 방지)
+          if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
+            // PCM 데이터 전송 시작
+            audioWorkletNode.port.onmessage = (event) => {
+              if (wsConnection && wsConnection.ws.readyState === WebSocket.OPEN) {
+                wsConnection.ws.send(event.data)
               }
-
-              isRecording.value = true
-              isConnected.value = true
-              isConnecting.value = false
-
-              // 녹음 시간 타이머 시작
-              recordingInterval = setInterval(() => {
-                recordingTime.value++
-              }, 1000)
-            } else {
-              error.value = 'WebSocket 연결이 불안정합니다'
-              isConnecting.value = false
-              cleanup()
             }
-          }, 200)
+
+            isRecording.value = true
+            isConnected.value = true
+            isConnecting.value = false
+
+            // 녹음 시간 타이머 시작
+            recordingInterval = setInterval(() => {
+              recordingTime.value++
+            }, 1000)
+
+            console.log('✅ [STT-Only] Audio streaming started')
+          } else {
+            console.warn('⚠️ [STT-Only] WebSocket not in OPEN state after onConnected')
+            error.value = 'WebSocket 연결에 실패했습니다. 다시 시도해주세요.'
+            isConnecting.value = false
+            cleanup()
+          }
         },
 
         onRecognizing: (message) => {
