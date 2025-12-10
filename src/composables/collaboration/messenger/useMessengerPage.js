@@ -208,7 +208,8 @@ export function useMessengerPage() {
     }
 
     const textToSend = messageText.value.trim()
-    const tempTimestamp = Date.now().toString() // Temporary timestamp for optimistic message
+    // Use seconds (not milliseconds) to match Slack's timestamp format
+    const tempTimestamp = (Date.now() / 1000).toFixed(6) // e.g., "1733750400.123456"
 
     // Optimistic UI update - show message immediately
     const optimisticMessage = {

@@ -89,13 +89,12 @@
         <div class="lg:col-span-8 flex flex-col gap-4 h-auto md:h-full md:overflow-hidden">
           
           <!-- 2. Small Talk / Scenario Practice -->
-          <!-- Reduced height to 50% to prevent cutting off bottom row -->
-          <div class="h-[400px] md:h-1/2 shrink-0 relative">
+          <div class="h-[400px] md:flex-1 md:min-h-0 relative">
             <SmallTalkChat />
           </div>
 
           <!-- Bottom Row: Performance & Quick Actions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:h-1/2 md:min-h-0 shrink-0">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:flex-1 md:min-h-0">
             <!-- Performance Chart (Biz 표현학습 일일 통계) -->
             <PerformanceChart />
 

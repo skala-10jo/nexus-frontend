@@ -4,6 +4,7 @@
  * Python 백엔드의 Slack Agent API와 통신
  * - 메시지 번역 (SimpleTranslationAgent)
  * - 비즈니스 초안 작성 (BizGuideRAGAgent + SlackDraftAgent)
+ * - 세션 기반 챗봇 (대화 컨텍스트 유지)
  */
 import axios from 'axios'
 
@@ -61,7 +62,40 @@ export async function createDraft(message, language = 'ko', keywords = null) {
   return response.data
 }
 
+/**
+ * Send a chat message (session-based conversation)
+ * Supports:
+ * - Draft creation: Initial message creates a new draft
+ * - Translation: "영어로 번역해줘" translates previous draft
+ * - Refinement: "더 공손하게" refines previous draft
+ *
+ * @param {string} message - User's message
+ * @param {string} sessionId - Session ID (null for new session)
+ * @param {string} language - Default language (ko, en)
+ * @returns {Promise<{session_id, message, draft, action_type, suggestions}>}
+ */
+export async function sendChatMessage(message, sessionId = null, language = 'ko') {
+  const response = await slackAgentAPI.post('/chat', {
+    message,
+    session_id: sessionId,
+    language
+  })
+  return response.data
+}
+
+/**
+ * Delete a chat session
+ * @param {string} sessionId - Session ID to delete
+ * @returns {Promise<{success, message}>}
+ */
+export async function deleteSession(sessionId) {
+  const response = await slackAgentAPI.delete(`/session/${sessionId}`)
+  return response.data
+}
+
 export default {
   translateMessage,
-  createDraft
+  createDraft,
+  sendChatMessage,
+  deleteSession
 }
