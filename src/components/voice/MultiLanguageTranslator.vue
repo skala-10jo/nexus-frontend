@@ -129,19 +129,33 @@
                 :key="card.id"
                 class="message-group bg-white rounded-2xl border border-gray-200 p-6 shadow-sm"
               >
-                <!-- Original Message -->
-                <div class="flex items-center gap-3 mb-3">
-                  <span class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold whitespace-nowrap flex-shrink-0">
+                <!-- Original Message (용어 하이라이트 적용) -->
+                <div class="flex items-start gap-3 mb-3">
+                  <span class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold whitespace-nowrap flex-shrink-0 mt-2.5">
                     {{ getLanguageLabel(card.detectedLang) }}
                   </span>
                   <div class="flex-1">
                     <div class="px-4 py-3 bg-gray-50 rounded-xl text-gray-800 text-sm leading-relaxed">
-                      {{ card.original }}
+                      <TranslatedText
+                        v-if="card.detectedTerms && card.detectedTerms.length > 0"
+                        :text="card.original"
+                        :detected-terms="card.detectedTerms"
+                        @term-click="handleTermClick"
+                      />
+                      <span v-else>{{ card.original }}</span>
                     </div>
                   </div>
-                  <div class="text-xs text-gray-400 flex-shrink-0">
+                  <div class="text-xs text-gray-400 flex-shrink-0 mt-3">
                     {{ formatTime(card.timestamp) }}
                   </div>
+                </div>
+
+                <!-- Detected Terms for this card -->
+                <div v-if="card.detectedTerms && card.detectedTerms.length > 0" class="mb-3">
+                  <DetectedTermsBar
+                    :terms="card.detectedTerms"
+                    @term-click="handleTermClick"
+                  />
                 </div>
 
                 <!-- Translation Messages -->
@@ -204,14 +218,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Term Detail Modal -->
+    <TermDetailModal
+      :term="selectedTerm"
+      @close="selectedTerm = null"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick, watch, onMounted } from 'vue'
+import { ref, nextTick, watch, onMounted, computed } from 'vue'
 import { useAzureSTT } from '@/composables/useAzureSTT'
 import { projectService } from '@/services/projectService'
 import ProjectSelector from '@/components/translation/ProjectSelector.vue'
+import TranslatedText from '@/components/translation/TranslatedText.vue'
+import DetectedTermsBar from '@/components/translation/DetectedTermsBar.vue'
+import TermDetailModal from '@/components/translation/TermDetailModal.vue'
 import {
   MicrophoneIcon,
   StopIcon,
@@ -248,6 +271,9 @@ const projects = ref([])
 const selectedProjectId = ref(null)
 const isLoadingProjects = ref(false)
 const contextInfo = ref(null)  // 문서 수, 용어 수 정보
+
+// 용어 모달 상태
+const selectedTerm = ref(null)
 
 // 언어 패널 확장 상태 (모바일용)
 const isLanguagePanelExpanded = ref(true)
@@ -318,6 +344,32 @@ function formatTime(timestamp) {
   const date = new Date(timestamp)
   return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
+
+// 용어 클릭 핸들러
+function handleTermClick(term) {
+  selectedTerm.value = term
+}
+
+// 전체 탐지된 용어 (모든 카드에서 수집)
+const allDetectedTerms = computed(() => {
+  const terms = []
+  const seenIds = new Set()
+
+  for (const card of translationCards.value) {
+    if (card.detectedTerms && card.detectedTerms.length > 0) {
+      for (const term of card.detectedTerms) {
+        // 중복 제거 (koreanTerm 기준)
+        const key = term.koreanTerm || term.matchedText
+        if (!seenIds.has(key)) {
+          seenIds.add(key)
+          terms.push(term)
+        }
+      }
+    }
+  }
+
+  return terms
+})
 
 // 언어 토글 (최대 4개 제한 - Azure 자동 언어 감지 제한)
 function toggleLanguage(value) {

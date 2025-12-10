@@ -114,6 +114,7 @@ export function useMultiLanguageSTT() {
               original: message.text,
               detectedLang: message.detected_language || 'ko-KR',
               translations: message.translations || [],
+              detectedTerms: message.detected_terms || [],  // 탐지된 전문용어 추가
               timestamp: new Date().toISOString()
             })
 
