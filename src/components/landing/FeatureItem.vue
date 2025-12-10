@@ -16,7 +16,7 @@
 
       <!-- Text -->
       <div
-        class="flex-1 transition-all duration-1000 delay-300"
+        class="flex-1 transition-all duration-1000 delay-300 lg:self-start lg:pt-32"
         :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'"
       >
         <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
