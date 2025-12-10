@@ -33,6 +33,14 @@ function getWebSocketProtocol() {
   return window.location.protocol === 'https:' ? 'wss:' : 'ws:'
 }
 
+// ============================================================
+// WebSocket 연결 안정성 상수
+// ============================================================
+const WS_RECONNECT_MAX_ATTEMPTS = 3           // 최대 재연결 시도 횟수
+const WS_RECONNECT_BASE_DELAY = 1000          // 재연결 기본 딜레이 (1초)
+const WS_HEARTBEAT_INTERVAL = 25000           // Heartbeat 간격 (25초)
+const WS_CONNECTION_TIMEOUT = 10000           // 연결 타임아웃 (10초)
+
 /**
  * STT: 음성 파일을 텍스트로 변환 (POST 업로드)
  *
@@ -64,6 +72,11 @@ export async function speechToText(audioFile, language = 'ko-KR') {
  * 회화연습, Learning Mode 등 번역이 필요 없는 경우 사용합니다.
  * 자동 언어 감지 없이 지정된 단일 언어로만 인식하여 더 빠른 응답을 제공합니다.
  *
+ * 연결 안정성 기능:
+ * - 연결 타임아웃 (10초)
+ * - Heartbeat ping/pong (25초 간격)
+ * - 자동 재연결 (최대 3회, exponential backoff)
+ *
  * @param {string} language - 인식 언어 (BCP-47 코드, 예: "en-US", "ko-KR")
  * @param {Object} callbacks - 이벤트 콜백 함수
  * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
@@ -71,6 +84,7 @@ export async function speechToText(audioFile, language = 'ko-KR') {
  * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백 ({ text, language })
  * @param {Function} callbacks.onError - 에러 콜백
  * @param {Function} callbacks.onEnd - 종료 콜백
+ * @param {Function} callbacks.onReconnecting - 재연결 시도 콜백 (attempt, maxAttempts)
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
 export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
@@ -86,88 +100,191 @@ export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
     console.warn('⚠️ [STT-Only] Array received, using first element:', singleLanguage)
   }
 
-  const ws = new WebSocket(wsUrl)
+  // 연결 상태 관리
+  let reconnectAttempts = 0
+  let heartbeatInterval = null
+  let connectionTimeout = null
+  let isIntentionalClose = false
+  let ws = null
 
-  ws.onopen = () => {
-    console.log('✅ [STT-Only] WebSocket connected')
-    ws.send(JSON.stringify({ language: singleLanguage }))
+  /**
+   * Heartbeat 시작 (연결 유지)
+   */
+  function startHeartbeat() {
+    stopHeartbeat()
+    heartbeatInterval = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({ type: 'ping' }))
+          console.debug('💓 [STT-Only] Heartbeat ping sent')
+        } catch (e) {
+          console.warn('⚠️ [STT-Only] Heartbeat failed:', e.message)
+        }
+      }
+    }, WS_HEARTBEAT_INTERVAL)
+  }
 
-    if (callbacks.onConnected) {
-      callbacks.onConnected()
+  /**
+   * Heartbeat 중지
+   */
+  function stopHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval)
+      heartbeatInterval = null
     }
   }
 
-  ws.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data)
-
-      switch (message.type) {
-        case 'recognizing':
-          if (callbacks.onRecognizing) {
-            callbacks.onRecognizing(message)
-          }
-          break
-
-        case 'recognized':
-          console.log('🎤 [STT-Only] Recognized:', message.text)
-          if (callbacks.onRecognized) {
-            callbacks.onRecognized(message)
-          }
-          break
-
-        case 'error':
-          console.error('❌ [STT-Only] Error:', message.error)
-          if (callbacks.onError) {
-            callbacks.onError(message.error)
-          }
-          break
-
-        case 'end':
-          console.log('🔚 [STT-Only] Stream ended')
-          if (callbacks.onEnd) {
-            callbacks.onEnd()
-          }
-          break
-
-        default:
-          console.warn('[STT-Only] Unknown message type:', message.type)
+  /**
+   * 연결 타임아웃 설정
+   */
+  function setConnectionTimeout() {
+    clearConnectionTimeout()
+    connectionTimeout = setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.CONNECTING) {
+        console.warn('⚠️ [STT-Only] Connection timeout')
+        ws.close()
+        if (callbacks.onError) {
+          callbacks.onError('연결 시간이 초과되었습니다. 네트워크 상태를 확인해주세요.')
+        }
       }
-    } catch (error) {
-      console.error('[STT-Only] Failed to parse message:', error)
+    }, WS_CONNECTION_TIMEOUT)
+  }
+
+  /**
+   * 연결 타임아웃 해제
+   */
+  function clearConnectionTimeout() {
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout)
+      connectionTimeout = null
+    }
+  }
+
+  /**
+   * WebSocket 연결 생성
+   */
+  function createConnection() {
+    ws = new WebSocket(wsUrl)
+    setConnectionTimeout()
+
+    ws.onopen = () => {
+      console.log('✅ [STT-Only] WebSocket connected')
+      clearConnectionTimeout()
+      reconnectAttempts = 0  // 연결 성공 시 재연결 카운터 초기화
+
+      ws.send(JSON.stringify({ language: singleLanguage }))
+      startHeartbeat()
+
+      if (callbacks.onConnected) {
+        callbacks.onConnected()
+      }
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data)
+
+        switch (message.type) {
+          case 'recognizing':
+            if (callbacks.onRecognizing) {
+              callbacks.onRecognizing(message)
+            }
+            break
+
+          case 'recognized':
+            console.log('🎤 [STT-Only] Recognized:', message.text)
+            if (callbacks.onRecognized) {
+              callbacks.onRecognized(message)
+            }
+            break
+
+          case 'pong':
+            console.debug('💓 [STT-Only] Heartbeat pong received')
+            break
+
+          case 'error':
+            console.error('❌ [STT-Only] Error:', message.error)
+            if (callbacks.onError) {
+              callbacks.onError(message.error)
+            }
+            break
+
+          case 'end':
+            console.log('🔚 [STT-Only] Stream ended')
+            if (callbacks.onEnd) {
+              callbacks.onEnd()
+            }
+            break
+
+          default:
+            console.warn('[STT-Only] Unknown message type:', message.type)
+        }
+      } catch (error) {
+        console.error('[STT-Only] Failed to parse message:', error)
+        if (callbacks.onError) {
+          callbacks.onError(error.message)
+        }
+      }
+    }
+
+    ws.onclose = (event) => {
+      console.log(`🔌 [STT-Only] WebSocket disconnected (code: ${event.code}, reason: ${event.reason})`)
+      clearConnectionTimeout()
+      stopHeartbeat()
+
+      // 의도적 종료가 아니고 재연결 가능한 경우
+      if (!isIntentionalClose && reconnectAttempts < WS_RECONNECT_MAX_ATTEMPTS) {
+        const delay = WS_RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts)
+        reconnectAttempts++
+
+        console.log(`🔄 [STT-Only] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${WS_RECONNECT_MAX_ATTEMPTS})`)
+
+        if (callbacks.onReconnecting) {
+          callbacks.onReconnecting(reconnectAttempts, WS_RECONNECT_MAX_ATTEMPTS)
+        }
+
+        setTimeout(() => {
+          if (!isIntentionalClose) {
+            createConnection()
+          }
+        }, delay)
+      } else {
+        if (callbacks.onEnd) {
+          callbacks.onEnd()
+        }
+      }
+    }
+
+    ws.onerror = (error) => {
+      console.error('❌ [STT-Only] WebSocket error:', error)
+      // onerror 후 onclose가 호출되므로 여기서는 재연결 로직 실행 안 함
       if (callbacks.onError) {
-        callbacks.onError(error.message)
+        callbacks.onError('WebSocket 연결 오류가 발생했습니다.')
       }
     }
   }
 
-  ws.onclose = () => {
-    console.log('🔌 [STT-Only] WebSocket disconnected')
-    if (callbacks.onEnd) {
-      callbacks.onEnd()
-    }
-  }
-
-  ws.onerror = (error) => {
-    console.error('❌ [STT-Only] WebSocket error:', error)
-    if (callbacks.onError) {
-      callbacks.onError(error.message || 'WebSocket error')
-    }
-  }
+  // 초기 연결 생성
+  createConnection()
 
   return {
-    ws,
+    get ws() { return ws },
     send(audioChunk) {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(audioChunk)
       } else {
-        console.warn('[STT-Only] WebSocket not open. State:', ws.readyState)
+        console.warn('[STT-Only] WebSocket not open. State:', ws?.readyState)
       }
     },
     close() {
-      if (ws.readyState === WebSocket.OPEN) {
+      isIntentionalClose = true
+      stopHeartbeat()
+      clearConnectionTimeout()
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'end' }))
         setTimeout(() => ws.close(), 100)
-      } else {
+      } else if (ws) {
         ws.close()
       }
     }
@@ -180,6 +297,15 @@ export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
  * 음성번역 페이지에서 사용합니다.
  * 선택한 언어들 중 자동으로 감지하고, 감지된 언어를 제외한 나머지 언어로 번역합니다.
  *
+ * 연결 안정성 기능:
+ * - 연결 타임아웃 (10초)
+ * - Heartbeat ping/pong (25초 간격)
+ * - 자동 재연결 (최대 3회, exponential backoff)
+ *
+ * 전문용어사전 적용:
+ * - projectId를 전달하면 해당 프로젝트에 연결된 문서의 용어집을 후처리로 적용합니다.
+ * - projectId가 없으면 기본 Azure Translator 번역만 수행합니다.
+ *
  * @param {string[]} languages - 인식 언어 배열 (BCP-47 코드, 예: ["ko-KR", "en-US", "ja-JP"])
  * @param {Object} callbacks - 이벤트 콜백 함수
  * @param {Function} callbacks.onConnected - WebSocket 연결 완료 콜백
@@ -187,87 +313,213 @@ export function createSTTOnlyStream(language = 'en-US', callbacks = {}) {
  * @param {Function} callbacks.onRecognized - 최종 인식 결과 콜백 ({ text, detected_language, translations })
  * @param {Function} callbacks.onError - 에러 콜백
  * @param {Function} callbacks.onEnd - 종료 콜백
+ * @param {Function} callbacks.onReconnecting - 재연결 시도 콜백 (attempt, maxAttempts)
+ * @param {string|null} projectId - 프로젝트 ID (용어집 적용, 선택사항)
  * @returns {Object} WebSocket 및 제어 함수 { ws, send, close }
  */
-export function createTranslationStream(languages = ['en-US'], callbacks = {}) {
+export function createTranslationStream(languages = ['en-US'], callbacks = {}, projectId = null) {
   const wsUrl = `${getWebSocketProtocol()}//${getWebSocketHost()}/api/ai/voice/realtime`
   const selectedLanguages = Array.isArray(languages) ? languages : [languages]
 
-  const ws = new WebSocket(wsUrl)
+  console.log('🌐 [Translation] WebSocket URL:', wsUrl)
+  console.log('🌐 [Translation] Selected languages:', selectedLanguages)
+  console.log('🌐 [Translation] Project ID:', projectId || 'None (용어집 미사용)')
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ selected_languages: selectedLanguages }))
+  // 연결 상태 관리
+  let reconnectAttempts = 0
+  let heartbeatInterval = null
+  let connectionTimeout = null
+  let isIntentionalClose = false
+  let ws = null
 
-    if (callbacks.onConnected) {
-      callbacks.onConnected()
+  /**
+   * Heartbeat 시작 (연결 유지)
+   */
+  function startHeartbeat() {
+    stopHeartbeat()
+    heartbeatInterval = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({ type: 'ping' }))
+          console.debug('💓 [Translation] Heartbeat ping sent')
+        } catch (e) {
+          console.warn('⚠️ [Translation] Heartbeat failed:', e.message)
+        }
+      }
+    }, WS_HEARTBEAT_INTERVAL)
+  }
+
+  /**
+   * Heartbeat 중지
+   */
+  function stopHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval)
+      heartbeatInterval = null
     }
   }
 
-  ws.onmessage = (event) => {
-    try {
-      const message = JSON.parse(event.data)
-
-      switch (message.type) {
-        case 'recognizing':
-          if (callbacks.onRecognizing) {
-            callbacks.onRecognizing(message)
-          }
-          break
-
-        case 'recognized':
-          if (callbacks.onRecognized) {
-            callbacks.onRecognized(message)
-          }
-          break
-
-        case 'error':
-          console.error('❌ [Translation] Error:', message.message || message.error)
-          if (callbacks.onError) {
-            callbacks.onError(message.message || message.error)
-          }
-          break
-
-        case 'end':
-          if (callbacks.onEnd) {
-            callbacks.onEnd()
-          }
-          break
-
-        default:
-          break
+  /**
+   * 연결 타임아웃 설정
+   */
+  function setConnectionTimeout() {
+    clearConnectionTimeout()
+    connectionTimeout = setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.CONNECTING) {
+        console.warn('⚠️ [Translation] Connection timeout')
+        ws.close()
+        if (callbacks.onError) {
+          callbacks.onError('연결 시간이 초과되었습니다. 네트워크 상태를 확인해주세요.')
+        }
       }
-    } catch (error) {
-      console.error('[Translation] Failed to parse message:', error)
+    }, WS_CONNECTION_TIMEOUT)
+  }
+
+  /**
+   * 연결 타임아웃 해제
+   */
+  function clearConnectionTimeout() {
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout)
+      connectionTimeout = null
+    }
+  }
+
+  /**
+   * WebSocket 연결 생성
+   */
+  function createConnection() {
+    ws = new WebSocket(wsUrl)
+    setConnectionTimeout()
+
+    ws.onopen = () => {
+      console.log('✅ [Translation] WebSocket connected')
+      clearConnectionTimeout()
+      reconnectAttempts = 0  // 연결 성공 시 재연결 카운터 초기화
+
+      // 세션 초기화 메시지 전송 (언어 + 프로젝트 ID)
+      const initMessage = {
+        selected_languages: selectedLanguages
+      }
+
+      // 프로젝트 ID가 있으면 추가 (용어집 적용)
+      if (projectId) {
+        initMessage.project_id = projectId
+        console.log('📚 [Translation] 용어집 적용 모드: project_id=' + projectId)
+      }
+
+      ws.send(JSON.stringify(initMessage))
+      startHeartbeat()
+
+      if (callbacks.onConnected) {
+        callbacks.onConnected()
+      }
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data)
+
+        switch (message.type) {
+          case 'recognizing':
+            if (callbacks.onRecognizing) {
+              callbacks.onRecognizing(message)
+            }
+            break
+
+          case 'recognized':
+            if (callbacks.onRecognized) {
+              callbacks.onRecognized(message)
+            }
+            break
+
+          case 'pong':
+            console.debug('💓 [Translation] Heartbeat pong received')
+            break
+
+          case 'error':
+            console.error('❌ [Translation] Error:', message.message || message.error)
+            if (callbacks.onError) {
+              callbacks.onError(message.message || message.error)
+            }
+            break
+
+          case 'end':
+            console.log('🔚 [Translation] Stream ended')
+            if (callbacks.onEnd) {
+              callbacks.onEnd()
+            }
+            break
+
+          default:
+            break
+        }
+      } catch (error) {
+        console.error('[Translation] Failed to parse message:', error)
+        if (callbacks.onError) {
+          callbacks.onError(error.message)
+        }
+      }
+    }
+
+    ws.onclose = (event) => {
+      console.log(`🔌 [Translation] WebSocket disconnected (code: ${event.code}, reason: ${event.reason})`)
+      clearConnectionTimeout()
+      stopHeartbeat()
+
+      // 의도적 종료가 아니고 재연결 가능한 경우
+      if (!isIntentionalClose && reconnectAttempts < WS_RECONNECT_MAX_ATTEMPTS) {
+        const delay = WS_RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts)
+        reconnectAttempts++
+
+        console.log(`🔄 [Translation] Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${WS_RECONNECT_MAX_ATTEMPTS})`)
+
+        if (callbacks.onReconnecting) {
+          callbacks.onReconnecting(reconnectAttempts, WS_RECONNECT_MAX_ATTEMPTS)
+        }
+
+        setTimeout(() => {
+          if (!isIntentionalClose) {
+            createConnection()
+          }
+        }, delay)
+      } else {
+        if (callbacks.onEnd) {
+          callbacks.onEnd()
+        }
+      }
+    }
+
+    ws.onerror = (error) => {
+      console.error('❌ [Translation] WebSocket error:', error)
+      // onerror 후 onclose가 호출되므로 여기서는 재연결 로직 실행 안 함
       if (callbacks.onError) {
-        callbacks.onError(error.message)
+        callbacks.onError('WebSocket 연결 오류가 발생했습니다.')
       }
     }
   }
 
-  ws.onclose = () => {
-    if (callbacks.onEnd) {
-      callbacks.onEnd()
-    }
-  }
-
-  ws.onerror = (error) => {
-    if (callbacks.onError) {
-      callbacks.onError(error.message || 'WebSocket error')
-    }
-  }
+  // 초기 연결 생성
+  createConnection()
 
   return {
-    ws,
+    get ws() { return ws },
     send(audioChunk) {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(audioChunk)
+      } else {
+        console.warn('[Translation] WebSocket not open. State:', ws?.readyState)
       }
     },
     close() {
-      if (ws.readyState === WebSocket.OPEN) {
+      isIntentionalClose = true
+      stopHeartbeat()
+      clearConnectionTimeout()
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'end' }))
         setTimeout(() => ws.close(), 100)
-      } else {
+      } else if (ws) {
         ws.close()
       }
     }

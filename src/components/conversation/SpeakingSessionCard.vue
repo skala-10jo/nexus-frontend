@@ -4,12 +4,12 @@
   >
     <!-- Card Header -->
     <div class="flex justify-between items-start mb-3 md:mb-4">
-      <div class="flex gap-2">
-        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide">
-          {{ languageLabel }}
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50 text-lg md:text-xl hover:scale-110 transition-transform">
+          {{ languageFlag }}
         </span>
         <span
-          class="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold"
+          class="h-7 md:h-8 px-2.5 rounded-lg text-[10px] md:text-xs font-bold flex items-center"
           :class="statusClass"
         >
           {{ statusLabel }}
@@ -132,15 +132,23 @@ const statusLabel = computed(() => {
   return labels[props.session.status] || props.session.status
 })
 
-const languageLabel = computed(() => {
-  const labels = {
-    'en-US': 'EN',
-    'en-GB': 'EN',
-    'ko-KR': 'KO',
-    'ja-JP': 'JA',
-    'zh-CN': 'ZH'
+const languageFlag = computed(() => {
+  const flags = {
+    'en-US': '🇺🇸',
+    'en-GB': '🇬🇧',
+    'ko-KR': '🇰🇷',
+    'ja-JP': '🇯🇵',
+    'zh-CN': '🇨🇳',
+    'vi-VN': '🇻🇳',
+    'es-ES': '🇪🇸',
+    'fr-FR': '🇫🇷',
+    'de-DE': '🇩🇪',
+    'pt-BR': '🇧🇷',
+    'ru-RU': '🇷🇺',
+    'th-TH': '🇹🇭',
+    'id-ID': '🇮🇩'
   }
-  return labels[props.session.language] || 'EN'
+  return flags[props.session.language] || '🌐'
 })
 
 const formattedDate = computed(() => {

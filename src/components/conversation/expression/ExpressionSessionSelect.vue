@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-gradient-to-br from-gray-50 to-white rounded-3xl border border-white/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 overflow-hidden relative min-h-[580px] flex flex-col">
+  <div class="min-h-[520px] bg-gradient-to-br from-gray-50 to-white rounded-3xl border border-white/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 md:p-5 overflow-hidden relative flex flex-col">
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6 z-10 relative">
+    <div class="flex items-center gap-3 mb-4 md:mb-6 z-10 relative">
       <div class="flex items-center justify-center w-10 h-10 rounded-2xl bg-white shadow-sm border border-gray-100 text-blue-600">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
@@ -14,7 +14,7 @@
     </div>
 
     <!-- Desktop: Circular Gallery Container -->
-    <div class="hidden md:flex flex-1 w-full relative" style="height: 450px; margin-left: -180px; width: calc(100% + 300px);">
+    <div class="hidden md:flex flex-1 w-full relative" style="height: 360px; margin-left: -180px; width: calc(100% + 300px);">
       <CircularGallery
         :items="sessions"
         :bend="-100"
@@ -32,10 +32,10 @@
             <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80"></div>
 
             <!-- Session Header -->
-            <div class="flex justify-between items-start mb-8">
-              <span class="flex items-center justify-center w-16 h-16 rounded-2xl font-bold text-2xl shadow-inner transition-colors duration-300"
+            <div class="flex justify-between items-start mb-6">
+              <span class="flex items-center justify-center w-14 h-14 rounded-2xl font-bold text-2xl shadow-inner transition-colors duration-300"
                 :class="session.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'">
-                <CheckIcon v-if="session.completed" class="w-8 h-8" />
+                <CheckIcon v-if="session.completed" class="w-7 h-7" />
                 <span v-else>{{ idx + 1 }}</span>
               </span>
               <div class="text-right">
@@ -45,13 +45,13 @@
             </div>
 
             <!-- Expressions Preview -->
-            <div class="flex-1 space-y-4 mb-8 overflow-hidden">
-              <div class="flex items-center gap-3 text-base text-gray-600" v-for="(expr, exprIdx) in session.expressions.slice(0, 5)" :key="exprIdx">
+            <div class="flex-1 space-y-3 mb-6 overflow-hidden">
+              <div class="flex items-center gap-3 text-base text-gray-600" v-for="(expr, exprIdx) in session.expressions.slice(0, 4)" :key="exprIdx">
                 <div class="w-2 h-2 rounded-full bg-blue-300 flex-shrink-0"></div>
                 <p class="truncate font-medium">{{ expr.expression }}</p>
               </div>
-              <p v-if="session.expressions.length > 5" class="text-sm text-gray-400 pl-5 pt-2">
-                + {{ session.expressions.length - 5 }}개 더보기
+              <p v-if="session.expressions.length > 4" class="text-sm text-gray-400 pl-5 pt-1">
+                + {{ session.expressions.length - 4 }}개 더보기
               </p>
             </div>
 

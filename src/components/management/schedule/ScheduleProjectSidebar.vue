@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 /**
- * 시나리오 회화 연습 페이지로 이동
+ * 실무 시나리오 회화연습 페이지로 이동
  */
 const goToScenarioPractice = (event) => {
   router.push({
@@ -59,7 +59,7 @@ const getProjectEvents = (projectId, allEvents) => {
 </script>
 
 <template>
-  <div class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
+  <div class="w-full md:w-1/4 md:min-w-[280px] md:max-w-[400px] flex-shrink-0 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-200/50 overflow-hidden backdrop-blur-sm">
     <!-- Header -->
     <div class="p-5 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
@@ -150,7 +150,7 @@ const getProjectEvents = (projectId, allEvents) => {
             <span class="truncate text-gray-700 font-medium group-hover/event:text-gray-900 flex-1">
               {{ event.title }}
             </span>
-            <!-- 시나리오 회화 연습 버튼 -->
+            <!-- 실무 시나리오 회화연습 버튼 -->
             <button
               class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-semibold transition-colors flex-shrink-0"
               @click.stop="goToScenarioPractice(event)"

@@ -1,7 +1,7 @@
 /**
  * Learning Mode 음성 녹음 및 발음 평가 Composable
  *
- * AI 스피킹 튜터의 학습모드에서 사용자의 발음을 녹음하고
+ * AI 실전 회화 피드백의 학습모드에서 사용자의 발음을 녹음하고
  * Azure Speech Service를 통해 발음 평가를 수행합니다.
  *
  * Features:

@@ -45,6 +45,47 @@ aiApi.interceptors.response.use(
 )
 
 /**
+ * 영상 목록 조회 (Java Backend)
+ *
+ * @param {number} page - 페이지 번호 (0부터 시작)
+ * @param {number} size - 페이지 크기
+ * @returns {Promise<Object>} 페이징된 영상 목록
+ */
+export async function getVideos(page = 0, size = 20) {
+  try {
+    const response = await api.get('/videos', {
+      params: {
+        page,
+        size,
+        sortBy: 'uploadDate',
+        sortOrder: 'desc'
+      }
+    })
+
+    return response.data
+  } catch (error) {
+    console.error('Video list fetch error:', error)
+    throw error
+  }
+}
+
+/**
+ * 영상 삭제 (Java Backend)
+ *
+ * @param {string} videoId - 영상 ID (UUID)
+ * @returns {Promise<Object>} 삭제 결과
+ */
+export async function deleteVideo(videoId) {
+  try {
+    const response = await api.delete(`/videos/${videoId}`)
+    return response.data
+  } catch (error) {
+    console.error('Video delete error:', error)
+    throw error
+  }
+}
+
+/**
  * 영상 파일 업로드 (Java Backend)
  *
  * @param {FormData} formData - 영상 파일 및 메타데이터
@@ -111,21 +152,21 @@ export async function extractSubtitles({ videoDocumentId, sourceLanguage }) {
  *
  * @param {Object} params - 번역 요청 파라미터
  * @param {string} params.videoDocumentId - 영상 문서 ID (UUID)
- * @param {string[]} params.documentIds - 프로젝트 문서 ID 배열 (컨텍스트)
+ * @param {string} params.projectId - 프로젝트 ID (용어집 컨텍스트) - Text.vue 방식과 동일
  * @param {string} params.sourceLanguage - 원본 언어
  * @param {string} params.targetLanguage - 목표 언어
  * @returns {Promise<Object>} 번역된 자막 정보
  */
 export async function translateSubtitles({
   videoDocumentId,
-  documentIds,
+  projectId,
   sourceLanguage,
   targetLanguage
 }) {
   try {
     const response = await aiApi.post('/api/ai/video/translate', {
-      video_file_id: videoDocumentId,  // Changed from video_document_id
-      document_ids: documentIds || [],
+      video_file_id: videoDocumentId,
+      project_id: projectId || null,  // Text.vue 방식: projectId로 용어집 자동 조회
       source_language: sourceLanguage,
       target_language: targetLanguage
     })
@@ -235,6 +276,8 @@ export async function updateSubtitle({ subtitleId, text }) {
 }
 
 export default {
+  getVideos,
+  deleteVideo,
   uploadVideo,
   extractSubtitles,
   translateSubtitles,
