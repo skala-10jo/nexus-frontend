@@ -39,31 +39,39 @@ const handleKeyEnter = () => {
 </script>
 
 <template>
-  <transition name="slide-left">
+  <!-- Desktop: slide from right, Mobile: slide from bottom -->
+  <transition name="chat-panel">
     <div
       v-if="show"
-      class="fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl flex flex-col border-l border-gray-100 z-50 font-sans"
+      class="fixed bg-white shadow-2xl flex flex-col z-50 font-sans
+        inset-x-0 bottom-0 h-[85vh] rounded-t-3xl border-t border-gray-200
+        md:inset-x-auto md:top-0 md:right-0 md:bottom-0 md:h-full md:w-[400px] md:border-l md:border-gray-100 md:rounded-none md:border-t-0"
     >
+      <!-- Mobile drag handle -->
+      <div class="md:hidden flex justify-center pt-3 pb-1">
+        <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+      </div>
+
       <!-- Header -->
-      <div class="p-5 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 flex items-center justify-center">
+      <div class="px-4 py-3 md:p-5 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
+        <div class="flex items-center gap-2 md:gap-3">
+          <div class="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center">
             <img
               src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Bear.png"
               alt="Bear"
-              class="w-10 h-10 object-contain"
+              class="w-8 h-8 md:w-10 md:h-10 object-contain"
             />
           </div>
           <div>
-            <h3 class="font-bold text-gray-900 text-lg leading-tight tracking-tight">AI Assistant</h3>
-            <p class="text-xs text-gray-500 font-medium">메일을 검색하고 초안 작성을 부탁해보세요</p>
+            <h3 class="font-bold text-gray-900 text-base md:text-lg leading-tight tracking-tight">AI Assistant</h3>
+            <p class="text-xs text-gray-500 font-medium hidden md:block">메일을 검색하고 초안 작성을 부탁해보세요</p>
           </div>
         </div>
-        <button 
-          @click="emit('close')" 
+        <button
+          @click="emit('close')"
           class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl active:scale-95"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -228,16 +236,28 @@ const handleKeyEnter = () => {
 </template>
 
 <style scoped>
-.slide-left-enter-active,
-.slide-left-leave-active {
+/* Chat panel animation */
+.chat-panel-enter-active,
+.chat-panel-leave-active {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-left-enter-from {
-  transform: translateX(100%);
+/* Mobile: slide from bottom */
+.chat-panel-enter-from,
+.chat-panel-leave-to {
+  transform: translateY(100%);
 }
 
-.slide-left-leave-to {
-  transform: translateX(100%);
+/* Desktop: no slide animation (main content margin handles the transition) */
+@media (min-width: 768px) {
+  .chat-panel-enter-active,
+  .chat-panel-leave-active {
+    transition: none;
+  }
+
+  .chat-panel-enter-from,
+  .chat-panel-leave-to {
+    transform: none;
+  }
 }
 </style>
