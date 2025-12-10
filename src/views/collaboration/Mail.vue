@@ -2,8 +2,8 @@
   <div class="flex h-full overflow-hidden relative">
     <!-- Main Content Area -->
     <div
-      class="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300"
-      :style="{ marginRight: showChatPanel ? '400px' : '0' }"
+      class="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300 pb-20 md:pb-0"
+      :class="{ 'md:mr-[400px]': showChatPanel }"
     >
       <!-- Header -->
       <MailHeader
@@ -83,10 +83,10 @@
     <button
       v-if="!showChatPanel"
       @click="showChatPanel = true"
-      class="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all flex items-center justify-center z-40 active:scale-95"
+      class="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all flex items-center justify-center z-40 active:scale-95"
       title="AI Mail Agent"
     >
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
       </svg>
     </button>

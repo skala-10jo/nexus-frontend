@@ -6,19 +6,46 @@
       @create="openCreateModal"
     />
 
-    <div class="flex-1 flex min-h-0 px-6 pt-4 pb-12 overflow-hidden gap-6">
+    <!-- Mobile Tabs -->
+    <div class="md:hidden flex border-b border-gray-200 bg-white">
+      <button
+        @click="switchTab('projects')"
+        class="flex-1 py-3 text-sm font-bold text-center border-b-2 transition-colors"
+        :class="activeTab === 'projects' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+      >
+        Projects
+      </button>
+      <button
+        @click="switchTab('schedule')"
+        class="flex-1 py-3 text-sm font-bold text-center border-b-2 transition-colors"
+        :class="activeTab === 'schedule' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
+      >
+        Schedule
+      </button>
+    </div>
+
+    <div class="flex-1 flex flex-col md:flex-row min-h-0 px-4 md:px-6 pt-4 pb-24 md:pb-12 overflow-hidden gap-4 md:gap-6">
       <!-- Left Sidebar: Project List -->
-      <ScheduleProjectSidebar
-        :projects="projectsComposable.projects.value"
-        :selected-project-id="projectsComposable.selectedProjectId.value"
-        :all-events="eventsComposable.allEvents.value"
-        @select-project="projectsComposable.selectProject"
-        @create-project="projectsComposable.openCreateProject"
-        @event-click="handleEventClick"
-      />
+      <div 
+        class="w-full md:w-80 flex-shrink-0 flex flex-col h-full"
+        :class="{'hidden md:flex': activeTab !== 'projects'}"
+      >
+        <ScheduleProjectSidebar
+          :projects="projectsComposable.projects.value"
+          :selected-project-id="projectsComposable.selectedProjectId.value"
+          :all-events="eventsComposable.allEvents.value"
+          @select-project="handleProjectSelect"
+          @create-project="projectsComposable.openCreateProject"
+          @event-click="handleEventClick"
+          class="h-full"
+        />
+      </div>
 
       <!-- Right Content: Calendar, Project Detail, or Project Edit -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div 
+        class="flex-1 flex flex-col min-w-0 h-full"
+        :class="{'hidden md:flex': activeTab !== 'schedule'}"
+      >
         <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] border border-white/60 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 flex flex-col relative overflow-hidden">
 
           <!-- Project Edit View -->
@@ -94,6 +121,7 @@
  * - components: UI 컴포넌트 분리
  */
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import FullCalendar from '@fullcalendar/vue3'
 
 // Components
@@ -130,6 +158,23 @@ const showModal = ref(false)
 const showCategoryManager = ref(false)
 const fullCalendarRef = ref(null)
 
+const route = useRoute()
+const router = useRouter()
+const activeTab = ref('projects') // 'projects' | 'schedule'
+
+function switchTab(tab) {
+  activeTab.value = tab
+  router.replace({ query: { ...route.query, tab } })
+}
+
+function handleProjectSelect(project) {
+  projectsComposable.selectProject(project)
+  // 모바일에서는 프로젝트 선택 시 스케줄 탭(상세 보기)으로 이동
+  if (window.innerWidth < 768) {
+    switchTab('schedule')
+  }
+}
+
 // ============================================
 // Calendar Options
 // ============================================
@@ -139,7 +184,8 @@ const calendarOptions = computed(() =>
     onDateSelect: handleDateSelect,
     onEventClick: handleEventClick,
     onEventDrop: handleEventDrop,
-    onEventResize: handleEventResize
+    onEventResize: handleEventResize,
+    onCreateClick: openCreateModal
   })
 )
 
@@ -329,6 +375,19 @@ watch(
       refreshCalendar()
     }
   }
+)
+
+// 탭 상태 동기화
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab === 'schedule' || newTab === 'projects') {
+      activeTab.value = newTab
+    } else {
+      activeTab.value = 'projects'
+    }
+  },
+  { immediate: true }
 )
 </script>
 
@@ -541,5 +600,98 @@ watch(
 /* Fix for drag mirror positioning */
 :deep(.fc-event-dragging) {
   z-index: 9999 !important;
+}
+
+/* Custom Add Event Button - Desktop: hide, Mobile: show */
+:deep(.fc-addEvent-button) {
+  display: none !important;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  :deep(.fc-header-toolbar) {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Move title (year/month) to top */
+  :deep(.fc-toolbar-chunk:nth-child(2)) {
+    order: -1;
+  }
+
+  :deep(.fc-toolbar-title) {
+    font-size: 1.25rem;
+  }
+
+  :deep(.fc-button) {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  :deep(.fc-daygrid-day-number) {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    padding: 4px;
+  }
+
+  :deep(.fc-col-header-cell-cushion) {
+    font-size: 0.7rem;
+    padding: 8px 0;
+  }
+
+  /* Mobile: Compact events to fit without scroll */
+  :deep(.fc-event) {
+    font-size: 0.6rem !important;
+    padding: 1px 3px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1px !important;
+  }
+
+  :deep(.fc-event-title) {
+    font-size: 0.6rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :deep(.fc-daygrid-event) {
+    margin-top: 1px !important;
+  }
+
+  :deep(.fc-daygrid-day-frame) {
+    padding: 2px !important;
+  }
+
+  :deep(.fc-daygrid-more-link) {
+    font-size: 0.55rem;
+    font-weight: 600;
+  }
+
+  /* Prevent scroll - fit content in view */
+  :deep(.fc-scroller) {
+    overflow: hidden !important;
+  }
+
+  :deep(.fc-scroller-liquid-absolute) {
+    overflow: hidden !important;
+  }
+
+  /* Mobile: Show add event button with special styling */
+  :deep(.fc-addEvent-button) {
+    display: inline-flex !important;
+    background-color: #111827 !important;
+    border-color: #111827 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  :deep(.fc-addEvent-button:hover) {
+    background-color: #1f2937 !important;
+    border-color: #1f2937 !important;
+    transform: translateY(-1px);
+  }
 }
 </style>

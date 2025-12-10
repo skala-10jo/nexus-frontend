@@ -30,11 +30,11 @@ const emit = defineEmits([
       </div>
       <button
         :disabled="loading"
-        class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="hidden md:flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
         @click="emit('create')"
       >
         <PlusIcon class="w-5 h-5" />
-        일정 추가
+        <span>추가</span>
       </button>
     </div>
   </div>

@@ -1,6 +1,85 @@
 <template>
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="max-h-[60vh] overflow-y-auto">
+  <div class="bg-white rounded-xl md:rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- Mobile: Card List View -->
+    <div class="md:hidden">
+      <!-- Select All Header -->
+      <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            :checked="isAllSelected"
+            @change="$emit('toggle-select-all')"
+            class="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+          />
+          <span class="text-sm font-medium text-gray-700">전체 선택</span>
+        </label>
+        <span class="text-xs text-gray-500">{{ mistakes.length }}개 항목</span>
+      </div>
+
+      <!-- Card List -->
+      <div class="divide-y divide-gray-100 max-h-[calc(100vh-20rem)] overflow-y-auto">
+        <div
+          v-for="mistake in mistakes"
+          :key="mistake.id"
+          class="p-4 transition"
+          :class="selectedMistakes.has(mistake.id) ? 'bg-blue-50' : ''"
+        >
+          <!-- Card Header: Checkbox + Expression -->
+          <div class="flex items-start gap-3">
+            <input
+              type="checkbox"
+              :checked="selectedMistakes.has(mistake.id)"
+              @change="$emit('toggle-select', mistake.id)"
+              class="w-4 h-4 mt-1 rounded border-gray-300 text-black focus:ring-black cursor-pointer flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <!-- Expression + TTS -->
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-gray-900 text-base">{{ mistake.expression }}</span>
+                <button
+                  @click="$emit('play-tts', mistake.expression)"
+                  :disabled="ttsLoading"
+                  class="p-1.5 rounded-full hover:bg-gray-200 transition flex-shrink-0"
+                >
+                  <SpeakerWaveIcon class="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+              <!-- Meaning -->
+              <p class="text-sm text-gray-500 mb-2">{{ formatMeaning(mistake.meaning) }}</p>
+
+              <!-- Example -->
+              <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                <p class="text-sm text-gray-900 line-clamp-2" v-html="highlightExpression(mistake.exampleText, mistake.expression)"></p>
+                <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ mistake.exampleTranslation }}</p>
+              </div>
+
+              <!-- Meta Info Row -->
+              <div class="flex items-center justify-between text-xs">
+                <!-- Location -->
+                <div class="text-gray-500">
+                  <span>{{ mistake.unit }}</span>
+                  <span class="mx-1">·</span>
+                  <span>{{ mistake.chapter }}</span>
+                </div>
+                <!-- Result -->
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">
+                    {{ mistake.incorrectCount }}
+                  </span>
+                  <span class="text-gray-400">/</span>
+                  <span class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
+                    {{ mistake.correctCount }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop: Table View -->
+    <div class="hidden md:block max-h-[60vh] overflow-y-auto">
       <table class="w-full">
         <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
           <tr>
