@@ -10,12 +10,12 @@
 
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
       <div class="w-full md:w-64 h-auto md:h-full border-r-0 md:border-r border-b md:border-b-0 border-gray-200 bg-gray-50 flex flex-col p-4 md:p-6 overflow-y-auto md:overflow-visible shrink-0 transition-all duration-300">
-        <div 
+        <div
           class="flex items-center justify-between cursor-pointer md:cursor-default mb-4 md:mb-6"
           @click="toggleLanguagePanel"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Languages</h3>
-          <ChevronDownIcon 
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">언어 선택</h3>
+          <ChevronDownIcon
             class="w-5 h-5 text-gray-400 transition-transform duration-200 md:hidden"
             :class="{ 'rotate-180': isLanguagePanelExpanded }"
           />
@@ -27,10 +27,11 @@
             <ProjectSelector
               v-model="selectedProjectId"
               :projects="projects"
+              :context-info="contextInfo"
               @change="onProjectChange"
             />
             <!-- 용어집 적용 상태 표시 -->
-            <div v-if="selectedProjectId" class="mt-2 flex items-center gap-1.5 text-xs text-green-600">
+            <div v-if="selectedProjectId && contextInfo" class="mt-2 flex items-center gap-1.5 text-xs text-green-600">
               <BookOpenIcon class="w-3.5 h-3.5" />
               <span class="font-medium">전문용어사전 적용</span>
             </div>
@@ -60,15 +61,15 @@
         <div class="text-xs text-gray-500 mb-4">
           <p v-if="selectedLanguages.length < 2" class="text-amber-600 font-medium flex items-center gap-1">
             <ExclamationCircleIcon class="w-4 h-4" />
-            Select at least 2 languages
+            최소 2개 언어를 선택하세요
           </p>
           <p v-else-if="selectedLanguages.length > 4" class="text-amber-600 font-medium flex items-center gap-1">
             <ExclamationCircleIcon class="w-4 h-4" />
-            Maximum 4 languages
+            최대 4개 언어까지 선택 가능
           </p>
           <p v-else class="text-green-600 font-medium flex items-center gap-1">
             <CheckCircleIcon class="w-4 h-4" />
-            {{ selectedLanguages.length }} languages selected
+            {{ selectedLanguages.length }}개 언어 선택됨
           </p>
         </div>
 
@@ -85,10 +86,10 @@
         <!-- Results Header -->
         <div class="h-14 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-200 bg-white">
           <div class="flex items-center gap-4">
-            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Transcript</span>
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">실시간 번역</span>
             <div v-if="translationCards.length > 0" class="flex items-center gap-2">
               <span class="px-2 py-1 bg-white text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wide border border-gray-200">
-                {{ translationCards.length }} Segments
+                {{ translationCards.length }}개 문장
               </span>
             </div>
           </div>
@@ -99,7 +100,7 @@
               @click="clearCards"
               :disabled="isRecording"
               class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-              title="Clear All"
+              title="전체 삭제"
             >
               <TrashIcon class="w-5 h-5" />
             </button>
@@ -116,8 +117,8 @@
             <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 border border-gray-200">
               <MicrophoneIcon class="w-10 h-10 text-gray-300" />
             </div>
-            <p class="text-lg font-bold text-gray-400">No translations yet</p>
-            <p class="text-sm text-gray-400 mt-1">Start recording to see live translations</p>
+            <p class="text-lg font-bold text-gray-400">번역 결과가 없습니다</p>
+            <p class="text-sm text-gray-400 mt-1">녹음을 시작하면 실시간 번역이 표시됩니다</p>
           </div>
 
           <!-- Message Groups -->
@@ -169,7 +170,7 @@
         <div v-if="recognizingText" class="flex-shrink-0 mx-8 mb-3 px-6 py-3 bg-blue-50 border border-blue-200 rounded-xl">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
-            <span class="text-xs font-bold text-blue-600 uppercase">Recognizing</span>
+            <span class="text-xs font-bold text-blue-600 uppercase">인식 중</span>
             <span class="text-sm text-blue-800 font-medium">{{ recognizingText }}</span>
           </div>
         </div>
@@ -223,11 +224,11 @@ import {
 
 // 언어 옵션 (BCP-47 코드 + 플래그)
 const languageOptions = [
-  { value: 'ko-KR', label: 'Korean', flag: '🇰🇷' },
-  { value: 'en-US', label: 'English', flag: '🇺🇸' },
-  { value: 'ja-JP', label: 'Japanese', flag: '🇯🇵' },
-  { value: 'vi-VN', label: 'Vietnamese', flag: '🇻🇳' },
-  { value: 'zh-CN', label: 'Chinese', flag: '🇨🇳' }
+  { value: 'ko-KR', label: '한국어', flag: '🇰🇷' },
+  { value: 'en-US', label: '영어', flag: '🇺🇸' },
+  { value: 'ja-JP', label: '일본어', flag: '🇯🇵' },
+  { value: 'vi-VN', label: '베트남어', flag: '🇻🇳' },
+  { value: 'zh-CN', label: '중국어', flag: '🇨🇳' }
 ]
 
 // 언어 라벨 매핑
@@ -246,6 +247,7 @@ const selectedLanguages = ref(['ko-KR', 'en-US'])
 const projects = ref([])
 const selectedProjectId = ref(null)
 const isLoadingProjects = ref(false)
+const contextInfo = ref(null)  // 문서 수, 용어 수 정보
 
 // 언어 패널 확장 상태 (모바일용)
 const isLanguagePanelExpanded = ref(true)
@@ -272,7 +274,21 @@ async function loadProjects() {
 // 프로젝트 선택 핸들러
 function onProjectChange(projectId) {
   selectedProjectId.value = projectId
-  console.log('📚 프로젝트 선택:', projectId || 'None (용어집 미사용)')
+
+  // 프로젝트 선택 시 컨텍스트 정보 설정
+  if (projectId) {
+    const project = projects.value.find(p => p.id === projectId)
+    if (project) {
+      contextInfo.value = {
+        documentsCount: project.documentCount || 0,
+        termsCount: project.termCount || 0
+      }
+      console.log('📚 프로젝트 선택:', project.name, `(문서 ${contextInfo.value.documentsCount}개, 용어 ${contextInfo.value.termsCount}개)`)
+    }
+  } else {
+    contextInfo.value = null
+    console.log('📚 프로젝트 선택 해제 (용어집 미사용)')
+  }
 }
 
 // 결과 컨테이너 참조
