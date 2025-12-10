@@ -8,11 +8,13 @@
       <div class="flex items-center gap-3">
         <div
           class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-          :class="scrolled ? 'bg-black text-white' : 'bg-white/20 text-white backdrop-blur-sm'"
+          :class="scrolled ? 'bg-blue-300' : 'bg-white/25 backdrop-blur-sm'"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
+          <img
+            src="@/views/logo.png"
+            alt="NexUS Logo"
+            class="w-7 h-7 object-contain"
+          />
         </div>
         <span
           class="text-xl font-bold transition-colors"
