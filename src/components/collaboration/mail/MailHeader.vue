@@ -41,7 +41,7 @@ const emit = defineEmits([
       <!-- Title -->
       <div>
         <h1 class="text-xl md:text-2xl font-bold text-gray-900">메일</h1>
-        <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5 hidden md:block">Outlook 메일을 관리하고 비즈니스 매너에 맞는 초안을 작성하세요</p>
+        <p class="text-[11px] md:text-sm text-gray-500 font-medium mt-0.5">Outlook 메일을 관리하고 비즈니스 매너에 맞는 초안을 작성하세요</p>
       </div>
 
       <!-- Not Connected -->
@@ -49,12 +49,12 @@ const emit = defineEmits([
         <span class="text-xs md:text-sm text-gray-500 hidden md:inline">Outlook 계정을 연동하세요</span>
         <button
           @click="emit('connect')"
-          class="flex items-center gap-1 md:gap-2 px-2.5 md:px-5 py-1.5 md:py-2.5 bg-black text-white rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold hover:bg-gray-800 transition-all shadow-sm"
+          class="flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-black text-white rounded-xl text-xs md:text-sm font-bold hover:bg-gray-800 transition-all shadow-sm"
         >
-          <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
-          <span>연동</span>
+          <span>Outlook 연동</span>
         </button>
       </div>
 
