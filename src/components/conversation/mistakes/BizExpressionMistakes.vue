@@ -1,35 +1,58 @@
 <template>
     <div class="h-full flex flex-col">
-        <div class="flex-1 overflow-y-auto p-8">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
             <div class="max-w-7xl mx-auto">
                 <!-- Loading -->
                 <div v-if="loading" class="flex justify-center items-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <div class="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-blue-600"></div>
                 </div>
 
                 <!-- Empty State -->
                 <div v-else-if="mistakes.length === 0"
-                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12">
+                    class="bg-white rounded-xl md:rounded-2xl border border-gray-100 shadow-sm p-6 md:p-12">
                     <div class="text-center">
-                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircleIcon class="w-12 h-12 text-green-500" />
+                        <div class="w-16 h-16 md:w-20 md:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                            <CheckCircleIcon class="w-10 h-10 md:w-12 md:h-12 text-green-500" />
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900 mb-2">Great job!</h2>
-                        <p class="text-gray-500">No mistakes recorded yet.</p>
-                        <p class="text-sm text-gray-400 mt-2">Mistakes from quiz sessions will appear here for review.
+                        <h2 class="text-lg md:text-xl font-bold text-gray-900 mb-2">Great job!</h2>
+                        <p class="text-gray-500 text-sm md:text-base">No mistakes recorded yet.</p>
+                        <p class="text-xs md:text-sm text-gray-400 mt-2">Mistakes from quiz sessions will appear here for review.
                         </p>
                         <router-link to="/conversation/expression"
-                            class="inline-block mt-6 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition">
+                            class="inline-block mt-4 md:mt-6 px-5 md:px-6 py-2.5 md:py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm md:text-base">
                             Go to Expression Learning
                         </router-link>
                     </div>
                 </div>
 
                 <!-- Mistakes List -->
-                <div v-else class="space-y-4">
-                    <!-- Summary -->
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-                        <div class="flex items-center justify-between">
+                <div v-else class="space-y-3 md:space-y-4">
+                    <!-- Summary - Mobile optimized -->
+                    <div class="bg-white rounded-xl md:rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6 mb-4 md:mb-6">
+                        <!-- Mobile: Stacked layout -->
+                        <div class="md:hidden">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-base font-semibold text-gray-900">오답 개수</h2>
+                                <div class="text-2xl font-bold text-red-500">{{ mistakes.length }}</div>
+                            </div>
+                            <!-- Action Buttons - Mobile -->
+                            <div class="flex gap-2" v-if="viewMode === 'list'">
+                                <button v-if="selectedMistakes.size > 0" @click="confirmDeleteSelected"
+                                    class="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-xs font-medium">
+                                    삭제 ({{ selectedMistakes.size }})
+                                </button>
+                                <button @click="handleStartQuizMode" :disabled="selectedMistakes.size === 0"
+                                    class="flex-1 px-3 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+                                    퀴즈 풀기
+                                    <span v-if="selectedMistakes.size > 0"
+                                        class="px-1.5 py-0.5 bg-white/20 text-white text-xs rounded-full">
+                                        {{ selectedMistakes.size }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Desktop: Original layout -->
+                        <div class="hidden md:flex items-center justify-between">
                             <div>
                                 <h2 class="text-lg font-semibold text-gray-900">오답 개수</h2>
                             </div>
@@ -56,7 +79,7 @@
                         </div>
                     </div>
 
-                    <!-- List View (Table) -->
+                    <!-- List View (Table for desktop, Cards for mobile) -->
                     <MistakesTable v-if="viewMode === 'list'" :mistakes="mistakes" :selected-mistakes="selectedMistakes"
                         :is-all-selected="isAllSelected" :tts-loading="ttsLoading" :format-meaning="formatMeaning"
                         :format-date="formatDate" :highlight-expression="highlightExpression"
