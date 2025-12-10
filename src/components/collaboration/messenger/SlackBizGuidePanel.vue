@@ -16,6 +16,11 @@ const props = defineProps({
   show: {
     type: Boolean,
     required: true
+  },
+  /** 모바일 여부 */
+  isMobile: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -110,15 +115,21 @@ const getActionLabel = (actionType) => {
 </script>
 
 <template>
-  <transition name="slide-left">
+  <transition :name="isMobile ? 'slide-up' : 'slide-left'">
     <div
       v-if="show"
-      class="fixed top-0 right-0 h-full w-[420px] bg-white shadow-2xl flex flex-col border-l border-gray-100 z-50 font-sans"
+      :class="[
+        'fixed bg-white shadow-2xl flex flex-col z-50 font-sans',
+        isMobile
+          ? 'inset-0 rounded-none'
+          : 'top-0 right-0 h-full w-[420px] border-l border-gray-100'
+      ]"
     >
       <!-- Header -->
-      <div class="p-4 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 flex items-center justify-center">
+      <div class="p-3 md:p-4 bg-white/90 backdrop-blur-md border-b border-gray-100 flex justify-between items-center sticky top-0 z-10 safe-area-top">
+        <div class="flex items-center gap-2 md:gap-3">
+          <!-- Icon (both mobile and desktop) -->
+          <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
             <img
               src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Books.png"
               alt="BizGuide"
@@ -127,20 +138,33 @@ const getActionLabel = (actionType) => {
           </div>
           <div>
             <h3 class="font-bold text-gray-900 text-base leading-tight tracking-tight">Biz Guide</h3>
-            <p class="text-xs text-gray-500">비즈니스 메시지 초안을 작성해드려요</p>
+            <p class="text-xs text-gray-500 hidden md:block">비즈니스 메시지 초안을 작성해드려요</p>
           </div>
         </div>
         <div class="flex items-center gap-1">
+          <!-- Mobile: X button first (left), then refresh button -->
+          <button
+            v-if="isMobile"
+            @click="emit('close')"
+            class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
           <button
             @click="handleNewChat"
             class="text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all p-2 rounded-xl"
             title="새 대화 시작"
           >
+            <!-- Refresh icon instead of plus -->
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
+          <!-- Desktop only: X button -->
           <button
+            v-if="!isMobile"
             @click="emit('close')"
             class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all p-2 rounded-xl"
           >
@@ -290,14 +314,14 @@ const getActionLabel = (actionType) => {
       </div>
 
       <!-- Input Area -->
-      <div class="p-4 bg-white border-t border-gray-100">
+      <div class="p-3 md:p-4 bg-white border-t border-gray-100 safe-area-bottom">
         <div class="relative">
           <textarea
             v-model="messageInput"
             @keydown="handleKeyDown"
             placeholder="메시지를 작성해주세요..."
             rows="2"
-            class="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 text-sm bg-gray-50 focus:bg-white transition-all resize-none placeholder-gray-400"
+            class="w-full px-3 md:px-4 py-2.5 md:py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 text-sm bg-gray-50 focus:bg-white transition-all resize-none placeholder-gray-400"
             :disabled="isChatLoading"
           ></textarea>
           <button
@@ -314,8 +338,9 @@ const getActionLabel = (actionType) => {
             </svg>
           </button>
         </div>
-        <div class="mt-2 flex items-center justify-between text-xs text-gray-400">
-          <span>Ctrl+Enter로 전송</span>
+        <div class="mt-1.5 md:mt-2 flex items-center justify-between text-xs text-gray-400">
+          <span class="hidden md:inline">Ctrl+Enter로 전송</span>
+          <span class="md:hidden"></span>
           <span v-if="chatMessages.length > 0">대화 {{ chatMessages.length }}개</span>
         </div>
       </div>
@@ -324,6 +349,7 @@ const getActionLabel = (actionType) => {
 </template>
 
 <style scoped>
+/* Desktop: Slide from right */
 .slide-left-enter-active,
 .slide-left-leave-active {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -335,6 +361,29 @@ const getActionLabel = (actionType) => {
 
 .slide-left-leave-to {
   transform: translateX(100%);
+}
+
+/* Mobile: Slide from bottom */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-up-enter-from {
+  transform: translateY(100%);
+}
+
+.slide-up-leave-to {
+  transform: translateY(100%);
+}
+
+/* Safe area for iOS */
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 /* Custom scrollbar */
