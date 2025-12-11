@@ -294,26 +294,6 @@ Make a final decision or request follow-up.`,
   // Negotiation Scenarios (협상)
   // ============================================
   {
-    id: 'template-negotiation-salary',
-    category: 'negotiation',
-    title: '연봉 협상하기',
-    description: '입사 또는 연봉 협상에서 자신의 가치를 효과적으로 어필합니다.',
-    language: 'EN',
-    difficulty: 'advanced',
-    roles: {
-      user: '지원자',
-      ai: '인사 담당자'
-    },
-    systemPrompt: `You are an HR manager conducting a salary negotiation.
-Start with the company's initial offer which is slightly below market rate.
-Listen to the candidate's justifications and consider counteroffers.
-You have some flexibility but also budget constraints.
-Be fair but also represent company interests.`,
-    requiredTerms: ['compensation', 'market rate', 'value', 'benefits', 'counteroffer'],
-    estimatedDuration: '15-20 min',
-    tags: ['career', 'negotiation', 'self-advocacy']
-  },
-  {
     id: 'template-negotiation-contract',
     category: 'negotiation',
     title: '계약 조건 협상하기',
