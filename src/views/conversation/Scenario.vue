@@ -6,112 +6,327 @@
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-gray-900">실무 시나리오 회화연습</h1>
-            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">{{ scenarios.length }}</span>
+            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
+              {{ activeTab === 'my' ? scenarios.length : filteredBusinessTemplates.length }}
+            </span>
           </div>
           <p class="text-sm text-gray-500 font-medium mt-0.5">
             비즈니스 상황별 시나리오로 회화를 연습하세요
           </p>
         </div>
-        <button @click="showCreateDialog = true"
-          class="hidden md:flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20">
+        <button
+          v-if="activeTab === 'my'"
+          @click="showCreateDialog = true"
+          class="hidden md:flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
+        >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           시나리오 생성
         </button>
       </div>
+
+      <!-- Tab Navigation -->
+      <div class="mt-6 flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <button
+          @click="activeTab = 'my'"
+          class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+          :class="activeTab === 'my'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'"
+        >
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            내 시나리오
+          </div>
+        </button>
+        <button
+          @click="activeTab = 'business'"
+          class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+          :class="activeTab === 'business'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'"
+        >
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            비즈니스 템플릿
+            <span class="px-1.5 py-0.5 bg-purple-100 text-purple-600 text-[10px] font-bold rounded-full">
+              {{ businessTemplates.length }}
+            </span>
+          </div>
+        </button>
+      </div>
     </div>
 
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden bg-gray-50/50">
-      <!-- Left Sidebar (Filters) - Desktop Only -->
+      <!-- Left Sidebar (Conditional) -->
       <div class="hidden md:block h-full">
-        <ScenarioProjectSidebar :projects="projects" :selected-projects="selectedProjects"
-          :selected-schedules="selectedSchedules" :upcoming-schedules="upcomingSchedules"
-          :projects-loading="projectsLoading" :schedules-loading="schedulesLoading" :scenarios="allScenarios"
-          @toggle-project="toggleProjectSelection" @toggle-schedule="toggleScheduleSelection"
-          @show-all="showAllScenarios" />
+        <!-- My Scenarios: Project Sidebar -->
+        <ScenarioProjectSidebar
+          v-if="activeTab === 'my'"
+          :projects="projects"
+          :selected-projects="selectedProjects"
+          :selected-schedules="selectedSchedules"
+          :upcoming-schedules="upcomingSchedules"
+          :projects-loading="projectsLoading"
+          :schedules-loading="schedulesLoading"
+          :scenarios="allScenarios"
+          @toggle-project="toggleProjectSelection"
+          @toggle-schedule="toggleScheduleSelection"
+          @show-all="showAllScenarios"
+        />
+        <!-- Business Templates: Category Sidebar -->
+        <BusinessCategorySidebar
+          v-else
+          :selected-category="selectedCategory"
+          :selected-difficulty="selectedDifficulty"
+          :total-templates="businessTemplates.length"
+          @select-category="selectCategory"
+          @select-difficulty="selectDifficulty"
+          @show-all="showAllTemplates"
+        />
       </div>
 
       <!-- Right Content -->
       <div class="flex-1 md:overflow-y-auto overflow-hidden p-4 md:p-8 w-full relative">
-        <!-- Mobile Project Selector -->
+        <!-- Mobile Tab & Filter Selector -->
         <div class="mb-6 relative z-30 md:hidden">
-          <button @click="mobileShowProjects = !mobileShowProjects"
-            class="flex items-center gap-2 text-lg font-bold text-gray-900 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-            <span>{{ currentProjectLabel }}</span>
+          <button
+            @click="mobileShowFilter = !mobileShowFilter"
+            class="flex items-center gap-2 text-lg font-bold text-gray-900 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100"
+          >
+            <span>{{ mobileFilterLabel }}</span>
             <ChevronDownIcon class="w-5 h-5 text-gray-500 transition-transform duration-200"
-              :class="{ 'rotate-180': mobileShowProjects }" />
+              :class="{ 'rotate-180': mobileShowFilter }" />
           </button>
 
-          <!-- Project Dropdown -->
-          <div v-if="mobileShowProjects"
-            class="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-slideDown">
+          <!-- Mobile Filter Dropdown -->
+          <div
+            v-if="mobileShowFilter"
+            class="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-slideDown"
+          >
+            <!-- Tab Switch -->
+            <div class="p-3 border-b border-gray-100">
+              <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  @click="activeTab = 'my'; mobileShowFilter = false"
+                  class="flex-1 py-2 rounded-md text-sm font-bold transition-all"
+                  :class="activeTab === 'my' ? 'bg-white shadow-sm' : 'text-gray-500'"
+                >
+                  내 시나리오
+                </button>
+                <button
+                  @click="activeTab = 'business'; mobileShowFilter = false"
+                  class="flex-1 py-2 rounded-md text-sm font-bold transition-all"
+                  :class="activeTab === 'business' ? 'bg-white shadow-sm' : 'text-gray-500'"
+                >
+                  템플릿
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Options -->
             <div class="p-2 max-h-60 overflow-y-auto">
-              <button @click="selectedProjects = []; mobileShowProjects = false; loadScenariosForFilters()"
-                class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                :class="selectedProjects.length === 0 ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
-                전체 프로젝트
-              </button>
-              <button v-for="project in projects" :key="project.id"
-                @click="toggleProjectSelection(project); mobileShowProjects = false"
-                class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors" :class="selectedProjects.find(p => p.id === project.id)
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'">
-                {{ project.name }}
-              </button>
+              <template v-if="activeTab === 'my'">
+                <button
+                  @click="selectedProjects = []; mobileShowFilter = false; loadScenariosForFilters()"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="selectedProjects.length === 0 ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'"
+                >
+                  전체 프로젝트
+                </button>
+                <button
+                  v-for="project in projects"
+                  :key="project.id"
+                  @click="toggleProjectSelection(project); mobileShowFilter = false"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="selectedProjects.find(p => p.id === project.id)
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50'"
+                >
+                  {{ project.name }}
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  @click="showAllTemplates(); mobileShowFilter = false"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  :class="!selectedCategory ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'"
+                >
+                  전체 템플릿
+                </button>
+                <button
+                  v-for="category in BUSINESS_CATEGORIES"
+                  :key="category.id"
+                  @click="selectCategory(category.id); mobileShowFilter = false"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  :class="selectedCategory === category.id
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50'"
+                >
+                  <span>{{ category.icon }}</span>
+                  <span>{{ category.name }}</span>
+                </button>
+              </template>
             </div>
           </div>
         </div>
 
         <!-- Loading State -->
-        <div v-if="scenariosLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="i in 6" :key="i" class="h-64 bg-gray-50 rounded-3xl animate-pulse"></div>
         </div>
 
-        <template v-else-if="scenarios.length > 0">
-          <!-- Desktop Grid View -->
-          <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
-            <ScenarioCard v-for="scenario in scenarios" :key="scenario.id" :scenario="scenario" :projects="projects"
-              :schedules="upcomingSchedules" @edit="openEditDialog" @delete="deleteScenario" @start="startPractice" />
-          </div>
-
-          <!-- Mobile Swiper View -->
-          <div class="md:hidden h-full flex flex-col justify-center pb-10">
-
-
-            <!-- Carousel -->
-            <div class="flex-1 flex flex-col justify-center">
-              <swiper :effect="'cards'" :grabCursor="true" :modules="modules" class="w-full max-w-sm mx-auto"
-                :cardsEffect="{
-                  perSlideOffset: 1,
-                  perSlideRotate: 2,
-                  rotate: true,
-                  slideShadows: true,
-                }">
-                <swiper-slide v-for="scenario in scenarios" :key="scenario.id" class="rounded-3xl">
-                  <ScenarioCard :scenario="scenario" :projects="projects" :schedules="upcomingSchedules"
-                    @edit="openEditDialog" @delete="deleteScenario" @start="startPractice" class="h-[55vh] shadow-xl" />
-                </swiper-slide>
-              </swiper>
+        <!-- My Scenarios Tab Content -->
+        <template v-else-if="activeTab === 'my'">
+          <template v-if="scenarios.length > 0">
+            <!-- Desktop Grid View -->
+            <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+              <ScenarioCard
+                v-for="scenario in scenarios"
+                :key="scenario.id"
+                :scenario="scenario"
+                :projects="projects"
+                :schedules="upcomingSchedules"
+                @edit="openEditDialog"
+                @delete="deleteScenario"
+                @start="startPractice"
+              />
             </div>
-          </div>
+
+            <!-- Mobile Swiper View -->
+            <div class="md:hidden h-full flex flex-col justify-center pb-10">
+              <div class="flex-1 flex flex-col justify-center">
+                <swiper
+                  :effect="'cards'"
+                  :grabCursor="true"
+                  :modules="modules"
+                  class="w-full max-w-sm mx-auto"
+                  :cardsEffect="{
+                    perSlideOffset: 1,
+                    perSlideRotate: 2,
+                    rotate: true,
+                    slideShadows: true,
+                  }"
+                >
+                  <swiper-slide v-for="scenario in scenarios" :key="scenario.id" class="rounded-3xl">
+                    <ScenarioCard
+                      :scenario="scenario"
+                      :projects="projects"
+                      :schedules="upcomingSchedules"
+                      @edit="openEditDialog"
+                      @delete="deleteScenario"
+                      @start="startPractice"
+                      class="h-[55vh] shadow-xl"
+                    />
+                  </swiper-slide>
+                </swiper>
+              </div>
+            </div>
+          </template>
+
+          <!-- Empty State -->
+          <ScenarioEmptyState v-else @create="showCreateDialog = true" />
         </template>
 
-        <!-- Empty State -->
-        <ScenarioEmptyState v-else @create="showCreateDialog = true" />
+        <!-- Business Templates Tab Content -->
+        <template v-else-if="activeTab === 'business'">
+          <template v-if="filteredBusinessTemplates.length > 0">
+            <!-- Desktop Grid View -->
+            <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+              <BusinessScenarioCard
+                v-for="template in filteredBusinessTemplates"
+                :key="template.id"
+                :scenario="template"
+                @start="startBusinessPractice"
+                @copy="copyToMyScenarios"
+              />
+            </div>
+
+            <!-- Mobile Swiper View -->
+            <div class="md:hidden h-full flex flex-col justify-center pb-10">
+              <div class="flex-1 flex flex-col justify-center">
+                <swiper
+                  :effect="'cards'"
+                  :grabCursor="true"
+                  :modules="modules"
+                  class="w-full max-w-sm mx-auto"
+                  :cardsEffect="{
+                    perSlideOffset: 1,
+                    perSlideRotate: 2,
+                    rotate: true,
+                    slideShadows: true,
+                  }"
+                >
+                  <swiper-slide v-for="template in filteredBusinessTemplates" :key="template.id" class="rounded-3xl">
+                    <BusinessScenarioCard
+                      :scenario="template"
+                      @start="startBusinessPractice"
+                      @copy="copyToMyScenarios"
+                      class="h-[55vh] shadow-xl"
+                    />
+                  </swiper-slide>
+                </swiper>
+              </div>
+            </div>
+          </template>
+
+          <!-- Empty State for Business Templates -->
+          <div v-else class="flex flex-col items-center justify-center h-64 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">템플릿이 없습니다</h3>
+            <p class="text-sm text-gray-500">선택한 필터에 맞는 템플릿이 없습니다.</p>
+            <button
+              @click="showAllTemplates"
+              class="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+            >
+              전체 템플릿 보기
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
-
-
     <!-- Create Dialog -->
-    <ScenarioCreateDialog :show="showCreateDialog" :projects="projects" :upcoming-schedules="upcomingSchedules"
-      @close="showCreateDialog = false" @created="handleCreateScenario" />
+    <ScenarioCreateDialog
+      :show="showCreateDialog"
+      :projects="projects"
+      :upcoming-schedules="upcomingSchedules"
+      @close="showCreateDialog = false"
+      @created="handleCreateScenario"
+    />
 
     <!-- Edit Dialog -->
-    <ScenarioEditDialog :show="showEditDialog" :scenario="editingScenario" :projects="projects"
-      :upcoming-schedules="upcomingSchedules" @close="showEditDialog = false" @save="handleUpdateScenario" />
+    <ScenarioEditDialog
+      :show="showEditDialog"
+      :scenario="editingScenario"
+      :projects="projects"
+      :upcoming-schedules="upcomingSchedules"
+      @close="showEditDialog = false"
+      @save="handleUpdateScenario"
+    />
+
+    <!-- Copy Confirmation Toast -->
+    <Transition name="toast">
+      <div
+        v-if="showCopyToast"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-gray-900 text-white rounded-xl shadow-xl flex items-center gap-3 z-50"
+      >
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="font-medium">내 시나리오로 복사되었습니다!</span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -130,16 +345,28 @@ import 'swiper/css/effect-cards'
 
 // Components
 import ScenarioProjectSidebar from '@/components/conversation/ScenarioProjectSidebar.vue'
+import BusinessCategorySidebar from '@/components/conversation/BusinessCategorySidebar.vue'
 import ScenarioCard from '@/components/conversation/ScenarioCard.vue'
+import BusinessScenarioCard from '@/components/conversation/BusinessScenarioCard.vue'
 import ScenarioEmptyState from '@/components/conversation/ScenarioEmptyState.vue'
 import ScenarioCreateDialog from '@/components/conversation/ScenarioCreateDialog.vue'
 import ScenarioEditDialog from '@/components/conversation/ScenarioEditDialog.vue'
+
+// Business Templates Data
+import { BUSINESS_CATEGORIES, BUSINESS_SCENARIO_TEMPLATES } from '@/data/businessScenarioTemplates'
 
 const router = useRouter()
 const route = useRoute()
 const modules = [EffectCards]
 
-// State
+// ============================================
+// Tab State
+// ============================================
+const activeTab = ref('my') // 'my' | 'business'
+
+// ============================================
+// My Scenarios State
+// ============================================
 const projects = ref([])
 const upcomingSchedules = ref([])
 const selectedSchedules = ref([])
@@ -151,20 +378,126 @@ const scenarios = ref([])
 const allScenarios = ref([])
 const scenariosLoading = ref(false)
 
-// Mobile UI State
-const mobileShowProjects = ref(false)
-const currentProjectLabel = computed(() => {
-  if (selectedProjects.value.length === 0) return '전체 프로젝트'
-  if (selectedProjects.value.length === 1) return selectedProjects.value[0].name
-  return `${selectedProjects.value.length}개 프로젝트 선택됨`
+// ============================================
+// Business Templates State
+// ============================================
+const businessTemplates = ref(BUSINESS_SCENARIO_TEMPLATES)
+const selectedCategory = ref(null)
+const selectedDifficulty = ref(null)
+
+const filteredBusinessTemplates = computed(() => {
+  let filtered = [...businessTemplates.value]
+
+  if (selectedCategory.value) {
+    filtered = filtered.filter(t => t.category === selectedCategory.value)
+  }
+
+  if (selectedDifficulty.value) {
+    filtered = filtered.filter(t => t.difficulty === selectedDifficulty.value)
+  }
+
+  return filtered
 })
 
-// Dialog State
+// ============================================
+// UI State
+// ============================================
+const mobileShowFilter = ref(false)
 const showCreateDialog = ref(false)
 const showEditDialog = ref(false)
 const editingScenario = ref({})
+const showCopyToast = ref(false)
 
-// Methods: Selection
+const isLoading = computed(() => {
+  return activeTab.value === 'my' ? scenariosLoading.value : false
+})
+
+const mobileFilterLabel = computed(() => {
+  if (activeTab.value === 'my') {
+    if (selectedProjects.value.length === 0) return '전체 프로젝트'
+    if (selectedProjects.value.length === 1) return selectedProjects.value[0].name
+    return `${selectedProjects.value.length}개 프로젝트`
+  } else {
+    if (!selectedCategory.value) return '전체 템플릿'
+    const cat = BUSINESS_CATEGORIES.find(c => c.id === selectedCategory.value)
+    return cat ? `${cat.icon} ${cat.name}` : '전체 템플릿'
+  }
+})
+
+// ============================================
+// Business Templates Methods
+// ============================================
+function selectCategory(categoryId) {
+  selectedCategory.value = selectedCategory.value === categoryId ? null : categoryId
+}
+
+function selectDifficulty(difficulty) {
+  selectedDifficulty.value = difficulty
+}
+
+function showAllTemplates() {
+  selectedCategory.value = null
+  selectedDifficulty.value = null
+}
+
+async function startBusinessPractice(template) {
+  // Create a temporary scenario from template and start practice
+  try {
+    const scenarioData = {
+      title: template.title,
+      description: template.description,
+      language: template.language,
+      difficulty: template.difficulty,
+      roles: template.roles,
+      systemPrompt: template.systemPrompt,
+      requiredTerms: template.requiredTerms || [],
+      projectIds: [],
+      scheduleIds: [],
+      isTemplate: true
+    }
+
+    const response = await scenarioService.create(scenarioData)
+    const createdScenario = response.data.data || response.data
+
+    router.push(`/conversation/practice/${createdScenario.id}`)
+  } catch (error) {
+    console.error('Failed to start business practice:', error)
+    alert('시나리오 시작에 실패했습니다.')
+  }
+}
+
+async function copyToMyScenarios(template) {
+  try {
+    const scenarioData = {
+      title: `[복사] ${template.title}`,
+      description: template.description,
+      language: template.language,
+      difficulty: template.difficulty,
+      roles: template.roles,
+      systemPrompt: template.systemPrompt,
+      requiredTerms: template.requiredTerms || [],
+      projectIds: [],
+      scheduleIds: []
+    }
+
+    await scenarioService.create(scenarioData)
+    await loadScenariosForFilters()
+    await loadAllScenarios()
+
+    // Show toast notification
+    showCopyToast.value = true
+    setTimeout(() => {
+      showCopyToast.value = false
+    }, 3000)
+  } catch (error) {
+    console.error('Failed to copy template:', error)
+    alert('시나리오 복사에 실패했습니다.')
+  }
+}
+
+// ============================================
+// My Scenarios Methods: Selection
+// ============================================
 async function toggleScheduleSelection(schedule) {
   const index = selectedSchedules.value.findIndex(s => s.id === schedule.id)
   if (index > -1) {
@@ -194,7 +527,9 @@ async function showAllScenarios() {
   await loadScenariosForFilters()
 }
 
-// Methods: Data Loading
+// ============================================
+// My Scenarios Methods: Data Loading
+// ============================================
 async function loadScenariosForFilters() {
   scenariosLoading.value = true
   try {
@@ -263,7 +598,6 @@ async function loadAllUpcomingSchedules() {
       }
     }
 
-    // 최신 일정이 위로 오도록 내림차순 정렬
     upcomingSchedules.value = allSchedules.sort((a, b) =>
       new Date(b.startTime) - new Date(a.startTime)
     )
@@ -275,7 +609,9 @@ async function loadAllUpcomingSchedules() {
   }
 }
 
-// Methods: CRUD Operations
+// ============================================
+// My Scenarios Methods: CRUD Operations
+// ============================================
 function openEditDialog(scenario) {
   editingScenario.value = scenario
   showEditDialog.value = true
@@ -335,7 +671,9 @@ function startPractice(scenarioId) {
   router.push(`/conversation/practice/${scenarioId}`)
 }
 
+// ============================================
 // Lifecycle
+// ============================================
 onMounted(async () => {
   await loadProjects()
   await loadAllUpcomingSchedules()
@@ -369,5 +707,16 @@ onMounted(async () => {
 
 .animate-slideDown {
   animation: slideDown 0.2s ease-out forwards;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 20px);
 }
 </style>
