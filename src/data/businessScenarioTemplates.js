@@ -356,46 +356,6 @@ You can partially accommodate but need clear justification.`,
   // Small Talk Scenarios (스몰토크)
   // ============================================
   {
-    id: 'template-smalltalk-coffee',
-    category: 'smalltalk',
-    title: '커피 타임 대화',
-    description: '휴식 시간에 동료와 가벼운 일상 대화를 나눕니다.',
-    language: 'EN',
-    difficulty: 'beginner',
-    roles: {
-      user: '나',
-      ai: '동료'
-    },
-    systemPrompt: `You are a friendly colleague having coffee during a break.
-Engage in casual conversation about topics like the weather, weekend plans, or recent movies.
-Keep the conversation light and enjoyable.
-Show genuine interest in what the other person shares.
-Use natural, informal English appropriate for workplace conversations.`,
-    requiredTerms: ['How are you', 'weekend', 'weather', 'plans', 'enjoy'],
-    estimatedDuration: '5-10 min',
-    tags: ['casual-conversation', 'relationship-building', 'workplace-culture']
-  },
-  {
-    id: 'template-smalltalk-elevator',
-    category: 'smalltalk',
-    title: '엘리베이터에서 마주친 임원',
-    description: '엘리베이터에서 우연히 만난 임원과 짧은 인사를 나눕니다.',
-    language: 'EN',
-    difficulty: 'intermediate',
-    roles: {
-      user: '직원',
-      ai: '임원'
-    },
-    systemPrompt: `You are a senior manager or executive riding the elevator.
-Engage in brief, polite small talk appropriate for the short elevator ride.
-Show interest in the employee but keep conversation professional yet warm.
-Ask about their work or make comments about the day.
-The conversation should be natural but time-limited (30 seconds to 1 minute).`,
-    requiredTerms: ['good morning', 'busy', 'project', 'nice to see', 'have a good day'],
-    estimatedDuration: '3-5 min',
-    tags: ['elevator-pitch', 'professional-image', 'executive-interaction']
-  },
-  {
     id: 'template-smalltalk-lunch',
     category: 'smalltalk',
     title: '점심 시간 대화',
@@ -434,25 +394,6 @@ Ask questions about the company or building if appropriate.`,
     requiredTerms: ['welcome', 'offer', 'comfortable', 'appreciate', 'looking forward'],
     estimatedDuration: '5-10 min',
     tags: ['hospitality', 'client-relations', 'professional-etiquette']
-  },
-  {
-    id: 'template-smalltalk-after-meeting',
-    category: 'smalltalk',
-    title: '회의 끝나고 인사 나누기',
-    description: '회의가 끝난 후 참석자들과 가볍게 대화하며 자리를 정리합니다.',
-    language: 'EN',
-    difficulty: 'beginner',
-    roles: {
-      user: '나',
-      ai: '동료'
-    },
-    systemPrompt: `You are a meeting attendee making small talk after the meeting ends.
-Discuss light topics as people pack up - comment on the meeting, the room, or upcoming plans.
-Be friendly and help transition from formal meeting mode to casual interaction.
-Keep conversation brief as people need to get back to work.`,
-    requiredTerms: ['great meeting', 'productive', 'catch up', 'see you', 'take care'],
-    estimatedDuration: '3-5 min',
-    tags: ['post-meeting', 'networking', 'relationship-building']
   },
   {
     id: 'template-smalltalk-new-colleague',
