@@ -88,25 +88,6 @@ Keep the conversation focused and efficient.`,
     tags: ['agile', 'status-update', 'team-meeting']
   },
   {
-    id: 'template-meeting-one-on-one',
-    category: 'meeting',
-    title: '상사와 1:1 면담',
-    description: '상사와의 정기 면담에서 업무 현황과 커리어 목표에 대해 이야기합니다.',
-    language: 'EN',
-    difficulty: 'intermediate',
-    roles: {
-      user: '팀원',
-      ai: '팀장'
-    },
-    systemPrompt: `You are a supportive manager having a one-on-one meeting with your direct report.
-Ask about their work satisfaction, career goals, and any challenges they're facing.
-Provide constructive feedback and discuss growth opportunities.
-Be empathetic and encouraging while maintaining professional boundaries.`,
-    requiredTerms: ['career development', 'feedback', 'performance', 'goal', 'growth'],
-    estimatedDuration: '15-20 min',
-    tags: ['career', 'management', 'professional-development']
-  },
-  {
     id: 'template-meeting-client',
     category: 'meeting',
     title: '고객사 미팅',
