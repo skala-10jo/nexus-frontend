@@ -41,6 +41,12 @@ export const BUSINESS_CATEGORIES = [
     name: '네트워킹',
     icon: 'GlobeAltIcon',
     description: '비즈니스 네트워킹 상황'
+  },
+  {
+    id: 'smalltalk',
+    name: '스몰토크',
+    icon: 'ChatBubbleOvalLeftEllipsisIcon',
+    description: '일상적인 비즈니스 대화 및 사교'
   }
 ]
 
@@ -430,6 +436,129 @@ Respond appropriately based on the quality of the introduction.`,
     requiredTerms: ['connect', 'mutual interest', 'profile', 'industry', 'opportunity'],
     estimatedDuration: '5 min',
     tags: ['social-media', 'digital-networking', 'personal-branding']
+  },
+
+  // ============================================
+  // Small Talk Scenarios (스몰토크)
+  // ============================================
+  {
+    id: 'template-smalltalk-coffee',
+    category: 'smalltalk',
+    title: '커피 브레이크 대화',
+    description: '커피 타임에 동료와 가벼운 대화를 나누며 친밀감을 형성합니다.',
+    language: 'EN',
+    difficulty: 'beginner',
+    roles: {
+      user: '직원',
+      ai: '동료'
+    },
+    systemPrompt: `You are a friendly colleague having coffee during a break.
+Engage in casual conversation about topics like the weather, weekend plans, or recent movies.
+Keep the conversation light and enjoyable.
+Show genuine interest in what the other person shares.
+Use natural, informal English appropriate for workplace conversations.`,
+    requiredTerms: ['How are you', 'weekend', 'weather', 'plans', 'enjoy'],
+    estimatedDuration: '5-10 min',
+    tags: ['casual-conversation', 'relationship-building', 'workplace-culture']
+  },
+  {
+    id: 'template-smalltalk-elevator',
+    category: 'smalltalk',
+    title: '엘리베이터 대화',
+    description: '엘리베이터에서 상사나 임원과 짧은 대화를 나눕니다.',
+    language: 'EN',
+    difficulty: 'intermediate',
+    roles: {
+      user: '직원',
+      ai: '상급자'
+    },
+    systemPrompt: `You are a senior manager or executive riding the elevator.
+Engage in brief, polite small talk appropriate for the short elevator ride.
+Show interest in the employee but keep conversation professional yet warm.
+Ask about their work or make comments about the day.
+The conversation should be natural but time-limited (30 seconds to 1 minute).`,
+    requiredTerms: ['good morning', 'busy', 'project', 'nice to see', 'have a good day'],
+    estimatedDuration: '3-5 min',
+    tags: ['elevator-pitch', 'professional-image', 'executive-interaction']
+  },
+  {
+    id: 'template-smalltalk-lunch',
+    category: 'smalltalk',
+    title: '점심 식사 대화',
+    description: '팀 점심 식사에서 업무 외 주제로 자연스럽게 대화합니다.',
+    language: 'EN',
+    difficulty: 'beginner',
+    roles: {
+      user: '직원',
+      ai: '팀원들'
+    },
+    systemPrompt: `You are team members having lunch together.
+Discuss casual topics like food, hobbies, travel, or current events.
+Occasionally share personal stories and ask about others' experiences.
+Keep the mood relaxed and friendly.
+Switch topics naturally like in a real group conversation.`,
+    requiredTerms: ['delicious', 'try', 'recommend', 'favorite', 'sounds good'],
+    estimatedDuration: '10-15 min',
+    tags: ['team-bonding', 'social-skills', 'casual-conversation']
+  },
+  {
+    id: 'template-smalltalk-visitor',
+    category: 'smalltalk',
+    title: '방문 고객 응대',
+    description: '회의 전 방문 고객을 맞이하며 가벼운 대화를 나눕니다.',
+    language: 'EN',
+    difficulty: 'intermediate',
+    roles: {
+      user: '직원',
+      ai: '방문객'
+    },
+    systemPrompt: `You are a visitor waiting for a meeting to start.
+Appreciate the hospitality and engage in polite small talk.
+Comment on the office, the commute, or current business trends.
+Be professional but approachable.
+Ask questions about the company or building if appropriate.`,
+    requiredTerms: ['welcome', 'offer', 'comfortable', 'appreciate', 'looking forward'],
+    estimatedDuration: '5-10 min',
+    tags: ['hospitality', 'client-relations', 'professional-etiquette']
+  },
+  {
+    id: 'template-smalltalk-after-meeting',
+    category: 'smalltalk',
+    title: '미팅 후 가벼운 대화',
+    description: '회의 후 참석자들과 간단한 사교 대화를 나눕니다.',
+    language: 'EN',
+    difficulty: 'beginner',
+    roles: {
+      user: '참석자',
+      ai: '다른 참석자'
+    },
+    systemPrompt: `You are a meeting attendee making small talk after the meeting ends.
+Discuss light topics as people pack up - comment on the meeting, the room, or upcoming plans.
+Be friendly and help transition from formal meeting mode to casual interaction.
+Keep conversation brief as people need to get back to work.`,
+    requiredTerms: ['great meeting', 'productive', 'catch up', 'see you', 'take care'],
+    estimatedDuration: '3-5 min',
+    tags: ['post-meeting', 'networking', 'relationship-building']
+  },
+  {
+    id: 'template-smalltalk-new-colleague',
+    category: 'smalltalk',
+    title: '신입 동료와 대화',
+    description: '새로 입사한 동료와 대화하며 환영하고 도움을 제안합니다.',
+    language: 'EN',
+    difficulty: 'beginner',
+    roles: {
+      user: '기존 직원',
+      ai: '신입 직원'
+    },
+    systemPrompt: `You are a new employee on your first week at the company.
+Be slightly nervous but eager to make a good impression.
+Ask questions about the company culture, team dynamics, and practical things.
+Show gratitude for any help or information offered.
+Share a bit about your background when asked.`,
+    requiredTerms: ['welcome', 'how do you like', 'let me know', 'help', 'join us'],
+    estimatedDuration: '5-10 min',
+    tags: ['onboarding', 'mentoring', 'team-culture']
   }
 ]
 

@@ -64,7 +64,8 @@ import {
   PresentationChartBarIcon,
   ScaleIcon,
   GlobeAltIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  ChatBubbleOvalLeftEllipsisIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -88,7 +89,8 @@ const iconComponents = {
   ChatBubbleLeftRightIcon,
   PresentationChartBarIcon,
   ScaleIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  ChatBubbleOvalLeftEllipsisIcon
 }
 
 const categoryIconComponent = computed(() => {
