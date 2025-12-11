@@ -12,9 +12,9 @@
     <!-- Card Header -->
     <div class="flex items-start gap-3 mb-4">
       <!-- Category Icon -->
-      <span class="w-10 h-10 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50 text-xl">
-        {{ categoryIcon }}
-      </span>
+      <div class="w-10 h-10 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50">
+        <component :is="categoryIconComponent" class="w-5 h-5 text-gray-600" />
+      </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-1">
           <span class="w-6 h-6 bg-gray-50 rounded flex items-center justify-center text-sm">
@@ -43,9 +43,7 @@
     <div class="mb-4 space-y-2">
       <!-- Duration -->
       <div class="flex items-center gap-2 text-xs text-gray-400">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <ClockIcon class="w-4 h-4" />
         <span>예상 시간: {{ scenario.estimatedDuration }}</span>
       </div>
       <!-- Tags -->
@@ -85,18 +83,14 @@
         class="flex-1 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
       >
         <span>바로 연습</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
+        <ArrowRightIcon class="w-4 h-4" />
       </button>
       <button
         @click="$emit('copy', scenario)"
         class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1"
         title="내 시나리오로 복사"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
+        <DocumentDuplicateIcon class="w-4 h-4" />
       </button>
     </div>
   </div>
@@ -105,6 +99,18 @@
 <script setup>
 import { computed } from 'vue'
 import { getCategoryById } from '@/data/businessScenarioTemplates'
+import {
+  ClockIcon,
+  ArrowRightIcon,
+  DocumentDuplicateIcon,
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon,
+  Squares2X2Icon
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   scenario: {
@@ -116,8 +122,24 @@ const props = defineProps({
 defineEmits(['start', 'copy'])
 
 const category = computed(() => getCategoryById(props.scenario.category))
-const categoryIcon = computed(() => category.value?.icon || '📋')
 const categoryName = computed(() => category.value?.name || '기타')
+
+/**
+ * 아이콘 컴포넌트 매핑
+ */
+const iconComponents = {
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon
+}
+
+const categoryIconComponent = computed(() => {
+  const iconName = category.value?.icon
+  return iconComponents[iconName] || Squares2X2Icon
+})
 
 const displayTags = computed(() => {
   return (props.scenario.tags || []).slice(0, 2)

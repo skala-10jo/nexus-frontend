@@ -5,6 +5,15 @@
  */
 import { computed } from 'vue'
 import { BUSINESS_CATEGORIES, getScenarioCountByCategory } from '@/data/businessScenarioTemplates'
+import {
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon,
+  Squares2X2Icon
+} from '@heroicons/vue/24/outline'
 
 defineProps({
   /** 선택된 카테고리 ID */
@@ -42,6 +51,25 @@ const difficulties = [
 ]
 
 /**
+ * 아이콘 컴포넌트 매핑
+ */
+const iconComponents = {
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon
+}
+
+/**
+ * 카테고리 아이콘 컴포넌트 반환
+ */
+const getCategoryIcon = (iconName) => {
+  return iconComponents[iconName] || Squares2X2Icon
+}
+
+/**
  * 난이도 색상 클래스 반환
  */
 const getDifficultyClass = (difficultyId, isSelected) => {
@@ -74,12 +102,9 @@ const getDifficultyClass = (difficultyId, isSelected) => {
           ? 'bg-blue-50 text-blue-800 font-bold'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
       >
-        <div class="w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0"
-          :class="!selectedCategory ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          </svg>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
+          :class="!selectedCategory ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:text-gray-600'">
+          <Squares2X2Icon class="w-5 h-5" />
         </div>
         <span class="text-base font-medium">전체 템플릿</span>
         <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ml-auto"
@@ -102,10 +127,10 @@ const getDifficultyClass = (difficultyId, isSelected) => {
           ? 'bg-blue-50 text-blue-800'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
       >
-        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-          :class="selectedCategory === category.id ? 'bg-blue-100' : 'group-hover:bg-gray-100'">
-          {{ category.icon }}
-        </span>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+          :class="selectedCategory === category.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'">
+          <component :is="getCategoryIcon(category.icon)" class="w-5 h-5" />
+        </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between">
             <span class="text-base font-medium"

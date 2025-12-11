@@ -169,7 +169,7 @@
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-600 hover:bg-gray-50'"
                 >
-                  <span>{{ category.icon }}</span>
+                  <component :is="getCategoryIcon(category.icon)" class="w-4 h-4" />
                   <span>{{ category.name }}</span>
                 </button>
               </template>
@@ -335,7 +335,16 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
-import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import {
+  ChevronDownIcon,
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon,
+  Squares2X2Icon
+} from '@heroicons/vue/24/outline'
 
 // Swiper
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -420,9 +429,28 @@ const mobileFilterLabel = computed(() => {
   } else {
     if (!selectedCategory.value) return '전체 템플릿'
     const cat = BUSINESS_CATEGORIES.find(c => c.id === selectedCategory.value)
-    return cat ? `${cat.icon} ${cat.name}` : '전체 템플릿'
+    return cat ? cat.name : '전체 템플릿'
   }
 })
+
+/**
+ * 카테고리 아이콘 컴포넌트 매핑
+ */
+const iconComponents = {
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PresentationChartBarIcon,
+  ScaleIcon,
+  GlobeAltIcon
+}
+
+/**
+ * 카테고리 아이콘 컴포넌트 반환
+ */
+const getCategoryIcon = (iconName) => {
+  return iconComponents[iconName] || Squares2X2Icon
+}
 
 // ============================================
 // Business Templates Methods

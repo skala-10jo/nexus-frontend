@@ -9,37 +9,37 @@ export const BUSINESS_CATEGORIES = [
   {
     id: 'meeting',
     name: '미팅',
-    icon: '👥',
+    icon: 'UserGroupIcon',
     description: '회의 및 미팅 상황에서의 대화'
   },
   {
     id: 'request',
     name: '업무 요청',
-    icon: '📋',
+    icon: 'ClipboardDocumentListIcon',
     description: '업무 요청, 수락, 거절 상황'
   },
   {
     id: 'feedback',
     name: '피드백',
-    icon: '💬',
+    icon: 'ChatBubbleLeftRightIcon',
     description: '피드백을 주고받는 상황'
   },
   {
     id: 'presentation',
     name: '발표',
-    icon: '🎤',
+    icon: 'PresentationChartBarIcon',
     description: '프레젠테이션 및 Q&A 상황'
   },
   {
     id: 'negotiation',
     name: '협상',
-    icon: '🤝',
+    icon: 'ScaleIcon',
     description: '비즈니스 협상 및 조율'
   },
   {
     id: 'networking',
     name: '네트워킹',
-    icon: '🌐',
+    icon: 'GlobeAltIcon',
     description: '비즈니스 네트워킹 상황'
   }
 ]
