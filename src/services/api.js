@@ -103,7 +103,10 @@ export const scheduleAPI = {
   getScheduleById: (id) => api.get(`/schedules/${id}`),
   createSchedule: (data) => api.post('/schedules', data),
   updateSchedule: (id, data) => api.put(`/schedules/${id}`, data),
-  deleteSchedule: (id) => api.delete(`/schedules/${id}`)
+  deleteSchedule: (id) => api.delete(`/schedules/${id}`),
+  // Outlook Calendar Sync
+  syncOutlookCalendar: () => api.post('/outlook/calendar/sync'),
+  getOutlookCalendarStatus: () => api.get('/outlook/calendar/status')
 };
 
 // Schedule Category API

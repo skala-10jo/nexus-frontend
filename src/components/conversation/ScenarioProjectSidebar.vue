@@ -177,7 +177,7 @@ const formatDate = (dateTimeString) => {
         <!-- Project Schedules List -->
         <div v-if="getProjectSchedules(project.id, upcomingSchedules).length > 0"
           class="ml-6 pl-3 border-l border-gray-200 my-1 space-y-0.5">
-          <div v-for="schedule in getProjectSchedules(project.id, upcomingSchedules).slice(0, 3)" :key="schedule.id"
+          <div v-for="schedule in getProjectSchedules(project.id, upcomingSchedules)" :key="schedule.id"
             class="text-xs py-1.5 px-2 rounded cursor-pointer flex items-center gap-2 transition-colors group/schedule"
             :class="isScheduleSelected(schedule.id, selectedSchedules)
               ? 'bg-blue-50 text-blue-700'
@@ -195,10 +195,6 @@ const formatDate = (dateTimeString) => {
             <!-- Schedule Selected Indicator -->
             <div v-if="isScheduleSelected(schedule.id, selectedSchedules)"
               class="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0 ml-auto"></div>
-          </div>
-          <div v-if="getProjectSchedules(project.id, upcomingSchedules).length > 3"
-            class="pl-2 py-0.5 text-[11px] text-gray-400 font-medium">
-            + {{ getProjectSchedules(project.id, upcomingSchedules).length - 3 }}개 더보기
           </div>
         </div>
       </div>

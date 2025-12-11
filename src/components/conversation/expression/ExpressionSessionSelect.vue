@@ -45,14 +45,11 @@
             </div>
 
             <!-- Expressions Preview -->
-            <div class="flex-1 space-y-3 mb-6 overflow-hidden">
-              <div class="flex items-center gap-3 text-base text-gray-600" v-for="(expr, exprIdx) in session.expressions.slice(0, 4)" :key="exprIdx">
+            <div class="flex-1 space-y-3 mb-6 overflow-y-auto">
+              <div class="flex items-center gap-3 text-base text-gray-600" v-for="(expr, exprIdx) in session.expressions" :key="exprIdx">
                 <div class="w-2 h-2 rounded-full bg-blue-300 flex-shrink-0"></div>
                 <p class="truncate font-medium">{{ expr.expression }}</p>
               </div>
-              <p v-if="session.expressions.length > 4" class="text-sm text-gray-400 pl-5 pt-1">
-                + {{ session.expressions.length - 4 }}개 더보기
-              </p>
             </div>
 
             <!-- Action Button -->
@@ -95,13 +92,10 @@
 
         <!-- Expressions Preview -->
         <div class="space-y-3 mb-6">
-          <div class="flex items-center gap-3 text-sm text-gray-600" v-for="(expr, exprIdx) in session.expressions.slice(0, 3)" :key="exprIdx">
+          <div class="flex items-center gap-3 text-sm text-gray-600" v-for="(expr, exprIdx) in session.expressions" :key="exprIdx">
             <div class="w-1.5 h-1.5 rounded-full bg-blue-300 flex-shrink-0"></div>
             <p class="truncate font-medium">{{ expr.expression }}</p>
           </div>
-          <p v-if="session.expressions.length > 3" class="text-xs text-gray-400 pl-4 pt-1">
-            + {{ session.expressions.length - 3 }}개 더보기
-          </p>
         </div>
 
         <!-- Action Button -->

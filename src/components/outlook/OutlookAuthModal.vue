@@ -1,7 +1,8 @@
 <script setup>
 /**
- * MailAuthModal Component
- * Outlook 인증 모달 (Device Code Flow)
+ * OutlookAuthModal Component
+ * @description Outlook 인증 모달 (Device Code Flow)
+ * Mail, Calendar 등 Outlook 서비스 공통 사용
  */
 defineProps({
   /** 모달 표시 여부 */

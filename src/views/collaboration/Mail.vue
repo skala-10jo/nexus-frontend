@@ -70,8 +70,8 @@
       @update:body="newEmail.body = $event"
     />
 
-    <!-- Auth Modal -->
-    <MailAuthModal
+    <!-- Outlook Auth Modal -->
+    <OutlookAuthModal
       :show="showAuthModal"
       :device-code="deviceCode"
       :auth-timeout="authTimeout"
@@ -118,11 +118,11 @@ import MailToolbar from '@/components/collaboration/mail/MailToolbar.vue'
 import MailList from '@/components/collaboration/mail/MailList.vue'
 import MailDetail from '@/components/collaboration/mail/MailDetail.vue'
 import MailComposer from '@/components/collaboration/mail/MailComposer.vue'
-import MailAuthModal from '@/components/collaboration/mail/MailAuthModal.vue'
+import OutlookAuthModal from '@/components/outlook/OutlookAuthModal.vue'
 import MailChatPanel from '@/components/collaboration/mail/MailChatPanel.vue'
 
 // Composables
-import { useMailAuth } from '@/composables/collaboration/mail/useMailAuth'
+import { useOutlookAuth } from '@/composables/outlook/useOutlookAuth'
 import { useMailList } from '@/composables/collaboration/mail/useMailList'
 import { useMailDetail } from '@/composables/collaboration/mail/useMailDetail'
 import { useMailComposer } from '@/composables/collaboration/mail/useMailComposer'
@@ -168,7 +168,7 @@ const {
   deleteEmail
 } = useMailDetail(loadEmails)
 
-// Mail Auth
+// Outlook Auth
 const {
   authStatus,
   showAuthModal,
@@ -179,7 +179,7 @@ const {
   disconnectOutlook,
   openAuthPage,
   closeAuthModal
-} = useMailAuth()
+} = useOutlookAuth()
 
 // Mail Composer
 const {

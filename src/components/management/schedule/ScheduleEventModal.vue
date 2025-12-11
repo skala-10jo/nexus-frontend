@@ -23,11 +23,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  /** 프로젝트 목록 */
-  projects: {
-    type: Array,
-    default: () => []
-  },
   /** 저장 중 상태 */
   saving: {
     type: Boolean,
@@ -233,20 +228,6 @@ const handleClose = () => {
               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
               placeholder="장소를 입력하세요"
             />
-          </div>
-
-          <!-- Project Selector -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">프로젝트</label>
-            <select
-              v-model="form.projectId"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
-            >
-              <option :value="null">프로젝트 없음</option>
-              <option v-for="project in projects" :key="project.id" :value="project.id">
-                {{ project.name }}
-              </option>
-            </select>
           </div>
 
           <!-- Category Selector -->

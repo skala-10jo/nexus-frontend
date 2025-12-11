@@ -4,12 +4,14 @@ import { parseLocalDateTime } from './useScheduleDateFormat'
 
 /**
  * 일정 이벤트 CRUD 관리
- * @description 일정 조회, 생성, 수정, 삭제 로직을 관리
+ * @description 일정 조회, 생성, 수정, 삭제, Outlook 동기화 로직을 관리
  */
 export function useScheduleEvents() {
   const allEvents = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const outlookSyncStatus = ref(null)
+  const syncingOutlook = ref(false)
 
   /**
    * 모든 일정 조회
@@ -44,7 +46,11 @@ export function useScheduleEvents() {
               description: schedule.description,
               location: schedule.location,
               categories: schedule.categories || [],
-              project: schedule.project || null
+              project: schedule.project || null,
+              // Outlook 연동 정보
+              isFromOutlook: schedule.isFromOutlook || false,
+              attendees: schedule.attendees,
+              organizer: schedule.organizer
             }
           }
         })
@@ -236,11 +242,78 @@ export function useScheduleEvents() {
     )
   }
 
+  // ============================================
+  // Outlook Calendar Sync
+  // ============================================
+
+  /**
+   * Outlook 일정 동기화 상태 조회
+   * @returns {Promise<Object>} 동기화 상태
+   */
+  const getOutlookCalendarStatus = async () => {
+    try {
+      const response = await scheduleAPI.getOutlookCalendarStatus()
+      if (response.data.success) {
+        outlookSyncStatus.value = response.data.data
+        return response.data.data
+      }
+      return null
+    } catch (err) {
+      console.error('Failed to get Outlook calendar status:', err)
+      return null
+    }
+  }
+
+  /**
+   * Outlook 일정 동기화
+   * @returns {Promise<Object>} 동기화 결과
+   */
+  const syncOutlookCalendar = async () => {
+    syncingOutlook.value = true
+    error.value = null
+
+    try {
+      const response = await scheduleAPI.syncOutlookCalendar()
+      if (response.data.success) {
+        outlookSyncStatus.value = response.data.data
+        // 동기화 후 일정 목록 새로고침
+        await fetchAllEvents()
+        return { success: true, data: response.data.data, message: response.data.message }
+      }
+      return { success: false, error: response.data.message }
+    } catch (err) {
+      console.error('Failed to sync Outlook calendar:', err)
+      const errorMessage = err.response?.data?.message || err.message
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      syncingOutlook.value = false
+    }
+  }
+
+  /**
+   * Outlook에서 가져온 일정만 필터링
+   * @returns {Array} Outlook 일정 배열
+   */
+  const getOutlookEvents = () => {
+    return allEvents.value.filter((event) => event.extendedProps.isFromOutlook)
+  }
+
+  /**
+   * 로컬에서 직접 추가한 일정만 필터링
+   * @returns {Array} 로컬 일정 배열
+   */
+  const getLocalEvents = () => {
+    return allEvents.value.filter((event) => !event.extendedProps.isFromOutlook)
+  }
+
   return {
     // State
     allEvents,
     loading,
     error,
+    outlookSyncStatus,
+    syncingOutlook,
 
     // Actions
     fetchAllEvents,
@@ -249,6 +322,12 @@ export function useScheduleEvents() {
     updateEvent,
     deleteEvent,
     updateEventFromDrag,
-    getProjectEvents
+    getProjectEvents,
+
+    // Outlook Calendar Sync
+    getOutlookCalendarStatus,
+    syncOutlookCalendar,
+    getOutlookEvents,
+    getLocalEvents
   }
 }
