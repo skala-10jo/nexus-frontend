@@ -3,7 +3,12 @@
     <!-- Header -->
     <ScheduleHeader
       :loading="eventsComposable.loading.value"
+      :syncing-outlook="eventsComposable.syncingOutlook.value"
+      :is-outlook-connected="outlookAuthComposable.authStatus.value.isConnected"
+      :outlook-email="outlookAuthComposable.authStatus.value.outlookEmail"
       @create="openCreateModal"
+      @sync-outlook="handleSyncOutlook"
+      @connect-outlook="handleConnectOutlook"
     />
 
     <!-- Mobile Tabs -->
@@ -95,7 +100,6 @@
       v-model="eventFormComposable.eventForm.value"
       :show="showModal"
       :is-edit-mode="eventFormComposable.isEditMode.value"
-      :projects="projectsComposable.projects.value"
       :saving="eventsComposable.loading.value"
       @close="closeModal"
       @save="saveEvent"
@@ -107,6 +111,15 @@
     <CategoryManager
       v-if="showCategoryManager"
       @close="showCategoryManager = false"
+    />
+
+    <!-- Outlook Auth Modal -->
+    <OutlookAuthModal
+      :show="outlookAuthComposable.showAuthModal.value"
+      :device-code="outlookAuthComposable.deviceCode.value"
+      :auth-timeout="outlookAuthComposable.authTimeout.value"
+      @close="outlookAuthComposable.closeAuthModal"
+      @open-auth-page="outlookAuthComposable.openAuthPage"
     />
   </div>
 </template>
@@ -132,12 +145,14 @@ import CategoryManager from '@/components/schedule/CategoryManager.vue'
 import ProjectDetail from '@/components/ProjectDetail.vue'
 import ProjectEdit from '@/components/ProjectEdit.vue'
 import ProjectCreate from '@/components/ProjectCreate.vue'
+import OutlookAuthModal from '@/components/outlook/OutlookAuthModal.vue'
 
 // Composables
 import { useScheduleCalendar } from '@/composables/management/useScheduleCalendar'
 import { useScheduleEvents } from '@/composables/management/useScheduleEvents'
 import { useScheduleProjects } from '@/composables/management/useScheduleProjects'
 import { useScheduleEventForm } from '@/composables/management/useScheduleEventForm'
+import { useOutlookAuth } from '@/composables/outlook/useOutlookAuth'
 
 // Stores
 import { useScheduleCategoryStore } from '@/stores/scheduleCategory'
@@ -150,6 +165,7 @@ const eventsComposable = useScheduleEvents()
 const projectsComposable = useScheduleProjects()
 const eventFormComposable = useScheduleEventForm()
 const categoryStore = useScheduleCategoryStore()
+const outlookAuthComposable = useOutlookAuth()
 
 // ============================================
 // State
@@ -345,6 +361,50 @@ async function handleDeleteProject(project) {
 }
 
 // ============================================
+// Outlook Calendar Sync
+// ============================================
+
+/**
+ * Outlook 연동 시작
+ */
+function handleConnectOutlook() {
+  outlookAuthComposable.connectOutlook(async () => {
+    // 연동 성공 시 캘린더 동기화 실행
+    await handleSyncOutlook()
+  })
+}
+
+/**
+ * Outlook 캘린더 동기화 실행
+ */
+async function handleSyncOutlook() {
+  const result = await eventsComposable.syncOutlookCalendar()
+  if (result.success) {
+    refreshCalendar()
+    // 범주도 새로고침
+    categoryStore.fetchCategories()
+    alert(result.message || 'Outlook 일정 동기화가 완료되었습니다.')
+  } else {
+    // JWT/토큰 관련 오류인지 확인
+    const errorMsg = result.error || ''
+    const isTokenError = errorMsg.includes('JWT') ||
+                         errorMsg.includes('token') ||
+                         errorMsg.includes('Token') ||
+                         errorMsg.includes('IDX14100') ||
+                         errorMsg.includes('unauthorized') ||
+                         errorMsg.includes('Unauthorized')
+
+    if (isTokenError) {
+      alert('Outlook 연결이 만료되었습니다. 다시 연결해주세요.')
+      // 연결 상태 새로고침
+      await outlookAuthComposable.checkAuthStatus()
+    } else {
+      alert('동기화 실패: ' + (result.error || '알 수 없는 오류'))
+    }
+  }
+}
+
+// ============================================
 // Utilities
 // ============================================
 
@@ -365,6 +425,8 @@ onMounted(() => {
   projectsComposable.loadProjects()
   projectsComposable.loadDocuments()
   categoryStore.fetchCategories()
+  // Outlook 연동 상태 확인
+  outlookAuthComposable.checkAuthStatus()
 })
 
 // 프로젝트 선택 변경 시 캘린더 새로고침

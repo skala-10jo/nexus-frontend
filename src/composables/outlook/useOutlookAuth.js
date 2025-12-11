@@ -3,8 +3,9 @@ import { mailService } from '@/services/collaboration/mailService'
 
 /**
  * Outlook 인증 관리 Composable
+ * @description Mail, Calendar 등 Outlook 서비스 공통 인증 처리
  */
-export function useMailAuth() {
+export function useOutlookAuth() {
   // ============================================
   // State
   // ============================================

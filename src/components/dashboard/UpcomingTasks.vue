@@ -89,8 +89,11 @@ const formatDateRange = (start, end) => {
             <span class="w-1 h-1 rounded-full bg-gray-300"></span>
             <span class="text-xs text-gray-500">{{ formatTime(event.start) }} - {{ formatTime(event.end || event.start) }}</span>
           </div>
-          <div v-if="event.extendedProps?.project" class="text-xs text-gray-500 mt-0.5 truncate">
-            {{ event.extendedProps.project.name }}
+          <div class="text-xs text-gray-500 mt-0.5 truncate">
+            <span v-if="event.extendedProps?.project">
+              {{ event.extendedProps.project.name }}
+            </span>
+            <span v-else class="text-gray-400">미할당</span>
           </div>
         </div>
 

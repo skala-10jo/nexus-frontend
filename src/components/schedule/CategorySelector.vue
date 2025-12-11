@@ -5,7 +5,15 @@
     </label>
 
     <!-- Selected Categories Display -->
-    <div v-if="localSelectedIds.length > 0" class="mb-3 flex flex-wrap gap-2">
+    <div class="mb-3 flex flex-wrap gap-2">
+      <!-- Show "미할당" when no categories selected -->
+      <span
+        v-if="localSelectedIds.length === 0"
+        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500 border border-gray-300"
+      >
+        미할당
+      </span>
+      <!-- Show selected categories -->
       <span
         v-for="categoryId in localSelectedIds"
         :key="categoryId"

@@ -64,8 +64,7 @@
         </button>
         <div v-show="openMenus.has('management') && !isCollapsed" class="pl-4 space-y-1 mt-1">
           <router-link to="/management/schedule" class="block px-4 py-2 text-sm rounded-xl transition border"
-            :class="isSubActive('/management/schedule') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">프로젝트
-            · 일정</router-link>
+            :class="isSubActive('/management/schedule') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">일정 관리</router-link>
           <router-link to="/management/glossary" class="block px-4 py-2 text-sm rounded-xl transition border"
             :class="isSubActive('/management/glossary') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_4px_10px_rgba(0,0,0,0.05),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(0,0,0,0.05)] text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white/50'">문서
             · 전문용어 사전</router-link>

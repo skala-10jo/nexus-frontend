@@ -135,7 +135,7 @@ const getProjectEvents = (projectId, allEvents) => {
           class="ml-6 pl-3 border-l border-gray-200 my-1 space-y-0.5"
         >
           <div
-            v-for="event in getProjectEvents(project.id, allEvents).slice(0, 3)"
+            v-for="event in getProjectEvents(project.id, allEvents)"
             :key="event.id"
             class="text-xs py-1.5 px-2 rounded hover:bg-gray-50 text-gray-600 cursor-pointer flex items-center gap-2 transition-colors group/event"
             @click.stop="emit('event-click', { event })"
@@ -157,12 +157,6 @@ const getProjectEvents = (projectId, allEvents) => {
             >
               회화 연습
             </button>
-          </div>
-          <div
-            v-if="getProjectEvents(project.id, allEvents).length > 3"
-            class="pl-2 py-0.5 text-[11px] text-gray-400 font-medium hover:text-gray-600 cursor-pointer transition-colors"
-          >
-            + {{ getProjectEvents(project.id, allEvents).length - 3 }}개 더보기
           </div>
         </div>
       </div>
