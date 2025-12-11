@@ -63,7 +63,6 @@ import {
   ChatBubbleLeftRightIcon,
   PresentationChartBarIcon,
   ScaleIcon,
-  GlobeAltIcon,
   Squares2X2Icon,
   ChatBubbleOvalLeftEllipsisIcon
 } from '@heroicons/vue/24/outline'
@@ -89,7 +88,6 @@ const iconComponents = {
   ChatBubbleLeftRightIcon,
   PresentationChartBarIcon,
   ScaleIcon,
-  GlobeAltIcon,
   ChatBubbleOvalLeftEllipsisIcon
 }
 

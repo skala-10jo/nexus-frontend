@@ -37,12 +37,6 @@ export const BUSINESS_CATEGORIES = [
     description: '비즈니스 협상 및 조율'
   },
   {
-    id: 'networking',
-    name: '네트워킹',
-    icon: 'GlobeAltIcon',
-    description: '비즈니스 네트워킹 상황'
-  },
-  {
     id: 'smalltalk',
     name: '스몰토크',
     icon: 'ChatBubbleOvalLeftEllipsisIcon',
@@ -375,67 +369,6 @@ You can partially accommodate but need clear justification.`,
     requiredTerms: ['resource', 'allocation', 'bandwidth', 'trade-off', 'priority'],
     estimatedDuration: '10-15 min',
     tags: ['resource-management', 'cross-functional', 'negotiation']
-  },
-
-  // ============================================
-  // Networking Scenarios (네트워킹)
-  // ============================================
-  {
-    id: 'template-networking-introduction',
-    category: 'networking',
-    title: '비즈니스 자기소개',
-    description: '비즈니스 네트워킹 이벤트에서 효과적으로 자기 소개합니다.',
-    language: 'EN',
-    difficulty: 'beginner',
-    roles: {
-      user: '직장인',
-      ai: '업계 관계자'
-    },
-    systemPrompt: `You are a professional at a networking event.
-Introduce yourself and show genuine interest in the other person.
-Ask about their work and find common professional interests.
-Keep the conversation natural and engaging.`,
-    requiredTerms: ['pleasure to meet', 'background', 'industry', 'experience', 'connect'],
-    estimatedDuration: '5-10 min',
-    tags: ['networking', 'personal-branding', 'communication']
-  },
-  {
-    id: 'template-networking-followup',
-    category: 'networking',
-    title: '미팅 후 팔로업',
-    description: '네트워킹 이벤트 후 연락을 이어가며 관계를 구축합니다.',
-    language: 'EN',
-    difficulty: 'intermediate',
-    roles: {
-      user: '직장인',
-      ai: '새로운 인맥'
-    },
-    systemPrompt: `You are someone who was met at a networking event last week.
-You remember the conversation and are open to continuing the connection.
-Respond positively to follow-up but be appropriately busy.
-Consider opportunities for mutual benefit.`,
-    requiredTerms: ['follow up', 'connect', 'opportunity', 'schedule', 'look forward'],
-    estimatedDuration: '5-10 min',
-    tags: ['relationship-building', 'professional-network', 'communication']
-  },
-  {
-    id: 'template-networking-linkedin',
-    category: 'networking',
-    title: '링크드인 연결 요청',
-    description: 'LinkedIn에서 전문적으로 연결 요청을 보내고 대화를 시작합니다.',
-    language: 'EN',
-    difficulty: 'beginner',
-    roles: {
-      user: '직장인',
-      ai: '링크드인 연락처'
-    },
-    systemPrompt: `You are a professional who received a LinkedIn connection request.
-You're cautiously open to new connections but filter based on relevance.
-Ask about mutual interests or reasons for connecting.
-Respond appropriately based on the quality of the introduction.`,
-    requiredTerms: ['connect', 'mutual interest', 'profile', 'industry', 'opportunity'],
-    estimatedDuration: '5 min',
-    tags: ['social-media', 'digital-networking', 'personal-branding']
   },
 
   // ============================================
