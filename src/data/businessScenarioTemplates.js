@@ -56,8 +56,8 @@ export const BUSINESS_SCENARIO_TEMPLATES = [
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Project Manager',
-      ai: 'Team Member'
+      user: '프로젝트 매니저',
+      ai: '팀원'
     },
     systemPrompt: `You are a team member attending a project kickoff meeting.
 The user is the Project Manager leading the meeting.
@@ -76,8 +76,8 @@ Use natural business English.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Developer',
-      ai: 'Team Lead'
+      user: '개발자',
+      ai: '팀 리드'
     },
     systemPrompt: `You are a team lead conducting a weekly standup meeting.
 Ask the user about their progress, blockers, and plans for the week.
@@ -95,8 +95,8 @@ Keep the conversation focused and efficient.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Employee',
-      ai: 'Manager'
+      user: '직원',
+      ai: '매니저'
     },
     systemPrompt: `You are a supportive manager having a one-on-one meeting with your direct report.
 Ask about their work satisfaction, career goals, and any challenges they're facing.
@@ -114,8 +114,8 @@ Be empathetic and encouraging while maintaining professional boundaries.`,
     language: 'EN',
     difficulty: 'advanced',
     roles: {
-      user: 'Account Manager',
-      ai: 'Client'
+      user: '어카운트 매니저',
+      ai: '클라이언트'
     },
     systemPrompt: `You are a demanding but fair client receiving a project update.
 Ask detailed questions about progress, timelines, and any issues.
@@ -137,8 +137,8 @@ Occasionally mention new requirements or scope changes.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Employee',
-      ai: 'Colleague'
+      user: '직원',
+      ai: '동료'
     },
     systemPrompt: `You are a busy but helpful colleague.
 When the user requests help, ask clarifying questions about the task.
@@ -156,8 +156,8 @@ Be collaborative and solution-oriented.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Employee',
-      ai: 'Manager'
+      user: '직원',
+      ai: '매니저'
     },
     systemPrompt: `You are a manager who values accountability but understands realistic constraints.
 Listen to the extension request carefully and ask about the reasons.
@@ -175,8 +175,8 @@ You may grant the extension with conditions or offer alternative solutions.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Employee',
-      ai: 'Colleague'
+      user: '직원',
+      ai: '동료'
     },
     systemPrompt: `You are a colleague who needs help with an urgent task.
 Make a reasonable request for assistance.
@@ -198,8 +198,8 @@ React professionally whether the request is accepted or declined.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Manager',
-      ai: 'Team Member'
+      user: '매니저',
+      ai: '팀원'
     },
     systemPrompt: `You are a team member who recently completed a successful project.
 Respond humbly to praise and share credit with the team when appropriate.
@@ -217,8 +217,8 @@ Show appreciation and enthusiasm.`,
     language: 'EN',
     difficulty: 'advanced',
     roles: {
-      user: 'Manager',
-      ai: 'Team Member'
+      user: '매니저',
+      ai: '팀원'
     },
     systemPrompt: `You are a team member receiving constructive feedback about your recent work.
 Initially be slightly defensive but open to understanding.
@@ -236,8 +236,8 @@ Eventually acknowledge the feedback and discuss improvement steps.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Employee',
-      ai: 'Manager'
+      user: '직원',
+      ai: '매니저'
     },
     systemPrompt: `You are a manager providing mixed feedback - both positive aspects and areas for improvement.
 Be specific with examples and focus on behaviors, not personality.
@@ -259,8 +259,8 @@ End with clear expectations and next steps.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Presenter',
-      ai: 'Audience Member'
+      user: '발표자',
+      ai: '청중'
     },
     systemPrompt: `You are an audience member at a business presentation.
 Ask clarifying questions about the agenda and objectives.
@@ -278,8 +278,8 @@ React naturally to the presentation style.`,
     language: 'EN',
     difficulty: 'advanced',
     roles: {
-      user: 'Presenter',
-      ai: 'Audience Member'
+      user: '발표자',
+      ai: '청중'
     },
     systemPrompt: `You are a challenging but fair audience member during a Q&A session.
 Ask detailed technical questions, clarifying questions, and occasionally tough questions.
@@ -297,8 +297,8 @@ If answers are vague, push for more specificity.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Presenter',
-      ai: 'Executive'
+      user: '발표자',
+      ai: '임원'
     },
     systemPrompt: `You are a senior executive who has been listening to the presentation.
 Ask about next steps, timelines, and resource requirements.
@@ -320,8 +320,8 @@ Make a final decision or request follow-up.`,
     language: 'EN',
     difficulty: 'advanced',
     roles: {
-      user: 'Candidate',
-      ai: 'HR Manager'
+      user: '지원자',
+      ai: 'HR 매니저'
     },
     systemPrompt: `You are an HR manager conducting a salary negotiation.
 Start with the company's initial offer which is slightly below market rate.
@@ -340,8 +340,8 @@ Be fair but also represent company interests.`,
     language: 'EN',
     difficulty: 'advanced',
     roles: {
-      user: 'Business Representative',
-      ai: 'Client Representative'
+      user: '비즈니스 담당자',
+      ai: '클라이언트 담당자'
     },
     systemPrompt: `You are a client representative negotiating contract terms.
 You want favorable terms but also value a long-term relationship.
@@ -359,8 +359,8 @@ Raise concerns about specific contract clauses.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Project Manager',
-      ai: 'Department Head'
+      user: '프로젝트 매니저',
+      ai: '부서장'
     },
     systemPrompt: `You are a department head whose team is already stretched thin.
 Listen to the resource request and ask about project priority and timeline.
@@ -382,8 +382,8 @@ You can partially accommodate but need clear justification.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Professional',
-      ai: 'Industry Contact'
+      user: '직장인',
+      ai: '업계 관계자'
     },
     systemPrompt: `You are a professional at a networking event.
 Introduce yourself and show genuine interest in the other person.
@@ -401,8 +401,8 @@ Keep the conversation natural and engaging.`,
     language: 'EN',
     difficulty: 'intermediate',
     roles: {
-      user: 'Professional',
-      ai: 'New Contact'
+      user: '직장인',
+      ai: '새로운 인맥'
     },
     systemPrompt: `You are someone who was met at a networking event last week.
 You remember the conversation and are open to continuing the connection.
@@ -420,8 +420,8 @@ Consider opportunities for mutual benefit.`,
     language: 'EN',
     difficulty: 'beginner',
     roles: {
-      user: 'Professional',
-      ai: 'LinkedIn Contact'
+      user: '직장인',
+      ai: '링크드인 연락처'
     },
     systemPrompt: `You are a professional who received a LinkedIn connection request.
 You're cautiously open to new connections but filter based on relevance.
