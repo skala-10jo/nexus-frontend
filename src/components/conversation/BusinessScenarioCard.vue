@@ -6,7 +6,7 @@
     <div class="flex justify-between items-start mb-4">
       <div class="flex items-center gap-2">
         <!-- Category Badge -->
-        <div class="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg">
+        <div class="flex items-center gap-1.5 h-8 px-3 bg-gray-100 rounded-xl">
           <component :is="categoryIconComponent" class="w-4 h-4 text-gray-600" />
           <span class="text-xs font-bold text-gray-700">{{ categoryName }}</span>
         </div>
@@ -24,7 +24,7 @@
       </div>
 
       <!-- Template Badge -->
-      <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-lg uppercase tracking-wide">
+      <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg uppercase tracking-wide">
         Template
       </span>
     </div>
