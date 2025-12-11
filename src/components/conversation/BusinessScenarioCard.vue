@@ -42,23 +42,14 @@
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex gap-2">
-      <button
-        @click="$emit('start', scenario)"
-        class="flex-1 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
-      >
-        <span>바로 연습</span>
-        <ArrowRightIcon class="w-4 h-4" />
-      </button>
-      <button
-        @click="$emit('copy', scenario)"
-        class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1"
-        title="내 시나리오로 복사"
-      >
-        <DocumentDuplicateIcon class="w-4 h-4" />
-      </button>
-    </div>
+    <!-- Action Button -->
+    <button
+      @click="$emit('start', scenario)"
+      class="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
+    >
+      <span>바로 연습</span>
+      <ArrowRightIcon class="w-4 h-4" />
+    </button>
   </div>
 </template>
 
@@ -67,7 +58,6 @@ import { computed } from 'vue'
 import { getCategoryById } from '@/data/businessScenarioTemplates'
 import {
   ArrowRightIcon,
-  DocumentDuplicateIcon,
   UserGroupIcon,
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
@@ -84,7 +74,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['start', 'copy'])
+defineEmits(['start'])
 
 const category = computed(() => getCategoryById(props.scenario.category))
 const categoryName = computed(() => category.value?.name || '기타')
