@@ -30,7 +30,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden bg-gray-50/50">
       <!-- Left Sidebar (Conditional) -->
-      <div class="hidden md:flex flex-col h-full w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 bg-white rounded-2xl border border-gray-100 overflow-hidden m-4 mr-0">
+      <div class="hidden md:flex flex-col h-full w-1/5 min-w-[220px] max-w-[320px] flex-shrink-0 bg-white rounded-2xl border border-gray-100 overflow-hidden m-4 mr-0">
         <!-- Tab Navigation (Above Sidebar) -->
         <div class="flex-shrink-0 p-4 border-b border-gray-100">
           <div class="flex gap-1 bg-gray-100 p-1 rounded-xl">
