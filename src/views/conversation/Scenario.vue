@@ -462,18 +462,19 @@ function showAllTemplates() {
 
 async function startBusinessPractice(template) {
   // Create a temporary scenario from template and start practice
+  // 백엔드 ManualCreateRequest 스키마에 맞게 데이터 변환
   try {
     const scenarioData = {
       title: template.title,
       description: template.description,
-      language: template.language,
+      scenarioText: template.systemPrompt,  // systemPrompt → scenarioText (백엔드 필수 필드)
+      category: template.category,           // category (백엔드 필수 필드)
+      roles: template.roles,                 // { user, ai } 그대로 전달
+      requiredTerminology: template.requiredTerms || [],  // requiredTerms → requiredTerminology
+      language: template.language?.toLowerCase() || 'en', // EN → en (소문자로 변환)
       difficulty: template.difficulty,
-      roles: template.roles,
-      systemPrompt: template.systemPrompt,
-      requiredTerms: template.requiredTerms || [],
-      projectIds: [],
-      scheduleIds: [],
-      isTemplate: true
+      projectId: null,   // 단수형 (배열 아님)
+      scheduleId: null   // 단수형 (배열 아님)
     }
 
     const response = await scenarioService.create(scenarioData)
