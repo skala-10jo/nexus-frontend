@@ -2,9 +2,14 @@
   <div
     class="group bg-white border border-gray-100 rounded-3xl p-6 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
   >
-    <!-- Card Header - Same style as ScenarioCard -->
+    <!-- Card Header - Category, Flag, Difficulty in one row -->
     <div class="flex justify-between items-start mb-4">
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
+        <!-- Category Badge -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg">
+          <component :is="categoryIconComponent" class="w-4 h-4 text-gray-600" />
+          <span class="text-xs font-bold text-gray-700">{{ categoryName }}</span>
+        </div>
         <!-- Language Flag -->
         <span class="w-8 h-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50 text-xl hover:scale-110 transition-transform">
           {{ languageFlag }}
@@ -19,17 +24,9 @@
       </div>
 
       <!-- Template Badge -->
-      <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg uppercase tracking-wide">
+      <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-lg uppercase tracking-wide">
         Template
       </span>
-    </div>
-
-    <!-- Category Badge - Prominent display -->
-    <div class="flex items-center gap-2 mb-3">
-      <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-        <component :is="categoryIconComponent" class="w-4 h-4 text-gray-600" />
-        <span class="text-sm font-bold text-gray-700">{{ categoryName }}</span>
-      </div>
     </div>
 
     <!-- Title & Description -->
