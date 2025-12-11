@@ -233,25 +233,6 @@ End with clear expectations and next steps.`,
   // Presentation Scenarios (발표)
   // ============================================
   {
-    id: 'template-presentation-opening',
-    category: 'presentation',
-    title: '발표 시작하기',
-    description: '프레젠테이션을 효과적으로 시작하며 청중의 관심을 사로잡습니다.',
-    language: 'EN',
-    difficulty: 'beginner',
-    roles: {
-      user: '발표자',
-      ai: '청중'
-    },
-    systemPrompt: `You are an audience member at a business presentation.
-Ask clarifying questions about the agenda and objectives.
-Show interest but also express typical audience concerns.
-React naturally to the presentation style.`,
-    requiredTerms: ['agenda', 'objective', 'overview', 'key points', 'outline'],
-    estimatedDuration: '5-10 min',
-    tags: ['public-speaking', 'communication', 'presentation-skills']
-  },
-  {
     id: 'template-presentation-qa',
     category: 'presentation',
     title: '질의응답 대응하기',
@@ -269,25 +250,6 @@ If answers are vague, push for more specificity.`,
     requiredTerms: ['elaborate', 'specifically', 'data', 'evidence', 'conclusion'],
     estimatedDuration: '15-20 min',
     tags: ['critical-thinking', 'communication', 'expertise']
-  },
-  {
-    id: 'template-presentation-closing',
-    category: 'presentation',
-    title: '발표 마무리하기',
-    description: '발표를 인상적으로 마무리하고 다음 단계에 대한 합의를 이끌어냅니다.',
-    language: 'EN',
-    difficulty: 'intermediate',
-    roles: {
-      user: '발표자',
-      ai: '임원'
-    },
-    systemPrompt: `You are a senior executive who has been listening to the presentation.
-Ask about next steps, timelines, and resource requirements.
-Express interest but also raise concerns about feasibility.
-Make a final decision or request follow-up.`,
-    requiredTerms: ['summary', 'key takeaway', 'next steps', 'action items', 'follow-up'],
-    estimatedDuration: '10-15 min',
-    tags: ['executive-communication', 'persuasion', 'closure']
   },
 
   // ============================================
