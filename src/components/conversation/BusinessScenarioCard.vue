@@ -5,18 +5,18 @@
     <!-- Card Header - Category, Flag, Difficulty in one row -->
     <div class="flex justify-between items-start mb-4">
       <div class="flex items-center gap-2">
-        <!-- Category Badge -->
+        <!-- Category Badge - same height as flag -->
         <div class="flex items-center gap-1.5 h-8 px-3 bg-gray-100 rounded-xl">
           <component :is="categoryIconComponent" class="w-4 h-4 text-gray-600" />
           <span class="text-xs font-bold text-gray-700">{{ categoryName }}</span>
         </div>
-        <!-- Language Flag -->
+        <!-- Language Flag - same as ScenarioCard -->
         <span class="w-8 h-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200/50 text-xl hover:scale-110 transition-transform">
           {{ languageFlag }}
         </span>
-        <!-- Difficulty Badge -->
+        <!-- Difficulty Badge - same as ScenarioCard -->
         <span
-          class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center"
+          class="h-8 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center"
           :class="difficultyClass"
         >
           {{ difficultyLabel }}
@@ -24,7 +24,7 @@
       </div>
 
       <!-- Template Badge -->
-      <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg uppercase tracking-wide">
+      <span class="h-8 px-2.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg uppercase tracking-wide flex items-center">
         Template
       </span>
     </div>
