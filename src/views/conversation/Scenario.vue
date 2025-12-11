@@ -50,10 +50,7 @@
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'"
             >
-              <div class="flex flex-col items-center justify-center gap-0.5">
-                <span>상황별</span>
-                <span>회화연습</span>
-              </div>
+              <span>추천 시나리오</span>
             </button>
           </div>
         </div>
