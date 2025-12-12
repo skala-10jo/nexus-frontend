@@ -126,7 +126,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useSlackAgent, SUPPORTED_LANGUAGES } from '@/composables/collaboration/messenger/useSlackAgent'
+import { useSlackAgent } from '@/composables/collaboration/messenger/useSlackAgent'
+import { SUPPORTED_LANGUAGES } from '@/constants/languages'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)

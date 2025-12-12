@@ -6,40 +6,20 @@
  *
  * NOTE: 이 composable은 싱글톤 패턴을 사용합니다.
  * 모든 컴포넌트에서 같은 상태를 공유합니다.
+ *
+ * 리팩토링: Constants/Utils 레이어 분리
+ * - 언어 상수: @/constants/languages
+ * - 헬퍼 함수: @/utils/slackHelpers
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { translateMessage, createDraft, sendChatMessage, deleteSession } from '@/services/slackAgentService'
 import { userAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { SUPPORTED_LANGUAGES, getLanguageLabel } from '@/constants/languages'
+import { decodeHtmlEntities } from '@/utils/slackHelpers'
 
-// Language options
-export const SUPPORTED_LANGUAGES = [
-  { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'ja', label: '日本語', flag: '🇯🇵' },
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'zh', label: '中文', flag: '🇨🇳' }
-]
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-/**
- * Decode HTML entities from Slack messages
- * Slack API returns messages with HTML entities encoded
- */
-const decodeHtmlEntities = (text) => {
-  if (!text) return ''
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-}
+// Re-export for backward compatibility
+export { SUPPORTED_LANGUAGES }
 
 // ============================================
 // SINGLETON STATE (shared across all instances)
@@ -78,11 +58,7 @@ export function useSlackAgent() {
   // 실제 사용할 언어 (임시 언어가 있으면 임시, 없으면 기본)
   const activeLanguage = computed(() => temporaryLanguage.value || preferredLanguage.value)
 
-  // Get language label by code
-  const getLanguageLabel = (code) => {
-    const lang = SUPPORTED_LANGUAGES.find(l => l.code === code)
-    return lang ? `${lang.flag} ${lang.label}` : code
-  }
+  // getLanguageLabel is now imported from @/constants/languages
 
   /**
    * Set temporary language for current session only (not saved to DB)

@@ -75,12 +75,6 @@
 
           <!-- View: Pronunciation Practice -->
           <div v-else-if="currentView === 'practice'" class="relative">
-            <!-- 매칭 사전 계산 로딩 오버레이 -->
-            <div v-if="isPrecomputingMatches" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-2xl">
-              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-3"></div>
-              <p class="text-gray-700 font-medium">예문 하이라이트 준비 중...</p>
-              <p class="text-gray-500 text-sm mt-1">{{ precomputeProgress }}%</p>
-            </div>
             <ExpressionPracticeCard :expression="currentExpression"
               :current-index="currentExpressionIndex" :total-count="currentSessionExpressions.length"
               :practice-completed="practiceCompletedForCurrent" :all-practice-completed="allPracticeCompleted"
@@ -97,7 +91,6 @@
             <div v-if="isGeneratingQuiz" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center">
               <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-3"></div>
               <p class="text-gray-700 font-medium">퀴즈 생성 중...</p>
-              <p class="text-gray-500 text-sm mt-1">AI가 문제를 분석하고 있습니다</p>
             </div>
             <ExpressionQuizCard v-else :question="currentQuizQuestion"
               :current-index="currentQuizIndex" :total-count="quizQuestions.length" :correct-count="quizCorrectCount"
@@ -162,8 +155,6 @@ const {
   currentExpression,
   allSessionsCompleted,
   hasNextSession,
-  isPrecomputingMatches,
-  precomputeProgress,
   fetchUnits,
   selectChapterDirect,
   startSession,
