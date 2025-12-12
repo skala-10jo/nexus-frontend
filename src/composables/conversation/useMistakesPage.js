@@ -2,16 +2,25 @@
  * Mistakes Page Composable
  *
  * 오답 목록 관리, 선택, 삭제 로직
+ *
+ * 리팩토링: Service/Utils/Composable 레이어 분리
+ * - API 호출: mistakesService
+ * - 포맷팅: formatters
+ * - TTS: useTTS composable
  */
 import { ref, computed } from 'vue'
-import api, { pythonAPI } from '@/services/api'
+import { mistakesService } from '@/services/conversation/mistakesService'
+import { formatMeaning, formatDate, highlightExpression } from '@/utils/formatters'
+import { useTTS } from '@/composables/common/useTTS'
 
 export function useMistakesPage() {
+  // TTS Composable
+  const { ttsLoading, playTTS } = useTTS()
+
   // State
   const loading = ref(true)
   const mistakes = ref([])
   const viewMode = ref('list') // 'list' | 'quiz'
-  const ttsLoading = ref(false)
   const selectedMistakes = ref(new Set())
   const showClearConfirm = ref(false)
   const showDeleteSelectedConfirm = ref(false)
@@ -25,40 +34,13 @@ export function useMistakesPage() {
   const fetchMistakes = async () => {
     loading.value = true
     try {
-      const response = await api.get('/expressions/mistakes')
+      const response = await mistakesService.getMistakes()
       mistakes.value = response.data.data || []
     } catch (error) {
       console.error('Failed to fetch mistakes:', error)
       mistakes.value = []
     } finally {
       loading.value = false
-    }
-  }
-
-  const playTTS = async (text) => {
-    if (!text || ttsLoading.value) return
-
-    ttsLoading.value = true
-    try {
-      const response = await pythonAPI.post(
-        '/expression/speech/synthesize-text',
-        { text, voice_name: 'en-US-JennyNeural' },
-        { responseType: 'arraybuffer' }
-      )
-
-      const audioBlob = new Blob([response.data], { type: 'audio/wav' })
-      const audioUrl = URL.createObjectURL(audioBlob)
-      const audio = new Audio(audioUrl)
-      audio.onended = () => URL.revokeObjectURL(audioUrl)
-      // Chrome Autoplay Policy: play()는 Promise 반환, 에러 처리 필요
-      audio.play().catch(err => {
-        console.error('Audio play failed:', err)
-        URL.revokeObjectURL(audioUrl)
-      })
-    } catch (error) {
-      console.error('TTS failed:', error)
-    } finally {
-      ttsLoading.value = false
     }
   }
 
@@ -77,7 +59,7 @@ export function useMistakesPage() {
     if (isAllSelected.value) {
       selectedMistakes.value = new Set()
     } else {
-      selectedMistakes.value = new Set(mistakes.value.map(m => m.id))
+      selectedMistakes.value = new Set(mistakes.value.map((m) => m.id))
     }
   }
 
@@ -88,7 +70,7 @@ export function useMistakesPage() {
 
   const clearAll = async () => {
     try {
-      await api.delete('/expressions/quiz/results')
+      await mistakesService.deleteAllMistakes()
       mistakes.value = []
       selectedMistakes.value = new Set()
       showClearConfirm.value = false
@@ -104,47 +86,23 @@ export function useMistakesPage() {
 
   const deleteSelected = async () => {
     try {
-      const deletePromises = Array.from(selectedMistakes.value).map(id => {
-        const mistake = mistakes.value.find(m => m.id === id)
+      const deletePromises = Array.from(selectedMistakes.value).map((id) => {
+        const mistake = mistakes.value.find((m) => m.id === id)
         if (mistake) {
-          return api.delete(`/expressions/quiz/result/${mistake.expressionId}/${mistake.exampleIndex}`)
+          return mistakesService.deleteMistake(mistake.expressionId, mistake.exampleIndex)
         }
         return Promise.resolve()
       })
 
       await Promise.all(deletePromises)
 
-      mistakes.value = mistakes.value.filter(m => !selectedMistakes.value.has(m.id))
+      mistakes.value = mistakes.value.filter((m) => !selectedMistakes.value.has(m.id))
       selectedMistakes.value = new Set()
       showDeleteSelectedConfirm.value = false
     } catch (error) {
       console.error('Failed to delete selected mistakes:', error)
       alert('Failed to delete selected mistakes')
     }
-  }
-
-  // Helpers
-  const formatMeaning = (meaning) => {
-    if (!meaning) return ''
-    return meaning.replace(/[{}]/g, '')
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const highlightExpression = (text, expression) => {
-    if (!text || !expression) return text
-    const regex = new RegExp(`(${expression})`, 'gi')
-    return text.replace(regex, '<mark class="bg-yellow-200 text-gray-900 font-semibold px-1 rounded">$1</mark>')
   }
 
   return {
@@ -170,7 +128,7 @@ export function useMistakesPage() {
     confirmDeleteSelected,
     deleteSelected,
 
-    // Helpers
+    // Helpers (from utils)
     formatMeaning,
     formatDate,
     highlightExpression
