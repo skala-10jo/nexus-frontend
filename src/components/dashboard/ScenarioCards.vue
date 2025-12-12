@@ -57,7 +57,7 @@ const topScenarios = computed(() => {
   return props.todayEvents.slice(0, 3)
 })
 
-const userName = computed(() => props.user?.name || 'User')
+const userName = computed(() => props.user?.fullName || props.user?.username || 'User')
 const hasSchedule = computed(() => props.scheduleMessage?.hasSchedule)
 
 const goToScenario = (scheduleId) => {
@@ -78,19 +78,19 @@ const handleCheckIn = () => {
 </script>
 
 <template>
-  <div class="bg-gradient-to-br from-purple-50/50 via-blue-50/30 to-pink-50/50 rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 h-full flex flex-col relative overflow-hidden">
+  <div class="bg-gradient-to-br from-purple-50/50 via-blue-50/30 to-pink-50/50 rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col relative overflow-hidden">
 
     <!-- Header Section -->
-    <div class="z-10 mb-4">
-      <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-        {{ greeting }} <span class="text-purple-600">{{ userName }}</span>!
+    <div class="z-10 mb-6">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
+        {{ greeting }} <span class="text-purple-600">{{ userName }}</span>님!
       </h2>
       <div class="text-gray-600">
         <p class="text-base md:text-lg mb-2">{{ scheduleMessage.text }}</p>
-        <p 
-          v-if="hasSchedule" 
+        <p
+          v-if="hasSchedule"
           @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
-          class="text-purple-600 hover:text-purple-700 font-semibold cursor-pointer transition-colors text-sm md:text-base"
+          class="text-purple-600 hover:text-purple-700 font-bold cursor-pointer transition-colors text-xl md:text-2xl"
         >
           {{ scheduleMessage.eventTitle }}에 대한 회화 연습 하러 갈까요?
         </p>
@@ -98,23 +98,23 @@ const handleCheckIn = () => {
     </div>
 
     <!-- Content Section -->
-    <div v-if="topScenarios.length > 0" class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40">
+    <div v-if="topScenarios.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 z-10 pr-0 md:pr-32 mb-2">
       <!-- Scenario Cards -->
-      <div 
-        v-for="(event, index) in topScenarios" 
+      <div
+        v-for="(event, index) in topScenarios"
         :key="event.id"
         @click="goToScenario(event.id)"
-        class="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-300 border border-gray-200 flex items-center gap-4 group"
+        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group"
       >
         <!-- Icon -->
-        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 transition-colors group-hover:bg-purple-200">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+        <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 transition-colors group-hover:bg-purple-200">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
         </div>
-        
+
         <!-- Text Info -->
-        <div class="flex-1 min-w-0 flex flex-col justify-center">
-          <span class="text-xs font-medium text-gray-500 mb-0.5">User vs Manager</span>
-          <h3 class="font-bold text-gray-900 text-sm truncate">{{ event.title }}</h3>
+        <div class="flex-1 min-w-0">
+          <span class="text-xs font-medium text-gray-500 mb-1">User vs Manager</span>
+          <h3 class="font-bold text-gray-900 text-base truncate">{{ event.title }}</h3>
         </div>
       </div>
     </div>

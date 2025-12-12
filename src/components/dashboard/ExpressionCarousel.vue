@@ -57,11 +57,54 @@ const currentExpression = computed(() => {
 
 // Highlight expression in example text
 const highlightExpression = (text, expression) => {
-  if (!text || expression) return text
-  
-  // Case-insensitive search for the expression
-  const regex = new RegExp(`(${expression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-  return text.replace(regex, '<span class="text-purple-600 font-semibold">$1</span>')
+  if (!text || !expression) return text
+
+  // 표현 정리: ~, ?, ! 등 끝문자 제거
+  let cleanExpression = expression
+    .replace(/[~?!.]+$/g, '')  // 끝의 ~, ?, !, . 제거
+    .replace(/\(someone\)/gi, '(SOMEONE_PLACEHOLDER)')
+    .replace(/\(something\)/gi, '(SOMETHING_PLACEHOLDER)')
+    .replace(/\([^)]*\)/g, '(OTHER_PLACEHOLDER)')
+    .trim()
+
+  if (!cleanExpression) return text
+
+  // 특수문자 이스케이프
+  let escapedExpression = cleanExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  // 플레이스홀더를 정규식 패턴으로 변환
+  escapedExpression = escapedExpression
+    .replace(/\\\(SOMEONE_PLACEHOLDER\\\)/g, '\\w+')
+    .replace(/\\\(SOMETHING_PLACEHOLDER\\\)/g, '[\\w\\s]+?')
+    .replace(/\\\(OTHER_PLACEHOLDER\\\)/g, '\\w+')
+
+  try {
+    // 1차: 전체 표현 매칭 시도
+    const fullRegex = new RegExp(`(${escapedExpression})`, 'gi')
+    if (fullRegex.test(text)) {
+      return text.replace(fullRegex, '<span class="text-purple-600">$1</span>')
+    }
+
+    // 2차: 핵심 단어들만 매칭 (the, a, an, is, are, be 등 제외하고 2글자 이상 단어)
+    const stopWords = ['the', 'a', 'an', 'is', 'are', 'be', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'it', 'this', 'that']
+    const words = cleanExpression.split(/\s+/).filter(w =>
+      w.length > 2 && !stopWords.includes(w.toLowerCase()) && !w.includes('PLACEHOLDER')
+    )
+
+    if (words.length > 0) {
+      let result = text
+      words.forEach(word => {
+        const wordRegex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+        result = result.replace(wordRegex, '<span class="text-purple-600">$1</span>')
+      })
+      return result
+    }
+
+    return text
+  } catch (e) {
+    // 정규식 에러 시 원본 반환
+    return text
+  }
 }
 
 onMounted(() => {
@@ -104,12 +147,12 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- 예문 -->
-          <div class="space-y-1.5 select-none">
-            <p 
-              class="text-gray-800 text-xs md:text-sm leading-relaxed select-none"
+          <div class="space-y-2 select-none">
+            <p
+              class="text-gray-800 text-sm md:text-base leading-relaxed select-none"
               v-html="highlightExpression(currentExpression.example_en, currentExpression.expression)"
             ></p>
-            <p class="text-gray-500 text-xs leading-relaxed select-none">
+            <p class="text-gray-500 text-xs md:text-sm leading-relaxed select-none">
               '{{ currentExpression.example_ko }}'
             </p>
           </div>
