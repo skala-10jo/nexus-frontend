@@ -79,7 +79,9 @@ pythonAPI.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  getCurrentUser: () => api.get('/auth/me')
+  getCurrentUser: () => api.get('/auth/me'),
+  checkUsername: (username) => api.get(`/auth/check-username?username=${username}`),
+  checkEmail: (email) => api.get(`/auth/check-email?email=${email}`)
 };
 
 // User API

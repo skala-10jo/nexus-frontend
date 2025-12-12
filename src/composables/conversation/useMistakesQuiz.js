@@ -2,9 +2,14 @@
  * Mistakes Quiz Composable
  *
  * 오답 복습 퀴즈 로직
+ *
+ * 리팩토링: Service/Utils 레이어 분리
+ * - API 호출: mistakesService
+ * - 셔플: formatters.shuffleArray
  */
 import { ref, computed } from 'vue'
-import api from '@/services/api'
+import { mistakesService } from '@/services/conversation/mistakesService'
+import { shuffleArray } from '@/utils/formatters'
 
 export function useMistakesQuiz(mistakes, selectedMistakes) {
   // State
@@ -27,19 +32,9 @@ export function useMistakesQuiz(mistakes, selectedMistakes) {
     )
   })
 
-  // Shuffle array (Fisher-Yates algorithm)
-  const shuffleArray = (array) => {
-    const shuffled = [...array]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-    return shuffled
-  }
-
   // Methods
   const startQuizMode = () => {
-    const selected = mistakes.value.filter(m => selectedMistakes.value.has(m.id))
+    const selected = mistakes.value.filter((m) => selectedMistakes.value.has(m.id))
     quizMistakes.value = shuffleArray(selected)
     currentQuizIndex.value = 0
     userAnswer.value = ''
@@ -51,7 +46,8 @@ export function useMistakesQuiz(mistakes, selectedMistakes) {
   const checkQuizAnswer = async () => {
     if (!userAnswer.value.trim()) return
 
-    const isCorrect = userAnswer.value.trim().toLowerCase() === currentMistake.value.expression.toLowerCase()
+    const isCorrect =
+      userAnswer.value.trim().toLowerCase() === currentMistake.value.expression.toLowerCase()
     answerStatus.value = isCorrect ? 'correct' : 'wrong'
 
     if (isCorrect) {
@@ -60,7 +56,7 @@ export function useMistakesQuiz(mistakes, selectedMistakes) {
 
     // Update local mistakes list immediately
     const mistakeId = currentMistake.value.id
-    const mistakeIndex = mistakes.value.findIndex(m => m.id === mistakeId)
+    const mistakeIndex = mistakes.value.findIndex((m) => m.id === mistakeId)
     if (mistakeIndex !== -1) {
       if (isCorrect) {
         mistakes.value[mistakeIndex].correctCount++
@@ -69,9 +65,9 @@ export function useMistakesQuiz(mistakes, selectedMistakes) {
       }
     }
 
-    // Save quiz result
+    // Save quiz result via service
     try {
-      await api.post('/expressions/quiz/result', {
+      await mistakesService.saveQuizResult({
         expressionId: currentMistake.value.expressionId,
         exampleIndex: currentMistake.value.exampleIndex,
         isCorrect
@@ -92,11 +88,8 @@ export function useMistakesQuiz(mistakes, selectedMistakes) {
     showQuizComplete.value = true
   }
 
-  const closeQuizComplete = (fetchMistakesCallback) => {
+  const closeQuizComplete = () => {
     showQuizComplete.value = false
-    if (fetchMistakesCallback) {
-      fetchMistakesCallback()
-    }
   }
 
   const resetQuiz = () => {

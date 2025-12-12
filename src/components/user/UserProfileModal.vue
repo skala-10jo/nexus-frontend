@@ -165,7 +165,7 @@ import { ref, computed, watch } from 'vue'
 import { XMarkIcon, CameraIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { userAPI } from '@/services/api'
-import { SUPPORTED_LANGUAGES } from '@/composables/collaboration/messenger/useSlackAgent'
+import { SUPPORTED_LANGUAGES } from '@/constants/languages'
 
 const props = defineProps({
   show: {

@@ -276,7 +276,8 @@
 
 <script setup>
 import { ref, watch, computed, nextTick, onMounted } from 'vue'
-import { useSlackAgent, SUPPORTED_LANGUAGES } from '@/composables/collaboration/messenger/useSlackAgent'
+import { useSlackAgent } from '@/composables/collaboration/messenger/useSlackAgent'
+import { SUPPORTED_LANGUAGES } from '@/constants/languages'
 
 const props = defineProps({
   selectedChannel: {

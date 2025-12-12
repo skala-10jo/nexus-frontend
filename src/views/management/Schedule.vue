@@ -12,26 +12,14 @@
     />
 
     <!-- Mobile Tabs -->
-    <div class="md:hidden flex border-b border-gray-200 bg-white">
-      <button
-        @click="switchTab('projects')"
-        class="flex-1 py-3 text-sm font-bold text-center border-b-2 transition-colors"
-        :class="activeTab === 'projects' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
-      >
-        Projects
-      </button>
-      <button
-        @click="switchTab('schedule')"
-        class="flex-1 py-3 text-sm font-bold text-center border-b-2 transition-colors"
-        :class="activeTab === 'schedule' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'"
-      >
-        Schedule
-      </button>
-    </div>
+    <ScheduleMobileTabs
+      :active-tab="activeTab"
+      @switch-tab="switchTab"
+    />
 
     <div class="flex-1 flex flex-col md:flex-row min-h-0 px-4 md:px-6 pt-4 pb-24 md:pb-12 overflow-hidden gap-4 md:gap-6">
       <!-- Left Sidebar: Project List -->
-      <div 
+      <div
         class="w-full md:w-80 flex-shrink-0 flex flex-col h-full"
         :class="{'hidden md:flex': activeTab !== 'projects'}"
       >
@@ -47,7 +35,7 @@
       </div>
 
       <!-- Right Content: Calendar, Project Detail, or Project Edit -->
-      <div 
+      <div
         class="flex-1 flex flex-col min-w-0 h-full"
         :class="{'hidden md:flex': activeTab !== 'schedule'}"
       >
@@ -130,8 +118,9 @@
  * @description 프로젝트와 일정을 관리하는 메인 페이지
  *
  * 리팩토링 구조:
- * - composables: 비즈니스 로직 분리
- * - components: UI 컴포넌트 분리
+ * - composables: 비즈니스 로직 분리 (5개)
+ * - components: UI 컴포넌트 분리 (9개)
+ * - styles: FullCalendar 커스텀 스타일 분리
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -141,7 +130,8 @@ import FullCalendar from '@fullcalendar/vue3'
 import ScheduleHeader from '@/components/management/schedule/ScheduleHeader.vue'
 import ScheduleProjectSidebar from '@/components/management/schedule/ScheduleProjectSidebar.vue'
 import ScheduleEventModal from '@/components/management/schedule/ScheduleEventModal.vue'
-import CategoryManager from '@/components/schedule/CategoryManager.vue'
+import ScheduleMobileTabs from '@/components/management/schedule/ScheduleMobileTabs.vue'
+import CategoryManager from '@/components/management/schedule/CategoryManager.vue'
 import ProjectDetail from '@/components/ProjectDetail.vue'
 import ProjectEdit from '@/components/ProjectEdit.vue'
 import ProjectCreate from '@/components/ProjectCreate.vue'
@@ -156,6 +146,9 @@ import { useOutlookAuth } from '@/composables/outlook/useOutlookAuth'
 
 // Stores
 import { useScheduleCategoryStore } from '@/stores/scheduleCategory'
+
+// Styles
+import '@/styles/components/fullcalendar-custom.css'
 
 // ============================================
 // Composables Setup
@@ -178,6 +171,9 @@ const route = useRoute()
 const router = useRouter()
 const activeTab = ref('projects') // 'projects' | 'schedule'
 
+// ============================================
+// Tab Navigation
+// ============================================
 function switchTab(tab) {
   activeTab.value = tab
   router.replace({ query: { ...route.query, tab } })
@@ -209,9 +205,7 @@ const calendarOptions = computed(() =>
 // Calendar Event Handlers
 // ============================================
 
-/**
- * 캘린더 이벤트 로드
- */
+/** 캘린더 이벤트 로드 */
 function handleLoadEvents(fetchInfo, successCallback, failureCallback) {
   eventsComposable.loadEventsForCalendar(
     fetchInfo,
@@ -221,9 +215,7 @@ function handleLoadEvents(fetchInfo, successCallback, failureCallback) {
   )
 }
 
-/**
- * 날짜 선택 핸들러
- */
+/** 날짜 선택 핸들러 */
 function handleDateSelect(selectInfo) {
   const calendarApi = selectInfo.view.calendar
   calendarApi.unselect()
@@ -232,18 +224,14 @@ function handleDateSelect(selectInfo) {
   showModal.value = true
 }
 
-/**
- * 이벤트 클릭 핸들러
- */
+/** 이벤트 클릭 핸들러 */
 function handleEventClick(clickInfo) {
   const event = clickInfo.event
   eventFormComposable.initFromEvent(event)
   showModal.value = true
 }
 
-/**
- * 이벤트 드래그 핸들러
- */
+/** 이벤트 드래그 핸들러 */
 async function handleEventDrop(dropInfo) {
   const result = await eventsComposable.updateEventFromDrag(dropInfo.event)
   if (!result.success) {
@@ -252,9 +240,7 @@ async function handleEventDrop(dropInfo) {
   }
 }
 
-/**
- * 이벤트 리사이즈 핸들러
- */
+/** 이벤트 리사이즈 핸들러 */
 async function handleEventResize(resizeInfo) {
   const result = await eventsComposable.updateEventFromDrag(resizeInfo.event)
   if (!result.success) {
@@ -267,24 +253,18 @@ async function handleEventResize(resizeInfo) {
 // Modal Handlers
 // ============================================
 
-/**
- * 일정 추가 모달 열기
- */
+/** 일정 추가 모달 열기 */
 function openCreateModal() {
   eventFormComposable.initCreateForm()
   showModal.value = true
 }
 
-/**
- * 모달 닫기
- */
+/** 모달 닫기 */
 function closeModal() {
   showModal.value = false
 }
 
-/**
- * 일정 저장
- */
+/** 일정 저장 */
 async function saveEvent() {
   const formData = eventFormComposable.getFormData()
   let result
@@ -306,9 +286,7 @@ async function saveEvent() {
   }
 }
 
-/**
- * 일정 삭제
- */
+/** 일정 삭제 */
 async function deleteEvent() {
   if (!confirm('이 일정을 삭제하시겠습니까?')) return
 
@@ -328,9 +306,7 @@ async function deleteEvent() {
 // Project Handlers
 // ============================================
 
-/**
- * 새 프로젝트 저장
- */
+/** 새 프로젝트 저장 */
 async function handleSaveNewProject(formData) {
   const result = await projectsComposable.saveNewProject(formData)
   if (!result.success) {
@@ -338,9 +314,7 @@ async function handleSaveNewProject(formData) {
   }
 }
 
-/**
- * 프로젝트 저장
- */
+/** 프로젝트 저장 */
 async function handleSaveProject(formData) {
   const result = await projectsComposable.saveProject(formData)
   if (!result.success) {
@@ -348,9 +322,7 @@ async function handleSaveProject(formData) {
   }
 }
 
-/**
- * 프로젝트 삭제
- */
+/** 프로젝트 삭제 */
 async function handleDeleteProject(project) {
   const result = await projectsComposable.deleteProject(project)
   if (result.success) {
@@ -364,9 +336,7 @@ async function handleDeleteProject(project) {
 // Outlook Calendar Sync
 // ============================================
 
-/**
- * Outlook 연동 시작
- */
+/** Outlook 연동 시작 */
 function handleConnectOutlook() {
   outlookAuthComposable.connectOutlook(async () => {
     // 연동 성공 시 캘린더 동기화 실행
@@ -374,9 +344,7 @@ function handleConnectOutlook() {
   })
 }
 
-/**
- * Outlook 캘린더 동기화 실행
- */
+/** Outlook 캘린더 동기화 실행 */
 async function handleSyncOutlook() {
   const result = await eventsComposable.syncOutlookCalendar()
   if (result.success) {
@@ -408,9 +376,7 @@ async function handleSyncOutlook() {
 // Utilities
 // ============================================
 
-/**
- * 캘린더 새로고침
- */
+/** 캘린더 새로고침 */
 function refreshCalendar() {
   if (fullCalendarRef.value) {
     const calendarApi = fullCalendarRef.value.getApi()
@@ -454,306 +420,5 @@ watch(
 </script>
 
 <style scoped>
-/* FullCalendar Custom Styles */
-:deep(.fc) {
-  --fc-border-color: transparent;
-  --fc-button-bg-color: white;
-  --fc-button-border-color: #e5e7eb;
-  --fc-button-text-color: #374151;
-  --fc-button-hover-bg-color: #f9fafb;
-  --fc-button-hover-border-color: #d1d5db;
-  --fc-button-active-bg-color: #f3f4f6;
-  --fc-button-active-border-color: #d1d5db;
-  --fc-event-bg-color: #3b82f6;
-  --fc-event-border-color: transparent;
-  --fc-today-bg-color: #f0f9ff;
-  --fc-neutral-bg-color: #f9fafb;
-  --fc-list-event-hover-bg-color: #f3f4f6;
-  font-family: inherit;
-}
-
-/* Header Toolbar */
-:deep(.fc-header-toolbar) {
-  margin-bottom: 2rem !important;
-  padding: 0 0.5rem;
-}
-
-:deep(.fc-toolbar-title) {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #111827;
-  letter-spacing: -0.025em;
-}
-
-:deep(.fc-button) {
-  border-radius: 0.75rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  text-transform: capitalize;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-  border: 1px solid #f3f4f6;
-  font-size: 0.875rem;
-}
-
-:deep(.fc-button:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  background-color: white;
-  border-color: #e5e7eb;
-}
-
-:deep(.fc-button-active) {
-  background-color: #1f2937 !important;
-  border-color: #1f2937 !important;
-  color: white !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-}
-
-:deep(.fc-button-group) {
-  gap: 0.5rem;
-}
-
-:deep(.fc-button-group > .fc-button) {
-  border-radius: 0.75rem !important;
-  margin-left: 0 !important;
-}
-
-/* Calendar Grid */
-:deep(.fc-theme-standard td),
-:deep(.fc-theme-standard th) {
-  border-color: #f3f4f6;
-}
-
-:deep(.fc-col-header-cell-cushion) {
-  padding: 12px 0;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
-
-:deep(.fc-daygrid-day-number) {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 8px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 4px;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-:deep(.fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
-  background-color: #3b82f6;
-  color: white;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-}
-
-/* Weekend Background */
-:deep(.fc-day-sat),
-:deep(.fc-day-sun) {
-  background-color: #fafafa;
-}
-
-/* Events */
-:deep(.fc-event) {
-  border-radius: 0.375rem;
-  padding: 2px 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 2px;
-  cursor: pointer;
-  line-height: 1.3;
-}
-
-:deep(.fc-event:hover) {
-  transform: translateY(-1px) scale(1.01);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 5;
-}
-
-:deep(.fc-daygrid-event-dot) {
-  border-width: 3px;
-  border-radius: 50%;
-}
-
-:deep(.fc-daygrid-day-frame) {
-  padding: 4px;
-}
-
-:deep(.fc-scrollgrid) {
-  border: none;
-}
-
-:deep(.fc-scrollgrid-section-header > td) {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-/* TimeGrid View */
-:deep(.fc-timegrid-slot) {
-  height: 3rem;
-  border-bottom: 1px dashed #f3f4f6;
-}
-
-:deep(.fc-timegrid-slot-label) {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #9ca3af;
-}
-
-:deep(.fc-v-event) {
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* List View */
-:deep(.fc-list) {
-  border: none;
-}
-
-:deep(.fc-list-day-cushion) {
-  background-color: transparent;
-  padding: 1.5rem 1rem 0.5rem;
-}
-
-:deep(.fc-list-day-text) {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-:deep(.fc-list-day-side-text) {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #9ca3af;
-}
-
-:deep(.fc-list-event) {
-  cursor: pointer;
-}
-
-:deep(.fc-list-event:hover td) {
-  background-color: #f9fafb;
-}
-
-:deep(.fc-list-event-dot) {
-  border-width: 4px;
-}
-
-:deep(.fc-list-event-title) {
-  font-weight: 600;
-  color: #374151;
-}
-
-:deep(.fc-list-event-time) {
-  font-weight: 500;
-  color: #6b7280;
-}
-
-/* Fix for drag mirror positioning */
-:deep(.fc-event-dragging) {
-  z-index: 9999 !important;
-}
-
-/* Custom Add Event Button - Desktop: hide, Mobile: show */
-:deep(.fc-addEvent-button) {
-  display: none !important;
-}
-
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
-  :deep(.fc-header-toolbar) {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem !important;
-  }
-
-  /* Move title (year/month) to top */
-  :deep(.fc-toolbar-chunk:nth-child(2)) {
-    order: -1;
-  }
-
-  :deep(.fc-toolbar-title) {
-    font-size: 1.25rem;
-  }
-
-  :deep(.fc-button) {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.75rem;
-  }
-
-  :deep(.fc-daygrid-day-number) {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-    padding: 4px;
-  }
-
-  :deep(.fc-col-header-cell-cushion) {
-    font-size: 0.7rem;
-    padding: 8px 0;
-  }
-
-  /* Mobile: Compact events to fit without scroll */
-  :deep(.fc-event) {
-    font-size: 0.6rem !important;
-    padding: 1px 3px !important;
-    line-height: 1.2 !important;
-    margin-bottom: 1px !important;
-  }
-
-  :deep(.fc-event-title) {
-    font-size: 0.6rem !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  :deep(.fc-daygrid-event) {
-    margin-top: 1px !important;
-  }
-
-  :deep(.fc-daygrid-day-frame) {
-    padding: 2px !important;
-  }
-
-  :deep(.fc-daygrid-more-link) {
-    font-size: 0.55rem;
-    font-weight: 600;
-  }
-
-  /* Prevent scroll - fit content in view */
-  :deep(.fc-scroller) {
-    overflow: hidden !important;
-  }
-
-  :deep(.fc-scroller-liquid-absolute) {
-    overflow: hidden !important;
-  }
-
-  /* Mobile: Show add event button with special styling */
-  :deep(.fc-addEvent-button) {
-    display: inline-flex !important;
-    background-color: #111827 !important;
-    border-color: #111827 !important;
-    color: white !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-  }
-
-  :deep(.fc-addEvent-button:hover) {
-    background-color: #1f2937 !important;
-    border-color: #1f2937 !important;
-    transform: translateY(-1px);
-  }
-}
+/* Layout styles only - FullCalendar styles are in @/styles/components/fullcalendar-custom.css */
 </style>

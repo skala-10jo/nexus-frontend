@@ -1,0 +1,326 @@
+/**
+ * FullCalendar Custom Styles
+ * @description Schedule 페이지의 FullCalendar 커스텀 스타일
+ * @usage import '@/styles/components/fullcalendar-custom.css'
+ */
+
+/* ============================================
+ * CSS Variables
+ * ============================================ */
+.fc {
+  --fc-border-color: transparent;
+  --fc-button-bg-color: white;
+  --fc-button-border-color: #e5e7eb;
+  --fc-button-text-color: #374151;
+  --fc-button-hover-bg-color: #f9fafb;
+  --fc-button-hover-border-color: #d1d5db;
+  --fc-button-active-bg-color: #f3f4f6;
+  --fc-button-active-border-color: #d1d5db;
+  --fc-event-bg-color: #3b82f6;
+  --fc-event-border-color: transparent;
+  --fc-today-bg-color: #f0f9ff;
+  --fc-neutral-bg-color: #f9fafb;
+  --fc-list-event-hover-bg-color: #f3f4f6;
+  font-family: inherit;
+}
+
+/* ============================================
+ * Header Toolbar
+ * ============================================ */
+.fc-header-toolbar {
+  margin-bottom: 2rem !important;
+  padding: 0 0.5rem;
+}
+
+.fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.025em;
+}
+
+.fc-button {
+  border-radius: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  text-transform: capitalize;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  border: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+}
+
+.fc-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background-color: white;
+  border-color: #e5e7eb;
+}
+
+.fc-button-active {
+  background-color: #1f2937 !important;
+  border-color: #1f2937 !important;
+  color: white !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fc-button-group {
+  gap: 0.5rem;
+}
+
+.fc-button-group > .fc-button {
+  border-radius: 0.75rem !important;
+  margin-left: 0 !important;
+}
+
+/* ============================================
+ * Calendar Grid
+ * ============================================ */
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: #f3f4f6;
+}
+
+.fc-col-header-cell-cushion {
+  padding: 12px 0;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.fc-daygrid-day-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Weekend Background */
+.fc-day-sat,
+.fc-day-sun {
+  background-color: #fafafa;
+}
+
+/* ============================================
+ * Events
+ * ============================================ */
+.fc-event {
+  border-radius: 0.375rem;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 2px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.fc-event:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.fc-daygrid-event-dot {
+  border-width: 3px;
+  border-radius: 50%;
+}
+
+.fc-daygrid-day-frame {
+  padding: 4px;
+}
+
+.fc-scrollgrid {
+  border: none;
+}
+
+.fc-scrollgrid-section-header > td {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* ============================================
+ * TimeGrid View
+ * ============================================ */
+.fc-timegrid-slot {
+  height: 3rem;
+  border-bottom: 1px dashed #f3f4f6;
+}
+
+.fc-timegrid-slot-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.fc-v-event {
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+ * List View
+ * ============================================ */
+.fc-list {
+  border: none;
+}
+
+.fc-list-day-cushion {
+  background-color: transparent;
+  padding: 1.5rem 1rem 0.5rem;
+}
+
+.fc-list-day-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.fc-list-day-side-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.fc-list-event {
+  cursor: pointer;
+}
+
+.fc-list-event:hover td {
+  background-color: #f9fafb;
+}
+
+.fc-list-event-dot {
+  border-width: 4px;
+}
+
+.fc-list-event-title {
+  font-weight: 600;
+  color: #374151;
+}
+
+.fc-list-event-time {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* ============================================
+ * Drag & Drop
+ * ============================================ */
+.fc-event-dragging {
+  z-index: 9999 !important;
+}
+
+/* ============================================
+ * Add Event Button (Desktop: hide, Mobile: show)
+ * ============================================ */
+.fc-addEvent-button {
+  display: none !important;
+}
+
+/* ============================================
+ * Mobile Responsive Styles
+ * ============================================ */
+@media (max-width: 768px) {
+  .fc-header-toolbar {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Move title (year/month) to top */
+  .fc-toolbar-chunk:nth-child(2) {
+    order: -1;
+  }
+
+  .fc-toolbar-title {
+    font-size: 1.25rem;
+  }
+
+  .fc-button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .fc-daygrid-day-number {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    padding: 4px;
+  }
+
+  .fc-col-header-cell-cushion {
+    font-size: 0.7rem;
+    padding: 8px 0;
+  }
+
+  /* Mobile: Compact events to fit without scroll */
+  .fc-event {
+    font-size: 0.6rem !important;
+    padding: 1px 3px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1px !important;
+  }
+
+  .fc-event-title {
+    font-size: 0.6rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fc-daygrid-event {
+    margin-top: 1px !important;
+  }
+
+  .fc-daygrid-day-frame {
+    padding: 2px !important;
+  }
+
+  .fc-daygrid-more-link {
+    font-size: 0.55rem;
+    font-weight: 600;
+  }
+
+  /* Prevent scroll - fit content in view */
+  .fc-scroller {
+    overflow: hidden !important;
+  }
+
+  .fc-scroller-liquid-absolute {
+    overflow: hidden !important;
+  }
+
+  /* Mobile: Show add event button with special styling */
+  .fc-addEvent-button {
+    display: inline-flex !important;
+    background-color: #111827 !important;
+    border-color: #111827 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .fc-addEvent-button:hover {
+    background-color: #1f2937 !important;
+    border-color: #1f2937 !important;
+    transform: translateY(-1px);
+  }
+}

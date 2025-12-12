@@ -2,15 +2,9 @@
  * Expression Quiz Composable
  *
  * 빈칸 채우기 퀴즈 로직
- * AI Fallback을 통해 특수문자/대명사 변형 처리
  */
 import { ref, computed } from 'vue'
 import api from '@/services/api'
-import {
-  tryLocalRegexMatch,
-  findMatchBatch,
-  createBlankHtml
-} from '@/services/expressionMatchService'
 
 export function useExpressionQuiz(currentSessionExpressions, formatMeaning) {
   // State
@@ -21,118 +15,96 @@ export function useExpressionQuiz(currentSessionExpressions, formatMeaning) {
   const showHint = ref(false)
   const quizCorrectCount = ref(0)
   const showCompletionModal = ref(false)
-  const isGeneratingQuiz = ref(false) // 퀴즈 생성 로딩 상태
+  const isGeneratingQuiz = ref(false)
 
   // Computed
   const currentQuizQuestion = computed(() => {
     return quizQuestions.value[currentQuizIndex.value] || null
   })
 
-  // Methods
   /**
-   * 퀴즈 문제 생성
-   * 배치 처리로 AI API 호출 최적화
-   *
-   * Phase 1: 로컬 정규식으로 빠르게 처리
-   * Phase 2: 실패한 항목들만 배치 API로 한번에 처리
+   * 유연한 정규식 패턴 생성
    */
-  const generateQuizQuestions = async () => {
+  const buildFlexiblePattern = (expression) => {
+    let pattern = expression
+
+    // 1. 끝에 있는 ~ 제거
+    pattern = pattern.replace(/\s*~\s*$/g, '')
+
+    // 2. 끝에 있는 ... 또는 ··· 또는 … 제거
+    pattern = pattern.replace(/\s*(?:\.\.\.|\·\·\·|…)\s*$/g, '')
+
+    // 3. (someone), (somebody) → 단어 매칭
+    pattern = pattern.replace(/\(someone\)|\(somebody\)/gi, '(\\w+)')
+
+    // 4. (something) → 비탐욕적 매칭
+    pattern = pattern.replace(/\(something\)/gi, '(.+?)')
+
+    // 5. one's → 소유격 대명사
+    pattern = pattern.replace(/\bone's\b/gi, "(my|your|his|her|their|its|our|one's)")
+
+    // 6. 중간에 있는 ~ → 가변 텍스트
+    pattern = pattern.replace(/~/g, '(.+?)')
+
+    // 7. 중간에 있는 ... 또는 ··· 또는 … → 가변 텍스트
+    pattern = pattern.replace(/\.\.\.|\·\·\·|…/g, '(.+?)')
+
+    return pattern
+  }
+
+  /**
+   * 빈칸 HTML 생성
+   */
+  const createBlankHtml = (text, startIndex, endIndex) => {
+    const before = text.substring(0, startIndex)
+    const after = text.substring(endIndex)
+    return `${before}<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>${after}`
+  }
+
+  /**
+   * 퀴즈 문제 생성 (단순 정규식 매칭)
+   */
+  const generateQuizQuestions = () => {
     isGeneratingQuiz.value = true
 
     try {
-      // 각 expression에서 랜덤 예문 선택
-      const quizItems = currentSessionExpressions.value.map(expr => {
-        const exampleIndex = Math.floor(Math.random() * expr.examples.length)
-        const example = expr.examples[exampleIndex]
-        return {
-          expr,
-          exampleIndex,
-          example,
-          expression: expr.expression
-        }
-      })
-
-      // Phase 1: 로컬 정규식 매칭 (빠름)
-      const needsAiFallback = []
-      const matchResults = new Map()
-
-      for (const item of quizItems) {
-        const localResult = tryLocalRegexMatch(item.expression, item.example.text)
-
-        if (localResult && localResult.matched) {
-          matchResults.set(item.expr.id, localResult)
-        } else {
-          needsAiFallback.push({
-            expressionId: item.expr.id,
-            expression: item.expression,
-            sentence: item.example.text
-          })
-        }
-      }
-
-      // Phase 2: AI Fallback 배치 처리 (한번에)
-      if (needsAiFallback.length > 0) {
-        console.log(`[Quiz] AI batch fallback for ${needsAiFallback.length} items`)
-
-        const batchItems = needsAiFallback.map(item => ({
-          expression: item.expression,
-          sentence: item.sentence
-        }))
-
-        const batchResponse = await findMatchBatch(batchItems, true)
-        const results = batchResponse.results || []
-
-        for (let i = 0; i < needsAiFallback.length; i++) {
-          const { expressionId } = needsAiFallback[i]
-          matchResults.set(expressionId, results[i] || { matched: false })
-        }
-      }
-
-      // 퀴즈 문제 생성
-      const questions = quizItems.map(item => {
-        const matchResult = matchResults.get(item.expr.id)
-
-        let questionHtml
-        let answer
-
-        if (matchResult && matchResult.matched) {
-          questionHtml = createBlankHtml(item.example.text, matchResult)
-          answer = matchResult.matched_text
-        } else {
-          // 매칭 실패 시 원본 expression 사용 (기존 동작)
-          questionHtml = item.example.text.replace(
-            new RegExp(item.expression, 'gi'),
-            '<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>'
-          )
-          answer = item.expression
-        }
-
-        return {
-          expressionId: item.expr.id,
-          exampleIndex: item.exampleIndex,
-          expression: item.expression,
-          meaning: formatMeaning(item.expr.meaning),
-          originalText: item.example.text,
-          questionHtml,
-          translation: item.example.translation,
-          answer,
-          matchMethod: matchResult?.method || 'fallback'
-        }
-      })
-
-      quizQuestions.value = questions
-    } catch (error) {
-      console.error('Failed to generate quiz questions:', error)
-      // 에러 시 기존 방식으로 폴백
-      quizQuestions.value = currentSessionExpressions.value.map(expr => {
+      const questions = currentSessionExpressions.value.map(expr => {
         const exampleIndex = Math.floor(Math.random() * expr.examples.length)
         const example = expr.examples[exampleIndex]
         const expression = expr.expression
 
-        const questionHtml = example.text.replace(
-          new RegExp(expression, 'gi'),
-          '<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>'
-        )
+        let questionHtml
+        let answer
+
+        try {
+          // 유연한 패턴으로 매칭 시도
+          const pattern = buildFlexiblePattern(expression)
+          const regex = new RegExp(`(${pattern})`, 'gi')
+          const match = regex.exec(example.text)
+
+          if (match) {
+            const matchedText = match[0]
+            const startIndex = match.index
+            const endIndex = startIndex + matchedText.length
+
+            questionHtml = createBlankHtml(example.text, startIndex, endIndex)
+            answer = matchedText
+          } else {
+            // 패턴 매칭 실패 시 원본 expression 사용
+            questionHtml = example.text.replace(
+              new RegExp(expression, 'gi'),
+              '<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>'
+            )
+            answer = expression
+          }
+        } catch (error) {
+          console.warn('Regex error for expression:', expression, error)
+          questionHtml = example.text.replace(
+            new RegExp(expression, 'gi'),
+            '<span class="px-2 py-1 bg-gray-200 rounded mx-1">________</span>'
+          )
+          answer = expression
+        }
 
         return {
           expressionId: expr.id,
@@ -142,17 +114,21 @@ export function useExpressionQuiz(currentSessionExpressions, formatMeaning) {
           originalText: example.text,
           questionHtml,
           translation: example.translation,
-          answer: expression,
-          matchMethod: 'error_fallback'
+          answer
         }
       })
+
+      quizQuestions.value = questions
+    } catch (error) {
+      console.error('Failed to generate quiz questions:', error)
+      quizQuestions.value = []
     } finally {
       isGeneratingQuiz.value = false
     }
   }
 
-  const goToQuiz = async () => {
-    await generateQuizQuestions()
+  const goToQuiz = () => {
+    generateQuizQuestions()
     currentQuizIndex.value = 0
     quizCorrectCount.value = 0
     userAnswer.value = ''

@@ -5,7 +5,7 @@
  */
 import { ref, watch, nextTick } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
-import CategorySelector from '@/components/schedule/CategorySelector.vue'
+import CategorySelector from './CategorySelector.vue'
 
 const props = defineProps({
   /** 모달 표시 여부 */

@@ -95,7 +95,7 @@ const formatDate = (dateTimeString) => {
 
 <template>
   <div
-    class="w-1/4 min-w-[280px] max-w-[400px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden h-full">
+    class="w-full flex-shrink-0 flex flex-col bg-white overflow-hidden h-full">
     <!-- Header -->
     <div class="p-5 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-900">프로젝트</h2>
