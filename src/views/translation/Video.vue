@@ -38,7 +38,7 @@
               v-for="video in videos"
               :key="video.id"
               :video="video"
-              @click="selectVideo"
+              @click="handleSelectVideo"
               @delete="handleDeleteVideo"
             />
           </div>
@@ -94,137 +94,15 @@
       <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-8">
         <div class="max-w-7xl mx-auto space-y-6">
           <!-- Language Config (자막 추출 전까지 표시) -->
-          <div v-if="!subtitles.length" class="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm">
-            <div class="flex items-end justify-center gap-3 md:gap-8">
-              <!-- Source Language -->
-              <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">원본</label>
-                <div class="relative" ref="sourceDropdownRef">
-                  <button
-                    @click="toggleSourceDropdown"
-                    type="button"
-                    class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
-                    :class="{ 'border-blue-500 ring-2 ring-blue-100': isSourceDropdownOpen }"
-                  >
-                    <div class="flex items-center gap-2 md:gap-3">
-                      <span class="text-lg md:text-xl">{{ getLanguageFlag(sourceLang) }}</span>
-                      <span class="text-gray-900 truncate">{{ getLanguageName(sourceLang) }}</span>
-                    </div>
-                    <ChevronDownIcon
-                      class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
-                      :class="{ 'rotate-180': isSourceDropdownOpen }"
-                    />
-                  </button>
+          <VideoLanguageConfig
+            v-if="!hasSubtitles"
+            :source-lang="sourceLang"
+            :target-lang="targetLang"
+            @update:source-lang="sourceLang = $event"
+            @update:target-lang="targetLang = $event"
+          />
 
-                  <!-- Source Dropdown -->
-                  <Transition
-                    enter-active-class="transition duration-100 ease-out"
-                    enter-from-class="transform scale-95 opacity-0"
-                    enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-75 ease-in"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                  >
-                    <div
-                      v-if="isSourceDropdownOpen"
-                      class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                    >
-                      <ul class="py-1">
-                        <li v-for="lang in languageOptions" :key="`source-${lang.code}`">
-                          <button
-                            @click="selectSourceLanguage(lang.code)"
-                            type="button"
-                            class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
-                            :class="sourceLang === lang.code ? 'bg-blue-50/50' : ''"
-                            :disabled="lang.code === targetLang"
-                          >
-                            <div class="flex items-center gap-2 md:gap-3" :class="lang.code === targetLang ? 'opacity-40' : ''">
-                              <span class="text-lg md:text-xl">{{ lang.flag }}</span>
-                              <span class="font-bold" :class="sourceLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
-                            </div>
-                            <svg v-if="sourceLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  </Transition>
-                </div>
-              </div>
-
-              <!-- Swap Button -->
-              <button
-                @click="swapLanguages"
-                type="button"
-                class="pb-2.5 md:pb-3 p-2 rounded-lg hover:bg-blue-50 hover:scale-110 transition-all group"
-                title="언어 교환"
-              >
-                <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </button>
-
-              <!-- Target Language -->
-              <div class="flex-1 max-w-[140px] md:max-w-xs space-y-1.5 md:space-y-2">
-                <label class="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider">번역</label>
-                <div class="relative" ref="targetDropdownRef">
-                  <button
-                    @click="toggleTargetDropdown"
-                    type="button"
-                    class="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm md:text-base font-bold transition-all"
-                    :class="{ 'border-blue-500 ring-2 ring-blue-100': isTargetDropdownOpen }"
-                  >
-                    <div class="flex items-center gap-2 md:gap-3">
-                      <span class="text-lg md:text-xl">{{ getLanguageFlag(targetLang) }}</span>
-                      <span class="text-gray-900 truncate">{{ getLanguageName(targetLang) }}</span>
-                    </div>
-                    <ChevronDownIcon
-                      class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-200 flex-shrink-0"
-                      :class="{ 'rotate-180': isTargetDropdownOpen }"
-                    />
-                  </button>
-
-                  <!-- Target Dropdown -->
-                  <Transition
-                    enter-active-class="transition duration-100 ease-out"
-                    enter-from-class="transform scale-95 opacity-0"
-                    enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-75 ease-in"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                  >
-                    <div
-                      v-if="isTargetDropdownOpen"
-                      class="absolute left-0 right-0 bottom-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                    >
-                      <ul class="py-1">
-                        <li v-for="lang in languageOptions" :key="`target-${lang.code}`">
-                          <button
-                            @click="selectTargetLanguage(lang.code)"
-                            type="button"
-                            class="w-full text-left px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base hover:bg-gray-50 transition-colors flex items-center justify-between"
-                            :class="targetLang === lang.code ? 'bg-blue-50/50' : ''"
-                            :disabled="lang.code === sourceLang"
-                          >
-                            <div class="flex items-center gap-2 md:gap-3" :class="lang.code === sourceLang ? 'opacity-40' : ''">
-                              <span class="text-lg md:text-xl">{{ lang.flag }}</span>
-                              <span class="font-bold" :class="targetLang === lang.code ? 'text-blue-600' : 'text-gray-700'">{{ lang.name }}</span>
-                            </div>
-                            <svg v-if="targetLang === lang.code" class="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  </Transition>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Context Selection (Text.vue 방식과 동일) -->
+          <!-- Project Context Selection -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
             <button @click="glossaryExpanded = !glossaryExpanded" class="w-full flex items-center justify-between p-6 hover:bg-gray-50 transition-colors rounded-t-2xl">
               <div class="flex items-center gap-3">
@@ -248,7 +126,6 @@
                 @change="onProjectChange"
               />
 
-              <!-- 프로젝트 선택 시 컨텍스트 정보 표시 -->
               <div v-if="selectedProjectId && contextInfo" class="mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <div class="flex items-center gap-2 text-blue-700">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,7 +139,7 @@
             </div>
           </div>
 
-          <!-- Language Selector -->
+          <!-- Language Selector (다국어 자막 있을 때) -->
           <LanguageSelector
             v-if="subtitleData.availableLanguages.length > 0"
             :available-languages="subtitleData.availableLanguages"
@@ -337,7 +214,7 @@
           <!-- Actions -->
           <div class="flex justify-center gap-4 py-4">
             <button
-              v-if="!subtitles.length"
+              v-if="!hasSubtitles"
               @click="handleExtractSubtitles"
               :disabled="isExtracting"
               class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -358,11 +235,11 @@
               </button>
 
               <div v-if="downloadDropdownOpen" class="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-xl border border-gray-100 shadow-xl overflow-hidden z-10">
-                <button @click="downloadSubtitle('original')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
+                <button @click="handleDownloadSubtitle('original')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
                   <DocumentTextIcon class="w-4 h-4" />
                   원본 (SRT)
                 </button>
-                <button @click="downloadSubtitle('translated')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
+                <button @click="handleDownloadSubtitle('translated')" class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 flex items-center gap-2">
                   <LanguageIcon class="w-4 h-4" />
                   번역본 (SRT)
                 </button>
@@ -374,22 +251,20 @@
     </template>
 
     <!-- ==================== MODALS ==================== -->
-    <!-- Upload Modal -->
     <VideoUploadModal
       ref="uploadModalRef"
       :show="showUploadModal"
       @close="showUploadModal = false"
-      @upload="handleVideoUpload"
+      @upload="onVideoUpload"
     />
 
-    <!-- Add Translation Modal -->
     <AddTranslationModal
       :show="showAddTranslationModal"
       :available-languages="subtitleData.availableLanguages"
       :source-language="subtitleData.originalLanguage"
       :projects="projects"
       @close="showAddTranslationModal = false"
-      @translate="handleAddTranslation"
+      @translate="onAddTranslation"
     />
 
     <!-- Toast -->
@@ -411,23 +286,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+
+// Components
 import ProjectSelector from '@/components/translation/ProjectSelector.vue'
 import LanguageSelector from '@/components/translation/LanguageSelector.vue'
 import AddTranslationModal from '@/components/translation/AddTranslationModal.vue'
 import VideoUploadModal from '@/components/translation/VideoUploadModal.vue'
 import VideoCard from '@/components/translation/VideoCard.vue'
-import {
-  getVideos,
-  deleteVideo,
-  uploadVideo,
-  extractSubtitles,
-  translateSubtitles,
-  getMultilingualSubtitles,
-  downloadSubtitles
-} from '@/services/videoService'
-import { getUserProjects } from '@/services/projectService'
+import VideoLanguageConfig from '@/components/translation/VideoLanguageConfig.vue'
+
+// Composables
+import { useVideoPage } from '@/composables/translation/useVideoPage'
+import { useVideoPlayer } from '@/composables/translation/useVideoPlayer'
+import { useVideoSubtitle } from '@/composables/translation/useVideoSubtitle'
+// Toast는 로컬 상태로 관리 (기존 방식 유지)
+
+// Icons
 import {
   VideoCameraIcon,
   TrashIcon,
@@ -444,514 +319,211 @@ import {
   ArrowLeftIcon
 } from '@heroicons/vue/24/solid'
 
-const router = useRouter()
+// ==================== COMPOSABLES ====================
+const {
+  currentView,
+  selectedVideo,
+  videos,
+  isLoadingVideos,
+  showUploadModal,
+  uploadModalRef,
+  glossaryExpanded,
+  selectedProjectId,
+  projects,
+  contextInfo,
+  downloadDropdownOpen,
+  showAddTranslationModal,
+  loadVideos,
+  selectVideo,
+  goBackToList,
+  handleVideoUpload,
+  handleDeleteVideo,
+  onProjectChange,
+  formatFileSize,
+  resetDetailView
+} = useVideoPage()
 
-// ==================== VIEW STATE ====================
-const currentView = ref('list') // 'list' | 'detail'
-const selectedVideo = ref(null)
+const {
+  videoPlayerRef,
+  videoUrl,
+  currentTime,
+  setVideoUrl,
+  setLocalVideoUrl,
+  handleTimeUpdate: _handleTimeUpdate,
+  handleVideoLoaded,
+  seekToSubtitle,
+  formatTime,
+  reset: resetPlayer
+} = useVideoPlayer()
 
-// ==================== LIST VIEW STATE ====================
-const videos = ref([])
-const isLoadingVideos = ref(false)
-const showUploadModal = ref(false)
-const uploadModalRef = ref(null)
+const {
+  subtitleData,
+  currentLanguage,
+  subtitles,
+  currentSubtitle,
+  isExtracting,
+  isTranslated,
+  displaySubtitles,
+  hasSubtitles,
+  loadExistingSubtitles,
+  handleExtractSubtitles: _extractSubtitles,
+  handleAddTranslation: _addTranslation,
+  handleLanguageChange,
+  handleDownloadSubtitle: _downloadSubtitle,
+  findCurrentSubtitle,
+  reset: resetSubtitles
+} = useVideoSubtitle()
 
-// ==================== DETAIL VIEW STATE ====================
-const videoUrl = ref(null)
-
-// Language State
-const sourceLang = ref('en')
-const targetLang = ref('ko')
-
-// Language Dropdown State
-const languageOptions = [
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' }
-]
-const isSourceDropdownOpen = ref(false)
-const isTargetDropdownOpen = ref(false)
-const sourceDropdownRef = ref(null)
-const targetDropdownRef = ref(null)
-
-// Glossary State (Text.vue 방식과 동일)
-const glossaryExpanded = ref(false)
-const selectedProjectId = ref(null)
-const projects = ref([])
-const contextInfo = ref(null)
-
-// Video Player State
-const videoPlayerRef = ref(null)
-const videoDuration = ref(0)
-const currentTime = ref(0)
-
-// 다국어 자막 상태
-const subtitleData = ref({
-  originalLanguage: 'ko',
-  availableLanguages: [],
-  subtitles: []
-})
-const currentLanguage = ref('ko')
-
-// 레거시 호환성
-const subtitles = ref([])
-const currentSubtitle = ref(null)
-
-// Processing State
-const isExtracting = ref(false)
-const isTranslated = ref(false)
-const downloadDropdownOpen = ref(false)
-const showAddTranslationModal = ref(false)
-
-// Toast
+// Toast 로컬 상태 (기존 Video.vue 방식)
 const toast = ref({
   show: false,
   message: '',
   type: 'success'
 })
 
-// ==================== COMPUTED ====================
-const totalTermsCount = computed(() => {
-  return contextInfo.value?.termsCount || 0
-})
-
-// 선택한 언어의 자막만 표시
-const displaySubtitles = computed(() => {
-  if (!subtitleData.value.subtitles.length) return []
-
-  return subtitleData.value.subtitles.map((segment) => ({
-    ...segment,
-    displayText:
-      currentLanguage.value === subtitleData.value.originalLanguage
-        ? segment.originalText
-        : segment.translations[currentLanguage.value] || segment.originalText
-  }))
-})
-
-// ==================== LIST VIEW METHODS ====================
-
-async function loadVideos() {
-  isLoadingVideos.value = true
-  try {
-    const response = await getVideos()
-    videos.value = response.data?.content || []
-  } catch (error) {
-    console.error('Failed to load videos:', error)
-    showToast('영상 목록을 불러오는데 실패했습니다.', 'error')
-  } finally {
-    isLoadingVideos.value = false
-  }
-}
-
-async function selectVideo(video) {
-  selectedVideo.value = video
-  currentView.value = 'detail'
-
-  // Set languages from video metadata
-  if (video.originalLanguage) {
-    sourceLang.value = video.originalLanguage
-  }
-
-  // Load video URL
-  try {
-    // Create video URL from server with token for authentication
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-    const token = localStorage.getItem('token')
-    videoUrl.value = `${API_URL}/videos/${video.id}/stream?token=${token}`
-
-    // Load existing subtitles if available
-    // Support both hasSubtitles field and sttStatus fallback
-    const hasSubtitles = video.hasSubtitles || video.sttStatus === 'completed'
-    if (hasSubtitles) {
-      await loadExistingSubtitles(video.id)
-    }
-  } catch (error) {
-    console.error('Failed to load video:', error)
-    showToast('영상을 불러오는데 실패했습니다.', 'error')
-  }
-}
-
-async function loadExistingSubtitles(videoId) {
-  try {
-    const result = await getMultilingualSubtitles(videoId)
-
-    subtitleData.value = {
-      originalLanguage: result.originalLanguage,
-      availableLanguages: result.availableLanguages,
-      subtitles: result.subtitles
-    }
-
-    currentLanguage.value = result.originalLanguage
-    subtitles.value = result.subtitles
-    isTranslated.value = result.availableLanguages.length > 1
-  } catch (error) {
-    console.error('Failed to load subtitles:', error)
-  }
-}
-
-function goBackToList() {
-  currentView.value = 'list'
-  resetDetailView()
-  loadVideos() // Refresh list
-}
-
-function resetDetailView() {
-  selectedVideo.value = null
-  videoUrl.value = null
-  subtitles.value = []
-  currentSubtitle.value = null
-  isTranslated.value = false
-  selectedProjectId.value = null
-  contextInfo.value = null
-  subtitleData.value = {
-    originalLanguage: 'ko',
-    availableLanguages: [],
-    subtitles: []
-  }
-}
-
-async function handleVideoUpload({ file, sourceLanguage, targetLanguage }) {
-  try {
-    // Update modal state
-    uploadModalRef.value?.setProgress(10)
-    uploadModalRef.value?.setUploading(true)
-
-    // Create FormData
-    const formData = new FormData()
-    formData.append('file', file)
-
-    // Add request metadata as JSON
-    const request = {
-      sourceLanguage: sourceLanguage,
-      targetLanguage: targetLanguage,
-      projectId: selectedProjectId.value
-    }
-    formData.append('request', JSON.stringify(request))
-
-    // Get user ID
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (!user.id) {
-      showToast('로그인이 필요합니다.', 'error')
-      router.push('/login')
-      return
-    }
-
-    uploadModalRef.value?.setProgress(30)
-
-    // Upload to Java Backend
-    const response = await uploadVideo(formData)
-
-    uploadModalRef.value?.setProgress(100)
-
-    // Close modal and refresh
-    showUploadModal.value = false
-    uploadModalRef.value?.resetState()
-
-    showToast('영상 업로드가 완료되었습니다!', 'success')
-
-    // Set languages for detail view
-    sourceLang.value = sourceLanguage
-    targetLang.value = targetLanguage
-
-    // Select the uploaded video to go to detail view
-    selectVideo({
-      id: response.id,
-      originalFilename: file.name,
-      fileName: file.name,
-      fileSize: file.size,
-      originalLanguage: sourceLanguage,
-      hasSubtitles: false
-    })
-
-    // Create local video URL for immediate playback
-    videoUrl.value = URL.createObjectURL(file)
-
-  } catch (error) {
-    console.error('Video upload error:', error)
-    showToast('영상 업로드에 실패했습니다.', 'error')
-    uploadModalRef.value?.setUploading(false)
-  }
-}
-
-async function handleDeleteVideo(videoId) {
-  if (!confirm('이 영상을 삭제하시겠습니까?')) return
-
-  try {
-    await deleteVideo(videoId)
-    showToast('영상이 삭제되었습니다.', 'success')
-
-    if (currentView.value === 'detail') {
-      goBackToList()
-    } else {
-      loadVideos()
-    }
-  } catch (error) {
-    console.error('Failed to delete video:', error)
-    showToast('영상 삭제에 실패했습니다.', 'error')
-  }
-}
-
-// ==================== LANGUAGE METHODS ====================
-
-function getLanguageFlag(code) {
-  return languageOptions.find(l => l.code === code)?.flag || ''
-}
-
-function getLanguageName(code) {
-  return languageOptions.find(l => l.code === code)?.name || code
-}
-
-function toggleSourceDropdown() {
-  isSourceDropdownOpen.value = !isSourceDropdownOpen.value
-  isTargetDropdownOpen.value = false
-}
-
-function toggleTargetDropdown() {
-  isTargetDropdownOpen.value = !isTargetDropdownOpen.value
-  isSourceDropdownOpen.value = false
-}
-
-function selectSourceLanguage(code) {
-  if (code !== targetLang.value) {
-    sourceLang.value = code
-    isSourceDropdownOpen.value = false
-  }
-}
-
-function selectTargetLanguage(code) {
-  if (code !== sourceLang.value) {
-    targetLang.value = code
-    isTargetDropdownOpen.value = false
-  }
-}
-
-function swapLanguages() {
-  const temp = sourceLang.value
-  sourceLang.value = targetLang.value
-  targetLang.value = temp
-}
-
-function handleDropdownClickOutside(event) {
-  if (sourceDropdownRef.value && !sourceDropdownRef.value.contains(event.target)) {
-    isSourceDropdownOpen.value = false
-  }
-  if (targetDropdownRef.value && !targetDropdownRef.value.contains(event.target)) {
-    isTargetDropdownOpen.value = false
-  }
-}
-
-// ==================== PROJECT METHODS ====================
-
-async function loadProjects() {
-  try {
-    const response = await getUserProjects()
-    projects.value = response.data.data || []
-  } catch (error) {
-    console.error('Failed to load projects:', error)
-    showToast('프로젝트 목록을 불러오는데 실패했습니다.', 'error')
-  }
-}
-
-function onProjectChange(projectId) {
-  if (projectId) {
-    const project = projects.value.find(p => p.id === projectId)
-    if (project) {
-      contextInfo.value = {
-        documentsCount: project.documentCount || 0,
-        termsCount: project.termCount || 0
-      }
-    }
-  } else {
-    contextInfo.value = null
-  }
-}
-
-// ==================== SUBTITLE METHODS ====================
-
-async function handleExtractSubtitles() {
-  if (!selectedVideo.value) return
-
-  console.log('Video File ID:', selectedVideo.value.id)
-
-  isExtracting.value = true
-
-  try {
-    // Step 1: STT 처리 (원본 언어)
-    await extractSubtitles({
-      videoDocumentId: selectedVideo.value.id,
-      sourceLanguage: sourceLang.value
-    })
-
-    // Step 2: 자동 번역 (목표 언어가 있고 원본과 다르면)
-    if (targetLang.value && targetLang.value !== sourceLang.value) {
-      await translateSubtitles({
-        videoDocumentId: selectedVideo.value.id,
-        projectId: selectedProjectId.value,
-        sourceLanguage: sourceLang.value,
-        targetLanguage: targetLang.value
-      })
-    }
-
-    // Step 3: 다국어 자막 조회
-    const result = await getMultilingualSubtitles(selectedVideo.value.id)
-
-    // Step 4: 상태 업데이트
-    subtitleData.value = {
-      originalLanguage: result.originalLanguage,
-      availableLanguages: result.availableLanguages,
-      subtitles: result.subtitles
-    }
-
-    currentLanguage.value = result.originalLanguage
-    subtitles.value = result.subtitles
-    isTranslated.value = result.availableLanguages.length > 1
-
-    const languageInfo =
-      result.availableLanguages.length > 1
-        ? ` (${result.availableLanguages.join(', ').toUpperCase()})`
-        : ''
-    showToast(`자막 생성 완료!${languageInfo}`, 'success')
-  } catch (error) {
-    console.error('Subtitle extraction error:', error)
-    showToast('자막 처리에 실패했습니다.', 'error')
-  } finally {
-    isExtracting.value = false
-  }
-}
-
-function handleLanguageChange(lang) {
-  currentLanguage.value = lang
-  console.log(`Language changed: ${lang}`)
-}
-
-async function handleAddTranslation({ targetLanguage, projectId: modalProjectId }) {
-  if (!selectedVideo.value) return
-
-  isExtracting.value = true
-
-  try {
-    await translateSubtitles({
-      videoDocumentId: selectedVideo.value.id,
-      projectId: modalProjectId || selectedProjectId.value,
-      sourceLanguage: subtitleData.value.originalLanguage,
-      targetLanguage: targetLanguage
-    })
-
-    const updatedData = await getMultilingualSubtitles(selectedVideo.value.id)
-
-    subtitleData.value = {
-      originalLanguage: updatedData.originalLanguage,
-      availableLanguages: updatedData.availableLanguages,
-      subtitles: updatedData.subtitles
-    }
-
-    subtitles.value = updatedData.subtitles
-    isTranslated.value = updatedData.availableLanguages.length > 1
-    currentLanguage.value = targetLanguage
-
-    showToast(`${targetLanguage.toUpperCase()} 번역이 완료되었습니다!`, 'success')
-  } catch (error) {
-    console.error('Additional translation error:', error)
-    showToast('번역에 실패했습니다.', 'error')
-  } finally {
-    isExtracting.value = false
-  }
-}
-
-async function downloadSubtitle(language) {
-  try {
-    const blob = await downloadSubtitles({
-      videoDocumentId: selectedVideo.value.id,
-      language: language
-    })
-
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    const filename = selectedVideo.value.originalFilename || selectedVideo.value.fileName || 'video'
-    a.download = `${filename.replace(/\.[^/.]+$/, '')}_${language}.srt`
-    a.click()
-    URL.revokeObjectURL(url)
-
-    downloadDropdownOpen.value = false
-    showToast('자막 파일이 다운로드되었습니다!', 'success')
-  } catch (error) {
-    console.error('Download error:', error)
-    showToast('다운로드에 실패했습니다.', 'error')
-  }
-}
-
-// ==================== VIDEO PLAYER METHODS ====================
-
-function handleTimeUpdate(event) {
-  currentTime.value = event.target.currentTime
-
-  const current = displaySubtitles.value.find(
-    (sub) => currentTime.value >= sub.startTime && currentTime.value <= sub.endTime
-  )
-  currentSubtitle.value = current || null
-}
-
-function handleVideoLoaded(event) {
-  videoDuration.value = event.target.duration
-}
-
-function seekToSubtitle(subtitle) {
-  if (videoPlayerRef.value) {
-    videoPlayerRef.value.currentTime = subtitle.startTime
-    videoPlayerRef.value.play()
-  }
-}
-
-// ==================== UTILITY METHODS ====================
-
-function formatTime(seconds) {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-}
-
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
-}
-
-function showToast(message, type = 'success') {
-  toast.value = {
-    show: true,
-    message,
-    type
-  }
-
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type }
   setTimeout(() => {
     toast.value.show = false
   }, 3000)
 }
 
+// ==================== REFS ====================
+const languageConfigRef = ref(null)
+
+// 언어 상태 (Video.vue에서 직접 관리)
+const sourceLang = ref('en')
+const targetLang = ref('ko')
+
+// ==================== HANDLERS ====================
+
+// 비디오 선택 처리
+async function handleSelectVideo(video) {
+  selectVideo(video)
+
+  // 언어 설정
+  if (video.originalLanguage) {
+    sourceLang.value = video.originalLanguage
+  }
+
+  // 비디오 URL 설정
+  setVideoUrl(video.id)
+
+  // 기존 자막 로드
+  const hasExistingSubtitles = video.hasSubtitles || video.sttStatus === 'completed'
+  if (hasExistingSubtitles) {
+    try {
+      await loadExistingSubtitles(video.id)
+    } catch (error) {
+      console.error('Failed to load subtitles:', error)
+      showToast('자막을 불러오는데 실패했습니다.', 'error')
+    }
+  }
+}
+
+// 비디오 업로드 처리
+async function onVideoUpload({ file, sourceLanguage, targetLanguage }) {
+  try {
+    const uploadedVideo = await handleVideoUpload(
+      { file, sourceLanguage, targetLanguage },
+      {
+        onProgress: (progress) => uploadModalRef.value?.setProgress(progress)
+      }
+    )
+
+    if (uploadedVideo) {
+      showUploadModal.value = false
+      uploadModalRef.value?.resetState()
+
+      // 언어 설정
+      sourceLang.value = sourceLanguage
+      targetLang.value = targetLanguage
+
+      // 상세 뷰로 이동
+      selectVideo(uploadedVideo)
+      setLocalVideoUrl(file)
+    }
+  } catch (error) {
+    uploadModalRef.value?.setUploading(false)
+  }
+}
+
+// 자막 추출 처리
+async function handleExtractSubtitles() {
+  if (!selectedVideo.value) return
+
+  try {
+    const result = await _extractSubtitles({
+      videoDocumentId: selectedVideo.value.id,
+      sourceLang: sourceLang.value,
+      targetLang: targetLang.value,
+      projectId: selectedProjectId.value
+    })
+
+    const languageInfo = result.availableLanguages.length > 1
+      ? ` (${result.availableLanguages.join(', ').toUpperCase()})`
+      : ''
+    showToast(`자막 생성 완료!${languageInfo}`, 'success')
+  } catch (error) {
+    console.error('Subtitle extraction error:', error)
+    showToast('자막 처리에 실패했습니다.', 'error')
+  }
+}
+
+// 추가 번역 처리
+async function onAddTranslation({ targetLanguage, projectId: modalProjectId }) {
+  if (!selectedVideo.value) return
+
+  try {
+    await _addTranslation({
+      videoDocumentId: selectedVideo.value.id,
+      targetLanguage,
+      projectId: modalProjectId || selectedProjectId.value
+    })
+
+    showToast(`${targetLanguage.toUpperCase()} 번역이 완료되었습니다!`, 'success')
+  } catch (error) {
+    console.error('Additional translation error:', error)
+    showToast('번역에 실패했습니다.', 'error')
+  }
+}
+
+// 자막 다운로드 처리
+async function handleDownloadSubtitle(language) {
+  try {
+    const filename = selectedVideo.value.originalFilename || selectedVideo.value.fileName || 'video'
+    await _downloadSubtitle({
+      videoDocumentId: selectedVideo.value.id,
+      language,
+      filename
+    })
+
+    downloadDropdownOpen.value = false
+    showToast('자막 파일이 다운로드되었습니다!', 'success')
+  } catch (error) {
+    showToast('다운로드에 실패했습니다.', 'error')
+  }
+}
+
+// 시간 업데이트 (자막 동기화 포함)
+function handleTimeUpdate(event) {
+  _handleTimeUpdate(event)
+  findCurrentSubtitle(currentTime.value)
+}
+
 // ==================== LIFECYCLE ====================
-
 onMounted(() => {
-  loadVideos()
-  loadProjects()
-
-  document.addEventListener('click', handleDropdownClickOutside)
-  document.addEventListener('click', (event) => {
+  // 다운로드 드롭다운 외부 클릭 처리
+  const handleClickOutside = (event) => {
     if (!event.target.closest('.relative')) {
       downloadDropdownOpen.value = false
     }
-  })
+  }
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleDropdownClickOutside)
-  if (videoUrl.value && videoUrl.value.startsWith('blob:')) {
-    URL.revokeObjectURL(videoUrl.value)
-  }
+  resetPlayer()
 })
 </script>
 
