@@ -193,14 +193,15 @@ import {
   ArrowLeftIcon
 } from '@heroicons/vue/24/outline'
 
-// Components
-import AudioUploadModal from '@/components/conversation/AudioUploadModal.vue'
-import SpeakingSessionCard from '@/components/conversation/SpeakingSessionCard.vue'
-import SpeakingEmptyState from '@/components/conversation/SpeakingEmptyState.vue'
-import SpeakingAnalysisProgress from '@/components/conversation/SpeakingAnalysisProgress.vue'
-import SpeakingTranscriptPanel from '@/components/conversation/SpeakingTranscriptPanel.vue'
-import SpeakingFeedbackPanel from '@/components/conversation/SpeakingFeedbackPanel.vue'
-import SpeakingLearningMode from '@/components/conversation/SpeakingLearningMode.vue'
+// Components - Audio
+import AudioUploadModal from '@/components/conversation/audio/AudioUploadModal.vue'
+// Components - Speaking
+import SpeakingSessionCard from '@/components/conversation/speaking/SpeakingSessionCard.vue'
+import SpeakingEmptyState from '@/components/conversation/speaking/SpeakingEmptyState.vue'
+import SpeakingAnalysisProgress from '@/components/conversation/speaking/SpeakingAnalysisProgress.vue'
+import SpeakingTranscriptPanel from '@/components/conversation/speaking/SpeakingTranscriptPanel.vue'
+import SpeakingFeedbackPanel from '@/components/conversation/speaking/SpeakingFeedbackPanel.vue'
+import SpeakingLearningMode from '@/components/conversation/speaking/SpeakingLearningMode.vue'
 
 // Composable
 import { useSpeakingTutor } from '@/composables/conversation/useSpeakingTutor'

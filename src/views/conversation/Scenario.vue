@@ -344,14 +344,15 @@ import { EffectCards } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/effect-cards'
 
-// Components
-import ScenarioProjectSidebar from '@/components/conversation/ScenarioProjectSidebar.vue'
-import BusinessCategorySidebar from '@/components/conversation/BusinessCategorySidebar.vue'
-import ScenarioCard from '@/components/conversation/ScenarioCard.vue'
-import BusinessScenarioCard from '@/components/conversation/BusinessScenarioCard.vue'
-import ScenarioEmptyState from '@/components/conversation/ScenarioEmptyState.vue'
-import ScenarioCreateDialog from '@/components/conversation/ScenarioCreateDialog.vue'
-import ScenarioEditDialog from '@/components/conversation/ScenarioEditDialog.vue'
+// Components - Scenario
+import ScenarioProjectSidebar from '@/components/conversation/scenario/ScenarioProjectSidebar.vue'
+import ScenarioCard from '@/components/conversation/scenario/ScenarioCard.vue'
+import ScenarioEmptyState from '@/components/conversation/scenario/ScenarioEmptyState.vue'
+import ScenarioCreateDialog from '@/components/conversation/scenario/ScenarioCreateDialog.vue'
+import ScenarioEditDialog from '@/components/conversation/scenario/ScenarioEditDialog.vue'
+// Components - Business
+import BusinessCategorySidebar from '@/components/conversation/business/BusinessCategorySidebar.vue'
+import BusinessScenarioCard from '@/components/conversation/business/BusinessScenarioCard.vue'
 
 // Business Templates Data
 import { BUSINESS_CATEGORIES, BUSINESS_SCENARIO_TEMPLATES } from '@/data/businessScenarioTemplates'
