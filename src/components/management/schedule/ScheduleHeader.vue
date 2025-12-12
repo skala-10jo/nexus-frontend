@@ -44,7 +44,7 @@ const emit = defineEmits([
       <div>
         <h1 class="text-2xl font-bold text-gray-900">일정 관리</h1>
         <p class="text-sm text-gray-500 font-medium mt-0.5">
-          Outlook 일정을 연동해보세용~
+          Outlook 일정을 연동하고 다가올 일정의 회화를 연습해보세요!
         </p>
       </div>
       <div class="hidden md:flex items-center gap-3">

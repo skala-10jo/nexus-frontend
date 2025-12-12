@@ -2,16 +2,18 @@
   <!-- Desktop Sidebar -->
   <aside class="bg-gray-100 min-h-screen flex-col flex-shrink-0 transition-all duration-300 ease-in-out hidden md:flex"
     :class="isCollapsed ? 'w-[80px]' : 'w-80'">
-    <!-- Brand Logo -->
+    <!-- Brand Logo - Click to go to Dashboard -->
     <div class="p-8 pb-6 flex items-center gap-3" :class="isCollapsed ? 'justify-center p-4' : ''">
-      <div class="w-10 h-10 bg-blue-300 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-        <img
-          src="@/views/logo.png"
-          alt="NexUS Logo"
-          class="w-9 h-9 object-contain ml-0.5"
-        />
-      </div>
-      <span v-if="!isCollapsed" class="text-xl font-bold tracking-tight text-gray-900" style="font-family: 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important; font-weight: 700 !important; letter-spacing: -0.02em !important;">NexUS</span>
+      <router-link to="/" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" :class="isCollapsed ? 'justify-center' : ''">
+        <div class="w-10 h-10 bg-blue-300 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+          <img
+            src="@/views/logo.png"
+            alt="NexUS Logo"
+            class="w-9 h-9 object-contain ml-0.5"
+          />
+        </div>
+        <span v-if="!isCollapsed" class="text-xl font-bold tracking-tight text-gray-900" style="font-family: 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important; font-weight: 700 !important; letter-spacing: -0.02em !important;">NexUS</span>
+      </router-link>
       <button v-if="!isCollapsed" @click="toggleCollapse"
         class="ml-auto w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-500 hover:text-gray-800 hover:shadow-md transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,19 +32,6 @@
     <nav class="flex-1 overflow-y-auto space-y-1 no-scrollbar" :class="isCollapsed ? 'px-3' : 'px-6'">
       <h3 v-if="!isCollapsed" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 px-4 mt-2">MENU
       </h3>
-
-      <!-- Dashboard -->
-      <router-link to="/"
-        class="flex items-center gap-4 rounded-2xl transition-all duration-300 group relative overflow-hidden border"
-        :class="[
-          isActive('/') ? 'bg-gradient-to-b from-white to-gray-50 border-white/50 shadow-[0_8px_20px_rgba(0,0,0,0.08),inset_0_4px_8px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(0,0,0,0.05)] -translate-y-0.5 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white hover:shadow-md hover:-translate-y-0.5',
-          isCollapsed ? 'px-3 py-3 justify-center' : 'px-4 py-3'
-        ]" :title="isCollapsed ? 'Dashboard' : ''">
-        <svg class="w-5 h-5 flex-shrink-0" :class="isActive('/') ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14.3213 15.2023C14.4394 15.2024 14.5349 15.2981 14.5352 15.4161V21.4874H10.4639V15.4161C10.4641 15.2983 10.5599 15.2027 10.6777 15.2023H14.3213ZM12.5 2.00012C13.8476 2.00012 14.9787 2.96998 17.2412 4.9093L18.4561 5.95032C19.7076 7.02309 20.3337 7.55975 20.667 8.2843C21.0001 9.00882 21 9.8332 21 11.4816V16.631C21 18.9203 21.0001 20.0652 20.2891 20.7765C19.6196 21.446 18.5657 21.4841 16.5352 21.4865V15.4161C16.5349 14.1935 15.5439 13.2024 14.3213 13.2023H10.6777C9.45533 13.2027 8.46409 14.1937 8.46387 15.4161V21.4865C6.43395 21.4841 5.3803 21.4459 4.71094 20.7765C3.99989 20.0652 4 18.9203 4 16.631V11.4816C4 9.8332 3.99989 9.00882 4.33301 8.2843C4.66625 7.55975 5.29237 7.02309 6.54395 5.95032L7.75879 4.9093C10.0213 2.96998 11.1524 2.00012 12.5 2.00012Z"/>
-        </svg>
-        <span v-if="!isCollapsed" class="font-extrabold text-[15px]">대시보드</span>
-      </router-link>
 
       <!-- Management -->
       <div class="space-y-1">
