@@ -1,41 +1,36 @@
 <template>
-  <div class="h-full md:overflow-hidden overflow-y-auto bg-gray-50/50 p-4 md:p-6 pb-24 md:pb-6">
-    <div class="max-w-[1600px] mx-auto h-auto md:h-full flex flex-col gap-4">
+  <div class="h-full overflow-y-auto bg-gray-50/50 p-4 md:p-6">
+    <div class="max-w-[1600px] mx-auto min-h-full flex flex-col gap-4">
 
-      <!-- 1. Welcome Banner -->
-      <WelcomeBanner
-        :user="user"
-        :schedule-message="scheduleMessage"
-        :today-expression="todayExpression"
-        :is-checked-in="isCheckedIn"
-        @check-in="handleCheckIn"
-      />
+      <!-- Main Grid: 왼쪽(시나리오+표현+차트) + 오른쪽(달력+태스크) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+        
+        <!-- 왼쪽 열 (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col gap-4 h-full">
+          <!-- 1. Scenario Cards (Welcome 메시지 + 출석/캐릭터 포함) -->
+          <ScenarioCards
+            :user="user"
+            :today-events="todayEvents"
+            :schedule-message="scheduleMessage"
+            :is-checked-in="isCheckedIn"
+            @check-in="handleCheckIn"
+          />
 
-      <!-- Main Grid -->
-      <div class="flex-1 md:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- 2. Expression Carousel -->
+          <ExpressionCarousel
+            :expressions="expressions"
+          />
 
-        <!-- Left Column (Content) -->
-        <div class="lg:col-span-8 flex flex-col gap-4 h-auto md:h-full md:overflow-hidden">
-
-          <!-- 2. Small Talk / Scenario Practice -->
-          <div class="h-[400px] md:flex-1 md:min-h-0 relative">
-            <SmallTalkChat />
-          </div>
-
-          <!-- Bottom Row: Performance & Quick Actions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:flex-1 md:min-h-0">
-            <!-- Performance Chart -->
+          <!-- 3. Performance Chart & Quick Actions -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
             <PerformanceChart />
-
-            <!-- Quick Actions -->
             <QuickActionsSwiper />
           </div>
         </div>
 
-        <!-- Right Column (Sidebar) -->
-        <div class="lg:col-span-4 flex flex-col gap-4 h-auto md:h-full md:overflow-y-auto">
-
-          <!-- 3. Mini Calendar -->
+        <!-- 오른쪽 열 (4 cols) -->
+        <div class="lg:col-span-4 flex flex-col gap-4 h-full">
+          <!-- 1. Mini Calendar (맨 위로 이동) -->
           <MiniCalendar
             :all-events="allEvents"
             :selected-date="selectedDate"
@@ -65,8 +60,8 @@
  *
  * @description 레이아웃 조립 및 컴포넌트 연결만 담당
  */
-import WelcomeBanner from '@/components/dashboard/WelcomeBanner.vue'
-import SmallTalkChat from '@/components/dashboard/SmallTalkChat.vue'
+import ScenarioCards from '@/components/dashboard/ScenarioCards.vue'
+import ExpressionCarousel from '@/components/dashboard/ExpressionCarousel.vue'
 import PerformanceChart from '@/components/dashboard/PerformanceChart.vue'
 import QuickActionsSwiper from '@/components/dashboard/QuickActionsSwiper.vue'
 import MiniCalendar from '@/components/dashboard/MiniCalendar.vue'
@@ -80,6 +75,7 @@ const {
   user,
   selectedDate,
   todayExpression,
+  expressions,
   allEvents,
   loadingEvents,
   isCheckedIn,
@@ -87,6 +83,7 @@ const {
   // Computed
   upcomingEvents,
   scheduleMessage,
+  todayEvents,
 
   // Actions
   handleCheckIn,
