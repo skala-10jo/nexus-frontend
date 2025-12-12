@@ -33,7 +33,6 @@
         <!-- Mail Preview -->
         <div v-if="activeTab === 0" class="flex-1 p-3 overflow-hidden bg-gray-50/50">
           <div class="bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col">
-            <!-- Mail Header -->
             <div class="px-3 py-2 border-b border-gray-100 space-y-1.5">
               <div class="flex items-center gap-2">
                 <span class="text-[10px] text-gray-400 w-8">To:</span>
@@ -44,13 +43,9 @@
                 <span class="text-xs text-gray-700 font-medium">{{ displayedSubject }}<span v-if="isTypingSubject" class="inline-block w-0.5 h-3 bg-gray-800 animate-blink ml-0.5"></span></span>
               </div>
             </div>
-
-            <!-- Mail Body -->
             <div ref="mailBodyRef" class="flex-1 px-3 py-2 overflow-y-auto">
               <p class="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{{ displayedBody }}<span v-if="isTypingBody" class="inline-block w-0.5 h-3 bg-gray-800 animate-blink ml-0.5"></span></p>
             </div>
-
-            <!-- Send Button -->
             <div class="px-3 py-2 border-t border-gray-100">
               <button
                 class="w-full py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 flex items-center justify-center gap-1.5"
@@ -77,7 +72,6 @@
         <!-- Slack Preview -->
         <div v-if="activeTab === 1" class="flex-1 p-3 overflow-hidden bg-gray-50/50">
           <div class="bg-[#1a1d21] rounded-lg border border-gray-700 shadow-sm h-full flex flex-col">
-            <!-- Slack Header -->
             <div class="px-3 py-2 border-b border-gray-700 flex items-center gap-2">
               <div class="w-5 h-5 rounded bg-green-600 flex items-center justify-center">
                 <span class="text-[8px] text-white font-bold">MJ</span>
@@ -85,8 +79,6 @@
               <span class="text-white font-bold text-xs">Mr. Johnson</span>
               <span class="text-green-400 text-[9px]">● 온라인</span>
             </div>
-
-            <!-- Slack Message -->
             <div class="flex-1 px-3 py-2 overflow-y-auto">
               <div v-if="showSlackMessage" class="flex gap-2">
                 <div class="w-7 h-7 rounded bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0">
@@ -101,8 +93,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Slack Send Button -->
             <div class="px-3 py-2 border-t border-gray-700">
               <button
                 class="w-full py-1.5 rounded text-[10px] font-bold transition-all duration-300 flex items-center justify-center gap-1.5"
@@ -118,12 +108,10 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- Right: Chatbot -->
       <div class="w-[50%] flex flex-col">
-        <!-- Chat Header -->
         <div class="px-3 py-2 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50">
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
@@ -138,13 +126,9 @@
           </div>
         </div>
 
-        <!-- Chat Messages -->
         <div ref="chatMessagesRef" class="flex-1 p-3 space-y-3 overflow-y-auto bg-gray-50/30">
-          <!-- AI Welcome Message -->
-          <div
-            v-if="showWelcome"
-            class="flex gap-2 animate-message-in"
-          >
+          <!-- AI Welcome -->
+          <div v-if="showWelcome" class="flex gap-2 animate-message-in">
             <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shrink-0">
               <span class="text-[10px] text-white font-bold">AI</span>
             </div>
@@ -154,10 +138,7 @@
           </div>
 
           <!-- User Message -->
-          <div
-            v-if="showUserMessage"
-            class="flex gap-2 justify-end animate-message-in"
-          >
+          <div v-if="showUserMessage" class="flex gap-2 justify-end animate-message-in">
             <div class="bg-blue-500 text-white rounded-xl rounded-tr-sm px-3 py-2 shadow-sm max-w-[85%]">
               <p class="text-[11px] leading-relaxed">{{ userMessage }}</p>
             </div>
@@ -166,11 +147,8 @@
             </div>
           </div>
 
-          <!-- AI Typing Response -->
-          <div
-            v-if="showAIResponse"
-            class="flex gap-2 animate-message-in"
-          >
+          <!-- AI Response -->
+          <div v-if="showAIResponse" class="flex gap-2 animate-message-in">
             <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shrink-0">
               <span class="text-[10px] text-white font-bold">AI</span>
             </div>
@@ -180,10 +158,7 @@
           </div>
 
           <!-- Typing Indicator -->
-          <div
-            v-if="showTypingIndicator"
-            class="flex gap-2 animate-message-in"
-          >
+          <div v-if="showTypingIndicator" class="flex gap-2 animate-message-in">
             <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shrink-0">
               <span class="text-[10px] text-white font-bold">AI</span>
             </div>
@@ -196,11 +171,8 @@
             </div>
           </div>
 
-          <!-- Translation Tips (챗봇 영역 하단) -->
-          <div
-            v-if="showTips"
-            class="flex gap-2 animate-message-in"
-          >
+          <!-- Tips -->
+          <div v-if="showTips" class="flex gap-2 animate-message-in">
             <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
               <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -236,7 +208,13 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, markRaw, h, nextTick } from 'vue'
+/**
+ * MailMockUI - 메일/Slack 작성 시연 UI
+ *
+ * @description AI 메일 어시스턴트 시연
+ */
+import { ref, markRaw, h } from 'vue'
+import { useMailAnimation } from '@/composables/landing/useMailAnimation'
 
 const props = defineProps({
   isVisible: {
@@ -245,7 +223,7 @@ const props = defineProps({
   }
 })
 
-// Icons as render functions
+// Icons
 const EnvelopeIcon = {
   render() {
     return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -267,255 +245,39 @@ const tabs = [
   { label: 'Slack', icon: markRaw(SlackIcon) }
 ]
 
-// State
-const headerTitle = ref('AI 메일 · 메신저 작성 도우미')
-const activeTab = ref(0)
-
-// Chat state
-const showWelcome = ref(false)
-const showUserMessage = ref(false)
-const showTypingIndicator = ref(false)
-const showAIResponse = ref(false)
-const isTypingAI = ref(false)
-const displayedAIResponse = ref('')
-const userMessage = ref('투자자 미팅 요청을 메일과 슬랙으로 각각 보내줘')
-const inputText = ref('')
-
 // Refs
 const mailBodyRef = ref(null)
 const chatMessagesRef = ref(null)
 
-// Mail state
-const mailTo = ref('investor@venture.com')
-const displayedSubject = ref('')
-const displayedBody = ref('')
-const isTypingSubject = ref(false)
-const isTypingBody = ref(false)
-const canSend = ref(false)
-const isSending = ref(false)
-const isSent = ref(false)
-
-// Slack state
-const showSlackMessage = ref(false)
-const displayedSlackMessage = ref('')
-const isTypingSlack = ref(false)
-const canSendSlack = ref(false)
-const isSendingSlack = ref(false)
-const isSentSlack = ref(false)
-
-// Tips
-const showTips = ref(false)
-
-// Full content
-const fullAIResponse = `네, 메일과 슬랙 메시지를 각각 작성해 드릴게요!
-
-📧 메일: 전문적이고 공손한 비즈니스 톤
-💬 슬랙: 메일보다 덜 격식을 차린 친근한 톤
-
-왼쪽 탭에서 확인하세요!`
-
-const fullSubject = 'Meeting Request: Investment Discussion'
-const fullBody = `Dear Mr. Johnson,
-
-I hope this email finds you well.
-
-I am writing to request a meeting to discuss potential investment opportunities in our company.
-
-We have recently achieved significant milestones and would be grateful for the opportunity to present our progress.
-
-Would you be available for a brief meeting next week?
-
-Best regards,
-Jihyun Kim`
-
-const fullSlackMessage = `Hi Mr. Johnson,
-
-I wanted to follow up on our investment discussion. Would you be available for a quick call this week?
-
-Looking forward to hearing from you.
-- Jihyun`
-
-let timeouts = []
-
-const clearTimeouts = () => {
-  timeouts.forEach(t => clearTimeout(t))
-  timeouts = []
-}
-
-const resetState = () => {
-  showWelcome.value = false
-  showUserMessage.value = false
-  showTypingIndicator.value = false
-  showAIResponse.value = false
-  isTypingAI.value = false
-  displayedAIResponse.value = ''
-  inputText.value = ''
-  displayedSubject.value = ''
-  displayedBody.value = ''
-  isTypingSubject.value = false
-  isTypingBody.value = false
-  canSend.value = false
-  isSending.value = false
-  isSent.value = false
-  showSlackMessage.value = false
-  displayedSlackMessage.value = ''
-  isTypingSlack.value = false
-  canSendSlack.value = false
-  isSendingSlack.value = false
-  isSentSlack.value = false
-  showTips.value = false
-  activeTab.value = 0
-}
-
-const scrollMailBodyToBottom = () => {
-  nextTick(() => {
-    if (mailBodyRef.value) {
-      mailBodyRef.value.scrollTop = mailBodyRef.value.scrollHeight
-    }
-  })
-}
-
-const scrollChatToBottom = () => {
-  nextTick(() => {
-    if (chatMessagesRef.value) {
-      chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight
-    }
-  })
-}
-
-const typeText = (text, setter, typingSetter, speed = 25, scrollFn = null) => {
-  return new Promise((resolve) => {
-    let index = 0
-    typingSetter.value = true
-    const type = () => {
-      if (index < text.length) {
-        setter.value = text.slice(0, index + 1)
-        index++
-        if (scrollFn) scrollFn()
-        timeouts.push(setTimeout(type, speed))
-      } else {
-        typingSetter.value = false
-        resolve()
-      }
-    }
-    type()
-  })
-}
-
-const startAnimation = async () => {
-  resetState()
-
-  // 1. Welcome message
-  timeouts.push(setTimeout(() => {
-    showWelcome.value = true
-    scrollChatToBottom()
-  }, 300))
-
-  // 2. User typing input
-  timeouts.push(setTimeout(() => {
-    let i = 0
-    const typeInput = () => {
-      if (i < userMessage.value.length) {
-        inputText.value = userMessage.value.slice(0, i + 1)
-        i++
-        timeouts.push(setTimeout(typeInput, 40))
-      } else {
-        // Send message
-        timeouts.push(setTimeout(() => {
-          inputText.value = ''
-          showUserMessage.value = true
-          scrollChatToBottom()
-        }, 300))
-      }
-    }
-    typeInput()
-  }, 1500))
-
-  // 3. AI typing indicator
-  timeouts.push(setTimeout(() => {
-    showTypingIndicator.value = true
-    scrollChatToBottom()
-  }, 4000))
-
-  // 4. AI response with typing effect
-  timeouts.push(setTimeout(() => {
-    showTypingIndicator.value = false
-    showAIResponse.value = true
-    scrollChatToBottom()
-    typeText(fullAIResponse, displayedAIResponse, isTypingAI, 20, scrollChatToBottom)
-  }, 5000))
-
-  // 5. Start typing mail subject
-  timeouts.push(setTimeout(() => {
-    isTypingSubject.value = true
-    typeText(fullSubject, displayedSubject, isTypingSubject, 35).then(() => {
-      // 6. Start typing mail body (스크롤 아래로 고정)
-      typeText(fullBody, displayedBody, isTypingBody, 15, scrollMailBodyToBottom).then(() => {
-        canSend.value = true
-        // Show tips in chatbot area
-        timeouts.push(setTimeout(() => {
-          showTips.value = true
-          scrollChatToBottom()
-        }, 500))
-      })
-    })
-  }, 6500))
-
-  // 7. Click send button
-  timeouts.push(setTimeout(() => {
-    isSending.value = true
-  }, 13000))
-
-  timeouts.push(setTimeout(() => {
-    isSending.value = false
-    isSent.value = true
-  }, 14000))
-
-  // 8. Switch to Slack tab - 바로 전체 텍스트 표시
-  timeouts.push(setTimeout(() => {
-    activeTab.value = 1
-    showSlackMessage.value = true
-    displayedSlackMessage.value = fullSlackMessage
-    canSendSlack.value = true
-  }, 15000))
-
-  // 9. Send Slack message
-  timeouts.push(setTimeout(() => {
-    isSendingSlack.value = true
-  }, 17000))
-
-  timeouts.push(setTimeout(() => {
-    isSendingSlack.value = false
-    isSentSlack.value = true
-  }, 17500))
-
-  // 애니메이션 끝 - 무한 반복 없음
-}
-
-watch(() => props.isVisible, (visible) => {
-  if (visible) {
-    startAnimation()
-  } else {
-    clearTimeouts()
-  }
-})
-
-onMounted(() => {
-  if (props.isVisible) {
-    startAnimation()
-  }
-})
-
-onUnmounted(() => {
-  clearTimeouts()
-})
-
-// 외부에서 리셋 후 재시작 가능하도록 expose
-const restartAnimation = () => {
-  clearTimeouts()
-  resetState()
-  startAnimation()
-}
+// Animation composable
+const {
+  headerTitle,
+  activeTab,
+  showWelcome,
+  showUserMessage,
+  showTypingIndicator,
+  showAIResponse,
+  isTypingAI,
+  displayedAIResponse,
+  userMessage,
+  inputText,
+  mailTo,
+  displayedSubject,
+  displayedBody,
+  isTypingSubject,
+  isTypingBody,
+  canSend,
+  isSending,
+  isSent,
+  showSlackMessage,
+  displayedSlackMessage,
+  canSendSlack,
+  isSendingSlack,
+  isSentSlack,
+  showTips,
+  resetState,
+  restartAnimation
+} = useMailAnimation(props, { mailBodyRef, chatMessagesRef })
 
 defineExpose({ resetState, restartAnimation })
 </script>
@@ -557,21 +319,6 @@ defineExpose({ resetState, restartAnimation })
   40% {
     transform: scale(1);
     opacity: 1;
-  }
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 

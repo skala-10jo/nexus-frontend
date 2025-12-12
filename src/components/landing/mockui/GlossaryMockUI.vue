@@ -27,7 +27,6 @@
             class="relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300"
             :class="dropzoneClass"
           >
-            <!-- Flying File Icon -->
             <div
               ref="flyingFileRef"
               v-show="animationPhase === 'file-flying'"
@@ -46,7 +45,6 @@
             </p>
             <span class="text-xs text-gray-400">PDF, DOCX, TXT (최대 50MB)</span>
 
-            <!-- Progress Bar with Glow -->
             <div
               v-if="animationPhase === 'uploading'"
               class="mt-4 w-full bg-gray-200 rounded-full h-2 overflow-hidden"
@@ -60,7 +58,7 @@
           </div>
         </div>
 
-        <!-- Document Table (appears after upload) -->
+        <!-- Document Table -->
         <div v-if="uploadedDocs.length > 0" class="border-t border-gray-100">
           <table class="w-full text-sm">
             <thead class="bg-gray-50/95">
@@ -126,7 +124,7 @@
 
         <!-- Terms Table -->
         <div class="relative">
-          <!-- Floating Terms (before settling) -->
+          <!-- Floating Terms -->
           <div
             v-if="animationPhase === 'extracting'"
             class="absolute inset-0 z-10 p-4"
@@ -238,8 +236,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { gsap } from 'gsap'
+/**
+ * GlossaryMockUI - 용어집 시연 UI 컴포넌트
+ *
+ * @description 문서 업로드 및 AI 용어 추출 시연
+ */
+import { ref } from 'vue'
 import {
   DocumentTextIcon,
   CloudArrowUpIcon,
@@ -249,9 +251,7 @@ import {
   XMarkIcon,
   CheckCircleIcon
 } from '@heroicons/vue/24/solid'
-
-// 공유 데이터 import
-import { glossaryTerms, demoDocument, floatingPositions } from '../data/glossaryData'
+import { useGlossaryAnimation } from '@/composables/landing/useGlossaryAnimation'
 
 const props = defineProps({
   isVisible: {
@@ -259,10 +259,6 @@ const props = defineProps({
     default: false
   }
 })
-
-// 공유 데이터 사용
-const allTerms = glossaryTerms
-const demoDoc = demoDocument
 
 // Refs
 const containerRef = ref(null)
@@ -272,334 +268,39 @@ const progressBarRef = ref(null)
 const docRowRef = ref(null)
 const extractBtnRef = ref(null)
 const scanLineRef = ref(null)
-const floatingTermRefs = ref([])
-const termRowRefs = ref([])
 const popupOverlayRef = ref(null)
 const popupRef = ref(null)
 
-// State
-const animationPhase = ref('idle')
-const uploadedDocs = ref([])
-const visibleTerms = ref([])
-const floatingTerms = ref([])
-const selectedTerm = ref(null)
-const showPopup = ref(false)
-const showExtractBtn = ref(false)
-const isDragActive = ref(false)
-
-let observer = null
-let mainTimeline = null
-
-// Computed
-const dropzoneClass = computed(() => {
-  if (isDragActive.value || animationPhase.value === 'file-flying') {
-    return 'border-blue-500 bg-blue-50 scale-[1.02]'
-  }
-  return 'border-gray-300 bg-white'
-})
-
-// Methods
-const getFloatingInitialStyle = (index) => {
-  const pos = floatingPositions[index % floatingPositions.length]
-  return {
-    left: `${pos.x}%`,
-    top: `${pos.y}%`,
-    opacity: 0,
-    transform: 'scale(0.5)'
-  }
-}
-
-const selectTerm = (term) => {
-  selectedTerm.value = term
-  showPopup.value = true
-
-  nextTick(() => {
-    if (popupOverlayRef.value && popupRef.value) {
-      gsap.to(popupOverlayRef.value, {
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-      })
-      gsap.to(popupRef.value, {
-        scale: 1,
-        y: 0,
-        opacity: 1,
-        duration: 0.4,
-        ease: 'back.out(1.7)'
-      })
-    }
-  })
-}
-
-const closePopup = () => {
-  if (popupOverlayRef.value && popupRef.value) {
-    gsap.to(popupRef.value, {
-      scale: 0.9,
-      y: 20,
-      opacity: 0,
-      duration: 0.25,
-      ease: 'power2.in'
-    })
-    gsap.to(popupOverlayRef.value, {
-      backgroundColor: 'rgba(0,0,0,0)',
-      opacity: 0,
-      duration: 0.25,
-      ease: 'power2.in',
-      onComplete: () => {
-        showPopup.value = false
-      }
-    })
-  } else {
-    showPopup.value = false
-  }
-}
-
-const resetAnimation = () => {
-  if (mainTimeline) {
-    mainTimeline.kill()
-    mainTimeline = null
-  }
-
-  gsap.killTweensOf([
-    flyingFileRef.value,
-    progressBarRef.value,
-    scanLineRef.value,
-    popupOverlayRef.value,
-    popupRef.value,
-    ...floatingTermRefs.value,
-    ...termRowRefs.value
-  ])
-
-  animationPhase.value = 'idle'
-  uploadedDocs.value = []
-  visibleTerms.value = []
-  floatingTerms.value = []
-  selectedTerm.value = null
-  showPopup.value = false
-  showExtractBtn.value = false
-  isDragActive.value = false
-  floatingTermRefs.value = []
-  termRowRefs.value = []
-}
-
-const startAnimation = () => {
-  resetAnimation()
-
-  mainTimeline = gsap.timeline({
-    defaults: { ease: 'power2.out' }
-  })
-
-  // Phase 1: File flying in
-  mainTimeline.add(() => {
-    animationPhase.value = 'file-flying'
-    isDragActive.value = true
-  }, 0.5)
-
-  mainTimeline.add(() => {
-    if (flyingFileRef.value) {
-      gsap.fromTo(flyingFileRef.value,
-        { y: -100, opacity: 0, rotation: -15 },
-        {
-          y: 0,
-          opacity: 1,
-          rotation: 0,
-          duration: 0.6,
-          ease: 'back.out(1.2)'
-        }
-      )
-    }
-  }, 0.5)
-
-  // Phase 2: Start uploading
-  mainTimeline.add(() => {
-    animationPhase.value = 'uploading'
-    isDragActive.value = false
-  }, 1.2)
-
-  mainTimeline.add(() => {
-    if (progressBarRef.value) {
-      gsap.to(progressBarRef.value, {
-        width: '100%',
-        duration: 1.5,
-        ease: 'power1.inOut'
-      })
-    }
-  }, 1.3)
-
-  // Phase 3: Upload complete, show document
-  mainTimeline.add(() => {
-    uploadedDocs.value = [demoDoc]
-    animationPhase.value = 'ready-to-extract'
-
-    nextTick(() => {
-      if (docRowRef.value) {
-        const row = Array.isArray(docRowRef.value) ? docRowRef.value[0] : docRowRef.value
-        gsap.to(row, {
-          opacity: 1,
-          x: 0,
-          duration: 0.5,
-          ease: 'power2.out'
-        })
-      }
-    })
-  }, 3)
-
-  // Show extract button with bounce
-  mainTimeline.add(() => {
-    showExtractBtn.value = true
-    nextTick(() => {
-      if (extractBtnRef.value) {
-        const btn = Array.isArray(extractBtnRef.value) ? extractBtnRef.value[0] : extractBtnRef.value
-        gsap.to(btn, {
-          opacity: 1,
-          scale: 1,
-          duration: 0.4,
-          ease: 'back.out(2)'
-        })
-      }
-    })
-  }, 3.5)
-
-  // Phase 4: Start scanning
-  mainTimeline.add(() => {
-    animationPhase.value = 'scanning'
-
-    nextTick(() => {
-      if (scanLineRef.value) {
-        gsap.fromTo(scanLineRef.value,
-          { top: '0%' },
-          {
-            top: '100%',
-            duration: 1.5,
-            ease: 'power1.inOut',
-            onComplete: () => {
-              animationPhase.value = 'extracting'
-              floatingTerms.value = [...allTerms]
-
-              // Animate floating terms
-              nextTick(() => {
-                floatingTermRefs.value.forEach((el, idx) => {
-                  if (el) {
-                    gsap.fromTo(el,
-                      { opacity: 0, scale: 0.5 },
-                      {
-                        opacity: 1,
-                        scale: 1.2,
-                        duration: 0.5,
-                        delay: idx * 0.15,
-                        ease: 'back.out(1.5)',
-                        onComplete: () => {
-                          gsap.to(el, {
-                            opacity: 0,
-                            y: 30,
-                            scale: 0.8,
-                            duration: 0.4,
-                            delay: 0.3,
-                            ease: 'power2.in'
-                          })
-                        }
-                      }
-                    )
-                  }
-                })
-              })
-            }
-          }
-        )
-      }
-    })
-  }, 4)
-
-  // Phase 5: Terms settle into table
-  mainTimeline.add(() => {
-    animationPhase.value = 'complete'
-    floatingTerms.value = []
-
-    // Add terms with stagger animation
-    allTerms.forEach((term, index) => {
-      setTimeout(() => {
-        visibleTerms.value.push(term)
-
-        nextTick(() => {
-          const row = termRowRefs.value[index]
-          if (row) {
-            gsap.to(row, {
-              opacity: 1,
-              y: 0,
-              duration: 0.4,
-              ease: 'power2.out'
-            })
-          }
-        })
-      }, index * 150)
-    })
-  }, 6.5)
-
-  // Phase 6: Auto-click first term
-  mainTimeline.add(() => {
-    if (visibleTerms.value.length > 0) {
-      // Highlight first row before clicking
-      const firstRow = termRowRefs.value[0]
-      if (firstRow) {
-        gsap.to(firstRow, {
-          scale: 1.02,
-          duration: 0.2,
-          yoyo: true,
-          repeat: 1,
-          ease: 'power2.inOut',
-          onComplete: () => {
-            selectTerm(visibleTerms.value[0])
-          }
-        })
-      } else {
-        selectTerm(visibleTerms.value[0])
-      }
-    }
-  }, 8.5)
-}
-
-// Watch for visibility
-watch(() => props.isVisible, (newVal) => {
-  if (newVal) {
-    startAnimation()
-  } else {
-    resetAnimation()
-  }
-})
-
-onMounted(() => {
-  if (!containerRef.value) return
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          startAnimation()
-        } else {
-          resetAnimation()
-        }
-      })
-    },
-    { threshold: 0.3 }
-  )
-
-  observer.observe(containerRef.value)
-})
-
-onUnmounted(() => {
-  if (mainTimeline) {
-    mainTimeline.kill()
-  }
-  gsap.killTweensOf('*')
-  if (observer) {
-    observer.disconnect()
-  }
+// Animation composable
+const {
+  animationPhase,
+  uploadedDocs,
+  visibleTerms,
+  floatingTerms,
+  selectedTerm,
+  showPopup,
+  showExtractBtn,
+  isDragActive,
+  floatingTermRefs,
+  termRowRefs,
+  dropzoneClass,
+  getFloatingInitialStyle,
+  selectTerm,
+  closePopup
+} = useGlossaryAnimation(props, {
+  containerRef,
+  dropzoneRef,
+  flyingFileRef,
+  progressBarRef,
+  docRowRef,
+  extractBtnRef,
+  scanLineRef,
+  popupOverlayRef,
+  popupRef
 })
 </script>
 
 <style scoped>
-/* Progress bar glow effect */
 .progress-glow {
   box-shadow:
     0 0 10px rgba(59, 130, 246, 0.5),
@@ -622,7 +323,6 @@ onUnmounted(() => {
   }
 }
 
-/* Scan line */
 .scan-line {
   position: absolute;
   left: 0;
@@ -635,7 +335,6 @@ onUnmounted(() => {
     0 0 30px #06b6d4;
 }
 
-/* Glassmorphism popup */
 .glassmorphism-popup {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);

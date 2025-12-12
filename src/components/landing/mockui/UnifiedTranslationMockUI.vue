@@ -248,7 +248,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+/**
+ * UnifiedTranslationMockUI - 통합 번역 시연 UI
+ *
+ * @description 텍스트, 음성, 비디오 번역 기능을 보여주는 데모 컴포넌트
+ */
+import { useUnifiedTranslationAnimation } from '@/composables/landing/useUnifiedTranslationAnimation'
 
 const props = defineProps({
   isVisible: {
@@ -257,253 +262,39 @@ const props = defineProps({
   }
 })
 
-// State
-const coreActive = ref(false)
-const textActive = ref(false)
-const voiceActive = ref(false)
-const videoActive = ref(false)
+const {
+  // Core state
+  coreActive,
 
-// Text Translation State
-const sourceText = "The API endpoint requires OAuth authentication for secure access."
-const translatedText = "API 엔드포인트는 보안 접근을 위해 OAuth 인증이 필요합니다."
-const displayedSourceText = ref('')
-const displayedTranslatedText = ref('')
-const isTypingSource = ref(false)
-const isTypingTranslated = ref(false)
+  // Panel states
+  textActive,
+  voiceActive,
+  videoActive,
 
-// Term highlight ranges
-const sourceTermRanges = [
-  { start: 4, end: 16 }, // "API endpoint"
-  { start: 26, end: 31 }, // "OAuth"
-]
-const translatedTermRanges = [
-  { start: 0, end: 7 }, // "API 엔드포인트"
-  { start: 20, end: 25 }, // "OAuth"
-]
+  // Text translation
+  displayedSourceText,
+  displayedTranslatedText,
+  isTypingSource,
+  isTypingTranslated,
 
-const isTermHighlight = (index, type) => {
-  const ranges = type === 'source' ? sourceTermRanges : translatedTermRanges
-  return ranges.some(r => index >= r.start && index < r.end)
-}
+  // Voice translation
+  voiceMessages,
 
-// Voice Translation State
-const voiceMessages = ref([])
-const voiceMessageData = [
-  { id: 1, lang: 'EN', speaker: 'David', isUser: true, words: [
-    { text: 'We', isTerm: false },
-    { text: 'need', isTerm: false },
-    { text: 'to', isTerm: false },
-    { text: 'deploy', isTerm: true },
-    { text: 'the', isTerm: false },
-    { text: 'update.', isTerm: false }
-  ]},
-  { id: 2, lang: 'KO', speaker: '번역', isUser: false, words: [
-    { text: '업데이트를', isTerm: false },
-    { text: '배포해야', isTerm: true },
-    { text: '합니다.', isTerm: false }
-  ]},
-  { id: 3, lang: 'EN', speaker: 'Sarah', isUser: true, words: [
-    { text: 'The', isTerm: false },
-    { text: 'CI/CD', isTerm: true },
-    { text: 'pipeline', isTerm: true },
-    { text: 'is', isTerm: false },
-    { text: 'ready.', isTerm: false }
-  ]},
-  { id: 4, lang: 'KO', speaker: '번역', isUser: false, words: [
-    { text: 'CI/CD', isTerm: true },
-    { text: '파이프라인', isTerm: true },
-    { text: '준비', isTerm: false },
-    { text: '완료.', isTerm: false }
-  ]}
-]
+  // Video translation
+  videoTime,
+  videoSubtitleChars,
 
-// Video Translation State
-const videoTime = ref('0:00')
-const videoSubtitleChars = ref([])
-const videoSubtitles = [
-  { text: "Our API integration enables seamless connectivity.", terms: ['API', 'integration'] },
-  { text: "API 통합으로 원활한 연결이 가능합니다.", terms: ['API', '통합'] }
-]
+  // Floating terms
+  floatingTerms,
 
-// Floating Terms
-const floatingTerms = ref([])
-const termData = [
-  { id: 1, text: 'API', class: 'bg-blue-500 text-white' },
-  { id: 2, text: 'OAuth', class: 'bg-purple-500 text-white' },
-  { id: 3, text: 'Deploy', class: 'bg-green-500 text-white' },
-  { id: 4, text: 'CI/CD', class: 'bg-amber-500 text-white' }
-]
+  // Connection paths
+  textConnectionPath,
+  voiceConnectionPath,
+  videoConnectionPath,
 
-// Connection paths
-const textConnectionPath = computed(() => 'M 170 120 Q 220 180, 260 240')
-const voiceConnectionPath = computed(() => 'M 350 120 Q 300 180, 260 240')
-const videoConnectionPath = computed(() => 'M 260 320 L 260 280')
-
-// Animation
-let animationTimeouts = []
-const animationCompleted = ref(false)
-
-const clearAllTimeouts = () => {
-  animationTimeouts.forEach(t => clearTimeout(t))
-  animationTimeouts = []
-}
-
-const resetState = () => {
-  coreActive.value = false
-  textActive.value = false
-  voiceActive.value = false
-  videoActive.value = false
-  displayedSourceText.value = ''
-  displayedTranslatedText.value = ''
-  isTypingSource.value = false
-  isTypingTranslated.value = false
-  voiceMessages.value = []
-  videoTime.value = '0:00'
-  videoSubtitleChars.value = []
-  floatingTerms.value = []
-  animationCompleted.value = false
-}
-
-const startAnimation = () => {
-  if (animationCompleted.value) {
-    resetState()
-  }
-
-  // 0.3s: Activate core
-  animationTimeouts.push(setTimeout(() => {
-    coreActive.value = true
-  }, 300))
-
-  // 0.5s: Add floating terms one by one
-  termData.forEach((term, idx) => {
-    animationTimeouts.push(setTimeout(() => {
-      const angle = (idx * 90 + 45) * (Math.PI / 180)
-      const radius = 55
-      floatingTerms.value.push({
-        ...term,
-        style: {
-          left: `${40 + Math.cos(angle) * radius}px`,
-          top: `${40 + Math.sin(angle) * radius}px`,
-          transform: 'translate(-50%, -50%)'
-        }
-      })
-    }, 500 + idx * 200))
-  })
-
-  // 1.5s: Start text translation
-  animationTimeouts.push(setTimeout(() => {
-    textActive.value = true
-    isTypingSource.value = true
-  }, 1500))
-
-  // Type source text
-  for (let i = 0; i <= sourceText.length; i++) {
-    animationTimeouts.push(setTimeout(() => {
-      displayedSourceText.value = sourceText.slice(0, i)
-    }, 1600 + i * 30))
-  }
-
-  // 3.5s: Start translated text
-  animationTimeouts.push(setTimeout(() => {
-    isTypingSource.value = false
-    isTypingTranslated.value = true
-  }, 3500))
-
-  for (let i = 0; i <= translatedText.length; i++) {
-    animationTimeouts.push(setTimeout(() => {
-      displayedTranslatedText.value = translatedText.slice(0, i)
-    }, 3600 + i * 35))
-  }
-
-  animationTimeouts.push(setTimeout(() => {
-    isTypingTranslated.value = false
-  }, 5200))
-
-  // 2.5s: Start voice translation (parallel)
-  animationTimeouts.push(setTimeout(() => {
-    voiceActive.value = true
-  }, 2500))
-
-  voiceMessageData.forEach((msg, idx) => {
-    animationTimeouts.push(setTimeout(() => {
-      voiceMessages.value.push(msg)
-    }, 2700 + idx * 600))
-  })
-
-  // 3.0s: Start video translation (parallel)
-  animationTimeouts.push(setTimeout(() => {
-    videoActive.value = true
-    updateVideoTime()
-  }, 3000))
-
-  // Show first subtitle
-  animationTimeouts.push(setTimeout(() => {
-    showVideoSubtitle(0)
-  }, 3200))
-
-  // Show second subtitle
-  animationTimeouts.push(setTimeout(() => {
-    showVideoSubtitle(1)
-  }, 5500))
-
-  // Mark animation complete
-  animationTimeouts.push(setTimeout(() => {
-    animationCompleted.value = true
-  }, 7500))
-}
-
-const updateVideoTime = () => {
-  let seconds = 0
-  const interval = setInterval(() => {
-    if (!videoActive.value || animationCompleted.value) {
-      clearInterval(interval)
-      return
-    }
-    seconds++
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    videoTime.value = `${mins}:${secs.toString().padStart(2, '0')}`
-  }, 1000)
-}
-
-const showVideoSubtitle = (index) => {
-  const subtitle = videoSubtitles[index]
-  const chars = []
-
-  for (let i = 0; i < subtitle.text.length; i++) {
-    const char = subtitle.text[i]
-    const isTerm = subtitle.terms.some(term => {
-      const termStart = subtitle.text.indexOf(term)
-      return i >= termStart && i < termStart + term.length
-    })
-    chars.push({ text: char, isTerm })
-  }
-
-  videoSubtitleChars.value = chars
-}
-
-watch(() => props.isVisible, (newVal, oldVal) => {
-  if (newVal && !oldVal) {
-    if (animationCompleted.value) {
-      resetState()
-      startAnimation()
-    } else if (!coreActive.value) {
-      startAnimation()
-    }
-  } else if (!newVal) {
-    clearAllTimeouts()
-  }
-})
-
-onMounted(() => {
-  if (props.isVisible) {
-    startAnimation()
-  }
-})
-
-onUnmounted(() => {
-  clearAllTimeouts()
-})
+  // Methods
+  isTermHighlight
+} = useUnifiedTranslationAnimation(props)
 </script>
 
 <style scoped>
