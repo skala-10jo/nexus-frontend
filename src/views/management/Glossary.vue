@@ -6,7 +6,7 @@
         <div>
           <h1 class="text-2xl font-bold text-gray-900">문서 · 전문용어 사전</h1>
           <p class="text-sm text-gray-500 font-medium mt-0.5">
-            프로젝트 용어를 관리하고 자동으로 추출하세요
+            업무 문서를 업로드하고 AI로 전문 용어를 자동 추출하세요!
           </p>
         </div>
         <GlossaryHeader

@@ -12,7 +12,7 @@
                 {{ videos.length }}
               </span>
             </h1>
-            <p class="text-sm text-gray-500 font-medium mt-0.5">업로드한 영상의 자막을 추출하고 번역하세요</p>
+            <p class="text-sm text-gray-500 font-medium mt-0.5">세상의 모든 지식, 전문 용어 사전을 통해 100% 흡수하세요!</p>
           </div>
           <button
             @click="showUploadModal = true"

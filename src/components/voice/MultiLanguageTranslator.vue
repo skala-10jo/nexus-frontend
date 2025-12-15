@@ -4,7 +4,7 @@
     <div class="flex-shrink-0 px-8 py-6 border-b border-gray-200 bg-white z-10">
       <div class="mb-2">
         <h2 class="text-2xl font-bold text-gray-900">음성 번역</h2>
-        <p class="text-sm text-gray-500 font-medium mt-0.5">파파고 번역기를 넘는, '나만의 전문 번역'</p>
+        <p class="text-sm text-gray-500 font-medium mt-0.5">전문용어 사전을 활용해 구글 번역기를 넘는 정확한 번역 결과를 받아보세요!</p>
       </div>
     </div>
 

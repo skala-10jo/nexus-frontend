@@ -41,7 +41,7 @@ const emit = defineEmits([
       <!-- Title -->
       <div>
         <h1 class="text-xl md:text-2xl font-bold text-gray-900">메일</h1>
-        <p class="text-[11px] md:text-sm text-gray-500 font-medium mt-0.5">Outlook 메일을 관리하고 비즈니스 매너에 맞는 초안을 작성하세요</p>
+        <p class="text-[11px] md:text-sm text-gray-500 font-medium mt-0.5">Outlook 메일을 관리하고 비즈니스 매너에 맞는 초안을 작성하세요!</p>
       </div>
 
       <!-- Not Connected -->
