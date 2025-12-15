@@ -45,7 +45,7 @@ const formatDateRange = (start, end) => {
 </script>
 
 <template>
-  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col min-h-[430px] max-h-[430px]">
+  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col flex-1 min-h-0 overflow-hidden">
     <div class="flex items-center justify-between mb-3 shrink-0">
       <h3 class="font-bold text-gray-900">
         {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
@@ -54,7 +54,7 @@ const formatDateRange = (start, end) => {
       <router-link v-else to="/management/schedule" class="text-xs font-bold text-blue-600 hover:text-blue-700">See all</router-link>
     </div>
 
-    <div class="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+    <div class="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
       <!-- Loading -->
       <div v-if="loading" class="space-y-2">
         <div v-for="i in 3" :key="i" class="h-14 bg-gray-50 rounded-xl animate-pulse"></div>

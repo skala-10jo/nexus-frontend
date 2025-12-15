@@ -1,12 +1,12 @@
 <template>
   <div class="h-full overflow-y-auto bg-gray-50/50 p-4 md:p-6">
-    <div class="max-w-[1600px] mx-auto min-h-full flex flex-col gap-4">
+    <div class="max-w-[1600px] mx-auto h-full flex flex-col gap-4">
 
       <!-- Main Grid: 왼쪽(시나리오+표현+차트) + 오른쪽(달력+태스크) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-        
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+
         <!-- 왼쪽 열 (8 cols) -->
-        <div class="lg:col-span-8 flex flex-col gap-4 h-full">
+        <div class="lg:col-span-8 flex flex-col gap-4 h-full min-h-0">
           <!-- 1. Scenario Cards (Welcome 메시지 + 출석/캐릭터 포함) -->
           <ScenarioCards
             :user="user"
@@ -29,7 +29,7 @@
         </div>
 
         <!-- 오른쪽 열 (4 cols) -->
-        <div class="lg:col-span-4 flex flex-col gap-4 h-full">
+        <div class="lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
           <!-- 1. Mini Calendar (맨 위로 이동) -->
           <MiniCalendar
             :all-events="allEvents"
