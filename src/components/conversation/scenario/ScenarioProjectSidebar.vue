@@ -60,6 +60,13 @@ const getProjectSchedules = (projectId, schedules) => {
 }
 
 /**
+ * 프로젝트 미할당 일정 필터링
+ */
+const getUnassignedSchedules = (schedules) => {
+  return schedules.filter(schedule => !schedule.projectId)
+}
+
+/**
  * 프로젝트가 선택되었는지 확인
  */
 const isProjectSelected = (projectId, selectedProjects) => {
@@ -146,7 +153,8 @@ const formatDate = (dateTimeString) => {
     </div>
 
     <!-- Project List -->
-    <div v-else-if="projects.length > 0" class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
+    <div v-else-if="projects.length > 0 || getUnassignedSchedules(upcomingSchedules).length > 0" class="flex-1 overflow-y-auto px-3 pb-3 space-y-1 custom-scrollbar">
+      <!-- Projects with Schedules -->
       <div v-for="project in projects" :key="project.id" class="space-y-2">
         <button
           class="w-full text-left px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-3 group relative overflow-hidden"
@@ -178,6 +186,44 @@ const formatDate = (dateTimeString) => {
         <div v-if="getProjectSchedules(project.id, upcomingSchedules).length > 0"
           class="ml-6 pl-3 border-l border-gray-200 my-1 space-y-0.5">
           <div v-for="schedule in getProjectSchedules(project.id, upcomingSchedules)" :key="schedule.id"
+            class="text-xs py-1.5 px-2 rounded cursor-pointer flex items-center gap-2 transition-colors group/schedule"
+            :class="isScheduleSelected(schedule.id, selectedSchedules)
+              ? 'bg-blue-50 text-blue-700'
+              : 'hover:bg-gray-50 text-gray-600'" @click.stop="emit('toggle-schedule', schedule)">
+            <div class="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-transform group-hover/schedule:scale-125"
+              :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'bg-blue-500' : 'bg-gray-400'"></div>
+            <span class="font-medium w-16 flex-shrink-0 tabular-nums tracking-tight"
+              :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'text-blue-600' : 'text-gray-500'">
+              {{ formatDate(schedule.startTime) }}
+            </span>
+            <span class="truncate font-medium group-hover/schedule:text-gray-900"
+              :class="isScheduleSelected(schedule.id, selectedSchedules) ? 'text-blue-700' : 'text-gray-700'">
+              {{ schedule.title }}
+            </span>
+            <!-- Schedule Selected Indicator -->
+            <div v-if="isScheduleSelected(schedule.id, selectedSchedules)"
+              class="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0 ml-auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unassigned Schedules Section -->
+      <div v-if="getUnassignedSchedules(upcomingSchedules).length > 0" class="space-y-2 mt-3">
+        <div class="mx-3 border-t border-gray-100 mb-2"></div>
+        <div class="flex items-center gap-2 px-3 py-1">
+          <div class="w-6 h-6 rounded flex items-center justify-center text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium text-gray-500">프로젝트 미할당</span>
+          <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 ml-auto">
+            {{ getUnassignedSchedules(upcomingSchedules).length }}
+          </span>
+        </div>
+        <div class="ml-6 pl-3 border-l border-gray-200 space-y-0.5">
+          <div v-for="schedule in getUnassignedSchedules(upcomingSchedules)" :key="schedule.id"
             class="text-xs py-1.5 px-2 rounded cursor-pointer flex items-center gap-2 transition-colors group/schedule"
             :class="isScheduleSelected(schedule.id, selectedSchedules)
               ? 'bg-blue-50 text-blue-700'

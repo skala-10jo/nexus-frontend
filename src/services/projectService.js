@@ -69,6 +69,13 @@ export const projectService = {
    */
   async getProjectSchedules(projectId) {
     return api.get(`/projects/${projectId}/schedules`);
+  },
+
+  /**
+   * Get all schedules for current user (including schedules without project)
+   */
+  async getAllSchedules() {
+    return api.get('/schedules');
   }
 };
 
@@ -79,3 +86,4 @@ export const createProject = projectService.createProject.bind(projectService);
 export const updateProject = projectService.updateProject.bind(projectService);
 export const deleteProject = projectService.deleteProject.bind(projectService);
 export const getProjectSchedules = projectService.getProjectSchedules.bind(projectService);
+export const getAllSchedules = projectService.getAllSchedules.bind(projectService);
