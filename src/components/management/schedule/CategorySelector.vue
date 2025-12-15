@@ -117,11 +117,28 @@ const localSelectedIds = ref([...props.modelValue])
 
 const sortedCategories = computed(() => categoryStore.sortedCategories)
 
+// props → local 동기화 중인지 표시 (무한 루프 방지용)
+const syncingFromProps = ref(false)
+
+// 배열이 동일한지 비교하는 헬퍼 함수
+const arraysEqual = (a, b) => {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((val, idx) => val === sortedB[idx])
+}
+
 // Watch for external changes
 watch(
   () => props.modelValue,
   (newValue) => {
-    localSelectedIds.value = [...newValue]
+    // 값이 실제로 다를 때만 업데이트 (무한 루프 방지)
+    if (!arraysEqual(newValue, localSelectedIds.value)) {
+      syncingFromProps.value = true
+      localSelectedIds.value = [...newValue]
+      syncingFromProps.value = false
+    }
   }
 )
 
@@ -129,7 +146,12 @@ watch(
 watch(
   localSelectedIds,
   (newValue) => {
-    emit('update:modelValue', newValue)
+    // props 동기화로 인한 변경은 건너뜀 (무한 루프 방지)
+    if (syncingFromProps.value) return
+    // 값이 실제로 다를 때만 emit
+    if (!arraysEqual(newValue, props.modelValue)) {
+      emit('update:modelValue', [...newValue])
+    }
   },
   { deep: true }
 )
