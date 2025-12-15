@@ -232,32 +232,18 @@ export function useScenarioPage() {
   }
 
   async function loadAllUpcomingSchedules() {
-    if (projects.value.length === 0) return
-
     schedulesLoading.value = true
     try {
-      const allSchedules = []
+      // 모든 일정 가져오기 (프로젝트 미할당 포함)
+      const response = await projectService.getAllSchedules()
+      const schedules = response.data.data || response.data || []
 
-      for (const project of projects.value) {
-        try {
-          const response = await projectService.getProjectSchedules(project.id)
-          const schedules = response.data.data || response.data || []
-
-          schedules.forEach(schedule => {
-            allSchedules.push({
-              ...schedule,
-              projectId: project.id,
-              projectName: project.name
-            })
-          })
-        } catch (error) {
-          console.error(`Failed to load schedules for project ${project.id}:`, error)
-        }
-      }
-
-      upcomingSchedules.value = allSchedules.sort((a, b) =>
-        new Date(b.startTime) - new Date(a.startTime)
-      )
+      // 일정 데이터 정규화 (프로젝트 정보 평탄화)
+      upcomingSchedules.value = schedules.map(schedule => ({
+        ...schedule,
+        projectId: schedule.project?.id || null,
+        projectName: schedule.project?.name || null
+      })).sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
     } catch (error) {
       console.error('Failed to load schedules:', error)
       upcomingSchedules.value = []

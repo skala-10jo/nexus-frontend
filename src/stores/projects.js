@@ -1,99 +1,127 @@
-import { defineStore } from 'pinia';
-import { projectService } from '@/services/projectService';
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { projectService } from '@/services/projectService'
 
-export const useProjectStore = defineStore('projects', {
-  state: () => ({
-    projects: [],
-    currentProject: null,
-    loading: false,
-    error: null,
-  }),
+/**
+ * 프로젝트 스토어 (Setup 함수 패턴)
+ *
+ * CLAUDE.md 규칙 준수: defineStore(() => {...}) 형태 사용
+ */
+export const useProjectStore = defineStore('projects', () => {
+  // ==================== State ====================
+  const projects = ref([])
+  const currentProject = ref(null)
+  const loading = ref(false)
+  const error = ref(null)
 
-  getters: {
-    activeProjects: (state) => {
-      return state.projects.filter(p => p.status === 'ACTIVE');
-    },
-    getProjectById: (state) => (id) => {
-      return state.projects.find(p => p.id === id);
-    },
-  },
+  // ==================== Getters ====================
 
-  actions: {
-    async fetchProjects() {
-      this.loading = true;
-      this.error = null;
+  const activeProjects = computed(() => {
+    return projects.value.filter(p => p.status === 'ACTIVE')
+  })
 
-      try {
-        const response = await projectService.getUserProjects();
-        this.projects = response.data.data || response.data;
-      } catch (error) {
-        this.error = error.message;
-        throw error;
-      } finally {
-        this.loading = false;
+  const getProjectById = (id) => {
+    return projects.value.find(p => p.id === id)
+  }
+
+  // ==================== Actions ====================
+
+  async function fetchProjects() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await projectService.getUserProjects()
+      projects.value = response.data.data || response.data
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function getProjectDetail(projectId) {
+    try {
+      const response = await projectService.getProject(projectId)
+      currentProject.value = response.data.data || response.data
+      return currentProject.value
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function createProject(projectData) {
+    try {
+      const response = await projectService.createProject(projectData)
+      const newProject = response.data.data || response.data
+      projects.value.unshift(newProject)
+      return newProject
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function updateProject(projectId, projectData) {
+    try {
+      const response = await projectService.updateProject(projectId, projectData)
+      const updatedProject = response.data.data || response.data
+
+      const index = projects.value.findIndex(p => p.id === projectId)
+      if (index !== -1) {
+        projects.value[index] = updatedProject
       }
-    },
 
-    async getProjectDetail(projectId) {
-      try {
-        const response = await projectService.getProject(projectId);
-        this.currentProject = response.data.data || response.data;
-        return this.currentProject;
-      } catch (error) {
-        throw error;
+      if (currentProject.value?.id === projectId) {
+        currentProject.value = updatedProject
       }
-    },
 
-    async createProject(projectData) {
-      try {
-        const response = await projectService.createProject(projectData);
-        const newProject = response.data.data || response.data;
-        this.projects.unshift(newProject);
-        return newProject;
-      } catch (error) {
-        throw error;
+      return updatedProject
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function deleteProject(projectId) {
+    try {
+      await projectService.deleteProject(projectId)
+      projects.value = projects.value.filter(p => p.id !== projectId)
+
+      if (currentProject.value?.id === projectId) {
+        currentProject.value = null
       }
-    },
+    } catch (err) {
+      throw err
+    }
+  }
 
-    async updateProject(projectId, projectData) {
-      try {
-        const response = await projectService.updateProject(projectId, projectData);
-        const updatedProject = response.data.data || response.data;
+  function setCurrentProject(project) {
+    currentProject.value = project
+  }
 
-        const index = this.projects.findIndex(p => p.id === projectId);
-        if (index !== -1) {
-          this.projects[index] = updatedProject;
-        }
+  function clearCurrentProject() {
+    currentProject.value = null
+  }
 
-        if (this.currentProject?.id === projectId) {
-          this.currentProject = updatedProject;
-        }
+  // ==================== Return ====================
+  return {
+    // State
+    projects,
+    currentProject,
+    loading,
+    error,
 
-        return updatedProject;
-      } catch (error) {
-        throw error;
-      }
-    },
+    // Getters
+    activeProjects,
+    getProjectById,
 
-    async deleteProject(projectId) {
-      try {
-        await projectService.deleteProject(projectId);
-        this.projects = this.projects.filter(p => p.id !== projectId);
-
-        if (this.currentProject?.id === projectId) {
-          this.currentProject = null;
-        }
-      } catch (error) {
-        throw error;
-      }
-    },
-
-    setCurrentProject(project) {
-      this.currentProject = project;
-    },
-
-    clearCurrentProject() {
-      this.currentProject = null;
-    },
-  },
-});
+    // Actions
+    fetchProjects,
+    getProjectDetail,
+    createProject,
+    updateProject,
+    deleteProject,
+    setCurrentProject,
+    clearCurrentProject
+  }
+})
