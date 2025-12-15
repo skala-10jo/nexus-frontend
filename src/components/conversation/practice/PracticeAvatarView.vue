@@ -65,22 +65,22 @@
     >
       <div v-if="sttIsConnecting" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
         <ArrowPathIcon class="w-6 h-6 animate-spin" />
-        Connecting...
+        연결 중...
       </div>
       <div v-else-if="isRecording" class="space-y-3">
         <div class="flex items-center justify-center gap-2 text-red-400 font-bold animate-pulse">
           <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-          Recording... {{ recordingTime }}s
+          녹음 중... {{ recordingTime }}초
         </div>
         <div class="space-y-1">
           <p v-for="(text, idx) in finalTexts" :key="idx" class="text-white font-medium">{{ text }}</p>
           <p v-if="interimText" class="text-blue-300 italic animate-pulse">{{ interimText }}</p>
-          <p v-else class="text-gray-400">Listening...</p>
+          <p v-else class="text-gray-400">음성을 기다리는 중...</p>
         </div>
       </div>
       <div v-else-if="isProcessingVoice" class="flex items-center justify-center gap-3 text-blue-400 font-medium">
         <ArrowPathIcon class="w-6 h-6 animate-spin" />
-        Sending message...
+        메시지 전송 중...
       </div>
     </div>
 
