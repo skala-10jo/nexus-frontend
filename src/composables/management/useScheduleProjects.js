@@ -6,35 +6,12 @@ import { documentService } from '@/services/documentService'
 /**
  * 일정 페이지 프로젝트 관리
  * @description 프로젝트 목록, 선택, CRUD 로직 관리
+ *
+ * 참고: Project와 ScheduleCategory 간의 양방향 동기화는 백엔드에서 자동으로 처리됩니다.
+ * - 프로젝트 생성 시 → 동일 이름의 카테고리 자동 생성
+ * - 카테고리 생성 시 → 동일 이름의 프로젝트 자동 생성
+ * - 이름 변경/삭제 시 → 양쪽 자동 동기화
  */
-// 프로젝트 카테고리용 색상 팔레트
-const PROJECT_CATEGORY_COLORS = [
-  '#3B82F6', // blue
-  '#10B981', // emerald
-  '#8B5CF6', // violet
-  '#F59E0B', // amber
-  '#EF4444', // red
-  '#EC4899', // pink
-  '#06B6D4', // cyan
-  '#84CC16', // lime
-  '#F97316', // orange
-  '#6366F1', // indigo
-]
-
-/**
- * 사용되지 않은 색상 중 하나를 반환
- * @param {Array} existingColors - 이미 사용 중인 색상 배열
- */
-function getAvailableColor(existingColors) {
-  const availableColors = PROJECT_CATEGORY_COLORS.filter(
-    (color) => !existingColors.includes(color)
-  )
-  if (availableColors.length > 0) {
-    return availableColors[Math.floor(Math.random() * availableColors.length)]
-  }
-  // 모든 색상이 사용 중이면 랜덤 선택
-  return PROJECT_CATEGORY_COLORS[Math.floor(Math.random() * PROJECT_CATEGORY_COLORS.length)]
-}
 
 export function useScheduleProjects() {
   const projectStore = useProjectStore()
@@ -116,6 +93,7 @@ export function useScheduleProjects() {
   /**
    * 새 프로젝트 저장
    * @param {Object} formData - 프로젝트 데이터
+   * @description 백엔드에서 Project-Category 양방향 동기화가 자동으로 처리됨
    */
   const saveNewProject = async (formData) => {
     try {
@@ -124,10 +102,8 @@ export function useScheduleProjects() {
 
       await loadProjects()
 
-      // 프로젝트 생성 시 해당 이름으로 카테고리 자동 생성
-      if (newProject && newProject.name) {
-        await createProjectCategory(newProject.name)
-      }
+      // 백엔드에서 동기화가 처리되므로 카테고리 목록도 새로고침
+      await categoryStore.fetchCategories()
 
       // Select the new project
       if (newProject && newProject.id) {
@@ -140,39 +116,6 @@ export function useScheduleProjects() {
     } catch (error) {
       console.error('Failed to create project:', error)
       return { success: false, error: error.message }
-    }
-  }
-
-  /**
-   * 프로젝트명으로 카테고리 자동 생성
-   * @param {string} projectName - 프로젝트 이름
-   */
-  const createProjectCategory = async (projectName) => {
-    try {
-      // 이미 같은 이름의 카테고리가 있는지 확인
-      const existingCategory = categoryStore.categories.find(
-        (cat) => cat.name === projectName
-      )
-      if (existingCategory) {
-        console.log(`Category "${projectName}" already exists, skipping creation`)
-        return
-      }
-
-      // 사용 중인 색상 목록 가져오기
-      const usedColors = categoryStore.categories.map((cat) => cat.color)
-      const color = getAvailableColor(usedColors)
-
-      // 카테고리 생성
-      await categoryStore.createCategory({
-        name: projectName,
-        color: color,
-        description: `프로젝트: ${projectName}`
-      })
-
-      console.log(`Category "${projectName}" created successfully`)
-    } catch (error) {
-      // 카테고리 생성 실패해도 프로젝트 생성은 성공으로 처리
-      console.error('Failed to create project category:', error)
     }
   }
 
@@ -226,70 +169,32 @@ export function useScheduleProjects() {
   }
 
   /**
-   * 카테고리 기반으로 프로젝트 자동 생성/삭제 (Outlook 동기화 후 호출)
-   * - 카테고리 중 프로젝트에 없는 것들을 자동으로 프로젝트로 생성
-   * - 카테고리에 없는 Outlook 동기화 프로젝트는 삭제
+   * 카테고리와 프로젝트 목록 새로고침 (Outlook 동기화 후 호출)
+   *
+   * 참고: 백엔드에서 Project-Category 양방향 동기화가 자동으로 처리됩니다.
+   * - Outlook 동기화 시 카테고리가 생성되면 백엔드에서 프로젝트도 자동 생성
+   * - 이 함수는 단순히 프론트엔드 상태를 새로고침하는 역할만 수행
+   *
    * @returns {Promise<Object>} 동기화 결과
    */
   const syncProjectsFromCategories = async () => {
     try {
-      // 최신 카테고리 목록 가져오기
+      // 동기화 전 프로젝트 수 기록
+      const beforeCount = projects.value.length
+
+      // 최신 카테고리 및 프로젝트 목록 새로고침
       await categoryStore.fetchCategories()
-
-      // 최신 프로젝트 목록 가져오기
       await loadProjects()
 
-      const categories = categoryStore.categories
-      const categoryNames = categories.map((cat) => cat.name)
-      const projectNames = projects.value.map((p) => p.name)
+      // 동기화 후 프로젝트 수 비교
+      const afterCount = projects.value.length
+      const diff = afterCount - beforeCount
 
-      let createdCount = 0
-      let deletedCount = 0
-
-      // 1. 프로젝트에 없는 카테고리 → 프로젝트 생성
-      const categoriesToCreate = categories.filter(
-        (cat) => !projectNames.includes(cat.name)
-      )
-
-      for (const category of categoriesToCreate) {
-        try {
-          await projectStore.createProject({
-            name: category.name,
-            description: category.description || `Outlook에서 동기화된 프로젝트: ${category.name}`,
-            status: 'ACTIVE',
-            documentIds: []
-          })
-          createdCount++
-          console.log(`Project "${category.name}" created from category`)
-        } catch (err) {
-          console.error(`Failed to create project for category "${category.name}":`, err)
-        }
+      return {
+        success: true,
+        created: diff > 0 ? diff : 0,
+        deleted: diff < 0 ? Math.abs(diff) : 0
       }
-
-      // 2. 카테고리에 없는 Outlook 동기화 프로젝트 → 삭제
-      // (사용자가 직접 만든 프로젝트는 삭제하지 않음)
-      const projectsToDelete = projects.value.filter((project) => {
-        // 카테고리에 해당 이름이 없고
-        const notInCategories = !categoryNames.includes(project.name)
-        // Outlook에서 동기화된 프로젝트인 경우만 삭제
-        const isFromOutlook = project.description?.includes('Outlook')
-        return notInCategories && isFromOutlook
-      })
-
-      for (const project of projectsToDelete) {
-        try {
-          await projectStore.deleteProject(project.id)
-          deletedCount++
-          console.log(`Project "${project.name}" deleted (removed from Outlook)`)
-        } catch (err) {
-          console.error(`Failed to delete project "${project.name}":`, err)
-        }
-      }
-
-      // 프로젝트 목록 새로고침
-      await loadProjects()
-
-      return { success: true, created: createdCount, deleted: deletedCount }
     } catch (error) {
       console.error('Failed to sync projects from categories:', error)
       return { success: false, error: error.message }

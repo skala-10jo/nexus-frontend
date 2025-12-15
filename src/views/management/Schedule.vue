@@ -314,7 +314,10 @@ async function deleteEvent() {
 /** 새 프로젝트 저장 */
 async function handleSaveNewProject(formData) {
   const result = await projectsComposable.saveNewProject(formData)
-  if (!result.success) {
+  if (result.success) {
+    // 백엔드에서 프로젝트 생성 시 카테고리가 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
+  } else {
     alert('프로젝트 생성에 실패했습니다.')
   }
 }
@@ -322,7 +325,10 @@ async function handleSaveNewProject(formData) {
 /** 프로젝트 저장 */
 async function handleSaveProject(formData) {
   const result = await projectsComposable.saveProject(formData)
-  if (!result.success) {
+  if (result.success) {
+    // 백엔드에서 프로젝트 이름 변경 시 카테고리도 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
+  } else {
     alert('프로젝트 저장에 실패했습니다.')
   }
 }
@@ -332,6 +338,8 @@ async function handleDeleteProject(project) {
   const result = await projectsComposable.deleteProject(project)
   if (result.success) {
     refreshCalendar()
+    // 백엔드에서 프로젝트 삭제 시 카테고리도 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
   } else {
     alert('프로젝트 삭제에 실패했습니다.')
   }

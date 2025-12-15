@@ -9,6 +9,7 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
+import { scheduleCategoryAPI } from '@/services/api'
 import { BUSINESS_CATEGORIES, BUSINESS_SCENARIO_TEMPLATES } from '@/data/businessScenarioTemplates'
 
 export function useScenarioPage() {
@@ -221,10 +222,18 @@ export function useScenarioPage() {
   async function loadProjects() {
     projectsLoading.value = true
     try {
-      const response = await projectService.getAll()
-      projects.value = response.data.data || response.data || []
+      // ScheduleCategory를 "프로젝트"로 사용
+      // 일정 관리 페이지에서 카테고리로 프로젝트를 할당하기 때문
+      const response = await scheduleCategoryAPI.getCategories()
+      // 카테고리를 프로젝트 형태로 변환 (id, name 필드 유지)
+      projects.value = (response.data || []).map(category => ({
+        id: category.id,
+        name: category.name,
+        color: category.color,
+        description: category.description || ''
+      }))
     } catch (error) {
-      console.error('Failed to load projects:', error)
+      console.error('Failed to load projects (categories):', error)
       projects.value = []
     } finally {
       projectsLoading.value = false
@@ -238,12 +247,19 @@ export function useScenarioPage() {
       const response = await projectService.getAllSchedules()
       const schedules = response.data.data || response.data || []
 
-      // 일정 데이터 정규화 (프로젝트 정보 평탄화)
-      upcomingSchedules.value = schedules.map(schedule => ({
-        ...schedule,
-        projectId: schedule.project?.id || null,
-        projectName: schedule.project?.name || null
-      })).sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+      // 일정 데이터 정규화
+      // - categories 배열에서 첫 번째 카테고리를 projectId/projectName으로 매핑
+      // - 일정 관리 페이지에서 카테고리로 프로젝트를 할당하기 때문
+      upcomingSchedules.value = schedules.map(schedule => {
+        const firstCategory = schedule.categories?.[0] || null
+        return {
+          ...schedule,
+          projectId: firstCategory?.id || schedule.project?.id || null,
+          projectName: firstCategory?.name || schedule.project?.name || null,
+          // 모든 카테고리 ID 보존 (복수 카테고리 지원)
+          categoryIds: schedule.categories?.map(c => c.id) || []
+        }
+      }).sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
     } catch (error) {
       console.error('Failed to load schedules:', error)
       upcomingSchedules.value = []
