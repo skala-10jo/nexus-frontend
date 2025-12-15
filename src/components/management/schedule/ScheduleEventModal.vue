@@ -232,7 +232,7 @@ const handleClose = () => {
 
           <!-- Category Selector -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">카테고리</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">프로젝트</label>
             <CategorySelector
               v-model="form.categoryIds"
               @open-manager="emit('open-category-manager')"

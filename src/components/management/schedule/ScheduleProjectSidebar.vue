@@ -49,12 +49,33 @@ const emit = defineEmits([
 
 /**
  * 프로젝트별 이벤트 필터링
+ * @param {Object} project - 프로젝트 객체 (id, name 포함)
+ * @param {Array} allEvents - 모든 이벤트
  */
-const getProjectEvents = (projectId, allEvents) => {
-  return allEvents.filter(
-    (event) =>
-      event.extendedProps.project && event.extendedProps.project.id === projectId
-  )
+const getProjectEvents = (project, allEvents) => {
+  if (!project) return []
+
+  return allEvents.filter((event) => {
+    // 1. project.id가 직접 일치하는 경우
+    if (
+      event.extendedProps.project &&
+      event.extendedProps.project.id === project.id
+    ) {
+      return true
+    }
+
+    // 2. 카테고리 중 프로젝트 이름과 같은 것이 있는 경우 (Outlook 동기화된 일정)
+    if (event.extendedProps.categories && project.name) {
+      const hasMatchingCategory = event.extendedProps.categories.some(
+        (cat) => cat.name === project.name
+      )
+      if (hasMatchingCategory) {
+        return true
+      }
+    }
+
+    return false
+  })
 }
 </script>
 
@@ -116,11 +137,11 @@ const getProjectEvents = (projectId, allEvents) => {
                 {{ project.name }}
               </span>
               <span
-                v-if="getProjectEvents(project.id, allEvents).length > 0"
+                v-if="getProjectEvents(project, allEvents).length > 0"
                 class="text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors"
                 :class="selectedProjectId === project.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'"
               >
-                {{ getProjectEvents(project.id, allEvents).length }}
+                {{ getProjectEvents(project, allEvents).length }}
               </span>
             </div>
             <p class="text-xs text-gray-400 truncate group-hover:text-gray-500 transition-colors">
@@ -131,11 +152,11 @@ const getProjectEvents = (projectId, allEvents) => {
 
         <!-- Project Events List -->
         <div
-          v-if="getProjectEvents(project.id, allEvents).length > 0"
+          v-if="getProjectEvents(project, allEvents).length > 0"
           class="ml-6 pl-3 border-l border-gray-200 my-1 space-y-0.5"
         >
           <div
-            v-for="event in getProjectEvents(project.id, allEvents)"
+            v-for="event in getProjectEvents(project, allEvents)"
             :key="event.id"
             class="text-xs py-1.5 px-2 rounded hover:bg-gray-50 text-gray-600 cursor-pointer flex items-center gap-2 transition-colors group/event"
             @click.stop="emit('event-click', { event })"

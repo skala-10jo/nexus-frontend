@@ -19,7 +19,7 @@
             # {{ selectedChannel.name }}
           </h1>
           <h1 v-else class="text-xl md:text-2xl font-bold text-gray-900">메신저</h1>
-          <p class="hidden md:block text-sm text-gray-500 font-medium mt-0.5">Slack 메시지를 관리하고 소통하세요</p>
+          <p class="hidden md:block text-sm text-gray-500 font-medium mt-0.5">Slack 메시지를 관리하고 비즈니스 매너에 맞는 초안을 작성하세요!</p>
         </div>
       </div>
 

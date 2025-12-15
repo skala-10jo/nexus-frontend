@@ -11,7 +11,7 @@
             </span>
           </div>
           <p class="text-sm text-gray-500 font-medium mt-0.5">
-            비즈니스 상황별 시나리오로 회화를 연습하세요
+            다가올 미팅, 일정 기반 시나리오로 완벽하게 준비하세요!
           </p>
         </div>
         <button

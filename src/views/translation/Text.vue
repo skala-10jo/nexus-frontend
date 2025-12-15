@@ -6,7 +6,7 @@
       <div class="flex items-center gap-4 mb-6">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">텍스트 번역</h1>
-          <p class="text-sm text-gray-500 font-medium mt-0.5">프로젝트 맥락을 반영한 전문 번역</p>
+          <p class="text-sm text-gray-500 font-medium mt-0.5">전문용어 사전을 활용해 파파고를 넘는 정확한 번역 결과를 받아보세요!</p>
         </div>
       </div>
 

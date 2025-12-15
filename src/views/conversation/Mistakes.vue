@@ -6,7 +6,7 @@
       <div class="flex items-center justify-between">
         <div class="min-w-0 flex-1">
           <h1 class="text-xl md:text-2xl font-bold text-gray-900">오답노트</h1>
-          <p class="hidden md:block text-sm text-gray-500 font-medium mt-0.5">학습 중 틀린 내용과 피드백을 복습해보세요</p>
+          <p class="hidden md:block text-sm text-gray-500 font-medium mt-0.5">틀린 표현을 복습하고 완벽하게 내 것으로 만드세요!</p>
         </div>
 
         <!-- Header Actions (Dynamic based on active tab) -->

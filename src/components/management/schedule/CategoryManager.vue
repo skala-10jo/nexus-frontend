@@ -6,7 +6,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-        <h2 class="text-xl font-bold text-gray-900">카테고리 관리</h2>
+        <h2 class="text-xl font-bold text-gray-900">프로젝트 관리</h2>
         <button @click="close" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -26,7 +26,7 @@
                 {{ category.description }}
               </div>
               <div v-if="category.isDefault" class="text-xs text-gray-400 mt-1">
-                기본 카테고리
+                기본 프로젝트
               </div>
             </div>
           </div>
@@ -45,11 +45,16 @@
             <button
               v-if="!category.isDefault"
               @click="confirmDelete(category)"
-              class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+              :disabled="deletingCategoryId === category.id"
+              class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               title="삭제"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="deletingCategoryId !== category.id" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </button>
           </div>
@@ -63,7 +68,7 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          새 카테고리 추가
+          새 프로젝트 추가
         </button>
       </div>
 
@@ -99,6 +104,7 @@ const emit = defineEmits(['close'])
 const categoryStore = useScheduleCategoryStore()
 const editingCategory = ref(null)
 const isNewCategory = ref(false)
+const deletingCategoryId = ref(null) // 삭제 중인 카테고리 ID (중복 클릭 방지)
 
 const sortedCategories = computed(() => categoryStore.sortedCategories)
 
@@ -126,20 +132,28 @@ const handleSave = async (categoryData) => {
     }
     editingCategory.value = null
   } catch (error) {
-    alert('카테고리 저장에 실패했습니다: ' + error.message)
+    alert('프로젝트 저장에 실패했습니다: ' + error.message)
   }
 }
 
 const confirmDelete = async (category) => {
+  // 이미 삭제 중이면 무시 (중복 클릭 방지)
+  if (deletingCategoryId.value) {
+    return
+  }
+
   if (
     confirm(
-      `"${category.name}" 카테고리를 삭제하시겠습니까?\n이 카테고리가 지정된 일정은 카테고리가 제거됩니다.`
+      `"${category.name}" 프로젝트를 삭제하시겠습니까?\n이 프로젝트가 지정된 일정에서 해당 프로젝트가 제거됩니다.`
     )
   ) {
     try {
+      deletingCategoryId.value = category.id
       await categoryStore.deleteCategory(category.id)
     } catch (error) {
-      alert('카테고리 삭제에 실패했습니다: ' + error.message)
+      alert('프로젝트 삭제에 실패했습니다: ' + error.message)
+    } finally {
+      deletingCategoryId.value = null
     }
   }
 }

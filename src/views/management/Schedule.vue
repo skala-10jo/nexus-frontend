@@ -207,11 +207,16 @@ const calendarOptions = computed(() =>
 
 /** 캘린더 이벤트 로드 */
 function handleLoadEvents(fetchInfo, successCallback, failureCallback) {
+  // 프로젝트 객체 전달 (id와 name 포함) - 카테고리 이름으로도 필터링 가능하도록
+  const selectedProject = projectsComposable.selectedProjectId.value
+    ? projectsComposable.selectedProject.value
+    : null
+
   eventsComposable.loadEventsForCalendar(
     fetchInfo,
     successCallback,
     failureCallback,
-    projectsComposable.selectedProjectId.value
+    selectedProject
   )
 }
 
@@ -309,7 +314,10 @@ async function deleteEvent() {
 /** 새 프로젝트 저장 */
 async function handleSaveNewProject(formData) {
   const result = await projectsComposable.saveNewProject(formData)
-  if (!result.success) {
+  if (result.success) {
+    // 백엔드에서 프로젝트 생성 시 카테고리가 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
+  } else {
     alert('프로젝트 생성에 실패했습니다.')
   }
 }
@@ -317,7 +325,10 @@ async function handleSaveNewProject(formData) {
 /** 프로젝트 저장 */
 async function handleSaveProject(formData) {
   const result = await projectsComposable.saveProject(formData)
-  if (!result.success) {
+  if (result.success) {
+    // 백엔드에서 프로젝트 이름 변경 시 카테고리도 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
+  } else {
     alert('프로젝트 저장에 실패했습니다.')
   }
 }
@@ -327,6 +338,8 @@ async function handleDeleteProject(project) {
   const result = await projectsComposable.deleteProject(project)
   if (result.success) {
     refreshCalendar()
+    // 백엔드에서 프로젝트 삭제 시 카테고리도 자동 동기화되므로 새로고침
+    await categoryStore.fetchCategories()
   } else {
     alert('프로젝트 삭제에 실패했습니다.')
   }
@@ -349,9 +362,22 @@ async function handleSyncOutlook() {
   const result = await eventsComposable.syncOutlookCalendar()
   if (result.success) {
     refreshCalendar()
-    // 범주도 새로고침
-    categoryStore.fetchCategories()
-    alert(result.message || 'Outlook 일정 동기화가 완료되었습니다.')
+    // 카테고리 새로고침 및 프로젝트 자동 생성
+    await categoryStore.fetchCategories()
+    const syncResult = await projectsComposable.syncProjectsFromCategories()
+
+    let message = result.message || 'Outlook 일정 동기화가 완료되었습니다.'
+    const changes = []
+    if (syncResult.created > 0) {
+      changes.push(`${syncResult.created}개 생성`)
+    }
+    if (syncResult.deleted > 0) {
+      changes.push(`${syncResult.deleted}개 삭제`)
+    }
+    if (changes.length > 0) {
+      message += ` (프로젝트: ${changes.join(', ')})`
+    }
+    alert(message)
   } else {
     // JWT/토큰 관련 오류인지 확인
     const errorMsg = result.error || ''

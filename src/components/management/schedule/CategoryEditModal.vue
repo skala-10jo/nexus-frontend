@@ -5,7 +5,7 @@
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
         <h3 class="text-lg font-bold text-gray-900">
-          {{ isNew ? '새 카테고리 추가' : '카테고리 수정' }}
+          {{ isNew ? '새 프로젝트 추가' : '프로젝트 수정' }}
         </h3>
       </div>
 
@@ -13,14 +13,14 @@
       <form @submit.prevent="save" class="p-6 space-y-4">
         <!-- Category Name -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">카테고리 이름 *</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 이름 *</label>
           <input
             v-model="formData.name"
             type="text"
             required
             maxlength="50"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="예: 프로젝트, 미팅"
+            placeholder="예: 개발, 미팅, 마케팅"
           />
         </div>
 
@@ -58,7 +58,7 @@
             rows="3"
             maxlength="500"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="카테고리에 대한 설명을 입력하세요"
+            placeholder="프로젝트에 대한 설명을 입력하세요"
           ></textarea>
         </div>
 
@@ -125,7 +125,7 @@ onMounted(() => {
 
 const save = () => {
   if (!formData.value.name.trim()) {
-    alert('카테고리 이름을 입력해주세요.')
+    alert('프로젝트 이름을 입력해주세요.')
     return
   }
 

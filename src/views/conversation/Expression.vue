@@ -6,7 +6,7 @@
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Biz 표현 학습</h1>
           <p class="text-sm text-gray-500 font-medium mt-0.5">
-            멋진 비즈니스 맨이 되는 법
+            오늘 익힌 표현으로 내일 미팅에서 프로페셔널한 인상을 남기세요!
           </p>
         </div>
       </div>

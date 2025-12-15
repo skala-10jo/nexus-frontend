@@ -1,0 +1,35 @@
+# 의존성 (Docker 내부에서 설치)
+node_modules
+
+# 빌드 결과물 (Docker 내부에서 빌드)
+dist
+
+# 개발 파일
+.git
+.gitignore
+*.md
+README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 환경변수 파일 (빌드 인자 사용)
+.env
+.env.local
+.env.*.local
+
+# 로그
+*.log
+npm-debug.log*
+
+# 테스트 파일
+coverage
+.nyc_output
+
+# Docker 파일 (이미지에 복사 불필요)
+Dockerfile*
+docker-compose*
+.dockerignore
