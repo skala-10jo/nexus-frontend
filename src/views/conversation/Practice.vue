@@ -17,10 +17,11 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- Main Chat Area -->
       <main class="flex-1 flex flex-col relative min-w-0 bg-gray-50 transition-all duration-300">
-        <!-- Terminology Section (필수 용어 표시) -->
-        <PracticeTerminology
-          :required-terms="conversation.requiredTerms.value"
-          :detected-terms="conversation.detectedTerms.value"
+        <!-- Stepper Section (시나리오 진행 단계 표시) -->
+        <PracticeStepper
+          :steps="scenarioSteps"
+          :current-step-index="currentStepIndex"
+          :completed-step-indices="completedStepIndices"
         />
 
         <!-- Conversation Area -->
@@ -94,6 +95,7 @@
         @close="showMobileFeedback = false"
       />
     </div>
+
   </div>
 </template>
 
@@ -116,7 +118,7 @@ import { ref, onMounted, nextTick, computed, watch } from 'vue'
 
 // Components
 import PracticeHeader from '@/components/conversation/practice/PracticeHeader.vue'
-import PracticeTerminology from '@/components/conversation/practice/PracticeTerminology.vue'
+import PracticeStepper from '@/components/conversation/practice/PracticeStepper.vue'
 import PracticeConversation from '@/components/conversation/practice/PracticeConversation.vue'
 import PracticeInput from '@/components/conversation/practice/PracticeInput.vue'
 import FeedbackSidebar from '@/components/conversation/practice/FeedbackSidebar.vue'
@@ -149,6 +151,63 @@ const {
 // 임시 userInput ref (voice와 conversation 연결용)
 const sharedUserInput = ref('')
 
+// ============================================
+// Stepper State (시나리오 단계 관리)
+// 주의: usePracticeConversation보다 먼저 정의되어야 함
+// ============================================
+
+/**
+ * 현재 진행 중인 스텝 인덱스 (0-based)
+ * AI가 현재 스텝 완료를 판단하면 자동으로 증가
+ */
+const currentStepIndex = ref(0)
+
+/**
+ * 완료된 스텝 인덱스 배열
+ * 마지막 스텝 완료 시에도 초록색 표시를 위해 사용
+ */
+const completedStepIndices = ref([])
+
+/**
+ * 시나리오 스텝 목록
+ * 백엔드 scenario.steps에서 가져옴
+ *
+ * 백엔드 steps 스키마:
+ * { name: string, title: string, guide: string, terminology: string[] }
+ */
+const scenarioSteps = computed(() => {
+  if (scenario.value?.steps && scenario.value.steps.length > 0) {
+    return scenario.value.steps.map((step, index) => ({
+      id: step.name || `step-${index}`,
+      title: step.title,
+      description: step.guide,
+      terminology: step.terminology || []
+    }))
+  }
+  return []
+})
+
+/**
+ * 스텝 완료 시 호출되는 핸들러
+ * 다음 스텝으로 자동 진행
+ */
+const handleStepCompleted = () => {
+  const totalSteps = scenarioSteps.value.length
+  const completedIndex = currentStepIndex.value
+
+  // 현재 스텝을 완료 목록에 추가
+  if (!completedStepIndices.value.includes(completedIndex)) {
+    completedStepIndices.value.push(completedIndex)
+  }
+
+  if (currentStepIndex.value < totalSteps - 1) {
+    currentStepIndex.value++
+    console.log(`📍 Step advanced to ${currentStepIndex.value + 1}/${totalSteps}`)
+  } else {
+    console.log('🎉 All steps completed!')
+  }
+}
+
 // Voice (초기화를 먼저 해야 getAudioBlob 사용 가능)
 const voice = usePracticeVoice({
   userInput: sharedUserInput,
@@ -163,6 +222,8 @@ let feedbackAddFn = null
 const conversation = usePracticeConversation({
   scenario,
   userInput: sharedUserInput,  // 외부 userInput 전달
+  currentStepIndex,  // 스텝 인덱스 연동
+  onStepCompleted: () => handleStepCompleted(),  // 스텝 완료 콜백
   onFeedbackReceived: (feedbackData) => {
     if (feedbackAddFn) {
       feedbackAddFn(feedbackData)
@@ -269,6 +330,8 @@ const handleReset = async () => {
     // 2. 프론트엔드 상태 초기화
     conversation.resetConversation()
     feedback.resetFeedbacks()
+    currentStepIndex.value = 0  // 스텝도 처음으로 리셋
+    completedStepIndices.value = []  // 완료 목록도 초기화
 
     // 3. 새 대화 시작하여 AI 초기 발화 받아오기
     const response = await conversationService.start(scenarioId)

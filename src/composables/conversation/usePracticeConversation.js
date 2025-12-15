@@ -38,9 +38,18 @@ async function blobToBase64(blob) {
  * @param {Function} options.onFeedbackReceived - 피드백 수신 콜백
  * @param {Function} options.getAudioBlob - 오디오 blob 가져오기 콜백 (음성 모드에서 발음 평가용)
  * @param {Ref<string>} options.userInput - 외부에서 전달받은 userInput ref (선택)
+ * @param {Ref<number>} options.currentStepIndex - 현재 스텝 인덱스 ref (선택)
+ * @param {Function} options.onStepCompleted - 스텝 완료 시 콜백 (선택)
  * @returns {Object} 대화 상태 및 메서드
  */
-export function usePracticeConversation({ scenario, onFeedbackReceived, getAudioBlob, userInput: externalUserInput }) {
+export function usePracticeConversation({
+  scenario,
+  onFeedbackReceived,
+  getAudioBlob,
+  userInput: externalUserInput,
+  currentStepIndex: externalCurrentStepIndex,
+  onStepCompleted
+}) {
   // ============================================
   // State
   // ============================================
@@ -114,8 +123,11 @@ export function usePracticeConversation({ scenario, onFeedbackReceived, getAudio
         message: msg.message
       }))
 
-      // API 호출
-      const response = await conversationService.sendMessage(scenarioId, message, history)
+      // 현재 스텝 인덱스 가져오기
+      const stepIndex = externalCurrentStepIndex?.value ?? 0
+
+      // API 호출 (currentStepIndex 포함)
+      const response = await conversationService.sendMessage(scenarioId, message, history, stepIndex)
 
       // 용어 탐지 업데이트
       if (response.detectedTerms?.length) {
@@ -132,6 +144,11 @@ export function usePracticeConversation({ scenario, onFeedbackReceived, getAudio
       isLoading.value = false
       await nextTick()
       scrollToBottom()
+
+      // 스텝 완료 처리
+      if (response.stepCompleted && onStepCompleted) {
+        onStepCompleted()
+      }
 
       // 피드백 요청 (음성 모드일 경우 오디오 데이터 포함)
       try {
