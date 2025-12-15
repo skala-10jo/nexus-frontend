@@ -43,7 +43,7 @@ export function usePracticeVoice({ userInput, onSendMessage, scenario }) {
   // ============================================
   // State
   // ============================================
-  const inputMode = ref('text') // 'text' | 'voice'
+  const inputMode = ref('voice') // 'text' | 'voice'
   const isProcessingVoice = ref(false)
   const recognizedText = ref('')
   const lastAudioBlob = ref(null)  // 마지막 녹음된 오디오 (발음 평가용)
