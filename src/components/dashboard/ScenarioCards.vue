@@ -71,11 +71,21 @@ const topScenarios = computed(() => {
 const practiceScenarios = computed(() => topScenarios.value.slice(0, 2))
 
 // 시나리오의 역할 정보 표시용 헬퍼
-const getRoleLabel = (scenario) => {
-  if (!scenario.roles) return 'User vs Manager'
-  const userRole = scenario.roles.user || 'User'
-  const assistantRole = scenario.roles.assistant || 'Manager'
-  return `${userRole} vs ${assistantRole}`
+const getRoles = (scenario) => {
+  return {
+    user: scenario?.roles?.user || 'User',
+    assistant: scenario?.roles?.ai || scenario?.roles?.assistant || 'Manager'
+  }
+}
+
+const getTitleLines = (title = '') => {
+  const words = title.split(/\s+/).filter(Boolean)
+  if (words.length <= 1) return [title]
+  const half = Math.ceil(words.length / 2)
+  return [
+    words.slice(0, half).join(' '),
+    words.slice(half).join(' ')
+  ]
 }
 
 const userName = computed(() => props.user?.fullName || props.user?.username || 'User')
@@ -138,21 +148,11 @@ const handleCheckIn = () => {
       <!-- Scenario Create CTA -->
       <div
         @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
-        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group"
+        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center justify-between group"
       >
-        <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 transition-colors group-hover:bg-blue-200">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <span class="text-xs font-medium text-gray-500 mb-1">시나리오 생성하기</span>
-          <h3 class="font-bold text-gray-900 text-base truncate">{{ scheduleMessage.eventTitle }} 회화 연습</h3>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-semibold text-gray-500 mb-1 truncate">{{ scheduleMessage.eventTitle || '시나리오' }}</span>
+          <h3 class="text-xl font-bold text-gray-900 leading-snug">시나리오 생성하기</h3>
         </div>
       </div>
 
@@ -169,13 +169,17 @@ const handleCheckIn = () => {
           </svg>
         </div>
         <div class="flex-1 min-w-0">
-          <span class="text-xs font-medium text-gray-500 mb-1 block">{{ getRoleLabel(scenario) }}</span>
-          <h3 class="font-bold text-gray-900 text-sm truncate">{{ scenario.title }}</h3>
-        </div>
-        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
+          <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">시나리오</div>
+          <div class="font-bold text-gray-900 text-sm leading-snug space-y-0.5 mb-2">
+            <p v-for="(line, idx) in getTitleLines(scenario.title)" :key="idx">{{ line }}</p>
+          </div>
+          <div class="text-xs font-medium text-gray-500 flex flex-wrap items-center gap-1">
+            <span>나:</span>
+            <span class="text-gray-900 font-semibold">{{ getRoles(scenario).user }}</span>
+            <span class="text-gray-300">|</span>
+            <span>상대:</span>
+            <span class="text-gray-900 font-semibold">{{ getRoles(scenario).assistant }}</span>
+          </div>
         </div>
       </div>
     </div>
