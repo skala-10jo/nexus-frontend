@@ -145,8 +145,8 @@ function isSelected(date) {
 </script>
 
 <template>
-  <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col relative z-10">
-    <div class="flex items-center justify-between mb-2 shrink-0">
+  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col relative z-10">
+    <div class="flex items-center justify-between mb-3 shrink-0">
       <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs">
         {{ currentMonthName }} {{ currentYear }}
       </h3>
@@ -161,7 +161,7 @@ function isSelected(date) {
     </div>
 
     <!-- Calendar Grid -->
-    <div class="mt-2 space-y-1">
+    <div class="mt-3 space-y-2">
       <!-- Day headers (Sun ~ Sat) -->
       <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 tracking-wider">
         <span v-for="day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="day">
@@ -170,7 +170,7 @@ function isSelected(date) {
       </div>
 
       <!-- Date grid -->
-      <div class="grid grid-cols-7 gap-x-1 gap-y-0.5 text-center">
+      <div class="grid grid-cols-7 gap-x-1 gap-y-1 text-center">
         <div
           v-for="{ date, isCurrentMonth, isToday, eventInfo } in calendarDays"
           :key="date.toISOString()"

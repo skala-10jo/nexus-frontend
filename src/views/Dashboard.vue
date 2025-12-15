@@ -10,7 +10,7 @@
           <!-- 1. Scenario Cards (Welcome 메시지 + 출석/캐릭터 포함) -->
           <ScenarioCards
             :user="user"
-            :today-events="todayEvents"
+            :upcoming-events="upcomingEvents"
             :schedule-message="scheduleMessage"
             :is-checked-in="isCheckedIn"
             @check-in="handleCheckIn"
@@ -83,7 +83,6 @@ const {
   // Computed
   upcomingEvents,
   scheduleMessage,
-  todayEvents,
 
   // Actions
   handleCheckIn,

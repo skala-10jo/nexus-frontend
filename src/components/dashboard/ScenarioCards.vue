@@ -1,16 +1,16 @@
 <script setup>
 /**
  * Scenario Cards 컴포넌트
- * 
- * 오늘 일정 기반 시나리오 카드 3개 표시 또는 일정 생성 안내
+ *
+ * 예정된 일정 기반 시나리오 카드 3개 표시 또는 일정 생성 안내
  * + 출석 체크 및 캐릭터 표시
  */
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
-  /** 오늘의 일정 목록 */
-  todayEvents: {
+  /** 예정된 일정 목록 */
+  upcomingEvents: {
     type: Array,
     default: () => []
   },
@@ -51,10 +51,10 @@ const greeting = computed(() => {
 
 // 대표 시나리오 3개 추출
 const topScenarios = computed(() => {
-  if (!props.todayEvents || props.todayEvents.length === 0) {
+  if (!props.upcomingEvents || props.upcomingEvents.length === 0) {
     return []
   }
-  return props.todayEvents.slice(0, 3)
+  return props.upcomingEvents.slice(0, 3)
 })
 
 const userName = computed(() => props.user?.fullName || props.user?.username || 'User')
@@ -98,40 +98,52 @@ const handleCheckIn = () => {
     </div>
 
     <!-- Content Section -->
-    <div v-if="topScenarios.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 z-10 pr-0 md:pr-32 mb-2">
+    <div v-if="topScenarios.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
       <!-- Scenario Cards -->
       <div
         v-for="(event, index) in topScenarios"
         :key="event.id"
         @click="goToScenario(event.id)"
-        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group"
+        class="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-3 group"
       >
         <!-- Icon -->
-        <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 transition-colors group-hover:bg-purple-200">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 transition-colors group-hover:bg-purple-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
         </div>
 
         <!-- Text Info -->
         <div class="flex-1 min-w-0">
           <span class="text-xs font-medium text-gray-500 mb-1">User vs Manager</span>
-          <h3 class="font-bold text-gray-900 text-base truncate">{{ event.title }}</h3>
+          <h3 class="font-bold text-gray-900 text-sm truncate">{{ event.title }}</h3>
         </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="flex-1 flex flex-col items-center justify-center text-center z-10">
-      <div class="bg-gray-50 rounded-2xl p-8 max-w-md">
-        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-gray-600 mb-4">일정을 등록하고<br/>시나리오 회화 연습을 시작해보세요!</p>
-        <button 
-          @click="goToSchedule"
-          class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
-        >
-          일정 등록하기
-        </button>
+    <!-- Empty State (시나리오 카드와 동일한 높이) -->
+    <div v-else class="z-10 mb-2">
+      <div
+        @click="goToSchedule"
+        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group max-w-sm"
+      >
+        <!-- Icon -->
+        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 transition-colors group-hover:bg-purple-100 group-hover:text-purple-600">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+
+        <!-- Text Info -->
+        <div class="flex-1 min-w-0">
+          <span class="text-xs font-medium text-gray-500 mb-1">일정 등록</span>
+          <h3 class="font-bold text-gray-900 text-base">시나리오 회화 연습 시작하기</h3>
+        </div>
+
+        <!-- Arrow -->
+        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
     </div>
 
