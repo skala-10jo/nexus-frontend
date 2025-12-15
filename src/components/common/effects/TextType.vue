@@ -127,7 +127,7 @@ const clearTimeoutIfNeeded = () => {
 };
 
 const executeTypingAnimation = () => {
-  const currentText = textArray.value[currentTextIndex.value];
+  const currentText = textArray.value[currentTextIndex.value] || '';
   const processedText = props.reverseMode ? currentText.split('').reverse().join('') : currentText;
 
   if (isDeleting.value) {
