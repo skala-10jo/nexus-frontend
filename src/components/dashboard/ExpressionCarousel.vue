@@ -82,7 +82,7 @@ const highlightExpression = (text, expression) => {
     // 1차: 전체 표현 매칭 시도
     const fullRegex = new RegExp(`(${escapedExpression})`, 'gi')
     if (fullRegex.test(text)) {
-      return text.replace(fullRegex, '<span class="text-purple-600">$1</span>')
+      return text.replace(fullRegex, '<span class="text-blue-700">$1</span>')
     }
 
     // 2차: 핵심 단어들만 매칭 (the, a, an, is, are, be 등 제외하고 2글자 이상 단어)
@@ -95,7 +95,7 @@ const highlightExpression = (text, expression) => {
       let result = text
       words.forEach(word => {
         const wordRegex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-        result = result.replace(wordRegex, '<span class="text-purple-600">$1</span>')
+        result = result.replace(wordRegex, '<span class="text-blue-600">$1</span>')
       })
       return result
     }
@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
       <h3 class="text-base md:text-lg font-bold text-gray-800">오늘의 표현</h3>
       <button 
         @click="goToExpression"
-        class="flex items-center gap-1 text-xs md:text-sm text-purple-600 hover:text-purple-700 font-semibold transition-colors"
+        class="flex items-center gap-1 text-xs md:text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors"
       >
         <span>표현 공부하러 가기</span>
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
           <!-- 표현 -->
           <div class="bg-gray-50 rounded-xl p-4 select-none text-center">
             <p class="text-lg md:text-xl font-bold mb-1 select-none">
-              <span class="text-purple-600">{{ currentExpression.expression }}</span>
+              <span class="text-blue-700">{{ currentExpression.expression }}</span>
               <span class="text-gray-900 text-base md:text-lg md:inline md:ml-2">'{{ currentExpression.meaning }}'</span>
             </p>
           </div>
@@ -167,7 +167,7 @@ onBeforeUnmount(() => {
           @click="currentIndex = index; stopAutoSwipe(); startAutoSwipe()"
           class="transition-all duration-300"
           :class="index === currentIndex 
-            ? 'w-6 h-1.5 bg-purple-600 rounded-full' 
+            ? 'w-6 h-1.5 bg-blue-600 rounded-full' 
             : 'w-1.5 h-1.5 bg-gray-300 rounded-full hover:bg-gray-400'"
         />
       </div>
