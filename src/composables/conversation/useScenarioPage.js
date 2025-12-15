@@ -9,7 +9,6 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { projectService } from '@/services/projectService'
 import { scenarioService } from '@/services/scenarioService'
-import { scheduleCategoryAPI } from '@/services/api'
 import { BUSINESS_CATEGORIES, BUSINESS_SCENARIO_TEMPLATES } from '@/data/businessScenarioTemplates'
 
 export function useScenarioPage() {
@@ -222,18 +221,17 @@ export function useScenarioPage() {
   async function loadProjects() {
     projectsLoading.value = true
     try {
-      // ScheduleCategory를 "프로젝트"로 사용
-      // 일정 관리 페이지에서 카테고리로 프로젝트를 할당하기 때문
-      const response = await scheduleCategoryAPI.getCategories()
-      // 카테고리를 프로젝트 형태로 변환 (id, name 필드 유지)
-      projects.value = (response.data || []).map(category => ({
-        id: category.id,
-        name: category.name,
-        color: category.color,
-        description: category.description || ''
+      // 실제 프로젝트 API 사용 (문서가 연결된 프로젝트)
+      const response = await projectService.getAll()
+      const projectsData = response.data.data || response.data || []
+      projects.value = projectsData.map(project => ({
+        id: project.id,
+        name: project.name,
+        color: project.color || '#6366f1',
+        description: project.description || ''
       }))
     } catch (error) {
-      console.error('Failed to load projects (categories):', error)
+      console.error('Failed to load projects:', error)
       projects.value = []
     } finally {
       projectsLoading.value = false
@@ -248,14 +246,14 @@ export function useScenarioPage() {
       const schedules = response.data.data || response.data || []
 
       // 일정 데이터 정규화
-      // - categories 배열에서 첫 번째 카테고리를 projectId/projectName으로 매핑
-      // - 일정 관리 페이지에서 카테고리로 프로젝트를 할당하기 때문
+      // - 실제 프로젝트 연결을 우선 사용 (백엔드에서 카테고리 이름으로 자동 연결됨)
+      // - 프로젝트 미연결 시 카테고리 정보 fallback
       upcomingSchedules.value = schedules.map(schedule => {
         const firstCategory = schedule.categories?.[0] || null
         return {
           ...schedule,
-          projectId: firstCategory?.id || schedule.project?.id || null,
-          projectName: firstCategory?.name || schedule.project?.name || null,
+          projectId: schedule.project?.id || null,
+          projectName: schedule.project?.name || firstCategory?.name || null,
           // 모든 카테고리 ID 보존 (복수 카테고리 지원)
           categoryIds: schedule.categories?.map(c => c.id) || []
         }
