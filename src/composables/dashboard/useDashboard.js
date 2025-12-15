@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useScheduleEvents } from '@/composables/management/useScheduleEvents'
 import { useAttendance } from '@/composables/useAttendance'
-import api from '@/services/api'
+import api, { pythonAPI } from '@/services/api'
 
 /**
  * Dashboard 페이지 메인 로직
@@ -27,6 +27,7 @@ export function useDashboard() {
   const selectedDate = ref(null)
   const showSuccessPopup = ref(false)
   const todayExpression = ref(null)
+  const expressions = ref([])
 
   // ============================================
   // Event Color Logic
@@ -157,40 +158,56 @@ export function useDashboard() {
     }
   })
 
+  /**
+   * 오늘의 일정 목록
+   */
+  const todayEvents = computed(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return allEvents.value.filter(event => {
+      const eStart = new Date(event.start)
+      const eEnd = event.end ? new Date(event.end) : new Date(eStart)
+      const startDate = new Date(eStart.getFullYear(), eStart.getMonth(), eStart.getDate())
+      const endDate = new Date(eEnd.getFullYear(), eEnd.getMonth(), eEnd.getDate())
+      return today >= startDate && today <= endDate
+    })
+  })
+
   // ============================================
   // Actions
   // ============================================
 
   /**
-   * 랜덤 표현 가져오기
+   * 랜덤 표현 가져오기 (Python API 사용 - 전체 랜덤)
    */
   const fetchRandomExpression = async () => {
     try {
-      const unitsResponse = await api.get('/expressions/units')
-      const units = unitsResponse.data.data || []
+      console.log('[Dashboard] Fetching random expressions from Python API...')
 
-      if (units.length === 0) return
-
-      const randomUnit = units[Math.floor(Math.random() * units.length)]
-
-      const expressionResponse = await api.get('/expressions', {
-        params: {
-          unit: randomUnit.unit,
-          limit: 1
-        }
+      const response = await pythonAPI.get('/expressions/random', {
+        params: { limit: 5 }
       })
 
-      const expressions = expressionResponse.data.data || []
-      if (expressions.length > 0) {
-        const expr = expressions[0]
-        if (expr.meaning) {
-          expr.meaning = expr.meaning.replace(/[{}]/g, '')
-        }
-        todayExpression.value = expr
+      console.log('[Dashboard] API Response:', response.data)
+      const fetchedExpressions = response.data.data || []
+      console.log('[Dashboard] Fetched expressions count:', fetchedExpressions.length)
+
+      if (fetchedExpressions.length > 0) {
+        expressions.value = fetchedExpressions
+        todayExpression.value = fetchedExpressions[0]
+        console.log('[Dashboard] Expressions set successfully:', expressions.value.length)
       }
     } catch (err) {
-      console.error('Failed to fetch random expression:', err)
-      todayExpression.value = { expression: "Let's touch base later.", meaning: "나중에 연락하자" }
+      console.error('[Dashboard] Failed to fetch random expression:', err)
+      const fallback = {
+        expression: "Let's touch base later.",
+        meaning: "나중에 연락하자",
+        example_en: "Let's touch base later this week to discuss the project.",
+        example_ko: "이번 주 후반에 프로젝트에 대해 논의하기 위해 연락합시다."
+      }
+      expressions.value = [fallback]
+      todayExpression.value = fallback
     }
   }
 
@@ -260,6 +277,7 @@ export function useDashboard() {
     selectedDate,
     showSuccessPopup,
     todayExpression,
+    expressions,
     allEvents,
     loadingEvents,
     isCheckedIn,
@@ -267,6 +285,7 @@ export function useDashboard() {
     // Computed
     upcomingEvents,
     scheduleMessage,
+    todayEvents,
 
     // Actions
     handleCheckIn,

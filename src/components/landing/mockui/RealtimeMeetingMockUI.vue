@@ -107,7 +107,7 @@
         </div>
       </div>
 
-      <!-- Right: AI Feedback (선택된 발화가 있을 때만 표시) -->
+      <!-- Right: AI Feedback -->
       <div
         class="w-[160px] bg-gray-50/50 flex flex-col transition-all duration-300"
         :class="selectedMessage !== null ? 'opacity-100' : 'opacity-0'"
@@ -149,7 +149,6 @@
           </button>
         </div>
       </div>
-
     </div>
 
     <!-- Phase 3: Practice Mode -->
@@ -165,11 +164,11 @@
         <div class="p-3 grid grid-cols-2 gap-2">
           <div class="p-2.5 bg-red-50 rounded-lg">
             <p class="text-[9px] font-medium text-red-600 mb-1">원문</p>
-            <p class="text-[11px] text-gray-700 leading-snug">"Alright team, we have the investor meeting..."</p>
+            <p class="text-[11px] text-gray-700 leading-snug">{{ practiceTexts.original }}</p>
           </div>
           <div class="p-2.5 bg-green-50 rounded-lg">
             <p class="text-[9px] font-medium text-green-600 mb-1">교정문</p>
-            <p class="text-[11px] text-gray-700 leading-snug">"Okay team, we have the investor meeting..."</p>
+            <p class="text-[11px] text-gray-700 leading-snug">{{ practiceTexts.corrected }}</p>
           </div>
         </div>
 
@@ -194,19 +193,19 @@
           >
             <div class="flex justify-between items-center mb-2">
               <span class="text-xs font-bold text-gray-700">발음 평가 결과</span>
-              <span class="text-lg font-bold text-blue-600">87점</span>
+              <span class="text-lg font-bold text-blue-600">{{ practiceScores.total }}점</span>
             </div>
             <div class="grid grid-cols-3 gap-2 text-center">
               <div class="p-2 bg-green-50 rounded">
-                <p class="text-base font-bold text-green-600">93</p>
+                <p class="text-base font-bold text-green-600">{{ practiceScores.accuracy }}</p>
                 <p class="text-[9px] text-gray-500">정확도</p>
               </div>
               <div class="p-2 bg-blue-50 rounded">
-                <p class="text-base font-bold text-blue-600">96</p>
+                <p class="text-base font-bold text-blue-600">{{ practiceScores.fluency }}</p>
                 <p class="text-[9px] text-gray-500">유창성</p>
               </div>
               <div class="p-2 bg-amber-50 rounded">
-                <p class="text-base font-bold text-amber-600">72</p>
+                <p class="text-base font-bold text-amber-600">{{ practiceScores.intonation }}</p>
                 <p class="text-[9px] text-gray-500">억양</p>
               </div>
             </div>
@@ -218,7 +217,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+/**
+ * RealtimeMeetingMockUI - 회의 분석 시연 UI
+ *
+ * @description 회의 녹음 분석 및 학습 모드를 보여주는 데모 컴포넌트
+ */
+import { speakers, practiceTexts, practiceScores } from '@/components/landing/data/realtimeMeetingData'
+import { useRealtimeMeetingAnimation } from '@/composables/landing/useRealtimeMeetingAnimation'
 
 const props = defineProps({
   isVisible: {
@@ -227,187 +232,32 @@ const props = defineProps({
   }
 })
 
-// State
-const phase = ref('upload')
-const headerTitle = ref('Meeting Analysis')
-const isDragging = ref(false)
-const isUploading = ref(false)
-const uploadProgress = ref(0)
-const visibleMessages = ref([])
-const selectedMessage = ref(null)
-const isPracticeRecording = ref(false)
-const showPracticeResult = ref(false)
-const animationCompleted = ref(false)
+const {
+  // Phase state
+  phase,
+  headerTitle,
 
-// Button click animation state
-const isButtonPressed = ref(false)
-const showButtonRipple = ref(false)
+  // Upload phase
+  isDragging,
+  isUploading,
+  uploadProgress,
 
-// Computed
-const currentMessageScore = computed(() => {
-  if (selectedMessage.value !== null && visibleMessages.value[selectedMessage.value]) {
-    return visibleMessages.value[selectedMessage.value].score || 0
-  }
-  return 0
-})
+  // Result phase
+  visibleMessages,
+  selectedMessage,
+  currentMessageScore,
 
-// Data
-const speakers = [
-  { name: 'David', color: 'bg-blue-500', count: 16 },
-  { name: 'Sarah', color: 'bg-purple-500', count: 10 },
-  { name: 'Mike', color: 'bg-amber-500', count: 9 },
-  { name: 'Jane', color: 'bg-green-500', count: 10 }
-]
+  // Practice phase
+  isPracticeRecording,
+  showPracticeResult,
 
-const messages = [
-  { speaker: 0, time: '0:00', text: "Alright team, we have the investor meeting in three days.", score: 8 },
-  { speaker: 1, time: '0:09', text: "The financials have been updated. Our burn rate is lower.", score: 7 },
-  { speaker: 0, time: '0:16', text: "That's good news. How much lower?", score: 8 },
-  { speaker: 1, time: '0:18', text: "About 15% we saved on marketing spendings.", score: 7 },
-  { speaker: 2, time: '0:25', text: "Wait, you cut the marketing budget without telling me?", score: 7 },
-  { speaker: 1, time: '0:31', text: "I'm sorry, but we had to make tough decisions.", score: 8 },
-  { speaker: 3, time: '0:38', text: "Let's focus on what we can present to investors.", score: 9 }
-]
+  // Button animation
+  isButtonPressed,
+  showButtonRipple,
 
-// Methods
-const selectMessage = (idx) => {
-  selectedMessage.value = idx
-}
-
-// Animation
-let animationTimeouts = []
-
-const clearAllTimeouts = () => {
-  animationTimeouts.forEach(t => clearTimeout(t))
-  animationTimeouts = []
-}
-
-const resetState = () => {
-  phase.value = 'upload'
-  headerTitle.value = 'Meeting Analysis'
-  isDragging.value = false
-  isUploading.value = false
-  uploadProgress.value = 0
-  visibleMessages.value = []
-  selectedMessage.value = null
-  isPracticeRecording.value = false
-  showPracticeResult.value = false
-  animationCompleted.value = false
-  isButtonPressed.value = false
-  showButtonRipple.value = false
-}
-
-const startAnimation = () => {
-  if (animationCompleted.value) {
-    // 애니메이션이 완료된 상태에서 다시 보이면 재시작
-    resetState()
-  }
-
-  // Phase 1: Upload (빠르게)
-  animationTimeouts.push(setTimeout(() => {
-    isDragging.value = true
-  }, 300))
-
-  animationTimeouts.push(setTimeout(() => {
-    isDragging.value = false
-    isUploading.value = true
-  }, 600))
-
-  // Upload progress (빠르게 - 1초 내에 완료)
-  for (let i = 0; i <= 100; i += 10) {
-    animationTimeouts.push(setTimeout(() => {
-      uploadProgress.value = i
-    }, 600 + i * 8))
-  }
-
-  // Phase 2: Result (1.5초 후)
-  animationTimeouts.push(setTimeout(() => {
-    phase.value = 'result'
-    headerTitle.value = '분석 결과'
-  }, 1600))
-
-  // Show messages one by one (빠르게)
-  messages.forEach((msg, idx) => {
-    animationTimeouts.push(setTimeout(() => {
-      visibleMessages.value.push(msg)
-    }, 1800 + idx * 150))
-  })
-
-  // 첫번째 메시지 자동 선택 (메시지 다 나온 후)
-  animationTimeouts.push(setTimeout(() => {
-    selectedMessage.value = 0
-  }, 2900))
-
-  // 다른 메시지 선택 시뮬레이션
-  animationTimeouts.push(setTimeout(() => {
-    selectedMessage.value = 2
-  }, 3800))
-
-  animationTimeouts.push(setTimeout(() => {
-    selectedMessage.value = 4
-  }, 4700))
-
-  // Result Phase 더 오래 보여주기 (5.5초까지 대기)
-
-  // 버튼 클릭 효과 시작 (6초)
-  animationTimeouts.push(setTimeout(() => {
-    isButtonPressed.value = true
-    showButtonRipple.value = true
-  }, 6000))
-
-  // 버튼 클릭 효과 끝 (6.3초)
-  animationTimeouts.push(setTimeout(() => {
-    isButtonPressed.value = false
-    showButtonRipple.value = false
-  }, 6300))
-
-  // Phase 3: Practice (6.5초 후 - 버튼 클릭 후 바로 전환)
-  animationTimeouts.push(setTimeout(() => {
-    phase.value = 'practice'
-    headerTitle.value = '학습 모드'
-  }, 6500))
-
-  animationTimeouts.push(setTimeout(() => {
-    isPracticeRecording.value = true
-  }, 7200))
-
-  animationTimeouts.push(setTimeout(() => {
-    isPracticeRecording.value = false
-    showPracticeResult.value = true
-  }, 8800))
-
-  // 애니메이션 완료 표시 (마지막 장면에서 정지)
-  animationTimeouts.push(setTimeout(() => {
-    animationCompleted.value = true
-  }, 9500))
-}
-
-watch(() => props.isVisible, (newVal, oldVal) => {
-  if (newVal && !oldVal) {
-    // 영역에 들어왔을 때
-    if (animationCompleted.value) {
-      // 완료된 상태면 재시작
-      resetState()
-      startAnimation()
-    } else if (phase.value === 'upload' && !isUploading.value) {
-      // 아직 시작 안했으면 시작
-      startAnimation()
-    }
-  } else if (!newVal) {
-    // 영역에서 나갔을 때 - 타이머만 정리 (상태 유지)
-    clearAllTimeouts()
-  }
-})
-
-onMounted(() => {
-  if (props.isVisible) {
-    startAnimation()
-  }
-})
-
-onUnmounted(() => {
-  clearAllTimeouts()
-})
+  // Methods
+  selectMessage
+} = useRealtimeMeetingAnimation(props)
 </script>
 
 <style scoped>
