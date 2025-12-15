@@ -6,7 +6,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-        <h2 class="text-xl font-bold text-gray-900">카테고리 관리</h2>
+        <h2 class="text-xl font-bold text-gray-900">프로젝트 관리</h2>
         <button @click="close" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -26,7 +26,7 @@
                 {{ category.description }}
               </div>
               <div v-if="category.isDefault" class="text-xs text-gray-400 mt-1">
-                기본 카테고리
+                기본 프로젝트
               </div>
             </div>
           </div>
@@ -63,7 +63,7 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          새 카테고리 추가
+          새 프로젝트 추가
         </button>
       </div>
 
@@ -126,20 +126,20 @@ const handleSave = async (categoryData) => {
     }
     editingCategory.value = null
   } catch (error) {
-    alert('카테고리 저장에 실패했습니다: ' + error.message)
+    alert('프로젝트 저장에 실패했습니다: ' + error.message)
   }
 }
 
 const confirmDelete = async (category) => {
   if (
     confirm(
-      `"${category.name}" 카테고리를 삭제하시겠습니까?\n이 카테고리가 지정된 일정은 카테고리가 제거됩니다.`
+      `"${category.name}" 프로젝트를 삭제하시겠습니까?\n이 프로젝트가 지정된 일정에서 해당 프로젝트가 제거됩니다.`
     )
   ) {
     try {
       await categoryStore.deleteCategory(category.id)
     } catch (error) {
-      alert('카테고리 삭제에 실패했습니다: ' + error.message)
+      alert('프로젝트 삭제에 실패했습니다: ' + error.message)
     }
   }
 }

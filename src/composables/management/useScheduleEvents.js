@@ -73,25 +73,41 @@ export function useScheduleEvents() {
    * @param {Object} fetchInfo - fetch 정보
    * @param {Function} successCallback - 성공 콜백
    * @param {Function} failureCallback - 실패 콜백
-   * @param {string|null} selectedProjectId - 선택된 프로젝트 ID
+   * @param {Object|null} selectedProject - 선택된 프로젝트 객체 (id, name 포함)
    */
   const loadEventsForCalendar = async (
     fetchInfo,
     successCallback,
     failureCallback,
-    selectedProjectId = null
+    selectedProject = null
   ) => {
     try {
       const events = await fetchAllEvents()
 
       // Filter by selected project if one is selected
       let filteredEvents = events
-      if (selectedProjectId) {
-        filteredEvents = events.filter(
-          (event) =>
+      if (selectedProject && selectedProject.id) {
+        filteredEvents = events.filter((event) => {
+          // 1. project.id가 직접 일치하는 경우
+          if (
             event.extendedProps.project &&
-            event.extendedProps.project.id === selectedProjectId
-        )
+            event.extendedProps.project.id === selectedProject.id
+          ) {
+            return true
+          }
+
+          // 2. 카테고리 중 프로젝트 이름과 같은 것이 있는 경우 (Outlook 동기화된 일정)
+          if (event.extendedProps.categories && selectedProject.name) {
+            const hasMatchingCategory = event.extendedProps.categories.some(
+              (cat) => cat.name === selectedProject.name
+            )
+            if (hasMatchingCategory) {
+              return true
+            }
+          }
+
+          return false
+        })
       }
 
       successCallback(filteredEvents)

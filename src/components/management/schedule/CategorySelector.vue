@@ -1,7 +1,7 @@
 <template>
   <div>
     <label class="block text-sm font-medium text-gray-700 mb-2">
-      카테고리 (다중 선택 가능)
+      프로젝트 (다중 선택 가능)
     </label>
 
     <!-- Selected Categories Display -->
@@ -94,7 +94,7 @@
           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
         />
       </svg>
-      카테고리 관리
+      프로젝트 관리
     </button>
   </div>
 </template>
