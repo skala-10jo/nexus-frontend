@@ -28,6 +28,16 @@ const props = defineProps({
   isCheckedIn: {
     type: Boolean,
     default: false
+  },
+  /** 배너 일정의 시나리오 목록 */
+  bannerScenarios: {
+    type: Array,
+    default: () => []
+  },
+  /** 시나리오 로딩 상태 */
+  loadingScenarios: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -49,13 +59,22 @@ const greeting = computed(() => {
   }
 })
 
-// 대표 시나리오 3개 추출
+// 배너 일정의 시나리오 3개 추출 (bannerScenarios 우선)
 const topScenarios = computed(() => {
-  if (!props.upcomingEvents || props.upcomingEvents.length === 0) {
-    return []
+  // 배너에 표시된 일정의 시나리오가 있으면 그것을 표시
+  if (props.bannerScenarios && props.bannerScenarios.length > 0) {
+    return props.bannerScenarios.slice(0, 3)
   }
-  return props.upcomingEvents.slice(0, 3)
+  return []
 })
+
+// 시나리오의 역할 정보 표시용 헬퍼
+const getRoleLabel = (scenario) => {
+  if (!scenario.roles) return 'User vs Manager'
+  const userRole = scenario.roles.user || 'User'
+  const assistantRole = scenario.roles.assistant || 'Manager'
+  return `${userRole} vs ${assistantRole}`
+}
 
 const userName = computed(() => props.user?.fullName || props.user?.username || 'User')
 const hasSchedule = computed(() => props.scheduleMessage?.hasSchedule)
@@ -83,14 +102,14 @@ const handleCheckIn = () => {
     <!-- Header Section -->
     <div class="z-10 mb-6">
       <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
-        {{ greeting }} <span class="text-purple-600">{{ userName }}</span>님!
+        {{ greeting }} <span class="text-purple-800">{{ userName }}</span>님!
       </h2>
       <div class="text-gray-600">
         <p class="text-base md:text-lg mb-2">{{ scheduleMessage.text }}</p>
         <p
           v-if="hasSchedule"
           @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
-          class="text-purple-600 hover:text-purple-700 font-bold cursor-pointer transition-colors text-xl md:text-2xl"
+          class="text-purple-800 hover:text-purple-600 font-bold cursor-pointer transition-colors text-xl md:text-2xl"
         >
           {{ scheduleMessage.eventTitle }}에 대한 회화 연습 하러 갈까요?
         </p>
@@ -98,12 +117,22 @@ const handleCheckIn = () => {
     </div>
 
     <!-- Content Section -->
-    <div v-if="topScenarios.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
+    <div v-if="loadingScenarios" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
+      <!-- Loading Skeleton -->
+      <div v-for="i in 3" :key="i" class="bg-white rounded-2xl p-4 border border-gray-200 flex items-center gap-3 animate-pulse">
+        <div class="w-12 h-12 rounded-full bg-gray-200 shrink-0"></div>
+        <div class="flex-1 min-w-0 space-y-2">
+          <div class="h-3 bg-gray-200 rounded w-20"></div>
+          <div class="h-4 bg-gray-200 rounded w-32"></div>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="topScenarios.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
       <!-- Scenario Cards -->
       <div
-        v-for="(event, index) in topScenarios"
-        :key="event.id"
-        @click="goToScenario(event.id)"
+        v-for="scenario in topScenarios"
+        :key="scenario.id"
+        @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
         class="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-3 group"
       >
         <!-- Icon -->
@@ -113,14 +142,42 @@ const handleCheckIn = () => {
 
         <!-- Text Info -->
         <div class="flex-1 min-w-0">
-          <span class="text-xs font-medium text-gray-500 mb-1">User vs Manager</span>
-          <h3 class="font-bold text-gray-900 text-sm truncate">{{ event.title }}</h3>
+          <span class="text-xs font-medium text-gray-500 mb-1 block">{{ getRoleLabel(scenario) }}</span>
+          <h3 class="font-bold text-gray-900 text-sm truncate">{{ scenario.title }}</h3>
         </div>
       </div>
     </div>
 
-    <!-- Empty State (시나리오 카드와 동일한 높이) -->
-    <div v-else class="z-10 mb-2">
+    <!-- 일정은 있지만 시나리오가 없을 때 - 시나리오 생성 안내 -->
+    <div v-else-if="hasSchedule && topScenarios.length === 0 && !loadingScenarios" class="z-10 mb-2">
+      <div
+        @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
+        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group max-w-sm"
+      >
+        <!-- Icon -->
+        <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 transition-colors group-hover:bg-purple-200">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </div>
+
+        <!-- Text Info -->
+        <div class="flex-1 min-w-0">
+          <span class="text-xs font-medium text-gray-500 mb-1">시나리오 생성하기</span>
+          <h3 class="font-bold text-gray-900 text-base">{{ scheduleMessage.eventTitle }} 회화 연습</h3>
+        </div>
+
+        <!-- Arrow -->
+        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State (일정도 없을 때) -->
+    <div v-else-if="!hasSchedule" class="z-10 mb-2">
       <div
         @click="goToSchedule"
         class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-4 group max-w-sm"

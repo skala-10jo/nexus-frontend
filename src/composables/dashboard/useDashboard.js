@@ -1,9 +1,10 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useScheduleEvents } from '@/composables/management/useScheduleEvents'
 import { useAttendance } from '@/composables/useAttendance'
 import api, { pythonAPI } from '@/services/api'
+import { scenarioService } from '@/services/scenarioService'
 
 /**
  * Dashboard 페이지 메인 로직
@@ -28,6 +29,8 @@ export function useDashboard() {
   const showSuccessPopup = ref(false)
   const todayExpression = ref(null)
   const expressions = ref([])
+  const bannerScenarios = ref([])
+  const loadingScenarios = ref(false)
 
   // ============================================
   // Event Color Logic
@@ -179,6 +182,29 @@ export function useDashboard() {
   // ============================================
 
   /**
+   * 배너 일정의 시나리오 가져오기
+   */
+  const fetchBannerScenarios = async (scheduleId) => {
+    if (!scheduleId) {
+      bannerScenarios.value = []
+      return
+    }
+
+    loadingScenarios.value = true
+    try {
+      const response = await scenarioService.getAll({ schedule_ids: scheduleId, limit: 3 })
+      if (response.data.success) {
+        bannerScenarios.value = response.data.data.scenarios || []
+      }
+    } catch (err) {
+      console.error('[Dashboard] Failed to fetch scenarios:', err)
+      bannerScenarios.value = []
+    } finally {
+      loadingScenarios.value = false
+    }
+  }
+
+  /**
    * 랜덤 표현 가져오기 (Python API 사용 - 전체 랜덤)
    */
   const fetchRandomExpression = async () => {
@@ -268,6 +294,17 @@ export function useDashboard() {
     initializeDashboard()
   })
 
+  // 배너 일정이 변경되면 시나리오 조회
+  watch(
+    () => scheduleMessage.value?.link?.query?.scheduleId,
+    (newScheduleId) => {
+      if (newScheduleId) {
+        fetchBannerScenarios(newScheduleId)
+      }
+    },
+    { immediate: true }
+  )
+
   // ============================================
   // Return
   // ============================================
@@ -281,6 +318,8 @@ export function useDashboard() {
     allEvents,
     loadingEvents,
     isCheckedIn,
+    bannerScenarios,
+    loadingScenarios,
 
     // Computed
     upcomingEvents,

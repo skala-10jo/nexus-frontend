@@ -13,6 +13,8 @@
             :upcoming-events="upcomingEvents"
             :schedule-message="scheduleMessage"
             :is-checked-in="isCheckedIn"
+            :banner-scenarios="bannerScenarios"
+            :loading-scenarios="loadingScenarios"
             @check-in="handleCheckIn"
           />
 
@@ -79,6 +81,8 @@ const {
   allEvents,
   loadingEvents,
   isCheckedIn,
+  bannerScenarios,
+  loadingScenarios,
 
   // Computed
   upcomingEvents,

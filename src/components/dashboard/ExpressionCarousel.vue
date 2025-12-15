@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
           <!-- 표현 -->
           <div class="bg-gray-50 rounded-xl p-4 select-none text-center">
             <p class="text-lg md:text-xl font-bold mb-1 select-none">
-              <span class="text-purple-600">{{ currentExpression.expression }}</span>
+              <span class="text-purple-700">{{ currentExpression.expression }}</span>
               <span class="text-gray-900 text-base md:text-lg md:inline md:ml-2">'{{ currentExpression.meaning }}'</span>
             </p>
           </div>
