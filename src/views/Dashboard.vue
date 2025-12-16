@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-full overflow-y-auto bg-gray-50/50 p-4 md:p-6">
-    <div class="max-w-[1600px] mx-auto flex flex-col gap-4">
+  <div class="h-full overflow-hidden bg-gray-50/50 p-4 md:p-6">
+    <div class="max-w-[1600px] mx-auto flex flex-col gap-4 h-full">
 
       <!-- Mobile Layout -->
       <div class="flex flex-col gap-4 pb-16 lg:hidden">
@@ -107,10 +107,10 @@
       </div>
 
       <!-- Desktop Layout -->
-      <div class="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div class="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch h-full">
 
         <!-- 왼쪽 열 (8 cols) -->
-        <div class="lg:col-span-8 flex flex-col gap-4">
+        <div class="lg:col-span-8 flex flex-col gap-4 h-full min-h-0">
           <!-- 1. Scenario Cards -->
           <ScenarioCards
             :user="user"
@@ -128,14 +128,14 @@
           />
 
           <!-- 3. Performance Chart & Quick Actions -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
             <PerformanceChart />
             <QuickActionsSwiper />
           </div>
         </div>
 
         <!-- 오른쪽 열 (4 cols) -->
-        <div class="lg:col-span-4 flex flex-col gap-4">
+        <div class="lg:col-span-4 flex flex-col gap-4 h-full min-h-0">
           <!-- 1. Mini Calendar -->
           <MiniCalendar
             :all-events="allEvents"

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-[2rem] p-3 md:p-4 shadow-sm border border-gray-100 flex flex-col h-[270px] overflow-hidden">
+  <div class="bg-white rounded-[2rem] p-3 md:p-4 shadow-sm border border-gray-100 flex flex-col h-full min-h-[200px] overflow-hidden">
     <!-- Header -->
     <div class="flex items-center justify-between mb-2 md:mb-3 shrink-0">
       <h3 class="font-bold text-gray-900 text-xs md:text-sm">퀴즈 통계</h3>

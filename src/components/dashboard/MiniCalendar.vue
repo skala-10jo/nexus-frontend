@@ -145,7 +145,7 @@ function isSelected(date) {
 </script>
 
 <template>
-  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col relative z-10">
+  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col relative z-10 flex-shrink-0">
     <div class="flex items-center justify-between mb-3 shrink-0">
       <h3 class="font-bold text-gray-900 uppercase tracking-wider text-xs">
         {{ currentMonthName }} {{ currentYear }}

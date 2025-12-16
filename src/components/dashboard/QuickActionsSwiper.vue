@@ -36,7 +36,7 @@ const quickActions = [
 </script>
 
 <template>
-  <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-[270px] relative overflow-visible">
+  <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col h-full min-h-[200px] relative overflow-visible">
     <h3 class="font-bold text-gray-900 text-sm mb-3 shrink-0">Quick Actions</h3>
 
     <swiper
