@@ -21,13 +21,15 @@ const conversationService = {
    * @param {string} scenarioId - 시나리오 ID
    * @param {string} message - 사용자 메시지
    * @param {Array} history - 대화 히스토리
-   * @returns {Promise} AI 응답 및 감지된 용어
+   * @param {number} currentStepIndex - 현재 스텝 인덱스 (0-based)
+   * @returns {Promise} AI 응답, 감지된 용어, 스텝 완료 여부
    */
-  async sendMessage(scenarioId, message, history = []) {
+  async sendMessage(scenarioId, message, history = [], currentStepIndex = 0) {
     const response = await pythonAPI.post('/conversations/message', {
       scenarioId,
       message,
-      history
+      history,
+      currentStepIndex
     })
     return response.data
   },

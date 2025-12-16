@@ -71,6 +71,7 @@
           <!-- Scenario Form -->
           <ScenarioFormSection
             v-model:formData="formData"
+            v-model:userRequest="userRequest"
             :isGenerating="isGenerating"
             @generate="generateAllFields"
           />
@@ -139,6 +140,7 @@ const {
   // State - Form
   generateOptions,
   formData,
+  userRequest,
 
   // State - Selection
   selectedProjectId,

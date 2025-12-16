@@ -1,20 +1,38 @@
 <template>
   <div class="space-y-6">
-    <!-- Title with AI Generate Button -->
-    <div class="space-y-2">
+    <!-- AI Generation Section -->
+    <div class="space-y-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-2xl border border-gray-100">
       <div class="flex items-center justify-between">
-        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">제목</label>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span class="text-sm font-bold text-gray-700">AI 자동 생성</span>
+        </div>
         <button
           @click="$emit('generate')"
           :disabled="isGenerating"
           class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-black hover:bg-gray-800 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
         >
           <svg class="w-4 h-4" :class="{ 'animate-spin': isGenerating }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          {{ isGenerating ? '생성 중...' : 'AI 자동 생성' }}
+          {{ isGenerating ? '생성 중...' : '생성하기' }}
         </button>
       </div>
+      <textarea
+        :value="userRequest"
+        @input="$emit('update:userRequest', $event.target.value)"
+        rows="2"
+        placeholder="원하는 시나리오 방향을 입력하세요 (예: 제품 기능 설명 미팅, 긴급한 버그 대응 상황, 클레임 고객 응대)"
+        class="w-full px-4 py-3 bg-white border border-gray-200 focus:border-gray-900 focus:ring-0 rounded-xl text-sm text-gray-900 transition-all resize-none"
+      ></textarea>
+      <p class="text-xs text-gray-400">프로젝트/일정을 선택하면 해당 컨텍스트를 기반으로 시나리오가 생성됩니다</p>
+    </div>
+
+    <!-- Title -->
+    <div class="space-y-2">
+      <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">제목</label>
       <input
         :value="formData.title"
         @input="updateField('title', $event.target.value)"
@@ -92,13 +110,17 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  userRequest: {
+    type: String,
+    default: ''
+  },
   isGenerating: {
     type: Boolean,
     default: false
   }
 })
 
-const emit = defineEmits(['update:formData', 'generate'])
+const emit = defineEmits(['update:formData', 'update:userRequest', 'generate'])
 
 function updateField(field, value) {
   emit('update:formData', {
