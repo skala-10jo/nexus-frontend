@@ -86,8 +86,12 @@ const formatDateRange = (start, end) => {
           <h4 class="font-bold text-gray-900 text-sm truncate">{{ event.title }}</h4>
           <div class="flex items-center gap-2 mt-0.5">
             <span class="text-xs text-gray-500">{{ formatDateRange(event.start, event.end) }}</span>
-            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-            <span class="text-xs text-gray-500">{{ formatTime(event.start) }} - {{ formatTime(event.end || event.start) }}</span>
+            <span class="w-1 h-1 rounded-full bg-gray-300 shrink-0"></span>
+            <span class="text-xs text-gray-500">
+              <span>{{ formatTime(event.start) }}</span>
+              <br class="sm:hidden">
+              <span> - {{ formatTime(event.end || event.start) }}</span>
+            </span>
           </div>
           <div class="text-xs text-gray-500 mt-0.5 truncate">
             <span v-if="event.extendedProps?.project">

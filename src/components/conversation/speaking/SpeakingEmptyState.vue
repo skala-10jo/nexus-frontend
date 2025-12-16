@@ -12,15 +12,32 @@
       각 발화에 대한 맞춤 피드백을 제공합니다.
     </p>
 
-    <button
-      @click="$emit('upload')"
-      class="group flex items-center gap-2 md:gap-3 px-6 py-3 md:px-8 md:py-4 bg-black text-white rounded-2xl font-bold text-base md:text-lg hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-200"
-    >
-      <svg class="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-      </svg>
-      오디오 파일 업로드
-    </button>
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
+      <!-- Upload Button -->
+      <button
+        @click="$emit('upload')"
+        class="group flex items-center gap-2 md:gap-3 px-6 py-3 md:px-8 md:py-4 bg-black text-white rounded-2xl font-bold text-base md:text-lg hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-200"
+      >
+        <svg class="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        오디오 파일 업로드
+      </button>
+
+      <span class="text-gray-400 text-sm font-medium">또는</span>
+
+      <!-- Record Button -->
+      <button
+        @click="$emit('record')"
+        class="group flex items-center gap-2 md:gap-3 px-6 py-3 md:px-8 md:py-4 bg-red-500 text-white rounded-2xl font-bold text-base md:text-lg hover:bg-red-600 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-red-200"
+      >
+        <svg class="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+        녹음하기
+      </button>
+    </div>
 
     <!-- Features -->
     <div class="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-3xl w-full">
@@ -58,5 +75,5 @@
 </template>
 
 <script setup>
-defineEmits(['upload'])
+defineEmits(['upload', 'record'])
 </script>

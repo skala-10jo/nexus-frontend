@@ -30,7 +30,7 @@
             ref="fileInput"
             type="file"
             class="hidden"
-            accept=".wav,.mp3,.m4a,.ogg,.flac"
+            accept=".wav,.mp3,.m4a,.ogg,.flac,.webm"
             @change="handleFileSelect"
           />
 
@@ -198,7 +198,7 @@ function handleFileDrop(event) {
 function validateAndSetFile(file) {
   errorMessage.value = null
 
-  const allowedExtensions = ['.wav', '.mp3', '.m4a', '.ogg', '.flac']
+  const allowedExtensions = ['.wav', '.mp3', '.m4a', '.ogg', '.flac', '.webm']
   const ext = '.' + file.name.split('.').pop().toLowerCase()
 
   if (!allowedExtensions.includes(ext)) {

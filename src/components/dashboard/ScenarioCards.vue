@@ -169,16 +169,19 @@ const handleCheckIn = () => {
           </svg>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">시나리오</div>
-          <div class="font-bold text-gray-900 text-sm leading-snug mb-2 line-clamp-2">
+          <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">시나리오</div>
+          <div class="font-bold text-gray-900 text-sm leading-snug mb-1 truncate">
             {{ scenario.title }}
           </div>
-          <div class="text-xs font-medium text-gray-500 flex flex-wrap items-center gap-1">
-            <span>나:</span>
-            <span class="text-gray-900 font-semibold">{{ getRoles(scenario).user }}</span>
-            <span class="text-gray-300">|</span>
-            <span>상대:</span>
-            <span class="text-gray-900 font-semibold">{{ getRoles(scenario).assistant }}</span>
+          <div class="text-xs font-medium text-gray-500 space-y-0.5">
+            <div class="flex items-center gap-1 min-w-0">
+              <span class="shrink-0">나:</span>
+              <span class="text-gray-900 font-semibold truncate">{{ getRoles(scenario).user }}</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-0">
+              <span class="shrink-0">상대:</span>
+              <span class="text-gray-900 font-semibold truncate">{{ getRoles(scenario).assistant }}</span>
+            </div>
           </div>
         </div>
       </div>

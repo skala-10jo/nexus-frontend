@@ -11,8 +11,10 @@ export function useSpeakingTutor() {
   // ============ View State ============
   const currentView = ref('list') // 'list' | 'analyzing' | 'results' | 'learning'
   const showUploadModal = ref(false)
+  const showRecordModal = ref(false)
   const showMobileFeedback = ref(false)
   const uploadModalRef = ref(null)
+  const recordModalRef = ref(null)
 
   // ============ Analysis State ============
   const currentSessionId = ref(null)
@@ -471,12 +473,28 @@ export function useSpeakingTutor() {
     showUploadModal.value = false
   }
 
+  function openRecordModal() {
+    showRecordModal.value = true
+  }
+
+  function closeRecordModal() {
+    showRecordModal.value = false
+  }
+
+  function handleRecordUpload({ file, language }) {
+    // 녹음 모달에서 업로드 시 동일한 uploadFile 함수 사용
+    closeRecordModal()
+    uploadFile(file, language)
+  }
+
   return {
     // View State
     currentView,
     showUploadModal,
+    showRecordModal,
     showMobileFeedback,
     uploadModalRef,
+    recordModalRef,
 
     // Analysis State
     currentSessionId,
@@ -558,6 +576,9 @@ export function useSpeakingTutor() {
     clearError,
     closeMobileFeedback,
     openUploadModal,
-    closeUploadModal
+    closeUploadModal,
+    openRecordModal,
+    closeRecordModal,
+    handleRecordUpload
   }
 }

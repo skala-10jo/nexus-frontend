@@ -13,15 +13,26 @@
           </div>
           <p class="text-sm text-gray-500 font-medium mt-0.5">실제 회의를 분석하고, AI와 함께 더 나은 표현을 배워보세요!</p>
         </div>
-        <button
-          @click="openUploadModal"
-          class="hidden md:flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          오디오 업로드
-        </button>
+        <div class="hidden md:flex items-center gap-3">
+          <button
+            @click="openUploadModal"
+            class="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-900/20"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            오디오 업로드
+          </button>
+          <button
+            @click="openRecordModal"
+            class="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold hover:bg-red-600 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-red-200"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            녹음하기
+          </button>
+        </div>
       </div>
     </div>
 
@@ -57,16 +68,27 @@
     <div class="flex-1 flex overflow-hidden">
       <!-- List View -->
       <div v-if="currentView === 'list'" class="flex-1 overflow-y-auto bg-white p-4 md:p-8">
-        <!-- Mobile Upload Button -->
-        <button
-          @click="openUploadModal"
-          class="md:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold active:scale-95 transition-all shadow-lg shadow-gray-900/20"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          오디오 업로드
-        </button>
+        <!-- Mobile Buttons (세션이 있을 때만 표시) -->
+        <div v-if="sessions.length > 0" class="md:hidden flex gap-2 mb-4">
+          <button
+            @click="openUploadModal"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl text-sm font-bold active:scale-95 transition-all shadow-lg shadow-gray-900/20"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            업로드
+          </button>
+          <button
+            @click="openRecordModal"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-xl text-sm font-bold active:scale-95 transition-all shadow-lg shadow-red-200"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            녹음하기
+          </button>
+        </div>
 
         <!-- Loading State -->
         <div v-if="sessionsLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -85,7 +107,7 @@
         </div>
 
         <!-- Empty State -->
-        <SpeakingEmptyState v-else @upload="openUploadModal" />
+        <SpeakingEmptyState v-else @upload="openUploadModal" @record="openRecordModal" />
       </div>
 
       <!-- Analysis in Progress -->
@@ -166,6 +188,14 @@
       @upload="handleUpload"
     />
 
+    <!-- Record Modal -->
+    <AudioRecordModal
+      ref="recordModalRef"
+      :show="showRecordModal"
+      @close="closeRecordModal"
+      @upload="handleRecordUpload"
+    />
+
     <!-- Error Toast -->
     <div
       v-if="errorMessage"
@@ -195,6 +225,7 @@ import {
 
 // Components - Audio
 import AudioUploadModal from '@/components/conversation/audio/AudioUploadModal.vue'
+import AudioRecordModal from '@/components/conversation/audio/AudioRecordModal.vue'
 // Components - Speaking
 import SpeakingSessionCard from '@/components/conversation/speaking/SpeakingSessionCard.vue'
 import SpeakingEmptyState from '@/components/conversation/speaking/SpeakingEmptyState.vue'
@@ -211,8 +242,10 @@ const {
   // View State
   currentView,
   showUploadModal,
+  showRecordModal,
   showMobileFeedback,
   uploadModalRef,
+  recordModalRef,
 
   // Analysis State
   currentSession,
@@ -283,7 +316,10 @@ const {
   clearError,
   closeMobileFeedback,
   openUploadModal,
-  closeUploadModal
+  closeUploadModal,
+  openRecordModal,
+  closeRecordModal,
+  handleRecordUpload
 } = useSpeakingTutor()
 </script>
 
