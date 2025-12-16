@@ -222,14 +222,11 @@ const handleCheckIn = () => {
           </p>
 
           <button
+            v-if="!isCheckedIn"
             @click="handleCheckIn"
-            :disabled="isCheckedIn"
-            class="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold transition-all w-full flex items-center justify-center gap-1"
-            :class="isCheckedIn
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-105 active:scale-95'"
+            class="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold transition-all w-full flex items-center justify-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-105 active:scale-95"
           >
-            <span>{{ isCheckedIn ? '출석 완료' : '출check하기' }}</span>
+            <span>출check하기</span>
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -257,14 +254,11 @@ const handleCheckIn = () => {
           {{ isCheckedIn ? '출석 완료! 🌟' : '출석하세용 ⭐️'}}
         </p>
         <button
+          v-if="!isCheckedIn"
           @click="handleCheckIn"
-          :disabled="isCheckedIn"
-          class="px-6 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
-          :class="isCheckedIn
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'"
+          class="px-6 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100"
         >
-          <span>{{ isCheckedIn ? '출석 완료' : '출check하기' }}</span>
+          <span>출check하기</span>
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" />
           </svg>

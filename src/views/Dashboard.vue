@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full overflow-hidden bg-gray-50/50 p-4 md:p-6">
-    <div class="max-w-[1600px] mx-auto flex flex-col gap-4 h-full">
+  <div class="min-h-full overflow-y-auto lg:h-full lg:overflow-hidden bg-gray-50/50 p-4 md:p-6">
+    <div class="max-w-[1600px] mx-auto flex flex-col gap-4 lg:h-full">
 
       <!-- Mobile Layout -->
       <div class="flex flex-col gap-4 pb-16 lg:hidden">
@@ -47,16 +47,13 @@
               <div class="relative flex flex-col items-center">
                 <div class="speech-bubble text-xs font-semibold text-gray-700 text-center">
                   <span>{{ isCheckedIn ? '출석 완료! 🌟' : '출석하세용 ⭐️' }}</span>
-                  <!-- 출석 버튼 -->
+                  <!-- 출석 버튼 (출석 전에만 표시) -->
                   <button
+                    v-if="!isCheckedIn"
                     @click="handleCheckIn"
-                    :disabled="isCheckedIn"
-                    class="mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all w-full flex items-center justify-center gap-1"
-                    :class="isCheckedIn
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600 active:scale-95'"
+                    class="mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all w-full flex items-center justify-center gap-1 bg-blue-500 text-white hover:bg-blue-600 active:scale-95"
                   >
-                    <span>{{ isCheckedIn ? '완료' : '출check' }}</span>
+                    <span>출check</span>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
