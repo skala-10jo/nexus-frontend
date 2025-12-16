@@ -67,14 +67,18 @@ const conversationService = {
   },
 
   /**
-   * 메시지 번역
+   * 메시지 번역 (시나리오 맥락 기반)
+   * @param {string} scenarioId - 시나리오 ID (필수)
    * @param {string} message - 번역할 메시지
+   * @param {string} sourceLanguage - 원본 언어 (기본값: "en")
    * @param {string} targetLanguage - 목표 언어 (기본값: "ko")
    * @returns {Promise} 번역된 텍스트
    */
-  async translateMessage(message, targetLanguage = 'ko') {
+  async translateMessage(scenarioId, message, sourceLanguage = 'en', targetLanguage = 'ko') {
     const response = await pythonAPI.post('/conversations/translate', {
+      scenarioId,
       message,
+      sourceLanguage,
       targetLanguage
     })
     return response.data

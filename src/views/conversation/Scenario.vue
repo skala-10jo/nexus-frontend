@@ -169,6 +169,8 @@
       :show="showCreateDialog"
       :projects="projects"
       :upcoming-schedules="upcomingSchedules"
+      :initial-project-id="initialProjectIdForCreate"
+      :initial-schedule-id="initialScheduleIdForCreate"
       @close="showCreateDialog = false"
       @created="handleCreateScenario"
     />
@@ -250,6 +252,8 @@ const {
   filteredBusinessTemplates,
   isLoading,
   mobileFilterLabel,
+  initialProjectIdForCreate,
+  initialScheduleIdForCreate,
 
   // Business Templates Methods
   selectCategory,

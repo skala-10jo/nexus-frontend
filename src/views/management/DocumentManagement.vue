@@ -334,160 +334,75 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useDocumentStore } from '@/stores/documents';
-import { useIntersectionObserver } from '@/composables/useIntersectionObserver';
-import { useToast } from '@/composables/useToast';
+import { onMounted } from 'vue'
+import { useIntersectionObserver } from '@/composables/useIntersectionObserver'
+import { useDocumentManagement } from '@/composables/management/useDocumentManagement'
 
-import DocumentUploadZone from './components/DocumentUploadZone.vue';
-import DocumentDetailModal from './components/DocumentDetailModal.vue';
-import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import DocumentUploadZone from './components/DocumentUploadZone.vue'
+import DocumentDetailModal from './components/DocumentDetailModal.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
-const documentStore = useDocumentStore();
-const toast = useToast();
+// ========== Composables ==========
 
-// State
-const isUploadCollapsed = ref(true);
-const searchQuery = ref('');
-const filterFileType = ref('');
-const filterStatus = ref('');
-const sortOption = ref('uploadDate:desc');
-const viewMode = ref('list'); // Default to list view
-const selectedDocument = ref(null);
-const documentToDelete = ref(null);
-const loadMoreTrigger = ref(null);
+const {
+  // State
+  isUploadCollapsed,
+  searchQuery,
+  filterFileType,
+  sortOption,
+  viewMode,
+  selectedDocument,
+  documentToDelete,
+  loadMoreTrigger,
 
-// Computed
-const documents = computed(() => documentStore.documents);
-const loading = computed(() => documentStore.loading);
-const hasMore = computed(() => documentStore.hasMore);
-const totalDocuments = computed(() => documentStore.pagination.totalElements);
-const totalSize = computed(() => documentStore.totalSize);
-const recentUploadDate = computed(() => documentStore.recentUploadDate);
+  // Computed
+  documents,
+  loading,
+  hasMore,
+  totalDocuments,
+  totalSize,
+  recentUploadDate,
 
-// Methods
-const toggleUploadSection = () => {
-  isUploadCollapsed.value = !isUploadCollapsed.value;
-};
+  // UI Control
+  toggleUploadSection,
+  scrollToUpload,
 
-const handleUploadStart = () => {
-  isUploadCollapsed.value = false;
-};
+  // Upload Handlers
+  handleUploadStart,
+  handleUploadComplete,
+  handleUploadError,
 
-const handleUploadComplete = () => {
-  refreshDocuments();
-  toast.success('문서가 업로드되었습니다');
+  // Document CRUD
+  refreshDocuments,
+  openDocumentDetail,
+  downloadDocument,
+  confirmDelete,
+  handleDelete,
+  loadMore,
 
-  setTimeout(() => {
-    if (documents.value.length > 5) {
-      isUploadCollapsed.value = true;
-    }
-  }, 3000);
-};
+  // Utilities
+  getFileIcon,
+  formatFileSize,
+  formatDate,
 
-const handleUploadError = (error) => {
-  toast.error(`업로드 실패: ${error.message}`);
-};
+  // Watchers
+  setupFilterWatchers
+} = useDocumentManagement()
 
-const refreshDocuments = async () => {
-  try {
-    await documentStore.fetchDocuments({
-      search: searchQuery.value,
-      fileType: filterFileType.value,
-      status: filterStatus.value,
-      sort: sortOption.value,
-    });
-  } catch (error) {
-    toast.error('문서를 불러오는데 실패했습니다');
-  }
-};
+// ========== Infinite Scroll ==========
 
-const openDocumentDetail = async (document) => {
-  try {
-    const detail = await documentStore.getDocumentDetail(document.id);
-    selectedDocument.value = detail;
-  } catch (error) {
-    toast.error('문서 상세 정보를 불러오는데 실패했습니다');
-  }
-};
-
-const downloadDocument = async (document) => {
-  try {
-    await documentStore.downloadDocument(document.id, document.originalFilename);
-    toast.success('다운로드가 시작되었습니다');
-  } catch (error) {
-    toast.error('다운로드에 실패했습니다');
-  }
-};
-
-const confirmDelete = (document) => {
-  documentToDelete.value = document;
-};
-
-const handleDelete = async () => {
-  try {
-    await documentStore.deleteDocument(documentToDelete.value.id);
-    toast.success('문서가 삭제되었습니다');
-    documentToDelete.value = null;
-    selectedDocument.value = null;
-  } catch (error) {
-    toast.error('삭제에 실패했습니다');
-  }
-};
-
-const scrollToUpload = () => {
-  isUploadCollapsed.value = false;
-};
-
-const getFileIcon = (fileType) => {
-  if (!fileType) return '📄';
-  const type = fileType.toLowerCase();
-  if (type.includes('pdf')) return '📕';
-  if (type.includes('word') || type.includes('doc')) return '📘';
-  if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return '📗';
-  if (type.includes('image') || type.includes('png') || type.includes('jpg')) return '🖼️';
-  if (type.includes('zip') || type.includes('rar')) return '📦';
-  return '📄';
-};
-
-const formatFileSize = (bytes) => {
-  if (!bytes) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
-
-// Infinite scroll
 useIntersectionObserver(loadMoreTrigger, ([{ isIntersecting }]) => {
   if (isIntersecting && hasMore.value && !loading.value) {
-    documentStore.loadMore();
+    loadMore()
   }
-});
+})
 
-// Watch filters
-watch(
-  [searchQuery, filterFileType, filterStatus, sortOption],
-  () => {
-    refreshDocuments();
-  },
-  { debounce: 300 }
-);
+// ========== Lifecycle ==========
 
-// Initial load
 onMounted(() => {
-  refreshDocuments();
-});
+  refreshDocuments()
+  setupFilterWatchers()
+})
 </script>
 
 <style scoped>

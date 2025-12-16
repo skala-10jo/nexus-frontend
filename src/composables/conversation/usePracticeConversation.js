@@ -219,7 +219,12 @@ export function usePracticeConversation({
     translationLoading.value[index] = true
 
     try {
-      const response = await conversationService.translateMessage(msg.message, 'ko')
+      const response = await conversationService.translateMessage(
+        scenario.value?.id,
+        msg.message,
+        'en',  // AI 메시지는 영어
+        'ko'
+      )
       msg.translatedText = response.translatedText
       msg.showTranslation = true
     } catch (err) {

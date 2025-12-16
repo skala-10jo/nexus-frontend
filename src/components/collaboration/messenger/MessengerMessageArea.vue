@@ -47,7 +47,7 @@
         <div class="flex items-center gap-2 relative">
           <!-- Custom Dropdown Button -->
           <button
-            @click="showMobileDropdown = !showMobileDropdown"
+            @click="toggleMobileDropdown"
             class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 active:bg-gray-50"
           >
             <span>{{ getCurrentLanguageFlag }}</span>
@@ -82,7 +82,7 @@
           <!-- Backdrop to close dropdown -->
           <div
             v-if="showMobileDropdown"
-            @click="showMobileDropdown = false"
+            @click="closeMobileDropdown"
             class="fixed inset-0 z-40"
           ></div>
 
@@ -275,8 +275,18 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick, onMounted } from 'vue'
+/**
+ * Messenger Message Area 컴포넌트
+ *
+ * @description 메신저 메시지 영역 - 메시지 표시 및 입력
+ *
+ * 리팩토링 구조:
+ * - composable: useMessengerInput (textarea, dropdown 로직)
+ * - composable: useSlackAgent (번역 로직 - 기존)
+ */
+import { ref, watch, computed, nextTick } from 'vue'
 import { useSlackAgent } from '@/composables/collaboration/messenger/useSlackAgent'
+import { useMessengerInput } from '@/composables/collaboration/messenger/useMessengerInput'
 import { SUPPORTED_LANGUAGES } from '@/constants/languages'
 
 const props = defineProps({
@@ -316,7 +326,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:messageText', 'send', 'open-biz-guide'])
 
-// Slack Agent composable (translation features only)
+// ============================================
+// Composables
+// ============================================
+
+// Slack Agent (translation features)
 const {
   isTranslating,
   translateMessageToPreferred,
@@ -330,76 +344,34 @@ const {
   getLanguageLabel
 } = useSlackAgent()
 
-// Check if using temporary language
-const isUsingTemporary = computed(() => temporaryLanguage.value !== null)
+// Messenger Input (textarea, dropdown)
+const {
+  textareaRef,
+  messageContainer,
+  textareaHeight,
+  maxTextareaHeight,
+  isComposing,
+  showMobileDropdown,
+  handleTextareaInput: baseHandleTextareaInput,
+  handleCtrlEnterSend: baseHandleCtrlEnterSend,
+  scrollToBottom,
+  toggleMobileDropdown,
+  closeMobileDropdown,
+  decodeHtmlEntities,
+  setupMessageTextWatcher
+} = useMessengerInput({ emit })
 
-// Refs
-const messageContainer = ref(null)
-const textareaRef = ref(null)
-
-// Local state
+// ============================================
+// Local State
+// ============================================
 const selectedLanguage = ref(activeLanguage.value)
 const translatingMessageId = ref(null)
-const isComposing = ref(false)  // Korean IME composition state
-const showMobileDropdown = ref(false)  // Mobile custom dropdown state
 
-// Textarea auto-resize
-const textareaHeight = ref(44)  // Initial height (approx 1 line)
-const minTextareaHeight = 44
-const maxTextareaHeight = 100  // Approx 3 lines
+// ============================================
+// Computed
+// ============================================
+const isUsingTemporary = computed(() => temporaryLanguage.value !== null)
 
-// Auto-resize textarea based on content
-const adjustTextareaHeight = () => {
-  if (!textareaRef.value) return
-
-  // Reset height to auto to get the correct scrollHeight
-  textareaRef.value.style.height = 'auto'
-  const scrollHeight = textareaRef.value.scrollHeight
-
-  // Clamp between min and max
-  textareaHeight.value = Math.min(Math.max(scrollHeight, minTextareaHeight), maxTextareaHeight)
-  textareaRef.value.style.height = textareaHeight.value + 'px'
-}
-
-// Handle textarea input with auto-resize
-const handleTextareaInput = (event) => {
-  emit('update:messageText', event.target.value)
-  nextTick(() => adjustTextareaHeight())
-}
-
-// Reset textarea height when message is sent
-watch(() => props.messageText, (newVal) => {
-  if (!newVal) {
-    textareaHeight.value = minTextareaHeight
-    if (textareaRef.value) {
-      textareaRef.value.style.height = minTextareaHeight + 'px'
-    }
-  }
-})
-
-// Auto-scroll to bottom
-const scrollToBottom = async () => {
-  await nextTick()
-  if (messageContainer.value) {
-    messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-  }
-}
-
-// Watch for channel changes - scroll to bottom
-watch(() => props.selectedChannel, async (newChannel) => {
-  if (newChannel) {
-    await nextTick()
-    // Small delay to ensure messages are rendered
-    setTimeout(scrollToBottom, 100)
-  }
-})
-
-// Watch for new messages - scroll to bottom
-watch(() => props.messages.length, async () => {
-  await scrollToBottom()
-})
-
-// Computed for current language display
 const getCurrentLanguageFlag = computed(() => {
   const lang = SUPPORTED_LANGUAGES.find(l => l.code === selectedLanguage.value)
   return lang?.flag || '🌐'
@@ -410,59 +382,43 @@ const getCurrentLanguageLabel = computed(() => {
   return lang?.label || '언어 선택'
 })
 
-// Select language from custom dropdown
-const selectLanguage = (code) => {
+// ============================================
+// Methods - Textarea (wrapped)
+// ============================================
+function handleTextareaInput(event) {
+  baseHandleTextareaInput(event)
+}
+
+function handleCtrlEnterSend(event) {
+  baseHandleCtrlEnterSend(event)
+}
+
+// ============================================
+// Methods - Language
+// ============================================
+function selectLanguage(code) {
   selectedLanguage.value = code
   setTemporaryLanguage(code)
-  showMobileDropdown.value = false
+  closeMobileDropdown()
 }
 
-// Decode HTML entities from Slack messages
-const decodeHtmlEntities = (text) => {
-  if (!text) return ''
-  return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-}
-
-// Handle Ctrl+Enter send (prevents Korean IME duplicate character bug)
-const handleCtrlEnterSend = (event) => {
-  // If IME is composing (e.g., typing Korean), wait for composition to end
-  if (isComposing.value || event.isComposing) {
-    return
-  }
-  emit('send')
-}
-
-// Watch for active language changes from composable
-watch(activeLanguage, (newVal) => {
-  selectedLanguage.value = newVal
-})
-
-// Get message ID
-const getMessageId = (message) => {
-  return message.timestamp || message.ts || message.id
-}
-
-// Handle language change (temporary, session only)
-const handleLanguageChange = () => {
-  // Use temporary language change (not saved to DB)
+function handleLanguageChange() {
   setTemporaryLanguage(selectedLanguage.value)
 }
 
-// Handle reset to default language
-const handleResetLanguage = () => {
+function handleResetLanguage() {
   resetToDefaultLanguage()
   selectedLanguage.value = preferredLanguage.value
 }
 
-// Handle translate button click
-const handleTranslate = async (message) => {
+// ============================================
+// Methods - Translation
+// ============================================
+function getMessageId(message) {
+  return message.timestamp || message.ts || message.id
+}
+
+async function handleTranslate(message) {
   const messageId = getMessageId(message)
   translatingMessageId.value = messageId
   try {
@@ -473,4 +429,29 @@ const handleTranslate = async (message) => {
     translatingMessageId.value = null
   }
 }
+
+// ============================================
+// Watchers
+// ============================================
+
+// Message text reset watcher
+setupMessageTextWatcher(() => props.messageText)
+
+// Channel change - scroll to bottom
+watch(() => props.selectedChannel, async (newChannel) => {
+  if (newChannel) {
+    await nextTick()
+    setTimeout(scrollToBottom, 100)
+  }
+})
+
+// New messages - scroll to bottom
+watch(() => props.messages.length, async () => {
+  await scrollToBottom()
+})
+
+// Active language sync
+watch(activeLanguage, (newVal) => {
+  selectedLanguage.value = newVal
+})
 </script>

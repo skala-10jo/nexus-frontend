@@ -7,9 +7,13 @@
  * - 세션 기반 대화 (컨텍스트 유지)
  * - 초안 작성, 번역, 수정 요청 지원
  * - 대화 히스토리 표시
+ *
+ * 리팩토링 구조:
+ * - useSlackAgent: AI 챗봇 API 연동
+ * - useBizGuideChat: 채팅 UI 로직
  */
-import { ref, nextTick, watch, onMounted } from 'vue'
 import { useSlackAgent } from '@/composables/collaboration/messenger/useSlackAgent'
+import { useBizGuideChat } from '@/composables/collaboration/messenger/useBizGuideChat'
 
 const props = defineProps({
   /** 패널 표시 여부 */
@@ -29,88 +33,50 @@ const emit = defineEmits([
   'use-draft'
 ])
 
-// Composable
+// ============================================
+// Composables
+// ============================================
+
+// AI Agent 로직
 const {
   chatMessages,
   isChatLoading,
-  chatError,
   sendChat,
   startNewChat,
-  getLatestDraft,
-  preferredLanguage
+  getLatestDraft
 } = useSlackAgent()
 
-// Local State
-const messageInput = ref('')
-const chatContainer = ref(null)
-
-// Auto-scroll to bottom when new messages arrive
-watch(() => chatMessages.value.length, async () => {
-  await nextTick()
-  scrollToBottom()
+// 채팅 UI 로직
+const {
+  messageInput,
+  chatContainer,
+  quickActions,
+  handleSendMessage,
+  handleKeyDown,
+  handleQuickAction,
+  handleUseDraft,
+  getActionLabel,
+  setExampleMessage,
+  setupAutoScroll,
+  setupPanelOpenScroll
+} = useBizGuideChat({
+  sendChat,
+  isChatLoading,
+  chatMessages,
+  emit
 })
 
-// Scroll to bottom when panel opens
-watch(() => props.show, async (show) => {
-  if (show) {
-    await nextTick()
-    scrollToBottom()
-  }
-})
+// ============================================
+// Setup Watchers
+// ============================================
+setupAutoScroll()
+setupPanelOpenScroll(() => props.show)
 
-const scrollToBottom = () => {
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-  }
-}
-
-const handleSendMessage = async () => {
-  if (!messageInput.value.trim() || isChatLoading.value) return
-
-  const message = messageInput.value
-  messageInput.value = ''
-
-  try {
-    await sendChat(message)
-  } catch (error) {
-    console.error('Failed to send message:', error)
-  }
-}
-
-const handleKeyDown = (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    handleSendMessage()
-  }
-}
-
-const handleUseDraft = (draft) => {
-  emit('use-draft', draft)
-}
-
+// ============================================
+// Methods
+// ============================================
 const handleNewChat = async () => {
   await startNewChat()
-}
-
-// Quick action buttons
-const quickActions = [
-  { label: '영어로 번역', icon: '🌐', message: '영어로 번역해줘' },
-  { label: '더 격식있게', icon: '👔', message: '더 격식있게 수정해줘' },
-  { label: '더 간결하게', icon: '✂️', message: '더 간결하게 수정해줘' }
-]
-
-const handleQuickAction = (action) => {
-  messageInput.value = action.message
-  handleSendMessage()
-}
-
-// Get action type label (minimal)
-const getActionLabel = (actionType) => {
-  switch (actionType) {
-    case 'draft': return '초안'
-    case 'translate': return '번역 결과'
-    case 'refine': return '수정된 초안'
-    default: return '결과'
-  }
 }
 </script>
 
@@ -193,19 +159,19 @@ const getActionLabel = (actionType) => {
             <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">예시</p>
             <div class="space-y-1.5">
               <button
-                @click="messageInput = '회의 일정 조율 요청 메시지'"
+                @click="setExampleMessage('회의 일정 조율 요청 메시지')"
                 class="w-full text-left px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-purple-300 hover:bg-purple-50 transition"
               >
                 💼 회의 일정 조율 요청 메시지
               </button>
               <button
-                @click="messageInput = '프로젝트 진행 상황 보고'"
+                @click="setExampleMessage('프로젝트 진행 상황 보고')"
                 class="w-full text-left px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-purple-300 hover:bg-purple-50 transition"
               >
                 📊 프로젝트 진행 상황 보고
               </button>
               <button
-                @click="messageInput = '협조 요청하는 공손한 메시지'"
+                @click="setExampleMessage('협조 요청하는 공손한 메시지')"
                 class="w-full text-left px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-purple-300 hover:bg-purple-50 transition"
               >
                 🤝 협조 요청하는 공손한 메시지

@@ -34,7 +34,7 @@
     <!-- Workspace Section -->
     <div class="flex-1 bg-gray-50/50 p-4 md:p-6 overflow-y-auto md:overflow-hidden">
       <div class="h-auto md:h-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-[1920px] mx-auto">
-        
+
         <!-- Input Card -->
         <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col overflow-hidden group transition-all hover:shadow-md h-[300px] md:h-full">
           <div class="flex-1 relative p-8">
@@ -44,8 +44,8 @@
               :placeholder="inputPlaceholder"
               spellcheck="false"
             ></textarea>
-            
-            <button 
+
+            <button
               v-if="sourceText"
               @click="handleClear"
               class="absolute top-6 right-6 p-2 text-gray-300 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
@@ -60,14 +60,14 @@
               {{ sourceText.length }} / 5000 CHARS
             </div>
             <div class="flex gap-3">
-              <button 
+              <button
                 @click="handlePaste"
                 class="px-4 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all flex items-center gap-2"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                 Paste
               </button>
-              <button 
+              <button
                 @click="handleTranslate"
                 :disabled="!sourceText || isTranslating"
                 class="px-8 py-2.5 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-105 transition-all shadow-lg shadow-gray-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
@@ -131,7 +131,7 @@
 
           <!-- Output Action Bar -->
           <div class="h-20 px-8 border-t border-gray-50 flex justify-end items-center gap-3 bg-white flex-shrink-0">
-            <button 
+            <button
               v-if="translatedText"
               @click="handleCopy"
               class="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all flex items-center gap-2 shadow-sm"
@@ -139,7 +139,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
               Copy
             </button>
-            <button 
+            <button
               v-if="translatedText"
               @click="handleExport"
               class="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all flex items-center gap-2 shadow-sm"
@@ -154,15 +154,15 @@
     </div>
 
     <!-- Context Panel (Floating) -->
-    <div 
+    <div
       v-if="selectedProjectId && translationResult"
       class="absolute bottom-12 left-12 z-30"
     >
-      <div 
+      <div
         class="bg-white rounded-2xl shadow-xl border border-gray-100 transition-all duration-300 overflow-hidden"
         :class="contextExpanded ? 'w-96' : 'w-auto'"
       >
-        <button 
+        <button
           @click="contextExpanded = !contextExpanded"
           class="flex items-center gap-3 px-4 py-3 w-full hover:bg-gray-50 transition-colors"
         >
@@ -170,7 +170,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <span class="font-bold text-sm text-gray-800 whitespace-nowrap">Context Details</span>
-          <svg 
+          <svg
             class="w-4 h-4 text-gray-400 ml-auto transition-transform duration-300"
             :class="contextExpanded ? 'rotate-180' : ''"
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -192,7 +192,7 @@
     <TermDetailModal
       v-if="selectedTerm"
       :term="selectedTerm"
-      @close="selectedTerm = null"
+      @close="closeTermModal"
     />
 
     <!-- Toast Notifications -->
@@ -207,190 +207,63 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+/**
+ * 텍스트 번역 페이지
+ *
+ * @description 텍스트 번역을 위한 메인 페이지
+ *
+ * 리팩토링 구조:
+ * - composable: useTextTranslation (비즈니스 로직 분리)
+ * - components: 재사용 가능한 UI 컴포넌트들
+ */
+import { onMounted } from 'vue'
 import ProjectSelector from '@/components/translation/ProjectSelector.vue'
 import LanguageSwitcher from '@/components/translation/LanguageSwitcher.vue'
 import TranslatedText from '@/components/translation/TranslatedText.vue'
 import DetectedTermsBar from '@/components/translation/DetectedTermsBar.vue'
 import TermDetailModal from '@/components/translation/TermDetailModal.vue'
-import { translateText } from '@/services/translationService'
-import { getUserProjects } from '@/services/projectService'
+import { useTextTranslation } from '@/composables/translation/useTextTranslation'
 
-const router = useRouter()
+// ============================================
+// Composable Setup
+// ============================================
+const {
+  // State
+  sourceText,
+  translatedText,
+  sourceLang,
+  targetLang,
+  selectedProjectId,
+  projects,
+  contextInfo,
+  detectedTerms,
+  translationResult,
+  isTranslating,
+  contextExpanded,
+  selectedTerm,
+  toast,
 
-// State
-const sourceText = ref('')
-const translatedText = ref('')
-const sourceLang = ref('ko')
-const targetLang = ref('en')
-const selectedProjectId = ref(null)
-const projects = ref([])
-const contextInfo = ref(null)
-const detectedTerms = ref([])
-const translationResult = ref(null)
-const isTranslating = ref(false)
-const contextExpanded = ref(false)
-const selectedTerm = ref(null)
+  // Computed
+  inputPlaceholder,
 
-// Toast
-const toast = ref({
-  show: false,
-  message: '',
-  type: 'success'
-})
+  // Methods
+  onProjectChange,
+  handleTranslate,
+  handleClear,
+  onLanguageSwap,
+  handlePaste,
+  handleCopy,
+  handleExport,
+  handleTermClick,
+  closeTermModal,
+  initialize
+} = useTextTranslation()
 
-// Computed
-const inputPlaceholder = computed(() => {
-  if (selectedProjectId.value) {
-    return 'Translating with project context. Enter text...'
-  }
-  return 'Enter text to translate...'
-})
-
-// Methods
-async function loadProjects() {
-  try {
-    const response = await getUserProjects()
-    projects.value = response.data.data || []
-  } catch (error) {
-    console.error('Failed to load projects:', error)
-    showToast('Failed to load projects.', 'error')
-  }
-}
-
-async function handleTranslate() {
-  if (!sourceText.value.trim()) {
-    showToast('Please enter text to translate.', 'error')
-    return
-  }
-
-  if (sourceLang.value === targetLang.value) {
-    showToast('Source and target languages are the same.', 'error')
-    return
-  }
-
-  isTranslating.value = true
-  translatedText.value = ''
-  detectedTerms.value = []
-  translationResult.value = null
-
-  try {
-    // Get user ID from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const userId = user.id
-
-    if (!userId) {
-      showToast('Login required.', 'error')
-      router.push('/login')
-      return
-    }
-
-    const result = await translateText({
-      text: sourceText.value,
-      sourceLang: sourceLang.value,
-      targetLang: targetLang.value,
-      userId,
-      projectId: selectedProjectId.value
-    })
-
-    translatedText.value = result.translatedText
-    detectedTerms.value = result.detectedTerms || []
-    translationResult.value = {
-      contextUsed: result.contextUsed,
-      contextSummary: result.contextSummary,
-      termsCount: result.termsCount || 0
-    }
-
-    showToast('Translation completed!', 'success')
-  } catch (error) {
-    console.error('Translation error:', error)
-    const errorMessage = error.response?.data?.detail || error.message || 'An error occurred during translation.'
-    showToast(errorMessage, 'error')
-  } finally {
-    isTranslating.value = false
-  }
-}
-
-function handleClear() {
-  sourceText.value = ''
-  translatedText.value = ''
-  detectedTerms.value = []
-  translationResult.value = null
-}
-
-async function handlePaste() {
-  try {
-    const text = await navigator.clipboard.readText()
-    sourceText.value += text
-  } catch (error) {
-    console.error('Failed to read clipboard:', error)
-    showToast('Could not read clipboard.', 'error')
-  }
-}
-
-async function handleCopy() {
-  try {
-    await navigator.clipboard.writeText(translatedText.value)
-    showToast('Copied to clipboard!', 'success')
-  } catch (error) {
-    console.error('Failed to copy:', error)
-    showToast('Failed to copy.', 'error')
-  }
-}
-
-function handleExport() {
-  const blob = new Blob([translatedText.value], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `translation-${Date.now()}.txt`
-  a.click()
-  URL.revokeObjectURL(url)
-  showToast('Translation exported!', 'success')
-}
-
-function onProjectChange(projectId) {
-  if (projectId) {
-    const project = projects.value.find(p => p.id === projectId)
-    if (project) {
-      contextInfo.value = {
-        documentsCount: project.documentCount || 0,
-        termsCount: project.termCount || 0
-      }
-    }
-  } else {
-    contextInfo.value = null
-  }
-}
-
-function onLanguageSwap() {
-  if (translatedText.value && sourceText.value) {
-    const temp = sourceText.value
-    sourceText.value = translatedText.value
-    translatedText.value = temp
-    detectedTerms.value = []
-  }
-}
-
-function handleTermClick(term) {
-  selectedTerm.value = term
-}
-
-function showToast(message, type = 'success') {
-  toast.value = {
-    show: true,
-    message,
-    type
-  }
-
-  setTimeout(() => {
-    toast.value.show = false
-  }, 3000)
-}
-
+// ============================================
+// Lifecycle
+// ============================================
 onMounted(() => {
-  loadProjects()
+  initialize()
 })
 </script>
 

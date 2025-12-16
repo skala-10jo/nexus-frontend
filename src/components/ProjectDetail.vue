@@ -202,13 +202,6 @@
     <!-- Footer -->
     <div class="flex-shrink-0 border-t px-6 py-4 flex justify-end gap-3 bg-white sticky bottom-0 z-10">
       <button
-        v-if="showCloseButton"
-        @click="$emit('close')"
-        class="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
-      >
-        닫기
-      </button>
-      <button
         @click="$emit('edit', project)"
         class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm shadow-blue-200"
       >

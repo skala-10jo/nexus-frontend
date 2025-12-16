@@ -46,11 +46,12 @@
     <div class="space-y-2">
       <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">설명 (요약)</label>
       <textarea
+        ref="descriptionTextarea"
         :value="formData.description"
-        @input="updateField('description', $event.target.value)"
-        rows="2"
+        @input="handleDescriptionInput"
         placeholder="카드에 표시될 간단한 설명을 입력하세요..."
         class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all resize-none"
+        style="min-height: 80px; overflow-y: hidden;"
       ></textarea>
     </div>
 
@@ -58,11 +59,12 @@
     <div class="space-y-2">
       <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">시나리오 내용 (전체)</label>
       <textarea
+        ref="scenarioTextarea"
         :value="formData.scenarioText"
-        @input="updateField('scenarioText', $event.target.value)"
-        rows="6"
+        @input="handleScenarioInput"
         placeholder="연습할 전체 시나리오 내용을 입력하세요..."
         class="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-900 focus:ring-0 rounded-xl font-medium text-gray-900 transition-all resize-none"
+        style="min-height: 120px; overflow-y: hidden;"
       ></textarea>
     </div>
 
@@ -105,6 +107,8 @@
 </template>
 
 <script setup>
+import { ref, watch, nextTick } from 'vue'
+
 const props = defineProps({
   formData: {
     type: Object,
@@ -121,6 +125,39 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:formData', 'update:userRequest', 'generate'])
+
+// Textarea refs
+const descriptionTextarea = ref(null)
+const scenarioTextarea = ref(null)
+
+// Auto-resize function
+const autoResize = (el) => {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.max(el.scrollHeight, 80) + 'px'
+}
+
+// Input handlers with auto-resize
+const handleDescriptionInput = (event) => {
+  updateField('description', event.target.value)
+  autoResize(event.target)
+}
+
+const handleScenarioInput = (event) => {
+  updateField('scenarioText', event.target.value)
+  autoResize(event.target)
+}
+
+// Watch for external value changes (e.g., AI generation)
+watch(() => props.formData.description, async () => {
+  await nextTick()
+  autoResize(descriptionTextarea.value)
+})
+
+watch(() => props.formData.scenarioText, async () => {
+  await nextTick()
+  autoResize(scenarioTextarea.value)
+})
 
 function updateField(field, value) {
   emit('update:formData', {

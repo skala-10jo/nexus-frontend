@@ -7,7 +7,10 @@
  */
 import axios from 'axios'
 
-const PYTHON_API_URL = 'http://localhost:8000/api/ai'
+// Python AI Backend URL
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : 'http://localhost:8000/api/ai'
 
 // Avatar API용 axios 인스턴스
 const avatarAPI = axios.create({

@@ -1,8 +1,13 @@
 import axios from 'axios'
 
+// Python AI Backend URL
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : 'http://localhost:8000/api/ai'
+
 // Python AI 백엔드용 별도 axios 인스턴스
 const pythonAPI = axios.create({
-  baseURL: 'http://localhost:8000/api/ai',
+  baseURL: PYTHON_API_URL,
   headers: {
     'Content-Type': 'application/json'
   }

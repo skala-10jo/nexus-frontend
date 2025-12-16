@@ -126,6 +126,14 @@ const props = defineProps({
   upcomingSchedules: {
     type: Array,
     default: () => []
+  },
+  initialProjectId: {
+    type: String,
+    default: null
+  },
+  initialScheduleId: {
+    type: String,
+    default: null
   }
 })
 
