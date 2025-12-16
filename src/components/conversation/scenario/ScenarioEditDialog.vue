@@ -273,6 +273,7 @@ function handleSave() {
     scenarioText: localScenario.value.scenarioText,
     language: localScenario.value.language,
     difficulty: localScenario.value.difficulty,
+    category: localScenario.value.category || 'general',
     roles: localScenario.value.roles,
     requiredTerminology: localScenario.value.requiredTerminologyText
       ? localScenario.value.requiredTerminologyText.split(',').map(t => t.trim()).filter(t => t)

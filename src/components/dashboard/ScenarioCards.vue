@@ -134,7 +134,7 @@ const handleCheckIn = () => {
     </div>
 
     <!-- Content Section -->
-    <div v-if="loadingScenarios" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
+    <div v-if="loadingScenarios" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
       <!-- Loading Skeleton -->
       <div v-for="i in 3" :key="i" class="bg-white rounded-2xl p-4 border border-gray-200 flex items-center gap-3 animate-pulse">
         <div class="w-12 h-12 rounded-full bg-gray-200 shrink-0"></div>
@@ -144,11 +144,11 @@ const handleCheckIn = () => {
         </div>
       </div>
     </div>
-    <div v-else-if="hasSchedule" class="grid grid-cols-1 md:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
+    <div v-else-if="hasSchedule" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 z-10 pr-0 md:pr-40 mb-2">
       <!-- Scenario Create CTA -->
       <div
         @click="goToScenario(scheduleMessage.link?.query?.scheduleId)"
-        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center justify-between group"
+        class="bg-white rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
       >
         <div class="flex flex-col min-w-0">
           <span class="text-xs font-semibold text-gray-500 mb-1 truncate">{{ scheduleMessage.eventTitle || '시나리오' }}</span>
@@ -161,7 +161,7 @@ const handleCheckIn = () => {
         v-for="scenario in practiceScenarios"
         :key="scenario.id"
         @click="startPractice(scenario.id)"
-        class="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-center gap-3 group"
+        class="bg-white rounded-2xl p-4 cursor-pointer hover:shadow-md hover:scale-102 transition-all duration-300 border border-gray-200 flex items-start sm:items-center gap-3 group"
       >
         <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 transition-colors group-hover:bg-blue-200">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,8 +170,8 @@ const handleCheckIn = () => {
         </div>
         <div class="flex-1 min-w-0">
           <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">시나리오</div>
-          <div class="font-bold text-gray-900 text-sm leading-snug space-y-0.5 mb-2">
-            <p v-for="(line, idx) in getTitleLines(scenario.title)" :key="idx">{{ line }}</p>
+          <div class="font-bold text-gray-900 text-sm leading-snug mb-2 line-clamp-2">
+            {{ scenario.title }}
           </div>
           <div class="text-xs font-medium text-gray-500 flex flex-wrap items-center gap-1">
             <span>나:</span>
@@ -213,7 +213,7 @@ const handleCheckIn = () => {
     </div>
 
     <!-- Right Bottom: Character & Attendance Speech Bubble -->
-    <div class="absolute bottom-6 right-6 flex flex-col items-end gap-3 z-20">
+    <div class="hidden md:flex md:flex-col md:items-end gap-3 z-20 md:absolute md:bottom-6 md:right-6">
       <!-- Attendance Speech Bubble (위로) -->
       <div class="relative group">
         <div class="bg-white text-gray-800 px-4 py-3 md:px-6 md:py-4 rounded-2xl rounded-br-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 border-b-4 border-b-gray-200 flex flex-col items-center gap-2 md:gap-3 min-w-[120px] md:min-w-[140px] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)]">
@@ -222,12 +222,17 @@ const handleCheckIn = () => {
           </p>
 
           <button
-            v-if="!isCheckedIn"
             @click="handleCheckIn"
-            class="bg-blue-50 text-blue-600 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold hover:bg-blue-100 hover:scale-105 active:scale-95 transition-all w-full flex items-center justify-center gap-1"
+            :disabled="isCheckedIn"
+            class="px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold transition-all w-full flex items-center justify-center gap-1"
+            :class="isCheckedIn
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-105 active:scale-95'"
           >
-            <span>출check</span>
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" /></svg>
+            <span>{{ isCheckedIn ? '출석 완료' : '출check하기' }}</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
 
           <!-- Tail (아래 오른쪽으로) -->
@@ -241,6 +246,35 @@ const handleCheckIn = () => {
           src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
           alt="User Avatar"
           class="w-full h-full object-contain transform hover:scale-110 transition-transform duration-300"
+        />
+      </div>
+    </div>
+
+    <!-- Mobile Avatar & Check-in -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-4 md:hidden w-full">
+      <div class="bg-white text-gray-800 px-5 py-4 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center gap-2">
+        <p class="text-sm font-bold flex items-center gap-2 text-gray-700">
+          {{ isCheckedIn ? '출석 완료! 🌟' : '출석하세용 ⭐️'}}
+        </p>
+        <button
+          @click="handleCheckIn"
+          :disabled="isCheckedIn"
+          class="px-6 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+          :class="isCheckedIn
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'"
+        >
+          <span>{{ isCheckedIn ? '출석 완료' : '출check하기' }}</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <div class="w-20 h-20 relative filter drop-shadow-2xl">
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist.png"
+          alt="User Avatar"
+          class="w-full h-full object-contain"
         />
       </div>
     </div>

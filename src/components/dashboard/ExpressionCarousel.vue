@@ -119,9 +119,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative overflow-hidden">
+  <div class="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 relative overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3.5">
       <h3 class="text-base md:text-lg font-bold text-gray-800">오늘의 표현</h3>
       <button 
         @click="goToExpression"
@@ -139,10 +139,10 @@ onBeforeUnmount(() => {
       <div class="transition-all duration-500 ease-in-out">
         <div class="space-y-3 select-none">
           <!-- 표현 -->
-          <div class="bg-gray-50 rounded-xl p-4 select-none text-center">
-            <p class="text-lg md:text-xl font-bold mb-1 select-none">
+          <div class="bg-gray-50 rounded-xl p-3 select-none text-center">
+            <p class="text-lg md:text-xl font-bold mb-1 select-none flex flex-col items-center gap-1 md:flex-row md:justify-center md:gap-2 md:text-left">
               <span class="text-blue-700">{{ currentExpression.expression }}</span>
-              <span class="text-gray-900 text-base md:text-lg md:inline md:ml-2">'{{ currentExpression.meaning }}'</span>
+              <span class="text-gray-900 text-base md:text-lg md:inline-block md:ml-1">'{{ currentExpression.meaning }}'</span>
             </p>
           </div>
 
@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Carousel Indicators -->
-      <div v-if="expressions.length > 1" class="flex justify-center gap-1.5 mt-4">
+      <div v-if="expressions.length > 1" class="flex justify-center gap-1.5 mt-3.5">
         <button
           v-for="(_, index) in expressions"
           :key="index"
