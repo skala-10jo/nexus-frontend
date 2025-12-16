@@ -5,9 +5,12 @@
  */
 import axios from 'axios'
 
+// Python Backend URL
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000'
+
 // Python 백엔드용 axios 인스턴스 (Azure Speech 토큰 발급)
 const pythonApi = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: PYTHON_API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

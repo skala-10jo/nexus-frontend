@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const PYTHON_API_URL = 'http://localhost:8000/api/ai';
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : 'http://localhost:8000/api/ai';
 
 // Create axios instance for Java backend
 const api = axios.create({

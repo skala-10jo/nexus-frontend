@@ -1,6 +1,7 @@
 import api from '@/services/api'
 
-const PYTHON_API_URL = 'http://localhost:8000'
+// Python Backend URL
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000'
 
 /**
  * Mail API Service

@@ -35,6 +35,8 @@ jobs:
       - name: Create production .env
         run: |
           echo "VITE_API_URL=${{ secrets.API_BASE_URL }}" > .env
+          echo "VITE_PYTHON_API_URL=${{ secrets.PYTHON_API_URL }}" >> .env
+          echo "VITE_AI_API_URL=${{ secrets.PYTHON_API_URL }}" >> .env
 
       - name: Build Vue.js project
         run: npm run build
