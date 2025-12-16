@@ -83,6 +83,23 @@ export function useScenarioPage() {
     }
   })
 
+  // 시나리오 생성 팝업용 초기값 (필터에서 선택된 첫 번째 항목)
+  const initialScheduleIdForCreate = computed(() => {
+    return selectedSchedules.value.length > 0 ? selectedSchedules.value[0].id : null
+  })
+
+  const initialProjectIdForCreate = computed(() => {
+    // 일정이 선택되어 있으면 해당 일정의 프로젝트 사용
+    if (selectedSchedules.value.length > 0) {
+      return selectedSchedules.value[0].projectId || null
+    }
+    // 프로젝트만 선택되어 있으면 그 프로젝트 사용
+    if (selectedProjects.value.length > 0) {
+      return selectedProjects.value[0].id
+    }
+    return null
+  })
+
   // ============================================
   // Business Templates Methods
   // ============================================
@@ -382,6 +399,8 @@ export function useScenarioPage() {
     filteredBusinessTemplates,
     isLoading,
     mobileFilterLabel,
+    initialProjectIdForCreate,
+    initialScheduleIdForCreate,
 
     // Business Templates Methods
     selectCategory,

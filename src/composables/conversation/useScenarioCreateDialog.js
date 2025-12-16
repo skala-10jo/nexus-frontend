@@ -91,7 +91,15 @@ export function useScenarioCreateDialog(props, emit) {
   // Watchers
   // ============================================
   watch(() => props.show, (newVal) => {
-    if (!newVal) {
+    if (newVal) {
+      // 팝업 열릴 때 초기값 설정
+      if (props.initialProjectId) {
+        selectedProjectId.value = props.initialProjectId
+      }
+      if (props.initialScheduleId) {
+        selectedScheduleId.value = props.initialScheduleId
+      }
+    } else {
       resetForm()
     }
   })

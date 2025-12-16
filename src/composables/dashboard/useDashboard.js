@@ -270,9 +270,18 @@ export function useDashboard() {
 
   /**
    * 시나리오 연습 페이지로 이동
+   * @param {Object|string} eventOrScheduleId - 이벤트 객체 또는 scheduleId
    */
-  const goToPractice = (event) => {
-    router.push('/conversation/scenario')
+  const goToPractice = (eventOrScheduleId) => {
+    const scheduleId = typeof eventOrScheduleId === 'object'
+      ? eventOrScheduleId?.id
+      : eventOrScheduleId
+
+    if (scheduleId) {
+      router.push({ path: '/conversation/scenario', query: { scheduleId } })
+    } else {
+      router.push('/conversation/scenario')
+    }
   }
 
   /**
