@@ -45,7 +45,7 @@ const formatDateRange = (start, end) => {
 </script>
 
 <template>
-  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col max-h-[400px] overflow-hidden">
+  <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col max-h-[430px] overflow-hidden">
     <div class="flex items-center justify-between mb-3 shrink-0">
       <h3 class="font-bold text-gray-900">
         {{ selectedDate ? 'Tasks for ' + formatMonth(selectedDate) + ' ' + formatDay(selectedDate) : 'Upcoming Tasks' }}
