@@ -11,8 +11,8 @@
  * @props clickable - 스텝 클릭 가능 여부 (default: false)
  * @emits step-click - 스텝 클릭 시 발생 (stepIndex)
  */
-import { computed } from 'vue'
-import { CheckCircleIcon, PlayCircleIcon, LightBulbIcon } from '@heroicons/vue/24/solid'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { CheckCircleIcon, PlayCircleIcon, LightBulbIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/solid'
 
 const props = defineProps({
   /** 스텝 목록 */
@@ -39,6 +39,19 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['step-click'])
+
+// ============================================
+// Refs
+// ============================================
+const scrollContainer = ref(null)
+const stepRefs = ref([])
+
+// ============================================
+// Scroll State
+// ============================================
+const canScrollLeft = ref(false)
+const canScrollRight = ref(false)
+const isOverflowing = ref(false)
 
 /**
  * 스텝 상태 계산: 'complete' | 'active' | 'upcoming'
@@ -73,6 +86,147 @@ const handleStepClick = (index) => {
     emit('step-click', index)
   }
 }
+
+// ============================================
+// Scroll Functions
+// ============================================
+
+/**
+ * 스크롤 상태 업데이트 (화살표 표시 여부)
+ */
+const updateScrollState = () => {
+  if (!scrollContainer.value) return
+
+  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
+  const threshold = 5 // 스크롤 감지 임계값
+
+  isOverflowing.value = scrollWidth > clientWidth + threshold
+  canScrollLeft.value = scrollLeft > threshold
+  canScrollRight.value = scrollLeft < scrollWidth - clientWidth - threshold
+}
+
+/**
+ * 왼쪽으로 스크롤
+ */
+const scrollLeft = () => {
+  if (!scrollContainer.value) return
+  scrollContainer.value.scrollBy({
+    left: -150,
+    behavior: 'smooth'
+  })
+}
+
+/**
+ * 오른쪽으로 스크롤
+ */
+const scrollRight = () => {
+  if (!scrollContainer.value) return
+  scrollContainer.value.scrollBy({
+    left: 150,
+    behavior: 'smooth'
+  })
+}
+
+/**
+ * 특정 스텝이 보이도록 자동 스크롤
+ */
+const scrollToStep = (index) => {
+  if (!scrollContainer.value || !stepRefs.value[index]) return
+
+  const container = scrollContainer.value
+  const stepElement = stepRefs.value[index]
+
+  if (!stepElement) return
+
+  const containerRect = container.getBoundingClientRect()
+  const stepRect = stepElement.getBoundingClientRect()
+
+  // 스텝이 컨테이너 영역 밖에 있으면 스크롤
+  if (stepRect.left < containerRect.left || stepRect.right > containerRect.right) {
+    const scrollOffset = stepRect.left - containerRect.left - (containerRect.width / 2) + (stepRect.width / 2)
+    container.scrollBy({
+      left: scrollOffset,
+      behavior: 'smooth'
+    })
+  }
+}
+
+/**
+ * stepRef 설정 헬퍼
+ */
+const setStepRef = (el, index) => {
+  if (el) {
+    stepRefs.value[index] = el
+  }
+}
+
+// ============================================
+// Watchers
+// ============================================
+
+// currentStepIndex 변경 시 해당 스텝으로 자동 스크롤
+watch(
+  () => props.currentStepIndex,
+  async (newIndex) => {
+    await nextTick()
+    scrollToStep(newIndex)
+    updateScrollState()
+  }
+)
+
+// steps 변경 시 스크롤 상태 업데이트 + 현재 스텝으로 자동 스크롤
+watch(
+  () => props.steps,
+  async (newSteps) => {
+    await nextTick()
+    updateScrollState()
+    // steps가 로드되면 현재 스텝으로 자동 스크롤 (캐시된 진행도 복원 시)
+    if (newSteps && newSteps.length > 0) {
+      await nextTick() // stepRefs가 설정될 때까지 대기
+      scrollToStep(props.currentStepIndex)
+    }
+  },
+  { deep: true }
+)
+
+// ============================================
+// Lifecycle
+// ============================================
+
+let resizeObserver = null
+
+onMounted(async () => {
+  await nextTick()
+  updateScrollState()
+
+  // 초기 로드 시 현재 스텝으로 스크롤 (캐시된 진행도가 있을 경우)
+  if (props.steps.length > 0 && props.currentStepIndex > 0) {
+    await nextTick()
+    scrollToStep(props.currentStepIndex)
+  }
+
+  // 컨테이너 크기 변화 감지
+  if (scrollContainer.value && window.ResizeObserver) {
+    resizeObserver = new ResizeObserver(() => {
+      updateScrollState()
+    })
+    resizeObserver.observe(scrollContainer.value)
+  }
+
+  // 스크롤 이벤트 리스너
+  if (scrollContainer.value) {
+    scrollContainer.value.addEventListener('scroll', updateScrollState)
+  }
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
+  if (scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', updateScrollState)
+  }
+})
 </script>
 
 <template>
@@ -87,10 +241,29 @@ const handleStepClick = (index) => {
     <div v-else>
       <!-- 상단: 스텝 인디케이터들 -->
       <div class="px-4 md:px-6 py-3 flex items-center w-full">
-        <div class="flex items-center w-full overflow-x-auto scrollbar-hide">
+        <!-- 왼쪽 화살표 버튼 -->
+        <button
+          v-if="isOverflowing"
+          @click.stop="scrollLeft"
+          class="shrink-0 p-1 mr-2 rounded-full transition-all duration-200"
+          :class="canScrollLeft
+            ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+            : 'text-gray-300 cursor-not-allowed'"
+          :disabled="!canScrollLeft"
+          aria-label="이전 스텝 보기"
+        >
+          <ChevronLeftIcon class="w-5 h-5" />
+        </button>
+
+        <!-- 스크롤 가능한 스텝 컨테이너 -->
+        <div
+          ref="scrollContainer"
+          class="flex items-center flex-1 overflow-x-auto scrollbar-hide"
+        >
           <template v-for="(step, index) in steps" :key="step.id || index">
             <!-- 스텝 아이템 -->
             <div
+              :ref="(el) => setStepRef(el, index)"
               class="flex items-center shrink-0 transition-all duration-300"
               :class="[
                 clickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
@@ -150,6 +323,20 @@ const handleStepClick = (index) => {
             </div>
           </template>
         </div>
+
+        <!-- 오른쪽 화살표 버튼 -->
+        <button
+          v-if="isOverflowing"
+          @click.stop="scrollRight"
+          class="shrink-0 p-1 ml-2 rounded-full transition-all duration-200"
+          :class="canScrollRight
+            ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+            : 'text-gray-300 cursor-not-allowed'"
+          :disabled="!canScrollRight"
+          aria-label="다음 스텝 보기"
+        >
+          <ChevronRightIcon class="w-5 h-5" />
+        </button>
 
         <!-- 진행률 표시 -->
         <div class="hidden md:flex items-center ml-4 pl-4 border-l border-gray-200 shrink-0">

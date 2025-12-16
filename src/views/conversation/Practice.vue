@@ -93,6 +93,7 @@
         :user-messages="conversation.userMessages.value"
         :selected-message-index="feedback.selectedMessageIndex.value"
         :selected-message-feedback="feedback.selectedMessageFeedback.value"
+        :all-used-terms="conversation.detectedTerms.value"
         :is-mobile-open="showMobileFeedback"
         @select-message="feedback.selectMessage"
         @close="showMobileFeedback = false"
@@ -141,6 +142,9 @@ import { usePracticeVoice } from '@/composables/conversation/usePracticeVoice'
 import { usePracticeFeedback } from '@/composables/conversation/usePracticeFeedback'
 import { usePracticeTTS } from '@/composables/conversation/usePracticeTTS'
 
+// Stores
+import { usePracticeProgressStore } from '@/stores/practiceProgress'
+
 // Services
 import conversationService from '@/services/conversationService'
 
@@ -159,25 +163,31 @@ const {
   clearError
 } = usePractice()
 
+// Progress Store (세션 동안 진행도 캐시)
+const progressStore = usePracticeProgressStore()
+
 // 임시 userInput ref (voice와 conversation 연결용)
 const sharedUserInput = ref('')
 
 // ============================================
 // Stepper State (시나리오 단계 관리)
 // 주의: usePracticeConversation보다 먼저 정의되어야 함
+// Store에서 캐시된 진행도를 복원하여 페이지 재진입 시 유지
 // ============================================
 
 /**
  * 현재 진행 중인 스텝 인덱스 (0-based)
  * AI가 현재 스텝 완료를 판단하면 자동으로 증가
+ * Store에서 캐시된 값으로 초기화
  */
-const currentStepIndex = ref(0)
+const currentStepIndex = ref(progressStore.getCurrentStepIndex(scenarioId))
 
 /**
  * 완료된 스텝 인덱스 배열
  * 마지막 스텝 완료 시에도 초록색 표시를 위해 사용
+ * Store에서 캐시된 값으로 초기화
  */
-const completedStepIndices = ref([])
+const completedStepIndices = ref([...progressStore.getCompletedStepIndices(scenarioId)])
 
 /**
  * 시나리오 스텝 목록
@@ -200,20 +210,21 @@ const scenarioSteps = computed(() => {
 
 /**
  * 스텝 완료 시 호출되는 핸들러
- * 다음 스텝으로 자동 진행
+ * 다음 스텝으로 자동 진행하고 Store에 캐시
  */
 const handleStepCompleted = () => {
   const totalSteps = scenarioSteps.value.length
   const completedIndex = currentStepIndex.value
 
-  // 현재 스텝을 완료 목록에 추가
-  if (!completedStepIndices.value.includes(completedIndex)) {
-    completedStepIndices.value.push(completedIndex)
-  }
+  // Store를 통해 스텝 완료 처리 (캐시 포함)
+  const updatedProgress = progressStore.completeStep(scenarioId, completedIndex, totalSteps)
 
-  if (currentStepIndex.value < totalSteps - 1) {
-    currentStepIndex.value++
-    console.log(`📍 Step advanced to ${currentStepIndex.value + 1}/${totalSteps}`)
+  // 로컬 상태 동기화
+  currentStepIndex.value = updatedProgress.currentStepIndex
+  completedStepIndices.value = [...updatedProgress.completedStepIndices]
+
+  if (updatedProgress.currentStepIndex > completedIndex) {
+    console.log(`📍 Step advanced to ${updatedProgress.currentStepIndex + 1}/${totalSteps}`)
   } else {
     console.log('🎉 All steps completed!')
   }
@@ -345,7 +356,10 @@ const handleReset = async () => {
     currentStepIndex.value = 0  // 스텝도 처음으로 리셋
     completedStepIndices.value = []  // 완료 목록도 초기화
 
-    // 3. 새 대화 시작하여 AI 초기 발화 받아오기
+    // 3. Store 진행도 캐시 초기화
+    progressStore.resetProgress(scenarioId)
+
+    // 4. 새 대화 시작하여 AI 초기 발화 받아오기
     const response = await conversationService.start(scenarioId)
     conversation.addInitialMessage(response.initialMessage)
     await nextTick()

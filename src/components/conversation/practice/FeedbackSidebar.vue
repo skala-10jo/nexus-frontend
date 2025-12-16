@@ -4,6 +4,7 @@
  *
  * 대화별 피드백을 표시합니다.
  */
+import { computed } from 'vue'
 import {
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
@@ -15,7 +16,7 @@ import {
   MicrophoneIcon
 } from '@heroicons/vue/24/outline'
 
-defineProps({
+const props = defineProps({
   /** 사용자 메시지 목록 */
   userMessages: {
     type: Array,
@@ -31,6 +32,11 @@ defineProps({
     type: Object,
     default: null
   },
+  /** 전체 회화에서 사용한 용어 (누적) */
+  allUsedTerms: {
+    type: Array,
+    default: () => []
+  },
   /** 모바일에서 열림 상태 */
   isMobileOpen: {
     type: Boolean,
@@ -42,6 +48,17 @@ const emit = defineEmits([
   'selectMessage',
   'close'
 ])
+
+/**
+ * 실제 미사용 용어 (전체 회화에서 사용한 용어 제외)
+ */
+const filteredMissedTerms = computed(() => {
+  const missed = props.selectedMessageFeedback?.terminology_usage?.missed || []
+  const used = props.allUsedTerms || []
+
+  // 이미 사용한 용어는 미사용 목록에서 제외
+  return missed.filter(term => !used.includes(term))
+})
 </script>
 
 <template>
@@ -129,32 +146,34 @@ const emit = defineEmits([
               </div>
             </div>
 
-            <!-- Terminology Usage -->
-            <div v-if="selectedMessageFeedback.terminology_usage" class="space-y-3">
+            <!-- Terminology Usage (누적) -->
+            <div v-if="allUsedTerms?.length || selectedMessageFeedback.terminology_usage" class="space-y-3">
               <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                 <CheckCircleIcon class="w-4 h-4 text-emerald-500" />
                 용어 사용
               </h3>
               <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 space-y-3">
-                <div v-if="selectedMessageFeedback.terminology_usage.used?.length" class="space-y-2">
+                <!-- 사용한 용어 (누적) -->
+                <div v-if="allUsedTerms?.length" class="space-y-2">
                   <p class="text-xs font-bold text-emerald-600 uppercase">사용한 용어</p>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.used" :key="idx"
+                    <span v-for="(term, idx) in allUsedTerms" :key="idx"
                       class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium">
                       {{ term }}
                     </span>
                   </div>
                 </div>
-                <div v-if="selectedMessageFeedback.terminology_usage.missed?.length" class="space-y-2">
+                <!-- 미사용 용어 (전체 회화에서 사용한 용어 제외) -->
+                <div v-if="filteredMissedTerms.length" class="space-y-2">
                   <p class="text-xs font-bold text-gray-500 uppercase">미사용 용어</p>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="(term, idx) in selectedMessageFeedback.terminology_usage.missed" :key="idx"
+                    <span v-for="(term, idx) in filteredMissedTerms" :key="idx"
                       class="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
                       {{ term }}
                     </span>
                   </div>
                 </div>
-                <div v-if="selectedMessageFeedback.terminology_usage.feedback" class="text-sm text-gray-700 mt-2">
+                <div v-if="selectedMessageFeedback.terminology_usage?.feedback" class="text-sm text-gray-700 mt-2">
                   {{ selectedMessageFeedback.terminology_usage.feedback }}
                 </div>
               </div>
