@@ -22,6 +22,8 @@
           :steps="scenarioSteps"
           :current-step-index="currentStepIndex"
           :completed-step-indices="completedStepIndices"
+          class="cursor-pointer"
+          @click="showStepGuide = true"
         />
 
         <!-- Conversation Area -->
@@ -47,6 +49,7 @@
           :speaking-message-index="tts.speakingMessageIndex.value"
           @toggle-translation="conversation.toggleTranslation"
           @toggle-hint="handleToggleHint"
+          @increase-hint-level="handleIncreaseHintLevel"
           @message-click="handleMessageClick"
           @play-message="handlePlayMessage"
           @stop-message="tts.stopSpeaking"
@@ -96,6 +99,13 @@
       />
     </div>
 
+    <!-- Step Guide Modal -->
+    <StepGuideModal
+      v-if="showStepGuide"
+      :steps="scenarioSteps"
+      :scenario-title="scenario?.title"
+      @close="showStepGuide = false"
+    />
   </div>
 </template>
 
@@ -122,6 +132,7 @@ import PracticeStepper from '@/components/conversation/practice/PracticeStepper.
 import PracticeConversation from '@/components/conversation/practice/PracticeConversation.vue'
 import PracticeInput from '@/components/conversation/practice/PracticeInput.vue'
 import FeedbackSidebar from '@/components/conversation/practice/FeedbackSidebar.vue'
+import StepGuideModal from '@/components/conversation/practice/StepGuideModal.vue'
 
 // Composables
 import { usePractice } from '@/composables/conversation/usePractice'
@@ -256,6 +267,7 @@ const tts = usePracticeTTS({
 
 // Refs
 const conversationAreaRef = ref(null)
+const showStepGuide = ref(false)
 
 // 초기 로드 완료 플래그 (히스토리 로드 시 TTS 방지)
 const isInitialLoadComplete = ref(false)
@@ -349,6 +361,14 @@ const handleReset = async () => {
  */
 const handleToggleHint = async (index) => {
   await conversation.toggleHint(index, scenarioId)
+}
+
+/**
+ * 힌트 레벨 증가 처리 (2단계: 핵심 단어 → 전체 문장)
+ * @param {number} index - 메시지 인덱스
+ */
+const handleIncreaseHintLevel = (index) => {
+  conversation.increaseHintLevel(index)
 }
 
 /**
@@ -464,6 +484,8 @@ onMounted(async () => {
       if (conversationAreaRef.value?.scrollToBottom) {
         conversationAreaRef.value.scrollToBottom(false)
       }
+      // 새 대화 시작 시 Step Guide Modal 표시
+      showStepGuide.value = true
     }
   )
 

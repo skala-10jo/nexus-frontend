@@ -58,62 +58,76 @@
         </button>
       </div>
 
-      <!-- Hint Display - Multiple Hints -->
+      <!-- Hint Display - 2-Level Progressive Hints (wordHints → fullSentence) -->
       <div
-        v-if="message.speaker === 'ai' && message.showHint && message.hints?.length"
+        v-if="message.speaker === 'ai' && message.showHint && message.hintData"
         class="mt-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-xl p-4 relative animate-fade-in-down"
       >
         <div class="absolute -top-1.5 left-20 w-3 h-3 bg-amber-50 border-t border-l border-amber-100 transform rotate-45"></div>
 
-        <!-- Header -->
-        <div class="flex items-center gap-2 mb-3">
-          <div class="p-1 bg-amber-100 rounded-full text-amber-600">
-            <LightBulbIcon class="w-3.5 h-3.5" />
+        <!-- Header with Level Indicator -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="p-1 bg-amber-100 rounded-full text-amber-600">
+              <LightBulbIcon class="w-3.5 h-3.5" />
+            </div>
+            <p class="text-[13px] font-bold text-amber-600 uppercase tracking-wider">이렇게 말해보세요!</p>
           </div>
-          <p class="text-[13px] font-bold text-amber-600 uppercase tracking-wider">이렇게 말해보세요!</p>
+          <!-- Level Indicator (2 dots for 2-level system) -->
+          <div class="flex items-center gap-1">
+            <span
+              v-for="level in 2"
+              :key="level"
+              class="w-2 h-2 rounded-full transition-colors"
+              :class="(message.hintLevel ?? 0) >= level - 1 ? 'bg-amber-500' : 'bg-amber-200'"
+            />
+          </div>
         </div>
 
-        <!-- Hints List -->
+        <!-- Level 0: Word Hints (핵심 단어) -->
         <div class="space-y-3">
-          <div
-            v-for="(hint, hintIdx) in message.hints"
-            :key="hintIdx"
-            class="group/hint"
-          >
-            <!-- Hint Text -->
-            <div class="flex items-start gap-2">
-              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-200 text-amber-700 text-xs font-bold flex items-center justify-center">
-                {{ hintIdx + 1 }}
+          <!-- Word Hints Tags -->
+          <div v-if="message.hintData.wordHints?.length" class="mb-3">
+            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-2">핵심 단어</p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(word, idx) in message.hintData.wordHints"
+                :key="idx"
+                class="text-sm bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-medium"
+              >
+                {{ word }}
               </span>
-              <div class="flex-1">
-                <p class="text-sm text-gray-900 font-medium leading-relaxed">"{{ hint }}"</p>
-                <!-- Hint Explanation (Korean) -->
-                <p
-                  v-if="message.hintExplanations?.[hintIdx]"
-                  class="text-xs text-gray-500 mt-1 pl-0.5"
-                >
-                  {{ message.hintExplanations[hintIdx] }}
-                </p>
-              </div>
             </div>
           </div>
+
+          <!-- Level 1: Full Sentence (전체 문장) -->
+          <div v-if="(message.hintLevel ?? 0) >= 1 && message.hintData.fullSentence" class="pt-3 border-t border-amber-100">
+            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-2">예시 문장</p>
+            <p class="text-sm text-gray-900 font-medium leading-relaxed bg-white/50 px-3 py-2 rounded-lg">
+              "{{ message.hintData.fullSentence }}"
+            </p>
+            <!-- Explanation -->
+            <p v-if="message.hintData.explanation" class="text-xs text-gray-500 mt-2 pl-1">
+              {{ message.hintData.explanation }}
+            </p>
+          </div>
+
+          <!-- More Hint Button (Level 0 → Level 1) -->
+          <button
+            v-if="(message.hintLevel ?? 0) < 1"
+            @click.stop="$emit('increaseHintLevel', messageIndex)"
+            class="w-full mt-2 text-xs font-medium text-amber-600 hover:text-amber-800 flex items-center justify-center gap-1 py-2 rounded-lg hover:bg-amber-100/50 transition-colors"
+          >
+            <ChevronDownIcon class="w-4 h-4" />
+            전체 문장 보기
+          </button>
         </div>
 
-        <!-- Terminology Suggestions -->
-        <div
-          v-if="message.terminologySuggestions?.length"
-          class="mt-3 pt-3 border-t border-amber-100"
-        >
-          <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider mb-1.5">추천 용어</p>
-          <div class="flex flex-wrap gap-1.5">
-            <span
-              v-for="term in message.terminologySuggestions"
-              :key="term"
-              class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium"
-            >
-              {{ term }}
-            </span>
-          </div>
+        <!-- Step Info (optional) -->
+        <div v-if="message.hintData.stepInfo" class="mt-3 pt-3 border-t border-amber-100">
+          <p class="text-[10px] text-gray-400">
+            Step: {{ message.hintData.stepInfo.title || message.hintData.stepInfo.name }}
+          </p>
         </div>
       </div>
 
@@ -142,7 +156,8 @@ import {
   StopIcon,
   LanguageIcon,
   LightBulbIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -193,7 +208,8 @@ defineEmits([
   'playMessage',
   'stopMessage',
   'toggleTranslation',
-  'toggleHint'
+  'toggleHint',
+  'increaseHintLevel'
 ])
 
 /**

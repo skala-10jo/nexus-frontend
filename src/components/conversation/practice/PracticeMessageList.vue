@@ -26,6 +26,7 @@
       @stop-message="$emit('stopMessage')"
       @toggle-translation="(idx) => $emit('toggleTranslation', idx)"
       @toggle-hint="(idx) => $emit('toggleHint', idx)"
+      @increase-hint-level="(idx) => $emit('increaseHintLevel', idx)"
     />
 
     <!-- Loading Indicator -->
@@ -100,7 +101,8 @@ defineEmits([
   'playMessage',
   'stopMessage',
   'toggleTranslation',
-  'toggleHint'
+  'toggleHint',
+  'increaseHintLevel'
 ])
 
 // 스크롤 컨테이너 ref

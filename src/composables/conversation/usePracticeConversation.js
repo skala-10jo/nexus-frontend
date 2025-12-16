@@ -233,7 +233,8 @@ export function usePracticeConversation({
 
   /**
    * 힌트 토글
-   * 시나리오 맥락과 대화 히스토리를 기반으로 맥락에 맞는 힌트를 생성합니다.
+   * 시나리오 맥락과 대화 히스토리를 기반으로 2단계 힌트를 생성합니다.
+   * 2단계 구조: Level 0 = 핵심 단어, Level 1 = 전체 문장
    *
    * @param {number} index - 메시지 인덱스
    * @param {string} scenarioId - 시나리오 ID
@@ -247,7 +248,7 @@ export function usePracticeConversation({
     }
 
     // 이미 생성된 힌트가 있으면 재사용
-    if (msg.hints && msg.hints.length > 0) {
+    if (msg.hintData) {
       msg.showHint = true
       return
     }
@@ -264,32 +265,76 @@ export function usePracticeConversation({
       // 마지막 AI 메시지 찾기
       const lastAiMessage = msg.speaker === 'ai' ? msg.message : ''
 
-      // API 호출
+      // 현재 스텝 정보 구성
+      const stepIndex = externalCurrentStepIndex?.value ?? 0
+      const steps = scenario.value?.steps || []
+      const currentStepData = steps[stepIndex]
+
+      const currentStep = currentStepData ? {
+        name: currentStepData.name || currentStepData.id || `step_${stepIndex}`,
+        title: currentStepData.title || '',
+        guide: currentStepData.description || currentStepData.guide || '',
+        terminology: currentStepData.terminology || []
+      } : null
+
+      // API 호출 (2단계 힌트 형식)
       const response = await conversationService.getHint(
         scenarioId,
         history,
         lastAiMessage,
-        3  // 힌트 3개 생성
+        currentStep
       )
 
       if (response.success) {
-        // 힌트 정보 저장
-        msg.hints = response.hints || []
-        msg.hintExplanations = response.hint_explanations || []
-        msg.terminologySuggestions = response.terminology_suggestions || []
+        // 2단계 힌트 형식 저장 (단어 → 문장)
+        msg.hintData = {
+          targetExpression: response.targetExpression || '',
+          wordHints: response.wordHints || [],
+          fullSentence: response.fullSentence || '',
+          explanation: response.explanation || '',
+          stepInfo: response.stepInfo || null
+        }
+        // 힌트 레벨 (0: 단어, 1: 전체 문장)
+        msg.hintLevel = 0
         msg.showHint = true
       } else {
         console.error('Hint generation failed:', response)
-        msg.hints = ['I see what you mean.', 'Could you tell me more?', 'That\'s interesting.']
+        // 에러 시 기본 힌트 제공
+        msg.hintData = {
+          targetExpression: '',
+          wordHints: ['try', 'again'],
+          fullSentence: 'Could you please try again?',
+          explanation: '다시 시도해주세요.'
+        }
+        msg.hintLevel = 0
         msg.showHint = true
       }
     } catch (err) {
       console.error('Hint generation failed:', err)
       // 에러 시 기본 힌트 제공
-      msg.hints = ['I understand.', 'Please continue.', 'That makes sense.']
+      msg.hintData = {
+        targetExpression: '',
+        wordHints: ['understand', 'continue'],
+        fullSentence: 'I understand what you mean.',
+        explanation: '이해했습니다.'
+      }
+      msg.hintLevel = 0
       msg.showHint = true
     } finally {
       hintLoading.value[index] = false
+    }
+  }
+
+  /**
+   * 힌트 레벨 증가 (단어 → 전체 문장)
+   * 2단계 구조: Level 0 = 핵심 단어, Level 1 = 전체 문장
+   *
+   * @param {number} index - 메시지 인덱스
+   */
+  const increaseHintLevel = (index) => {
+    const msg = messages.value[index]
+    if (msg.hintLevel < 1) {
+      msg.hintLevel++
     }
   }
 
@@ -383,7 +428,8 @@ export function usePracticeConversation({
     // Actions
     sendMessage,
     toggleTranslation,
-    toggleHint, // Added
+    toggleHint,
+    increaseHintLevel,
     resetConversation,
     loadHistory,
     addInitialMessage,

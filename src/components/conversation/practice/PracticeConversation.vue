@@ -106,6 +106,7 @@ const props = defineProps({
 const emit = defineEmits([
   'toggleTranslation',
   'toggleHint',
+  'increaseHintLevel',
   'messageClick',
   'playMessage',
   'stopMessage'
@@ -318,6 +319,7 @@ defineExpose({
       @stop-message="emit('stopMessage')"
       @toggle-translation="(idx) => emit('toggleTranslation', idx)"
       @toggle-hint="(idx) => emit('toggleHint', idx)"
+      @increase-hint-level="(idx) => emit('increaseHintLevel', idx)"
     />
   </div>
 
@@ -339,5 +341,6 @@ defineExpose({
     @stop-message="emit('stopMessage')"
     @toggle-translation="(idx) => emit('toggleTranslation', idx)"
     @toggle-hint="(idx) => emit('toggleHint', idx)"
+    @increase-hint-level="(idx) => emit('increaseHintLevel', idx)"
   />
 </template>
