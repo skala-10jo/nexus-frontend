@@ -239,7 +239,7 @@ export async function getMultilingualSubtitles(videoDocumentId) {
  */
 export async function downloadSubtitles({ videoDocumentId, language }) {
   try {
-    const response = await aiApi.get('/api/ai/video/subtitles/download', {
+    const response = await aiApi.get('/api/ai/video/subtitle-download', {
       params: {
         video_file_id: videoDocumentId,  // Changed from video_document_id
         language: language

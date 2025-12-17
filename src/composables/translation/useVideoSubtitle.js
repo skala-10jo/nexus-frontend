@@ -13,6 +13,7 @@ import {
 export function useVideoSubtitle() {
   // 다국어 자막 상태
   const subtitleData = ref({
+    videoId: null, // 현재 작업 중인 비디오 ID 저장
     originalLanguage: 'ko',
     availableLanguages: [],
     subtitles: []
@@ -56,6 +57,7 @@ export function useVideoSubtitle() {
       const result = await getMultilingualSubtitles(videoId)
 
       subtitleData.value = {
+        videoId: videoId, // 비디오 ID 저장
         originalLanguage: result.originalLanguage,
         availableLanguages: result.availableLanguages,
         subtitles: result.subtitles
@@ -103,6 +105,7 @@ export function useVideoSubtitle() {
 
       // Step 4: 상태 업데이트
       subtitleData.value = {
+        videoId: videoDocumentId, // 비디오 ID 저장
         originalLanguage: result.originalLanguage,
         availableLanguages: result.availableLanguages,
         subtitles: result.subtitles
@@ -126,17 +129,21 @@ export function useVideoSubtitle() {
   }) {
     isExtracting.value = true
 
+    // 저장된 videoId를 우선 사용 (selectedVideo.id가 변경될 수 있으므로)
+    const actualVideoId = subtitleData.value.videoId || videoDocumentId
+
     try {
       await translateSubtitles({
-        videoDocumentId,
+        videoDocumentId: actualVideoId,
         projectId,
         sourceLanguage: subtitleData.value.originalLanguage,
         targetLanguage
       })
 
-      const updatedData = await getMultilingualSubtitles(videoDocumentId)
+      const updatedData = await getMultilingualSubtitles(actualVideoId)
 
       subtitleData.value = {
+        videoId: actualVideoId, // 비디오 ID 유지
         originalLanguage: updatedData.originalLanguage,
         availableLanguages: updatedData.availableLanguages,
         subtitles: updatedData.subtitles
@@ -191,6 +198,7 @@ export function useVideoSubtitle() {
   // 상태 초기화
   function reset() {
     subtitleData.value = {
+      videoId: null,
       originalLanguage: 'ko',
       availableLanguages: [],
       subtitles: []
