@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
+// 개발 환경: 환경변수 또는 localhost
+const API_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.PROD ? 'https://api.sk-nexus.world/api' : 'http://localhost:3000/api'
+);
 
 // Create axios instance
 const api = axios.create({

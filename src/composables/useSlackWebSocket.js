@@ -26,8 +26,13 @@ export function useSlackWebSocket(channelId) {
     }
 
     try {
-      // Use relative path (proxied by Vite to backend)
-      const wsUrl = window.location.origin + '/ws';
+      // 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
+      // 개발 환경: localhost (Vite proxy) 사용
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = import.meta.env.PROD
+        ? 'api.sk-nexus.world'
+        : window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws`;
 
       console.log('[WebSocket] Connecting to:', wsUrl);
 

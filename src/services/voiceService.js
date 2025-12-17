@@ -17,12 +17,15 @@ const BASE_URL = '/voice'
 
 /**
  * WebSocket 호스트 URL 생성 헬퍼
- * @returns {string} WebSocket 호스트 URL (예: 'localhost:8000')
+ * 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
+ * 개발 환경: 환경변수 또는 localhost
+ * @returns {string} WebSocket 호스트 URL (예: 'api.sk-nexus.world')
  */
 function getWebSocketHost() {
-  return import.meta.env.VITE_PYTHON_API_URL
-    ? new URL(import.meta.env.VITE_PYTHON_API_URL).host
-    : 'localhost:8000'
+  if (import.meta.env.VITE_PYTHON_API_URL) {
+    return new URL(import.meta.env.VITE_PYTHON_API_URL).host
+  }
+  return import.meta.env.PROD ? 'api.sk-nexus.world' : 'localhost:8000'
 }
 
 /**
