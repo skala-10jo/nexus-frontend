@@ -2,10 +2,10 @@ import { ref, onUnmounted } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-// WebSocket 엔드포인트
+// WebSocket 엔드포인트 (/api/* nginx 설정 활용)
 const WS_URL = import.meta.env.PROD
-  ? 'https://api.sk-nexus.world/ws'
-  : 'http://localhost:3000/ws';
+  ? 'https://api.sk-nexus.world/api/ws'
+  : 'http://localhost:3000/api/ws';
 
 /**
  * Composable for Slack real-time messaging via STOMP WebSocket
