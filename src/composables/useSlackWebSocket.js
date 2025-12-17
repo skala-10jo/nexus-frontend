@@ -28,11 +28,12 @@ export function useSlackWebSocket(channelId) {
     try {
       // 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
       // 개발 환경: localhost (Vite proxy) 사용
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      // SockJS는 http/https URL을 사용 (내부적으로 WebSocket 프로토콜 처리)
+      const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
       const wsHost = import.meta.env.PROD
         ? 'api.sk-nexus.world'
         : window.location.host;
-      const wsUrl = `${wsProtocol}//${wsHost}/ws`;
+      const wsUrl = `${httpProtocol}//${wsHost}/ws`;
 
       console.log('[WebSocket] Connecting to:', wsUrl);
 
