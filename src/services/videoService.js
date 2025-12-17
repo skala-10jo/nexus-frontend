@@ -6,8 +6,12 @@
 import axios from 'axios'
 import api from './api'
 
-// Python AI Backend URL (포트 8000)
-const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:8000'
+// Python AI Backend URL (Proxy를 통한 접근)
+// Production: https://api.sk-nexus.world/api/ai → Python Backend
+// Development: http://localhost:8000/api/ai → Python Backend 직접
+const AI_API_URL = import.meta.env.VITE_AI_API_URL
+  ? `${import.meta.env.VITE_AI_API_URL}/api/ai`
+  : (import.meta.env.PROD ? 'https://api.sk-nexus.world/api/ai' : 'http://localhost:8000/api/ai')
 
 // Python AI Backend용 axios 인스턴스
 const aiApi = axios.create({
@@ -122,7 +126,7 @@ export async function uploadVideo(formData) {
  */
 export async function extractSubtitles({ videoDocumentId, sourceLanguage }) {
   try {
-    const response = await aiApi.post('/api/ai/video/stt', {
+    const response = await aiApi.post('/video/stt', {
       video_file_id: videoDocumentId,  // Changed from video_document_id to video_file_id
       source_language: sourceLanguage
     })
@@ -164,7 +168,7 @@ export async function translateSubtitles({
   targetLanguage
 }) {
   try {
-    const response = await aiApi.post('/api/ai/video/translate', {
+    const response = await aiApi.post('/video/translate', {
       video_file_id: videoDocumentId,
       project_id: projectId || null,  // Text.vue 방식: projectId로 용어집 자동 조회
       source_language: sourceLanguage,
@@ -203,7 +207,7 @@ export async function translateSubtitles({
  */
 export async function getMultilingualSubtitles(videoDocumentId) {
   try {
-    const response = await aiApi.get(`/api/ai/video/subtitles/${videoDocumentId}`)  // URL path stays same
+    const response = await aiApi.get(`/video/subtitles/${videoDocumentId}`)  // URL path stays same
 
     // Python 백엔드 응답 형식: MultilingualSubtitlesResponse
     const data = response.data
@@ -239,7 +243,7 @@ export async function getMultilingualSubtitles(videoDocumentId) {
  */
 export async function downloadSubtitles({ videoDocumentId, language }) {
   try {
-    const response = await aiApi.get('/api/ai/video/subtitle-download', {
+    const response = await aiApi.get('/video/subtitle-download', {
       params: {
         video_file_id: videoDocumentId,  // Changed from video_document_id
         language: language
@@ -264,7 +268,7 @@ export async function downloadSubtitles({ videoDocumentId, language }) {
  */
 export async function updateSubtitle({ subtitleId, text }) {
   try {
-    const response = await aiApi.patch(`/api/ai/video/subtitles/${subtitleId}`, {
+    const response = await aiApi.patch(`/video/subtitles/${subtitleId}`, {
       text: text
     })
 

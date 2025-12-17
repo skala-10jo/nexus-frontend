@@ -5,12 +5,16 @@
  */
 import axios from 'axios'
 
-// Python Backend URL
-const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000'
+// Python Backend URL (Proxy를 통한 접근)
+// Production: https://api.sk-nexus.world/api/ai → Python Backend
+// Development: http://localhost:8000/api/ai → Python Backend 직접
+const PYTHON_API_BASE = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : (import.meta.env.PROD ? 'https://api.sk-nexus.world/api/ai' : 'http://localhost:8000/api/ai')
 
 // Python 백엔드용 axios 인스턴스 (Azure Speech 토큰 발급)
 const pythonApi = axios.create({
-  baseURL: PYTHON_API_URL,
+  baseURL: PYTHON_API_BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -26,7 +30,7 @@ const pythonApi = axios.create({
  */
 export async function getSpeechToken() {
   try {
-    const response = await pythonApi.get('/api/ai/speech/token')
+    const response = await pythonApi.get('/speech/token')
 
     if (response.data.success && response.data.data) {
       return {
@@ -49,7 +53,7 @@ export async function getSpeechToken() {
  */
 export async function refreshSpeechToken() {
   try {
-    const response = await pythonApi.post('/api/ai/speech/token/refresh')
+    const response = await pythonApi.post('/speech/token/refresh')
 
     if (response.data.success && response.data.data) {
       return {
@@ -72,7 +76,7 @@ export async function refreshSpeechToken() {
  */
 export async function getSpeechRegion() {
   try {
-    const response = await pythonApi.get('/api/ai/speech/region')
+    const response = await pythonApi.get('/speech/region')
 
     if (response.data.success && response.data.data) {
       return response.data.data.region

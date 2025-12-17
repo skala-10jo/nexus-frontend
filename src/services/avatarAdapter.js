@@ -7,10 +7,12 @@
  */
 import axios from 'axios'
 
-// Python AI Backend URL
+// Python AI Backend URL (Proxy를 통한 접근)
+// Production: https://api.sk-nexus.world/api/ai → Python Backend
+// Development: http://localhost:8000/api/ai → Python Backend 직접
 const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
   ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
-  : 'http://localhost:8000/api/ai'
+  : (import.meta.env.PROD ? 'https://api.sk-nexus.world/api/ai' : 'http://localhost:8000/api/ai')
 
 // Avatar API용 axios 인스턴스
 const avatarAPI = axios.create({

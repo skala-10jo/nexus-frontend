@@ -1,7 +1,11 @@
 import api from '@/services/api'
 
-// Python Backend URL
-const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000'
+// Python Backend URL (Proxy를 통한 접근)
+// Production: https://api.sk-nexus.world/api/ai → Python Backend
+// Development: http://localhost:8000/api/ai → Python Backend 직접
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : (import.meta.env.PROD ? 'https://api.sk-nexus.world/api/ai' : 'http://localhost:8000/api/ai')
 
 /**
  * Mail API Service
@@ -123,7 +127,7 @@ export const mailService = {
    * AI 채팅 요청
    */
   async chat(message, userId, conversationHistory) {
-    const response = await fetch(`${PYTHON_API_URL}/api/ai/mail/chat`, {
+    const response = await fetch(`${PYTHON_API_URL}/mail/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -139,7 +143,7 @@ export const mailService = {
    * 메일 임베딩 일괄 생성
    */
   async generateEmbeddings(userId) {
-    const response = await fetch(`${PYTHON_API_URL}/api/ai/mail/embeddings/batch`, {
+    const response = await fetch(`${PYTHON_API_URL}/mail/embeddings/batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId })
