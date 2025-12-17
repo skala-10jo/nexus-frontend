@@ -1,179 +1,125 @@
 import { ref, onUnmounted } from 'vue';
-import { Client } from '@stomp/stompjs';
+import { slackAPI } from '@/services/slackService';
 
 /**
- * Composable for Slack WebSocket real-time messaging
+ * Composable for Slack messaging with REST API Polling
+ * (WebSocket 대신 Polling 방식 사용 - Proxy 서버 WebSocket 미지원으로 인한 대안)
  *
  * @param {string} channelId - Slack channel ID to subscribe to
- * @returns {object} WebSocket utilities
+ * @returns {object} Messaging utilities
  */
 export function useSlackWebSocket(channelId) {
   const messages = ref([]);
   const connected = ref(false);
   const error = ref(null);
 
-  let stompClient = null;
-  let subscription = null;
+  let pollingInterval = null;
+  let lastMessageTs = null;
 
   /**
-   * Connect to WebSocket and subscribe to channel
+   * Connect (start polling for messages)
    */
   const connect = () => {
     if (!channelId) {
-      console.warn('[WebSocket] No channel ID provided');
+      console.warn('[Polling] No channel ID provided');
       return;
     }
 
+    console.log('[Polling] Starting message polling for channel:', channelId);
+    connected.value = true;
+    error.value = null;
+
+    // Initial fetch
+    fetchMessages();
+
+    // Poll every 3 seconds
+    pollingInterval = setInterval(() => {
+      fetchMessages();
+    }, 3000);
+  };
+
+  /**
+   * Fetch messages from REST API
+   */
+  const fetchMessages = async () => {
     try {
-      // 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
-      // 개발 환경: localhost (Vite proxy) 사용
-      // Native WebSocket 사용 (SockJS의 /ws/info CORS 문제 우회)
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = import.meta.env.PROD
-        ? 'api.sk-nexus.world'
-        : window.location.host;
-      // SockJS 활성화된 Spring Boot는 /ws/websocket 경로로 직접 연결 지원
-      const wsUrl = `${wsProtocol}//${wsHost}/ws/websocket`;
+      const response = await slackAPI.getMessageHistory(channelId);
 
-      console.log('[WebSocket] Connecting to:', wsUrl);
+      if (response.data && response.data.data) {
+        const fetchedMessages = response.data.data.messages || [];
 
-      // Get JWT token from localStorage
-      const token = localStorage.getItem('token');
-
-      // Create STOMP client with Native WebSocket (not SockJS)
-      stompClient = new Client({
-        brokerURL: wsUrl,
-
-        connectHeaders: {
-          Authorization: `Bearer ${token}`
-        },
-
-        debug: (str) => {
-          console.log('[WebSocket Debug]', str);
-        },
-
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
-
-        onConnect: () => {
-          console.log('[WebSocket] Connected to channel:', channelId);
-          connected.value = true;
-          error.value = null;
-
-          // Subscribe to channel topic
-          const topic = `/topic/slack/${channelId}`;
-          console.log('[WebSocket] Subscribing to topic:', topic);
-
-          subscription = stompClient.subscribe(
-            topic,
-            (message) => {
-              try {
-                console.log('[WebSocket] Raw message received:', message);
-                const parsedMessage = JSON.parse(message.body);
-                console.log('[WebSocket] Parsed message:', parsedMessage);
-
-                // Add message to list
-                messages.value.push(parsedMessage);
-                console.log('[WebSocket] Messages array length:', messages.value.length);
-              } catch (err) {
-                console.error('[WebSocket] Failed to parse message:', err);
+        // Find new messages (after lastMessageTs)
+        if (lastMessageTs) {
+          const newMessages = fetchedMessages.filter(msg => msg.ts > lastMessageTs);
+          if (newMessages.length > 0) {
+            console.log('[Polling] New messages:', newMessages.length);
+            // Add new messages to the list
+            newMessages.forEach(msg => {
+              // Check if message already exists (by ts)
+              const exists = messages.value.some(m => m.ts === msg.ts);
+              if (!exists) {
+                messages.value.push(msg);
               }
-            }
-          );
-
-          console.log('[WebSocket] Subscription created:', subscription);
-        },
-
-        onStompError: (frame) => {
-          console.error('[WebSocket] STOMP error:', frame);
-          error.value = frame.headers['message'];
-          connected.value = false;
-        },
-
-        onWebSocketError: (evt) => {
-          console.error('[WebSocket] WebSocket error:', evt);
-          error.value = 'WebSocket connection failed';
-          connected.value = false;
-        },
-
-        onDisconnect: () => {
-          console.log('[WebSocket] Disconnected');
-          connected.value = false;
+            });
+          }
+        } else {
+          // First fetch - set all messages
+          messages.value = fetchedMessages;
         }
-      });
 
-      // Activate the client
-      stompClient.activate();
-
+        // Update lastMessageTs
+        if (fetchedMessages.length > 0) {
+          lastMessageTs = fetchedMessages[fetchedMessages.length - 1].ts;
+        }
+      }
     } catch (err) {
-      console.error('[WebSocket] Connection error:', err);
-      error.value = err.message;
-      connected.value = false;
+      console.error('[Polling] Failed to fetch messages:', err);
+      // Don't set error for polling failures, just log
     }
   };
 
   /**
-   * Send text message via WebSocket
+   * Send text message via REST API
    *
    * @param {string} text - Message text
    */
-  const sendMessage = (text) => {
-    if (!stompClient || !connected.value) {
-      console.warn('[WebSocket] Not connected, cannot send message');
-      return;
-    }
-
+  const sendMessage = async (text) => {
     if (!text || text.trim() === '') {
-      console.warn('[WebSocket] Empty message, not sending');
+      console.warn('[Polling] Empty message, not sending');
       return;
     }
 
     try {
-      // Get username from localStorage (stored during login)
-      const userStr = localStorage.getItem('user');
-      let username = null;
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          username = user.username;
-        } catch (e) {
-          console.error('[WebSocket] Failed to parse user from localStorage');
-        }
-      }
+      console.log('[Polling] Sending message via REST API');
 
-      stompClient.publish({
-        destination: '/app/slack/send',
-        body: JSON.stringify({
-          channelId: channelId,
-          text: text.trim(),
-          username: username  // Include username for authentication fallback
-        })
+      await slackAPI.sendMessage({
+        channelId: channelId,
+        text: text.trim()
       });
 
-      console.log('[WebSocket] Message sent:', text);
+      console.log('[Polling] Message sent successfully');
+
+      // Immediately fetch to see the sent message
+      await fetchMessages();
     } catch (err) {
-      console.error('[WebSocket] Failed to send message:', err);
+      console.error('[Polling] Failed to send message:', err);
       error.value = err.message;
+      throw err;
     }
   };
 
   /**
-   * Disconnect from WebSocket
+   * Disconnect (stop polling)
    */
   const disconnect = () => {
-    if (subscription) {
-      subscription.unsubscribe();
-      subscription = null;
-    }
-
-    if (stompClient) {
-      stompClient.deactivate();
-      stompClient = null;
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
     }
 
     connected.value = false;
-    console.log('[WebSocket] Disconnected manually');
+    lastMessageTs = null;
+    console.log('[Polling] Stopped polling');
   };
 
   /**
@@ -181,6 +127,7 @@ export function useSlackWebSocket(channelId) {
    */
   const clearMessages = () => {
     messages.value = [];
+    lastMessageTs = null;
   };
 
   // Auto-disconnect on component unmount
