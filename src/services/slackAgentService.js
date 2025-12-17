@@ -8,11 +8,15 @@
  */
 import axios from 'axios'
 
-const PYTHON_BASE_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:8000'
+// 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
+// 개발 환경: 환경변수 또는 localhost
+const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL
+  ? `${import.meta.env.VITE_PYTHON_API_URL}/api/ai`
+  : (import.meta.env.PROD ? 'https://api.sk-nexus.world/api/ai' : 'http://localhost:8000/api/ai')
 
 // Create axios instance for Python Slack Agent API
 const slackAgentAPI = axios.create({
-  baseURL: `${PYTHON_BASE_URL}/api/slack`,
+  baseURL: `${PYTHON_API_URL}/slack`,
   headers: {
     'Content-Type': 'application/json'
   }
