@@ -105,8 +105,12 @@ export function useWebSocketSTT() {
     return new Promise((resolve, reject) => {
       try {
         // WebSocket URL 생성
+        // 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
+        // 개발 환경: 환경변수 또는 localhost
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-        const wsHost = import.meta.env.VITE_PYTHON_API_URL?.replace(/^https?:\/\//, '') || 'localhost:8000'
+        const wsHost = import.meta.env.VITE_PYTHON_API_URL
+          ? import.meta.env.VITE_PYTHON_API_URL.replace(/^https?:\/\//, '')
+          : (import.meta.env.PROD ? 'api.sk-nexus.world' : 'localhost:8000')
         const wsUrl = `${wsProtocol}//${wsHost}/voice/ws/stt`
 
         console.log('🔌 Connecting to WebSocket:', wsUrl)

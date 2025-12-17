@@ -19,7 +19,8 @@ export const useSlackStore = defineStore('slack', () => {
       error.value = null;
 
       const response = await slackAPI.getAuthUrl();
-      const { url, state } = response.data;
+      // ApiResponse 래퍼 구조: { success, message, data: { url, state } }
+      const { url, state } = response.data.data;
 
       // Save state to sessionStorage for verification
       sessionStorage.setItem('slack_oauth_state', state);
@@ -45,7 +46,8 @@ export const useSlackStore = defineStore('slack', () => {
       }
 
       const response = await slackAPI.handleCallback(code, state);
-      integration.value = response.data;
+      // ApiResponse 래퍼 구조: { success, message, data: SlackIntegrationResponse }
+      integration.value = response.data.data;
       isConnected.value = true;
 
       // Clean up
@@ -66,8 +68,10 @@ export const useSlackStore = defineStore('slack', () => {
       error.value = null;
 
       const response = await slackAPI.getIntegrationStatus();
-      integration.value = response.data;
-      isConnected.value = response.data.isActive || false;
+      // ApiResponse 래퍼 구조: { success, message, data: SlackIntegrationResponse }
+      const integrationData = response.data.data;
+      integration.value = integrationData;
+      isConnected.value = integrationData?.isActive || false;
     } catch (err) {
       // Not connected or error
       integration.value = null;
@@ -109,7 +113,8 @@ export const useSlackStore = defineStore('slack', () => {
       error.value = null;
 
       const response = await slackAPI.getChannels();
-      channels.value = response.data;
+      // ApiResponse 래퍼 구조: { success, message, data: SlackChannelResponse[] }
+      channels.value = response.data.data || [];
 
       // Clear selected channel
       selectedChannel.value = null;
@@ -156,7 +161,9 @@ export const useSlackStore = defineStore('slack', () => {
       error.value = null;
 
       const response = await slackAPI.getMessageHistory(channelId);
-      messages.value = response.data.reverse(); // Reverse to show oldest first
+      // ApiResponse 래퍼 구조: { success, message, data: SlackMessageResponse[] }
+      const messageData = response.data.data || [];
+      messages.value = messageData.reverse(); // Reverse to show oldest first
 
       return messages.value;
     } catch (err) {
