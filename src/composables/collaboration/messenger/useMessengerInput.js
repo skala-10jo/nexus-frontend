@@ -89,6 +89,18 @@ export function useMessengerInput({ emit }) {
   }
 
   /**
+   * Textarea 붙여넣기 핸들러
+   * 붙여넣기 완료 후 높이 조절
+   */
+  function handlePaste() {
+    // 붙여넣기 후 DOM 업데이트를 기다린 후 높이 조절
+    // setTimeout을 사용하여 paste 이벤트가 완료된 후 처리
+    setTimeout(() => {
+      adjustTextareaHeight()
+    }, 0)
+  }
+
+  /**
    * Textarea 높이 리셋
    */
   function resetTextareaHeight() {
@@ -99,7 +111,7 @@ export function useMessengerInput({ emit }) {
   }
 
   /**
-   * 메시지 전송 후 Textarea 리셋을 위한 watcher 설정
+   * 메시지 전송 후 Textarea 리셋 및 프로그래밍적 텍스트 변경 시 높이 조절을 위한 watcher 설정
    *
    * @param {Function} getMessageText - 메시지 텍스트 getter
    */
@@ -107,6 +119,10 @@ export function useMessengerInput({ emit }) {
     watch(getMessageText, (newVal) => {
       if (!newVal) {
         resetTextareaHeight()
+      } else {
+        // 프로그래밍적으로 텍스트가 설정될 때 (예: 붙여넣기, '사용하기' 버튼)
+        // nextTick 후 높이 조절
+        nextTick(() => adjustTextareaHeight())
       }
     })
   }
@@ -184,6 +200,7 @@ export function useMessengerInput({ emit }) {
     adjustTextareaHeight,
     handleTextareaInput,
     handleCtrlEnterSend,
+    handlePaste,
     resetTextareaHeight,
     setupMessageTextWatcher,
 

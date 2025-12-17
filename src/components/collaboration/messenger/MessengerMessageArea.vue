@@ -205,6 +205,7 @@
               ref="textareaRef"
               :value="messageText"
               @input="handleTextareaInput"
+              @paste="handlePaste"
               @keydown.ctrl.enter.prevent="handleCtrlEnterSend"
               @compositionstart="isComposing = true"
               @compositionend="isComposing = false"
@@ -354,6 +355,7 @@ const {
   showMobileDropdown,
   handleTextareaInput: baseHandleTextareaInput,
   handleCtrlEnterSend: baseHandleCtrlEnterSend,
+  handlePaste,
   scrollToBottom,
   toggleMobileDropdown,
   closeMobileDropdown,
