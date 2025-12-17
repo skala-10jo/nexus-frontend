@@ -1,5 +1,4 @@
 import { ref, onUnmounted } from 'vue';
-import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
 /**
@@ -28,21 +27,22 @@ export function useSlackWebSocket(channelId) {
     try {
       // 배포 환경: api.sk-nexus.world (Proxy 서버) 사용
       // 개발 환경: localhost (Vite proxy) 사용
-      // SockJS는 http/https URL을 사용 (내부적으로 WebSocket 프로토콜 처리)
-      const httpProtocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      // Native WebSocket 사용 (SockJS의 /ws/info CORS 문제 우회)
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = import.meta.env.PROD
         ? 'api.sk-nexus.world'
         : window.location.host;
-      const wsUrl = `${httpProtocol}//${wsHost}/ws`;
+      // SockJS 활성화된 Spring Boot는 /ws/websocket 경로로 직접 연결 지원
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/websocket`;
 
       console.log('[WebSocket] Connecting to:', wsUrl);
 
       // Get JWT token from localStorage
       const token = localStorage.getItem('token');
 
-      // Create STOMP client with SockJS
+      // Create STOMP client with Native WebSocket (not SockJS)
       stompClient = new Client({
-        webSocketFactory: () => new SockJS(wsUrl),
+        brokerURL: wsUrl,
 
         connectHeaders: {
           Authorization: `Bearer ${token}`
