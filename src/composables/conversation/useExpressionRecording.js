@@ -89,8 +89,12 @@ export function useExpressionRecording() {
 
       mediaRecorder.start()
 
-      // WebSocket connection
-      const wsUrl = `ws://localhost:8000/api/ai/expression/speech/assess-realtime`
+      // WebSocket connection - 환경에 따라 URL 결정
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const wsHost = import.meta.env.PROD
+        ? 'api.sk-nexus.world'
+        : 'localhost:8000'
+      const wsUrl = `${wsProtocol}//${wsHost}/api/ai/expression/speech/assess-realtime`
       websocket = new WebSocket(wsUrl)
 
       websocket.onopen = () => {
