@@ -17,15 +17,16 @@ export function useScheduleProjects() {
   const projectStore = useProjectStore()
   const categoryStore = useScheduleCategoryStore()
 
-  // State
-  const projects = ref([])
+  // State - projects는 스토어에서 직접 가져옴 (반응성 유지)
   const selectedProjectId = ref(null)
   const allDocuments = ref([])
   const isProjectEditing = ref(false)
   const isProjectCreating = ref(false)
   const currentProjectId = ref(null)
 
-  // Computed
+  // Computed - 스토어의 projects를 직접 참조하여 반응성 유지
+  const projects = computed(() => projectStore.projects || [])
+
   const selectedProject = computed(() => {
     return projects.value.find((p) => p.id === selectedProjectId.value) || {}
   })
@@ -36,7 +37,6 @@ export function useScheduleProjects() {
   const loadProjects = async () => {
     try {
       await projectStore.fetchProjects()
-      projects.value = projectStore.projects
     } catch (error) {
       console.error('Failed to load projects:', error)
     }
