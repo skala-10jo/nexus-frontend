@@ -103,6 +103,18 @@
           @select-category="(categoryId) => { selectCategory(categoryId); mobileShowFilter = false }"
         />
 
+        <!-- Mobile Create Button (inline between dropdown and cards) -->
+        <button
+          v-if="activeTab === 'my'"
+          @click="showCreateDialog = true"
+          class="md:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-2xl text-sm font-bold hover:bg-gray-800 active:scale-[0.98] transition-all shadow-lg"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          새 시나리오 생성
+        </button>
+
         <!-- Loading State -->
         <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="i in 6" :key="i" class="h-64 bg-gray-50 rounded-3xl animate-pulse"></div>
@@ -197,17 +209,6 @@
         <span class="font-medium">내 시나리오로 복사되었습니다!</span>
       </div>
     </Transition>
-
-    <!-- Mobile Floating Create Button -->
-    <button
-      v-if="activeTab === 'my'"
-      @click="showCreateDialog = true"
-      class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-full shadow-xl shadow-gray-900/30 flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all z-40"
-    >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
-    </button>
   </div>
 </template>
 
